@@ -26,15 +26,15 @@
 // Vector utilities
 // -----------------------------------------------------------------------------------
 
-use std::ops::Add;
-use num::Zero;
+use std;
+use num::{Float, Num, Zero};
 
 //export const zip = (...rows: any[]): any[] => [...rows[0]].map((_, c) => rows.map(row => row[c]));
 
 // Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
 pub fn veclistsum<T>(veclist: &[Vec<T>]) -> Vec<T>
 where
-    T: Zero + Add<Output = T> + Copy + Clone,
+    T: Num + Copy + Clone,
 {
     let maxlen: usize = veclist.iter().map(|lst| lst.len()).max().unwrap_or(0_usize);
     veclist.iter().fold(vec![Zero::zero()], |acc, ref x| {
@@ -47,44 +47,45 @@ where
 }
 
 // // Elementwise minimum min res[i] = min(vec1[i], vec2[i])
-pub fn vecvecmin(vec1: &[f32], vec2: &[f32]) -> Vec<f32> {
+pub fn vecvecmin<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
-        .map(|(ii, el)| el.min(*vec2.get(ii).unwrap_or(&0.0)))
+        .map(|(ii, el)| el.min(*vec2.get(ii).unwrap_or(&Zero::zero())))
         .collect()
 }
 
 // // Elementwise sum of arrays
-pub fn vecvecsum(vec1: &[f32], vec2: &[f32]) -> Vec<f32> {
+pub fn vecvecsum<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
-        .map(|(ii, el)| el + vec2.get(ii).unwrap_or(&0.0))
+        .map(|(ii, el)| *el + *vec2.get(ii).unwrap_or(&Zero::zero()))
         .collect()
 }
 
 // // Elementwise difference res[i] = vec1[i] - vec2[i]
-pub fn vecvecdif(vec1: &[f32], vec2: &[f32]) -> Vec<f32> {
+pub fn vecvecdif<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
-        .map(|(ii, el)| el - vec2.get(ii).unwrap_or(&0.0))
+        .map(|(ii, el)| *el - *vec2.get(ii).unwrap_or(&Zero::zero()))
         .collect()
 }
 
 // // Elementwise multiplication res[i] = vec1[i] * vec2[i]
-pub fn vecvecmul(vec1: &[f32], vec2: &[f32]) -> Vec<f32> {
+pub fn vecvecmul<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
-        .map(|(ii, el)| el * vec2.get(ii).unwrap_or(&0.0))
+        .map(|(ii, el)| *el * *vec2.get(ii).unwrap_or(&Zero::zero()))
         .collect()
 }
 
 // // Multiply vector by scalar
-pub fn veckmul(vec1: &[f32], k: f32) -> Vec<f32> {
-    vec1.iter().map(|el| el * k).collect()
+pub fn veckmul<T: Float>(vec1: &[T], k: T) -> Vec<T> {
+    vec1.iter().map(|el| *el * k).collect()
 }
 
 // // Sum all elements in a vector
-pub fn vecsum(vec: &[f32]) -> f32 {
+pub fn vecsum<'a, T>(vec: &'a[T]) -> T 
+    where T: Float + std::iter::Sum<&'a T> {
     vec.iter().sum()
 }
 
