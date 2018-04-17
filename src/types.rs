@@ -144,10 +144,7 @@ impl str::FromStr for TMeta {
 
     fn from_str(s: &str) -> Result<TMeta, Self::Err> {
         // Remove start of line with #META or #CTE_
-        let items: Vec<&str> = s.trim()[5..]
-            .splitn(2, ':')
-            .map(|v| v.trim())
-            .collect();
+        let items: Vec<&str> = s.trim()[5..].splitn(2, ':').map(|v| v.trim()).collect();
         if items.len() == 2 {
             let key = items[0].to_string();
             let value = items[1].to_string();
@@ -199,10 +196,7 @@ impl str::FromStr for TComponent {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<TComponent, Self::Err> {
-        let items: Vec<&str> = s.trim()
-            .splitn(2, '#')
-            .map(|v| v.trim())
-            .collect();
+        let items: Vec<&str> = s.trim().splitn(2, '#').map(|v| v.trim()).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(|v| v.trim()).collect();
         if items.len() < 4 {
@@ -264,10 +258,7 @@ impl str::FromStr for TFactor {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<TFactor, Self::Err> {
-        let items: Vec<&str> = s.trim()
-            .splitn(2, '#')
-            .map(|v| v.trim())
-            .collect();
+        let items: Vec<&str> = s.trim().splitn(2, '#').map(|v| v.trim()).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(|v| v.trim()).collect();
         if items.len() < 6 {
