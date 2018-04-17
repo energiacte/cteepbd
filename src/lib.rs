@@ -31,6 +31,8 @@ extern crate failure;
 #[macro_use]
 extern crate maplit;
 
+extern crate num;
+
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;

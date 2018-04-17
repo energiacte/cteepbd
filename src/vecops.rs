@@ -26,15 +26,23 @@
 // Vector utilities
 // -----------------------------------------------------------------------------------
 
+use std::ops::Add;
+use num::Zero;
+
 //export const zip = (...rows: any[]): any[] => [...rows[0]].map((_, c) => rows.map(row => row[c]));
 
 // Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
-pub fn veclistsum(veclist: &[Vec<f32>]) -> Vec<f32> {
+pub fn veclistsum<T>(veclist: &[Vec<T>]) -> Vec<T>
+where
+    T: Zero + Add<Output = T> + Copy + Clone,
+{
     let maxlen: usize = veclist.iter().map(|lst| lst.len()).max().unwrap_or(0_usize);
-    veclist.iter().fold(vec![0.0], |acc, ref x| {
+    veclist.iter().fold(vec![Zero::zero()], |acc, ref x| {
         (0..maxlen)
-            .map(|idx| acc.get(idx).unwrap_or(&0.0) + x.get(idx).unwrap_or(&0.0))
-            .collect::<Vec<_>>()
+            .map(|idx| {
+                *acc.get(idx).unwrap_or(&Zero::zero()) + *x.get(idx).unwrap_or(&Zero::zero())
+            })
+            .collect()
     })
 }
 
