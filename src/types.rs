@@ -29,7 +29,7 @@ use failure::Error;
 // Common (carriers + weighting factors)
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Display, EnumString)]
+#[derive(Debug, PartialEq, Display, EnumString)]
 pub enum carrierType {
     ELECTRICIDAD,
     MEDIOAMBIENTE,
@@ -46,14 +46,14 @@ pub enum carrierType {
 // Energy Components
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Display, EnumString)]
+#[derive(Debug, PartialEq, Display, EnumString)]
 pub enum ctypeType {
     PRODUCCION,
     CONSUMO,
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Display, EnumString)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Display, EnumString)]
 pub enum csubtypeType {
     INSITU,
     COGENERACION,
@@ -62,7 +62,7 @@ pub enum csubtypeType {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Display)]
+#[derive(Debug, PartialEq, Display)]
 pub enum serviceType {
     ACS,
     CAL,
@@ -100,7 +100,7 @@ impl str::FromStr for serviceType {
 // Weighting factors
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Display, EnumString)]
+#[derive(Debug, PartialEq, Display, EnumString)]
 pub enum sourceType {
     RED,
     INSITU,
@@ -108,7 +108,7 @@ pub enum sourceType {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Display, EnumString)]
+#[derive(Debug, PartialEq, Display, EnumString)]
 pub enum destType {
     input,
     to_grid,
@@ -116,7 +116,7 @@ pub enum destType {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Display, EnumString)]
+#[derive(Debug, PartialEq, Display, EnumString)]
 pub enum stepType {
     A,
     B,
