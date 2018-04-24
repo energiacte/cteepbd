@@ -129,8 +129,8 @@ pub enum stepType {
 //   - key is the metadata name
 //   - value is the metadata value
 pub struct TMeta {
-    key: String,
-    value: String,
+    pub key: String,
+    pub value: String,
 }
 
 impl fmt::Display for TMeta {
@@ -164,12 +164,12 @@ impl str::FromStr for TMeta {
 //   - values is a list of energy values, one for each timestep
 //   - comment is a comment string for the carrier
 pub struct TComponent {
-    carrier: carrierType,
-    ctype: ctypeType,
-    csubtype: csubtypeType,
-    service: serviceType,
-    values: Vec<f32>,
-    comment: String,
+    pub carrier: carrierType,
+    pub ctype: ctypeType,
+    pub csubtype: csubtypeType,
+    pub service: serviceType,
+    pub values: Vec<f32>,
+    pub comment: String,
 }
 
 impl fmt::Display for TComponent {
@@ -230,13 +230,13 @@ impl str::FromStr for TComponent {
 
 // Weighting Factor Struct
 pub struct TFactor {
-    carrier: carrierType,
-    source: sourceType,
-    dest: destType,
-    step: stepType,
-    ren: f32,
-    nren: f32,
-    comment: String,
+    pub carrier: carrierType,
+    pub source: sourceType,
+    pub dest: destType,
+    pub step: stepType,
+    pub ren: f32,
+    pub nren: f32,
+    pub comment: String,
 }
 
 impl fmt::Display for TFactor {
@@ -292,8 +292,8 @@ impl str::FromStr for TFactor {
 // ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
 // ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
 pub struct TComponents {
-    cmeta: Vec<TMeta>,
-    cdata: Vec<TComponent>,
+    pub cmeta: Vec<TMeta>,
+    pub cdata: Vec<TComponent>,
 }
 
 impl fmt::Display for TComponents {
@@ -335,8 +335,8 @@ impl str::FromStr for TComponents {
 
 // List of Weighting Factors with Metadata
 pub struct TFactors {
-    wmeta: Vec<TMeta>,
-    wdata: Vec<TFactor>,
+    pub wmeta: Vec<TMeta>,
+    pub wdata: Vec<TFactor>,
 }
 
 impl fmt::Display for TFactors {
@@ -380,13 +380,13 @@ impl str::FromStr for TFactors {
 //TODO: implement Display to serialize and FromStr to deserialize? JSON?
 #[allow(dead_code)]
 pub struct TBalance {
-    components: TComponents,
-    wfactors: TFactors,
-    k_exp: f32,
-    arearef: f32,
-    balance_cr_i: String, // TODO: era any
-    balance: String,      // TODO: era any
-    balance_m2: String,   // TODO: era any
+    pub components: TComponents,
+    pub wfactors: TFactors,
+    pub k_exp: f32,
+    pub arearef: f32,
+    pub balance_cr_i: String, // TODO: era any
+    pub balance: String,      // TODO: era any
+    pub balance_m2: String,   // TODO: era any
 }
 
 #[cfg(test)]
