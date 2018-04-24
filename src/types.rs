@@ -130,6 +130,7 @@ pub enum stepType {
 // * objects of type 'META' represent metadata of components or weighting factors
 //   - key is the metadata name
 //   - value is the metadata value
+#[derive(Debug)]
 pub struct TMeta {
     pub key: String,
     pub value: String,
@@ -165,6 +166,7 @@ impl str::FromStr for TMeta {
 //     - the energy end use (EPB or NEPB) for delivered energy
 //   - values is a list of energy values, one for each timestep
 //   - comment is a comment string for the carrier
+#[derive(Debug)]
 pub struct TComponent {
     pub carrier: carrierType,
     pub ctype: ctypeType,
@@ -231,6 +233,7 @@ impl str::FromStr for TComponent {
 }
 
 // Weighting Factor Struct
+#[derive(Debug)]
 pub struct TFactor {
     pub carrier: carrierType,
     pub source: sourceType,
@@ -293,6 +296,7 @@ impl str::FromStr for TFactor {
 // #META CTE_AREAREF: 100.5
 // ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
 // ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
+#[derive(Debug)]
 pub struct TComponents {
     pub cmeta: Vec<TMeta>,
     pub cdata: Vec<TComponent>,
@@ -336,6 +340,7 @@ impl str::FromStr for TComponents {
 }
 
 // List of Weighting Factors with Metadata
+#[derive(Debug)]
 pub struct TFactors {
     pub wmeta: Vec<TMeta>,
     pub wdata: Vec<TFactor>,
@@ -381,6 +386,7 @@ impl str::FromStr for TFactors {
 // Results Struct for Output
 //TODO: implement Display to serialize and FromStr to deserialize? JSON?
 #[allow(dead_code)]
+#[derive(Debug)]
 pub struct TBalance {
     pub components: TComponents,
     pub wfactors: TFactors,
