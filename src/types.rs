@@ -22,9 +22,39 @@
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
 use std::fmt;
+use std::ops::{Add, Sub};
 use std::str;
 
 use failure::Error;
+
+// Energy pairs representing the renewable and non renewable fractions of an energy quantity
+#[derive(Debug, PartialEq, Default)]
+pub struct EnergyPair {
+    pub ren: f32,
+    pub nren: f32,
+}
+
+impl Add for EnergyPair {
+    type Output = EnergyPair;
+
+    fn add(self, other: EnergyPair) -> EnergyPair {
+        EnergyPair {ren: self.ren + other.ren, nren: self.nren + other.nren}
+    }
+}
+
+impl Sub for EnergyPair {
+    type Output = EnergyPair;
+
+    fn sub(self, other: EnergyPair) -> EnergyPair {
+        EnergyPair {ren: self.ren - other.ren, nren: self.nren - other.nren}
+    }
+}
+
+impl fmt::Display for EnergyPair {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{ ren: {:.3}, nren: {:.3} }}", self.ren, self.nren)
+    }
+}
 
 // Common (carriers + weighting factors)
 
@@ -400,6 +430,13 @@ pub struct TBalance {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn energypair() {
+        assert_eq!(EnergyPair {ren: 3.0, nren: 3.0}, EnergyPair {ren: 1.0, nren: 0.0} + EnergyPair {ren: 2.0, nren: 3.0});
+        assert_eq!(EnergyPair {ren: -1.0, nren: -3.0}, EnergyPair {ren: 1.0, nren: 0.0} - EnergyPair {ren: 2.0, nren: 3.0});
+        assert_eq!(format!("{}", EnergyPair {ren: 1.0, nren: 0.0}), "{ ren: 1.000, nren: 0.000 }");
+    }
 
     #[test]
     fn tmeta() {
