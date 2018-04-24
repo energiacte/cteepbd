@@ -32,7 +32,7 @@ use num::{Float, Num, Zero};
 //export const zip = (...rows: any[]): any[] => [...rows[0]].map((_, c) => rows.map(row => row[c]));
 
 // Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
-pub fn veclistsum<T>(veclist: &[Vec<T>]) -> Vec<T>
+pub fn veclistsum<T>(veclist: &[&Vec<T>]) -> Vec<T>
 where
     T: Num + Copy + Clone,
 {
@@ -97,12 +97,10 @@ mod tests {
 
     #[test]
     fn vecops_veclistsum() {
-        let myvec = vec![
-            vec![1.0, 1.0, 1.0],
-            vec![2.0, 2.0, 2.0],
-            vec![3.0, 3.0, 3.0],
-        ];
-        assert_eq!(vec![6.0, 6.0, 6.0], veclistsum(&myvec));
+        assert_eq!(
+            vec![6.0, 6.0, 6.0],
+            veclistsum(&[&vec![1.0, 1.0, 1.0], &vec![2.0, 2.0, 2.0], &vec![3.0, 3.0, 3.0]])
+        );
     }
 
     #[test]
