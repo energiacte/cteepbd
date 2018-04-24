@@ -41,6 +41,8 @@ pub enum carrierType {
     GASNATURAL,
     GASOLEO,
     GLP,
+    RED1,
+    RED2,
 }
 
 // Energy Components
