@@ -84,8 +84,10 @@ pub fn veckmul<T: Float>(vec1: &[T], k: T) -> Vec<T> {
 }
 
 // // Sum all elements in a vector
-pub fn vecsum<'a, T>(vec: &'a[T]) -> T 
-    where T: Float + std::iter::Sum<&'a T> {
+pub fn vecsum<'a, T>(vec: &'a [T]) -> T
+where
+    T: Float + std::iter::Sum<&'a T>,
+{
     vec.iter().sum()
 }
 
