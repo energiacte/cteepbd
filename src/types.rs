@@ -410,6 +410,12 @@ pub struct TFactor {
     pub comment: String,
 }
 
+impl TFactor {
+    pub fn factors(&self) -> RenNrenPair {
+        RenNrenPair { ren: self.ren, nren: self.nren }
+    }
+}
+
 impl fmt::Display for TFactor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let comment = if self.comment != "" {
