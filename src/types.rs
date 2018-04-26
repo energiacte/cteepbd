@@ -29,7 +29,7 @@ use std::str;
 use failure::Error;
 
 // Energy pairs representing renewable and non renewable energy quantities or factors
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct RenNrenPair {
     // Renewable energy or factor
     pub ren: f32,
@@ -196,7 +196,7 @@ impl<'a> Mul<&'a RenNrenPair> for f32 {
 // Common (carriers + weighting factors)
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Display, EnumString)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum carrierType {
     ELECTRICIDAD,
     MEDIOAMBIENTE,
@@ -215,14 +215,14 @@ pub enum carrierType {
 // Energy Components
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Display, EnumString)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum ctypeType {
     PRODUCCION,
     CONSUMO,
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Display, EnumString)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Display, EnumString)]
 pub enum csubtypeType {
     INSITU,
     COGENERACION,
@@ -231,7 +231,7 @@ pub enum csubtypeType {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Display)]
+#[derive(Debug, Copy, Clone, PartialEq, Display)]
 pub enum serviceType {
     ACS,
     CAL,
@@ -269,7 +269,7 @@ impl str::FromStr for serviceType {
 // Weighting factors
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Display, EnumString)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum sourceType {
     RED,
     INSITU,
@@ -277,7 +277,7 @@ pub enum sourceType {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Display, EnumString)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum destType {
     input,
     to_grid,
@@ -285,7 +285,7 @@ pub enum destType {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Display, EnumString)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum stepType {
     A,
     B,
@@ -297,7 +297,7 @@ pub enum stepType {
 // * objects of type 'META' represent metadata of components or weighting factors
 //   - key is the metadata name
 //   - value is the metadata value
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TMeta {
     pub key: String,
     pub value: String,
@@ -333,7 +333,7 @@ impl str::FromStr for TMeta {
 //     - the energy end use (EPB or NEPB) for delivered energy
 //   - values is a list of energy values, one for each timestep
 //   - comment is a comment string for the carrier
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TComponent {
     pub carrier: carrierType,
     pub ctype: ctypeType,
@@ -400,7 +400,7 @@ impl str::FromStr for TComponent {
 }
 
 // Weighting Factor Struct
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TFactor {
     pub carrier: carrierType,
     pub source: sourceType,
@@ -469,7 +469,7 @@ impl str::FromStr for TFactor {
 // #META CTE_AREAREF: 100.5
 // ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
 // ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TComponents {
     pub cmeta: Vec<TMeta>,
     pub cdata: Vec<TComponent>,
@@ -513,7 +513,7 @@ impl str::FromStr for TComponents {
 }
 
 // List of Weighting Factors with Metadata
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TFactors {
     pub wmeta: Vec<TMeta>,
     pub wdata: Vec<TFactor>,
