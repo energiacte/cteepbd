@@ -22,39 +22,175 @@
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
 use std::fmt;
-use std::ops::{Add, Sub};
+use std::ops::{Add, Mul, Sub};
 use std::str;
 
 use failure::Error;
 
-// Energy pairs representing the renewable and non renewable fractions of an energy quantity
+// Energy pairs representing renewable and non renewable energy quantities or factors
 #[derive(Debug, PartialEq, Default)]
-pub struct EnergyPair {
+pub struct RenNrenPair {
+    // Renewable energy or factor
     pub ren: f32,
+    // Non Renewable energy or factor
     pub nren: f32,
 }
 
-impl Add for EnergyPair {
-    type Output = EnergyPair;
+impl RenNrenPair {
+    // Default constructor -> { ren: 0.0, nren: 0.0 }
+    pub fn new() -> Self {
+        Default::default()
+    }
 
-    fn add(self, other: EnergyPair) -> EnergyPair {
-        EnergyPair {ren: self.ren + other.ren, nren: self.nren + other.nren}
+    // Total renewable + non renewable
+    pub fn tot(&self) -> f32 {
+        self.ren + self.nren
+    }
+
+    // Renewable energy ratio
+    pub fn rer(&self) -> f32 {
+        let tot = self.tot();
+        if tot == 0.0 {
+            0.0
+        } else {
+            self.ren / tot
+        }
     }
 }
 
-impl Sub for EnergyPair {
-    type Output = EnergyPair;
-
-    fn sub(self, other: EnergyPair) -> EnergyPair {
-        EnergyPair {ren: self.ren - other.ren, nren: self.nren - other.nren}
-    }
-}
-
-impl fmt::Display for EnergyPair {
+impl fmt::Display for RenNrenPair {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{ ren: {:.3}, nren: {:.3} }}", self.ren, self.nren)
     }
 }
+
+// The insane amount of boilerplate for ops would be simplified with the implementation
+// of the Eye of Sauron in Rustc:
+// - https://github.com/arielb1/rfcs/blob/df42b1df220d27876976b54dc93cdcb0b592cad3/text/0000-eye-of-sauron.md
+// - https://github.com/rust-lang/rust/issues/44762
+
+// Implement addition
+impl Add for RenNrenPair {
+    type Output = RenNrenPair;
+
+    fn add(self, other: RenNrenPair) -> RenNrenPair {
+        RenNrenPair {
+            ren: self.ren + other.ren,
+            nren: self.nren + other.nren,
+        }
+    }
+}
+
+impl<'a> Add for &'a RenNrenPair {
+    type Output = RenNrenPair;
+
+    fn add(self, other: &RenNrenPair) -> RenNrenPair {
+        RenNrenPair {
+            ren: self.ren + other.ren,
+            nren: self.nren + other.nren,
+        }
+    }
+}
+
+// Implement substraction
+impl Sub for RenNrenPair {
+    type Output = RenNrenPair;
+
+    fn sub(self, other: RenNrenPair) -> RenNrenPair {
+        RenNrenPair {
+            ren: self.ren - other.ren,
+            nren: self.nren - other.nren,
+        }
+    }
+}
+
+impl<'a> Sub for &'a RenNrenPair {
+    type Output = RenNrenPair;
+
+    fn sub(self, other: &RenNrenPair) -> RenNrenPair {
+        RenNrenPair {
+            ren: self.ren - other.ren,
+            nren: self.nren - other.nren,
+        }
+    }
+}
+
+// Implement multiplication by a f32
+// rennren * f32
+impl Mul<f32> for RenNrenPair {
+    type Output = RenNrenPair;
+
+    fn mul(self, rhs: f32) -> RenNrenPair {
+        RenNrenPair {
+            ren: self.ren * rhs,
+            nren: self.nren * rhs,
+        }
+    }
+}
+
+// rennren * &f32
+impl<'a> Mul<&'a f32> for RenNrenPair {
+    type Output = RenNrenPair;
+
+    fn mul(self, rhs: &f32) -> RenNrenPair {
+        RenNrenPair {
+            ren: self.ren * rhs,
+            nren: self.nren * rhs,
+        }
+    }
+}
+
+// &rennren * f32
+impl<'a> Mul<f32> for &'a RenNrenPair {
+    type Output = RenNrenPair;
+
+    fn mul(self, rhs: f32) -> RenNrenPair {
+        RenNrenPair {
+            ren: self.ren * rhs,
+            nren: self.nren * rhs,
+        }
+    }
+}
+
+// TODO: &rennren * &f32 -> impl<'a, 'b> Mul<&'b f32> for &'a RenNRenPair
+
+// f32 * rennren
+impl Mul<RenNrenPair> for f32 {
+    type Output = RenNrenPair;
+
+    fn mul(self, rhs: RenNrenPair) -> RenNrenPair {
+        RenNrenPair {
+            ren: self * rhs.ren,
+            nren: self * rhs.nren,
+        }
+    }
+}
+
+// &f32 * rennren
+impl<'a> Mul<RenNrenPair> for &'a f32 {
+    type Output = RenNrenPair;
+
+    fn mul(self, rhs: RenNrenPair) -> RenNrenPair {
+        RenNrenPair {
+            ren: self * rhs.ren,
+            nren: self * rhs.nren,
+        }
+    }
+}
+
+// f32 * &rennren
+impl<'a> Mul<&'a RenNrenPair> for f32 {
+    type Output = RenNrenPair;
+
+    fn mul(self, rhs: &RenNrenPair) -> RenNrenPair {
+        RenNrenPair {
+            ren: self * rhs.ren,
+            nren: self * rhs.nren,
+        }
+    }
+}
+
+// TODO: &f32 * &rennren -> impl<'a, 'b> Mul<&'b RenNRenPair> for &'a f32
 
 // Common (carriers + weighting factors)
 
@@ -432,10 +568,53 @@ mod tests {
     use super::*;
 
     #[test]
-    fn energypair() {
-        assert_eq!(EnergyPair {ren: 3.0, nren: 3.0}, EnergyPair {ren: 1.0, nren: 0.0} + EnergyPair {ren: 2.0, nren: 3.0});
-        assert_eq!(EnergyPair {ren: -1.0, nren: -3.0}, EnergyPair {ren: 1.0, nren: 0.0} - EnergyPair {ren: 2.0, nren: 3.0});
-        assert_eq!(format!("{}", EnergyPair {ren: 1.0, nren: 0.0}), "{ ren: 1.000, nren: 0.000 }");
+    fn RenNrenPair() {
+        assert_eq!(
+            RenNrenPair {
+                ren: 3.0,
+                nren: 3.0,
+            },
+            RenNrenPair {
+                ren: 1.0,
+                nren: 0.0,
+            } + RenNrenPair {
+                ren: 2.0,
+                nren: 3.0,
+            }
+        );
+        assert_eq!(
+            RenNrenPair {
+                ren: -1.0,
+                nren: -3.0,
+            },
+            RenNrenPair {
+                ren: 1.0,
+                nren: 0.0,
+            } - RenNrenPair {
+                ren: 2.0,
+                nren: 3.0,
+            }
+        );
+        assert_eq!(
+            format!(
+                "{}",
+                RenNrenPair {
+                    ren: 1.0,
+                    nren: 0.0,
+                }
+            ),
+            "{ ren: 1.000, nren: 0.000 }"
+        );
+        assert_eq!(
+            RenNrenPair {
+                ren: 2.2,
+                nren: 4.4,
+            },
+            2.0 * RenNrenPair {
+                ren: 1.1,
+                nren: 2.2,
+            }
+        );
     }
 
     #[test]
