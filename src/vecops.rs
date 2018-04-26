@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 Ministerio de Fomento
+// Copyright (c) 2018 Ministerio de Fomento
 //                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -77,6 +77,8 @@ pub fn vecvecmul<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
         .map(|(ii, el)| *el * *vec2.get(ii).unwrap_or(&Zero::zero()))
         .collect()
 }
+
+// TODO: Elementwise division res[i] = vec1[i] / vec2[i] for each vec1[i] != 0 if vec2 != 0
 
 // // Multiply vector by scalar
 pub fn veckmul<T: Float>(vec1: &[T], k: T) -> Vec<T> {
