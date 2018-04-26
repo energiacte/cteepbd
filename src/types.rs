@@ -21,6 +21,7 @@
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
+use std::collections::HashMap;
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
 use std::str;
@@ -557,14 +558,51 @@ impl str::FromStr for TFactors {
 
 // Results Struct for Output
 //TODO: implement Display to serialize and FromStr to deserialize? JSON?
+
+// Type to hold results of energy balance by carrier
+#[derive(Debug, Clone)]
+pub struct CarrierBalance {
+    pub used_EPB: Vec<f32>,
+    pub used_nEPB: Vec<f32>,
+    pub produced_bygen: HashMap<csubtypeType, Vec<f32>>, // es csubtypeType pero es COGENERACION o INSITU (sourcetypes != RED)
+    pub produced_bygen_an: HashMap<csubtypeType, f32>,
+    pub produced: Vec<f32>,
+    pub produced_an: f32,
+    pub f_match: Vec<f32>, // load matching factor
+    // E_pr_cr_used_EPus_t <- produced_used_EPus
+    // E_pr_cr_i_used_EPus_t <- produced_used_EPus_bygen
+    pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
+    pub exported_an: f32,
+    pub exported_bygen: HashMap<csubtypeType, Vec<f32>>, // cambiado origin -> gen
+    pub exported_bygen_an: HashMap<csubtypeType, f32>, // cambiado origin -> gen
+    pub exported_grid: Vec<f32>,
+    pub exported_grid_an: f32,
+    pub exported_nEPB: Vec<f32>,
+    pub exported_nEPB_an: f32,
+    pub delivered_grid: Vec<f32>,
+    pub delivered_grid_an: f32,
+    // Weighted energy: { ren, nren }
+    pub we_delivered_grid_an: RenNrenPair,
+    pub we_delivered_prod_an: RenNrenPair,
+    pub we_delivered_an: RenNrenPair,
+    pub we_exported_an_A: RenNrenPair,
+    pub we_exported_nEPB_an_AB: RenNrenPair,
+    pub we_exported_grid_an_AB: RenNrenPair,
+    pub we_exported_an_AB: RenNrenPair,
+    pub we_exported_an: RenNrenPair,
+    pub we_an_A: RenNrenPair,
+    pub we_an: RenNrenPair,
+}
+
+// Type to hold data and results of energy balance
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TBalance {
     pub components: TComponents,
     pub wfactors: TFactors,
     pub k_exp: f32,
     pub arearef: f32,
-    pub balance_cr_i: String, // TODO: era any
+    pub balance_cr_i: Vec<CarrierBalance>,
     pub balance: String,      // TODO: era any
     pub balance_m2: String,   // TODO: era any
 }
