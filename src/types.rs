@@ -30,14 +30,14 @@ use failure::Error;
 
 // Energy pairs representing renewable and non renewable energy quantities or factors
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
-pub struct RenNrenPair {
+pub struct RenNren {
     // Renewable energy or factor
     pub ren: f32,
     // Non Renewable energy or factor
     pub nren: f32,
 }
 
-impl RenNrenPair {
+impl RenNren {
     // Default constructor -> { ren: 0.0, nren: 0.0 }
     pub fn new() -> Self {
         Default::default()
@@ -59,7 +59,7 @@ impl RenNrenPair {
     }
 }
 
-impl fmt::Display for RenNrenPair {
+impl fmt::Display for RenNren {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{ ren: {:.3}, nren: {:.3} }}", self.ren, self.nren)
     }
@@ -71,22 +71,22 @@ impl fmt::Display for RenNrenPair {
 // - https://github.com/rust-lang/rust/issues/44762
 
 // Implement addition
-impl Add for RenNrenPair {
-    type Output = RenNrenPair;
+impl Add for RenNren {
+    type Output = RenNren;
 
-    fn add(self, other: RenNrenPair) -> RenNrenPair {
-        RenNrenPair {
+    fn add(self, other: RenNren) -> RenNren {
+        RenNren {
             ren: self.ren + other.ren,
             nren: self.nren + other.nren,
         }
     }
 }
 
-impl<'a> Add for &'a RenNrenPair {
-    type Output = RenNrenPair;
+impl<'a> Add for &'a RenNren {
+    type Output = RenNren;
 
-    fn add(self, other: &RenNrenPair) -> RenNrenPair {
-        RenNrenPair {
+    fn add(self, other: &RenNren) -> RenNren {
+        RenNren {
             ren: self.ren + other.ren,
             nren: self.nren + other.nren,
         }
@@ -94,22 +94,22 @@ impl<'a> Add for &'a RenNrenPair {
 }
 
 // Implement substraction
-impl Sub for RenNrenPair {
-    type Output = RenNrenPair;
+impl Sub for RenNren {
+    type Output = RenNren;
 
-    fn sub(self, other: RenNrenPair) -> RenNrenPair {
-        RenNrenPair {
+    fn sub(self, other: RenNren) -> RenNren {
+        RenNren {
             ren: self.ren - other.ren,
             nren: self.nren - other.nren,
         }
     }
 }
 
-impl<'a> Sub for &'a RenNrenPair {
-    type Output = RenNrenPair;
+impl<'a> Sub for &'a RenNren {
+    type Output = RenNren;
 
-    fn sub(self, other: &RenNrenPair) -> RenNrenPair {
-        RenNrenPair {
+    fn sub(self, other: &RenNren) -> RenNren {
+        RenNren {
             ren: self.ren - other.ren,
             nren: self.nren - other.nren,
         }
@@ -118,11 +118,11 @@ impl<'a> Sub for &'a RenNrenPair {
 
 // Implement multiplication by a f32
 // rennren * f32
-impl Mul<f32> for RenNrenPair {
-    type Output = RenNrenPair;
+impl Mul<f32> for RenNren {
+    type Output = RenNren;
 
-    fn mul(self, rhs: f32) -> RenNrenPair {
-        RenNrenPair {
+    fn mul(self, rhs: f32) -> RenNren {
+        RenNren {
             ren: self.ren * rhs,
             nren: self.nren * rhs,
         }
@@ -130,11 +130,11 @@ impl Mul<f32> for RenNrenPair {
 }
 
 // rennren * &f32
-impl<'a> Mul<&'a f32> for RenNrenPair {
-    type Output = RenNrenPair;
+impl<'a> Mul<&'a f32> for RenNren {
+    type Output = RenNren;
 
-    fn mul(self, rhs: &f32) -> RenNrenPair {
-        RenNrenPair {
+    fn mul(self, rhs: &f32) -> RenNren {
+        RenNren {
             ren: self.ren * rhs,
             nren: self.nren * rhs,
         }
@@ -142,11 +142,11 @@ impl<'a> Mul<&'a f32> for RenNrenPair {
 }
 
 // &rennren * f32
-impl<'a> Mul<f32> for &'a RenNrenPair {
-    type Output = RenNrenPair;
+impl<'a> Mul<f32> for &'a RenNren {
+    type Output = RenNren;
 
-    fn mul(self, rhs: f32) -> RenNrenPair {
-        RenNrenPair {
+    fn mul(self, rhs: f32) -> RenNren {
+        RenNren {
             ren: self.ren * rhs,
             nren: self.nren * rhs,
         }
@@ -156,11 +156,11 @@ impl<'a> Mul<f32> for &'a RenNrenPair {
 // TODO: &rennren * &f32 -> impl<'a, 'b> Mul<&'b f32> for &'a RenNRenPair
 
 // f32 * rennren
-impl Mul<RenNrenPair> for f32 {
-    type Output = RenNrenPair;
+impl Mul<RenNren> for f32 {
+    type Output = RenNren;
 
-    fn mul(self, rhs: RenNrenPair) -> RenNrenPair {
-        RenNrenPair {
+    fn mul(self, rhs: RenNren) -> RenNren {
+        RenNren {
             ren: self * rhs.ren,
             nren: self * rhs.nren,
         }
@@ -168,11 +168,11 @@ impl Mul<RenNrenPair> for f32 {
 }
 
 // &f32 * rennren
-impl<'a> Mul<RenNrenPair> for &'a f32 {
-    type Output = RenNrenPair;
+impl<'a> Mul<RenNren> for &'a f32 {
+    type Output = RenNren;
 
-    fn mul(self, rhs: RenNrenPair) -> RenNrenPair {
-        RenNrenPair {
+    fn mul(self, rhs: RenNren) -> RenNren {
+        RenNren {
             ren: self * rhs.ren,
             nren: self * rhs.nren,
         }
@@ -180,11 +180,11 @@ impl<'a> Mul<RenNrenPair> for &'a f32 {
 }
 
 // f32 * &rennren
-impl<'a> Mul<&'a RenNrenPair> for f32 {
-    type Output = RenNrenPair;
+impl<'a> Mul<&'a RenNren> for f32 {
+    type Output = RenNren;
 
-    fn mul(self, rhs: &RenNrenPair) -> RenNrenPair {
-        RenNrenPair {
+    fn mul(self, rhs: &RenNren) -> RenNren {
+        RenNren {
             ren: self * rhs.ren,
             nren: self * rhs.nren,
         }
@@ -412,8 +412,8 @@ pub struct TFactor {
 }
 
 impl TFactor {
-    pub fn factors(&self) -> RenNrenPair {
-        RenNrenPair { ren: self.ren, nren: self.nren }
+    pub fn factors(&self) -> RenNren {
+        RenNren { ren: self.ren, nren: self.nren }
     }
 }
 
@@ -582,16 +582,16 @@ pub struct CarrierBalance {
     pub delivered_grid: Vec<f32>,
     pub delivered_grid_an: f32,
     // Weighted energy: { ren, nren }
-    pub we_delivered_grid_an: RenNrenPair,
-    pub we_delivered_prod_an: RenNrenPair,
-    pub we_delivered_an: RenNrenPair,
-    pub we_exported_an_A: RenNrenPair,
-    pub we_exported_nEPB_an_AB: RenNrenPair,
-    pub we_exported_grid_an_AB: RenNrenPair,
-    pub we_exported_an_AB: RenNrenPair,
-    pub we_exported_an: RenNrenPair,
-    pub we_an_A: RenNrenPair,
-    pub we_an: RenNrenPair,
+    pub we_delivered_grid_an: RenNren,
+    pub we_delivered_prod_an: RenNren,
+    pub we_delivered_an: RenNren,
+    pub we_exported_an_A: RenNren,
+    pub we_exported_nEPB_an_AB: RenNren,
+    pub we_exported_grid_an_AB: RenNren,
+    pub we_exported_an_AB: RenNren,
+    pub we_exported_an: RenNren,
+    pub we_an_A: RenNren,
+    pub we_an: RenNren,
 }
 
 // Type to hold data and results of energy balance
@@ -612,29 +612,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn RenNrenPair() {
+    fn RenNren() {
         assert_eq!(
-            RenNrenPair {
+            RenNren {
                 ren: 3.0,
                 nren: 3.0,
             },
-            RenNrenPair {
+            RenNren {
                 ren: 1.0,
                 nren: 0.0,
-            } + RenNrenPair {
+            } + RenNren {
                 ren: 2.0,
                 nren: 3.0,
             }
         );
         assert_eq!(
-            RenNrenPair {
+            RenNren {
                 ren: -1.0,
                 nren: -3.0,
             },
-            RenNrenPair {
+            RenNren {
                 ren: 1.0,
                 nren: 0.0,
-            } - RenNrenPair {
+            } - RenNren {
                 ren: 2.0,
                 nren: 3.0,
             }
@@ -642,7 +642,7 @@ mod tests {
         assert_eq!(
             format!(
                 "{}",
-                RenNrenPair {
+                RenNren {
                     ren: 1.0,
                     nren: 0.0,
                 }
@@ -650,11 +650,11 @@ mod tests {
             "{ ren: 1.000, nren: 0.000 }"
         );
         assert_eq!(
-            RenNrenPair {
+            RenNren {
                 ren: 2.2,
                 nren: 4.4,
             },
-            2.0 * RenNrenPair {
+            2.0 * RenNren {
                 ren: 1.1,
                 nren: 2.2,
             }
