@@ -21,6 +21,7 @@
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
+// TODO: - restructure types so CSubtype::INSITU and CSubtype::COGENERACION are a subtype of ctype::PRODUCCION
 use std::collections::HashMap;
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
@@ -197,7 +198,7 @@ impl<'a> Mul<&'a RenNren> for f32 {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
-pub enum carrierType {
+pub enum Carrier {
     ELECTRICIDAD,
     MEDIOAMBIENTE,
     BIOCARBURANTE,
@@ -216,14 +217,14 @@ pub enum carrierType {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
-pub enum ctypeType {
+pub enum CType {
     PRODUCCION,
     CONSUMO,
 }
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Display, EnumString)]
-pub enum csubtypeType {
+pub enum CSubtype {
     INSITU,
     COGENERACION,
     EPB,
@@ -232,7 +233,7 @@ pub enum csubtypeType {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display)]
-pub enum serviceType {
+pub enum Service {
     ACS,
     CAL,
     REF,
@@ -243,25 +244,25 @@ pub enum serviceType {
     NDEF,
 }
 
-impl str::FromStr for serviceType {
+impl str::FromStr for Service {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<serviceType, Self::Err> {
+    fn from_str(s: &str) -> Result<Service, Self::Err> {
         match s {
-            "ACS" => Ok(serviceType::ACS),
-            "WATERSYSTEMS" => Ok(serviceType::ACS),
-            "CAL" => Ok(serviceType::CAL),
-            "HEATING" => Ok(serviceType::CAL),
-            "REF" => Ok(serviceType::REF),
-            "COOLING" => Ok(serviceType::REF),
-            "VEN" => Ok(serviceType::VEN),
-            "FANS" => Ok(serviceType::VEN),
-            "ILU" => Ok(serviceType::ACS),
-            "HU" => Ok(serviceType::ACS),
-            "DHU" => Ok(serviceType::ACS),
-            "" => Ok(serviceType::NDEF),
-            "NDEF" => Ok(serviceType::NDEF),
-            _ => Err(format_err!("serviceType not found")),
+            "ACS" => Ok(Service::ACS),
+            "WATERSYSTEMS" => Ok(Service::ACS),
+            "CAL" => Ok(Service::CAL),
+            "HEATING" => Ok(Service::CAL),
+            "REF" => Ok(Service::REF),
+            "COOLING" => Ok(Service::REF),
+            "VEN" => Ok(Service::VEN),
+            "FANS" => Ok(Service::VEN),
+            "ILU" => Ok(Service::ACS),
+            "HU" => Ok(Service::ACS),
+            "DHU" => Ok(Service::ACS),
+            "" => Ok(Service::NDEF),
+            "NDEF" => Ok(Service::NDEF),
+            _ => Err(format_err!("Service not found")),
         }
     }
 }
@@ -270,7 +271,7 @@ impl str::FromStr for serviceType {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
-pub enum sourceType {
+pub enum Source {
     RED,
     INSITU,
     COGENERACION,
@@ -278,7 +279,7 @@ pub enum sourceType {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
-pub enum destType {
+pub enum Dest {
     input,
     to_grid,
     to_nEPB,
@@ -286,7 +287,7 @@ pub enum destType {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
-pub enum stepType {
+pub enum Step {
     A,
     B,
 }
@@ -335,10 +336,10 @@ impl str::FromStr for TMeta {
 //   - comment is a comment string for the carrier
 #[derive(Debug, Clone)]
 pub struct TComponent {
-    pub carrier: carrierType,
-    pub ctype: ctypeType,
-    pub csubtype: csubtypeType,
-    pub service: serviceType,
+    pub carrier: Carrier,
+    pub ctype: CType,
+    pub csubtype: CSubtype,
+    pub service: Service,
     pub values: Vec<f32>,
     pub comment: String,
 }
@@ -375,14 +376,14 @@ impl str::FromStr for TComponent {
                 "Couldn't parse Component (TComponent) from string"
             ));
         };
-        let carrier: carrierType = items[0].parse()?;
-        let ctype: ctypeType = items[1].parse()?;
-        let csubtype: csubtypeType = items[2].parse()?;
+        let carrier: Carrier = items[0].parse()?;
+        let ctype: CType = items[1].parse()?;
+        let csubtype: CSubtype = items[2].parse()?;
         //This accounts for the legacy version, which may not have a service type
-        let maybeservice: Result<serviceType, _> = items[3].parse();
+        let maybeservice: Result<Service, _> = items[3].parse();
         let (valuesidx, service) = match maybeservice {
             Ok(s) => (4, s),
-            Err(_) => (3, serviceType::NDEF),
+            Err(_) => (3, Service::NDEF),
         };
         let values = items[valuesidx..]
             .iter()
@@ -402,10 +403,10 @@ impl str::FromStr for TComponent {
 // Weighting Factor Struct
 #[derive(Debug, Clone)]
 pub struct TFactor {
-    pub carrier: carrierType,
-    pub source: sourceType,
-    pub dest: destType,
-    pub step: stepType,
+    pub carrier: Carrier,
+    pub source: Source,
+    pub dest: Dest,
+    pub step: Step,
     pub ren: f32,
     pub nren: f32,
     pub comment: String,
@@ -444,10 +445,10 @@ impl str::FromStr for TFactor {
                 "Couldn't parse Weighting Factor (TFactor) from string"
             ));
         };
-        let carrier: carrierType = items[0].parse()?;
-        let source: sourceType = items[1].parse()?;
-        let dest: destType = items[2].parse()?;
-        let step: stepType = items[3].parse()?;
+        let carrier: Carrier = items[0].parse()?;
+        let source: Source = items[1].parse()?;
+        let dest: Dest = items[2].parse()?;
+        let step: Step = items[3].parse()?;
         let ren: f32 = items[4].parse()?;
         let nren: f32 = items[5].parse()?;
         Ok(TFactor {
@@ -564,8 +565,8 @@ impl str::FromStr for TFactors {
 pub struct CarrierBalance {
     pub used_EPB: Vec<f32>,
     pub used_nEPB: Vec<f32>,
-    pub produced_bygen: HashMap<csubtypeType, Vec<f32>>, // es csubtypeType pero es COGENERACION o INSITU (sourcetypes != RED)
-    pub produced_bygen_an: HashMap<csubtypeType, f32>,
+    pub produced_bygen: HashMap<CSubtype, Vec<f32>>, // es CSubtype pero es COGENERACION o INSITU (sourcetypes != RED)
+    pub produced_bygen_an: HashMap<CSubtype, f32>,
     pub produced: Vec<f32>,
     pub produced_an: f32,
     pub f_match: Vec<f32>, // load matching factor
@@ -573,8 +574,8 @@ pub struct CarrierBalance {
     // E_pr_cr_i_used_EPus_t <- produced_used_EPus_bygen
     pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
     pub exported_an: f32,
-    pub exported_bygen: HashMap<csubtypeType, Vec<f32>>, // cambiado origin -> gen
-    pub exported_bygen_an: HashMap<csubtypeType, f32>, // cambiado origin -> gen
+    pub exported_bygen: HashMap<CSubtype, Vec<f32>>, // cambiado origin -> gen
+    pub exported_bygen_an: HashMap<CSubtype, f32>, // cambiado origin -> gen
     pub exported_grid: Vec<f32>,
     pub exported_grid_an: f32,
     pub exported_nEPB: Vec<f32>,
