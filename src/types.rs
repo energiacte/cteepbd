@@ -509,6 +509,15 @@ impl str::FromStr for TComponents {
         let cdata = datalines
             .map(|e| e.parse())
             .collect::<Result<Vec<TComponent>, _>>()?;
+        {
+            let cdata_lens: Vec<_> = cdata.iter().map(|e| e.values.len()).collect();
+            if &cdata_lens.iter().max().unwrap() != &cdata_lens.iter().min().unwrap() {
+                return Err(format_err!(
+                    "Energy components have different number of values: {:?}",
+                    cdata_lens
+                ));
+            }
+        }
         Ok(TComponents { cmeta, cdata })
     }
 }
