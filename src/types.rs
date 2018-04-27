@@ -414,7 +414,10 @@ pub struct TFactor {
 
 impl TFactor {
     pub fn factors(&self) -> RenNren {
-        RenNren { ren: self.ren, nren: self.nren }
+        RenNren {
+            ren: self.ren,
+            nren: self.nren,
+        }
     }
 }
 
