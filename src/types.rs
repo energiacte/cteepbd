@@ -197,7 +197,7 @@ impl<'a> Mul<&'a RenNren> for f32 {
 // Common (carriers + weighting factors)
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString)]
 pub enum Carrier {
     ELECTRICIDAD,
     MEDIOAMBIENTE,
