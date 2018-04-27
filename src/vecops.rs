@@ -101,7 +101,11 @@ mod tests {
     fn vecops_veclistsum() {
         assert_eq!(
             vec![6.0, 6.0, 6.0],
-            veclistsum(&[&vec![1.0, 1.0, 1.0], &vec![2.0, 2.0, 2.0], &vec![3.0, 3.0, 3.0]])
+            veclistsum(&[
+                &vec![1.0, 1.0, 1.0],
+                &vec![2.0, 2.0, 2.0],
+                &vec![3.0, 3.0, 3.0]
+            ])
         );
     }
 
