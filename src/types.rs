@@ -587,7 +587,7 @@ pub struct CarrierBalance {
     pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
     pub exported_an: f32,
     pub exported_bygen: HashMap<CSubtype, Vec<f32>>, // cambiado origin -> gen
-    pub exported_bygen_an: HashMap<CSubtype, f32>, // cambiado origin -> gen
+    pub exported_bygen_an: HashMap<CSubtype, f32>,   // cambiado origin -> gen
     pub exported_grid: Vec<f32>,
     pub exported_grid_an: f32,
     pub exported_nEPB: Vec<f32>,
@@ -607,6 +607,16 @@ pub struct CarrierBalance {
     pub we_an: RenNren,
 }
 
+// Type to hold global balance results, either in absolute value or by m2.
+#[derive(Debug, Copy, Clone, Default)]
+pub struct TTotalBalance {
+    pub A: RenNren,
+    pub B: RenNren,
+    pub we_del: RenNren,
+    pub we_exp_A: RenNren,
+    pub we_exp: RenNren,
+}
+
 // Type to hold data and results of energy balance
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -615,9 +625,9 @@ pub struct TBalance {
     pub wfactors: TFactors,
     pub k_exp: f32,
     pub arearef: f32,
-    pub balance_cr_i: Vec<CarrierBalance>,
-    pub balance: String,      // TODO: era any
-    pub balance_m2: String,   // TODO: era any
+    pub balance_cr_i: HashMap<Carrier, CarrierBalance>,
+    pub balance: TTotalBalance,
+    pub balance_m2: TTotalBalance,
 }
 
 #[cfg(test)]
