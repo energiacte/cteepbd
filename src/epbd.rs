@@ -473,10 +473,11 @@ pub fn energy_performance(
     k_exp: f32,
     arearef: f32,
 ) -> Result<TBalance, Error> {
-    // TODO:
-    if arearef < 1e-3 {
-        bail!("Reference area can't be zero or almost zero");
-    }
+    ensure!(
+        arearef > 1e-3,
+        "Reference area can't be zero or almost zero and found {}",
+        arearef
+    );
 
     let carriers = components.cdata.clone();
     let fps = wfactors.wdata.clone();
