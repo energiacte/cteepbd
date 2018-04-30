@@ -51,6 +51,47 @@ use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecve
 // Energy calculation functions
 // --------------------------------------------------------------------
 
+// /////////////// Aux functions for weighting factor selection //////////////////
+
+// Weighting factor for step 'step' of energy exported to 'dest' uses for the given 'source'
+fn fp_src<'a>(
+    fp_cr: &'a [TFactor],
+    source: Source,
+    dest: Dest,
+    step: Step,
+) -> Result<&'a TFactor, Error> {
+    fp_cr
+        .iter()
+        .find(|fp| fp.dest == dest && fp.step == step && fp.source == source)
+        .ok_or_else(|| {
+            if fp_cr.is_empty() {
+                format_err!("No weighting factors found for carrier")
+            } else {
+                format_err!(
+                    "No weighting factor found for: '{}, {}, {}, {}'",
+                    fp_cr[0].carrier,
+                    source,
+                    dest,
+                    step
+                )
+            }
+        })
+}
+
+// Weighting factor for 'step' of energy to 'dest' uses from the 'gen' generator source
+fn fp_gen<'a>(
+    fp_cr: &'a [TFactor],
+    gen: &CSubtype,
+    dest: Dest,
+    step: Step,
+) -> Result<&'a TFactor, Error> {
+    match *gen {
+        CSubtype::INSITU => fp_src(fp_cr, Source::INSITU, dest, step),
+        CSubtype::COGENERACION => fp_src(fp_cr, Source::COGENERACION, dest, step),
+        _ => bail!("Unexpected generator {}", gen),
+    }
+}
+
 // ///////////// By Carrier timestep and annual computations ////////////
 
 // Calculate energy balance for carrier
@@ -62,27 +103,23 @@ use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecve
 //    This follows the ISO EN 52000-1 procedure for calculation of delivered,
 //    exported and weighted energy balance.
 //
-// TODO: Move filtering and selection of weighting factors to a fn to simplify code
 pub fn balance_cr(
     cr_i_list: &[TComponent],
     fp_cr: &[TFactor],
     k_exp: f32,
 ) -> Result<CarrierBalance, Error> {
-    let CURRENTCARRIER = &cr_i_list[0].carrier;
     let num_steps = cr_i_list[0].values.len(); // All carriers have the same timesteps (see FromStr for TComponents)
 
     // * Energy used by technical systems for EPB services, for each time step
     let E_EPus_cr_t = cr_i_list
         .iter()
-        .filter(|e| e.ctype == CType::CONSUMO)
-        .filter(|e| e.csubtype == CSubtype::EPB)
+        .filter(|e| e.ctype == CType::CONSUMO && e.csubtype == CSubtype::EPB)
         .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
 
     // * Energy used by technical systems for non-EPB services, for each time step
     let E_nEPus_cr_t = cr_i_list
         .iter()
-        .filter(|e| e.ctype == CType::CONSUMO)
-        .filter(|e| e.csubtype == CSubtype::NEPB)
+        .filter(|e| e.ctype == CType::CONSUMO && e.csubtype == CSubtype::NEPB)
         .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
 
     // * Produced on-site energy and inside the assessment boundary, by generator i (origin i)
@@ -214,34 +251,13 @@ pub fn balance_cr(
     // NOTE: This allows using annual quantities and not timestep expressions
 
     // * Weighted energy for delivered energy: the cost of producing that energy
-    // TODO: we could avoid forcing the definition of some factors if no related energy input does exist
-
-    // 1) Delivered energy from the grid
-    // NOTE: grid delivered energy is energy which is used but not produced (on-site or nearby)
-    let fpA_grid: &TFactor = fp_cr
-        .iter()
-        .find(|fp| fp.dest == Dest::input && fp.step == Step::A && fp.source == Source::RED)
-        .ok_or_else(|| {
-            format_err!(
-                "No weighting factor found for: '{}, RED, input, A'",
-                CURRENTCARRIER
-            )
-        })?;
+    let fpA_grid = fp_src(fp_cr, Source::RED, Dest::input, Step::A)?;
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid.factors(); // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources
-    let fpA_pr_i: &TFactor = fp_cr
-        .iter()
-        .find(|fp| fp.dest == Dest::input && fp.step == Step::A && fp.source == Source::INSITU)
-        .ok_or_else(|| {
-            format_err!(
-                "No weighting factor found for: '{}, INSITU, input, A'",
-                CURRENTCARRIER
-            )
-        })?;
-
     let E_we_del_cr_pr_an = {
         let E_pr_i = E_pr_cr_pr_i_an.get(&CSubtype::INSITU).unwrap_or(&0.0);
+        let fpA_pr_i = fp_src(fp_cr, Source::INSITU, Dest::input, Step::A)?;
         E_pr_i * fpA_pr_i.factors()
     };
 
@@ -271,10 +287,9 @@ pub fn balance_cr(
             .iter()
             .fold(HashMap::<CSubtype, f32>::new(), |mut acc, gen| {
                 let E_exp_cr_gen_an = E_exp_cr_pr_i_an[gen];
-                if E_exp_cr_gen_an == 0.0 {
-                    return acc;
-                } // Don't store generators without generation
-                acc.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_gen_an);
+                if E_exp_cr_gen_an != 0.0 {
+                    acc.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_gen_an);
+                } // Do not store generators without generation
                 acc
             });
         // Generators (produced energy sources) that are exporting some energy (!= 0)
@@ -285,31 +300,14 @@ pub fn balance_cr(
             // No exported energy to nEP uses
             RenNren::new() // ren: 0.0, nren: 0.0
         } else {
-            // There's exported energy to nEP uses
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    let acc_ok = acc?;
-                    let fpA_nEPus_i = fp_cr
-                        .iter()
-                        .filter(|fp| fp.dest == Dest::to_nEPB && fp.step == Step::A)
-                        .find(|fp| {
-                            // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
-                            match *gen {
-                                CSubtype::INSITU => fp.source == Source::INSITU,
-                                CSubtype::COGENERACION => fp.source == Source::COGENERACION,
-                                _ => false,
-                            }
-                        })
-                        .ok_or_else(|| {
-                            format_err!(
-                                "No weighting factor found for: '{}, {}, to_nEPB, A'",
-                                CURRENTCARRIER,
-                                gen
-                            )
-                        })?;
-                    Ok(acc_ok + (fpA_nEPus_i.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpA_nEPus_i[gen] * F_pr_i[gen]
+                    Ok(
+                        acc?
+                            + (fp_gen(fp_cr, gen, Dest::to_nEPB, Step::A)?.factors() * F_pr_i[gen]),
+                    )
+                })? // sum all i (non grid sources): fpA_nEPus_i[gen] * F_pr_i[gen]
         };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
@@ -317,31 +315,14 @@ pub fn balance_cr(
             // No energy exported to grid
             RenNren::new() // ren: 0.0, nren: 0.0
         } else {
-            // TODO: A check to ensure that fpA_g exist for all gen values should move here from the closure
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    let acc_ok = acc?;
-                    let fpA_grid_i = fp_cr
-                        .iter()
-                        .filter(|fp| fp.dest == Dest::to_grid && fp.step == Step::A)
-                        .find(|fp| {
-                            // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
-                            match *gen {
-                                CSubtype::INSITU => fp.source == Source::INSITU,
-                                CSubtype::COGENERACION => fp.source == Source::COGENERACION,
-                                _ => false,
-                            }
-                        })
-                        .ok_or_else(|| {
-                            format_err!(
-                                "No weighting factor found for: '{}, {}, to_nEPB, A'",
-                                CURRENTCARRIER,
-                                gen
-                            )
-                        })?;
-                    Ok(acc_ok + (fpA_grid_i.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpA_grid_i[gen] * F_pr_i[gen];
+                    Ok(
+                        acc?
+                            + (fp_gen(fp_cr, gen, Dest::to_grid, Step::A)?.factors() * F_pr_i[gen]),
+                    )
+                })? // sum all i (non grid sources): fpA_grid_i[gen] * F_pr_i[gen];
         };
 
         // Weighted exported energy according to resources used to generate that energy (formula 23)
@@ -358,26 +339,11 @@ pub fn balance_cr(
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    let acc_ok = acc?;
-                    let fpB_nEPus_i = fp_cr
-                        .iter()
-                        .filter(|fp| fp.dest == Dest::to_nEPB && fp.step == Step::B)
-                        .find(|fp|
-                            // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
-                            match *gen {
-                                CSubtype::INSITU => fp.source == Source::INSITU,
-                                CSubtype::COGENERACION => fp.source == Source::COGENERACION,
-                                _ => false,
-                        })
-                        .ok_or_else(|| {
-                            format_err!(
-                                "No weighting factor found for: '{}, {}, to_nEPB, B'",
-                                CURRENTCARRIER,
-                                gen
-                            )
-                        })?;
-                    Ok(acc_ok + (fpB_nEPus_i.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpB_nEPus_i[gen] * F_pr_i[gen]
+                    Ok(
+                        acc?
+                            + (fp_gen(fp_cr, gen, Dest::to_nEPB, Step::B)?.factors() * F_pr_i[gen]),
+                    )
+                })? // sum all i (non grid sources): fpB_nEPus_i[gen] * F_pr_i[gen]
         };
 
         // Weighting factors for energy exported to the grid (step B)
@@ -388,26 +354,11 @@ pub fn balance_cr(
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    let acc_ok = acc?;
-                    let fpB_grid_i = fp_cr
-                        .iter()
-                        .filter(|fp| fp.dest == Dest::to_grid && fp.step == Step::B)
-                        .find(|fp|
-                            // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
-                            match *gen {
-                                CSubtype::INSITU => fp.source == Source::INSITU,
-                                CSubtype::COGENERACION => fp.source == Source::COGENERACION,
-                                _ => false,
-                        })
-                        .ok_or_else(|| {
-                            format_err!(
-                                "No weighting factor found for: '{}, {}, to_grid, B'",
-                                CURRENTCARRIER,
-                                gen
-                            )
-                        })?;
-                    Ok(acc_ok + (fpB_grid_i.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpB_grid_i[gen] * F_pr_i[gen];
+                    Ok(
+                        acc?
+                            + (fp_gen(fp_cr, gen, Dest::to_grid, Step::B)?.factors() * F_pr_i[gen]),
+                    )
+                })? // sum all i (non grid sources): fpB_grid_i[gen] * F_pr_i[gen];
         };
 
         // Effect of exported energy on weighted energy performance (step B) (formula 26)
