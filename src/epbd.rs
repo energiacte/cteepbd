@@ -42,8 +42,8 @@ use failure::Error;
 //use failure::ResultExt;
 
 use types::{CSubtype, CType, Carrier, Dest, Source, Step};
-use types::{CarrierBalance, RenNren, TBalance, TComponent, TComponents, TFactor, TFactors,
-            TTotalBalance};
+use types::{Balance, BalanceForCarrier, BalanceTotal, Component, Components, Factor, Factors,
+            RenNren};
 
 use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
 
@@ -55,11 +55,11 @@ use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecve
 
 // Weighting factor for step 'step' of energy exported to 'dest' uses for the given 'source'
 fn fp_src<'a>(
-    fp_cr: &'a [TFactor],
+    fp_cr: &'a [Factor],
     source: Source,
     dest: Dest,
     step: Step,
-) -> Result<&'a TFactor, Error> {
+) -> Result<&'a Factor, Error> {
     fp_cr
         .iter()
         .find(|fp| fp.dest == dest && fp.step == step && fp.source == source)
@@ -80,11 +80,11 @@ fn fp_src<'a>(
 
 // Weighting factor for 'step' of energy to 'dest' uses from the 'gen' generator source
 fn fp_gen<'a>(
-    fp_cr: &'a [TFactor],
+    fp_cr: &'a [Factor],
     gen: &CSubtype,
     dest: Dest,
     step: Step,
-) -> Result<&'a TFactor, Error> {
+) -> Result<&'a Factor, Error> {
     match *gen {
         CSubtype::INSITU => fp_src(fp_cr, Source::INSITU, dest, step),
         CSubtype::COGENERACION => fp_src(fp_cr, Source::COGENERACION, dest, step),
@@ -104,11 +104,11 @@ fn fp_gen<'a>(
 //    exported and weighted energy balance.
 //
 pub fn balance_cr(
-    cr_i_list: &[TComponent],
-    fp_cr: &[TFactor],
+    cr_i_list: &[Component],
+    fp_cr: &[Factor],
     k_exp: f32,
-) -> Result<CarrierBalance, Error> {
-    let num_steps = cr_i_list[0].values.len(); // All carriers have the same timesteps (see FromStr for TComponents)
+) -> Result<BalanceForCarrier, Error> {
+    let num_steps = cr_i_list[0].values.len(); // All carriers have the same timesteps (see FromStr for Components)
 
     // * Energy used by technical systems for EPB services, for each time step
     let E_EPus_cr_t = cr_i_list
@@ -381,7 +381,7 @@ pub fn balance_cr(
     // Partial result for carrier (formula 2)
     let E_we_cr_an: RenNren = E_we_del_cr_an - E_we_exp_cr_an;
 
-    Ok(CarrierBalance {
+    Ok(BalanceForCarrier {
         used_EPB: E_EPus_cr_t,
         used_nEPB: E_nEPus_cr_t,
         produced_bygen: E_pr_cr_pr_i_t,
@@ -419,11 +419,11 @@ pub fn balance_cr(
 //
 //
 pub fn energy_performance(
-    components: TComponents,
-    wfactors: TFactors,
+    components: Components,
+    wfactors: Factors,
     k_exp: f32,
     arearef: f32,
-) -> Result<TBalance, Error> {
+) -> Result<Balance, Error> {
     ensure!(
         arearef > 1e-3,
         "Reference area can't be zero or almost zero and found {}",
@@ -437,14 +437,14 @@ pub fn energy_performance(
     carriers_set.dedup();
 
     // Compute balance for each carrier
-    let mut balance_cr_i: HashMap<Carrier, CarrierBalance> = HashMap::new();
+    let mut balance_cr_i: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
     for &carrier in &carriers_set {
-        let cr_i: Vec<TComponent> = carriers
+        let cr_i: Vec<Component> = carriers
             .iter()
             .filter(|e| e.carrier == carrier)
             .cloned()
             .collect();
-        let fp_cr: Vec<TFactor> = fps.iter()
+        let fp_cr: Vec<Factor> = fps.iter()
             .filter(|e| e.carrier == carrier)
             .cloned()
             .collect();
@@ -453,9 +453,9 @@ pub fn energy_performance(
     }
 
     // Accumulate partial balance values for total balance
-    let balance: TTotalBalance = carriers_set.iter().fold(
-        TTotalBalance::default(),
-        |mut acc, cr| {
+    let balance: BalanceTotal = carriers_set
+        .iter()
+        .fold(BalanceTotal::default(), |mut acc, cr| {
             // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
             acc.A = acc.A + balance_cr_i[cr].we_an_A;
             // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
@@ -465,12 +465,11 @@ pub fn energy_performance(
             acc.we_exp_A = acc.we_exp_A + balance_cr_i[cr].we_exported_an_A;
             acc.we_exp = acc.we_exp + balance_cr_i[cr].we_exported_an;
             acc
-        },
-    );
+        });
 
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
-    let balance_m2 = TTotalBalance {
+    let balance_m2 = BalanceTotal {
         A: k_area * balance.A,
         B: k_area * balance.B,
         we_del: k_area * balance.we_del,
@@ -479,7 +478,7 @@ pub fn energy_performance(
     };
 
     // Global data and results
-    Ok(TBalance {
+    Ok(Balance {
         components,
         wfactors,
         k_exp,

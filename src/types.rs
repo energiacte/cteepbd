@@ -299,27 +299,27 @@ pub enum Step {
 //   - key is the metadata name
 //   - value is the metadata value
 #[derive(Debug, Clone)]
-pub struct TMeta {
+pub struct Meta {
     pub key: String,
     pub value: String,
 }
 
-impl fmt::Display for TMeta {
+impl fmt::Display for Meta {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "#META {}: {}", self.key, self.value)
     }
 }
 
-impl str::FromStr for TMeta {
+impl str::FromStr for Meta {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<TMeta, Self::Err> {
+    fn from_str(s: &str) -> Result<Meta, Self::Err> {
         // Remove start of line with #META or #CTE_
         let items: Vec<&str> = s.trim()[5..].splitn(2, ':').map(|v| v.trim()).collect();
         if items.len() == 2 {
             let key = items[0].to_string();
             let value = items[1].to_string();
-            Ok(TMeta { key, value })
+            Ok(Meta { key, value })
         } else {
             Err(format_err!("Couldn't parse Metadata from string"))
         }
@@ -335,7 +335,7 @@ impl str::FromStr for TMeta {
 //   - values is a list of energy values, one for each timestep
 //   - comment is a comment string for the carrier
 #[derive(Debug, Clone)]
-pub struct TComponent {
+pub struct Component {
     pub carrier: Carrier,
     pub ctype: CType,
     pub csubtype: CSubtype,
@@ -344,7 +344,7 @@ pub struct TComponent {
     pub comment: String,
 }
 
-impl fmt::Display for TComponent {
+impl fmt::Display for Component {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let valuelist = self.values
             .iter()
@@ -364,16 +364,16 @@ impl fmt::Display for TComponent {
     }
 }
 
-impl str::FromStr for TComponent {
+impl str::FromStr for Component {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<TComponent, Self::Err> {
+    fn from_str(s: &str) -> Result<Component, Self::Err> {
         let items: Vec<&str> = s.trim().splitn(2, '#').map(|v| v.trim()).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(|v| v.trim()).collect();
         if items.len() < 4 {
             return Err(format_err!(
-                "Couldn't parse Component (TComponent) from string"
+                "Couldn't parse Component (Component) from string"
             ));
         };
         let carrier: Carrier = items[0].parse()?;
@@ -389,7 +389,7 @@ impl str::FromStr for TComponent {
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
-        Ok(TComponent {
+        Ok(Component {
             carrier,
             ctype,
             csubtype,
@@ -402,7 +402,7 @@ impl str::FromStr for TComponent {
 
 // Weighting Factor Struct
 #[derive(Debug, Clone)]
-pub struct TFactor {
+pub struct Factor {
     pub carrier: Carrier,
     pub source: Source,
     pub dest: Dest,
@@ -412,7 +412,7 @@ pub struct TFactor {
     pub comment: String,
 }
 
-impl TFactor {
+impl Factor {
     pub fn factors(&self) -> RenNren {
         RenNren {
             ren: self.ren,
@@ -421,7 +421,7 @@ impl TFactor {
     }
 }
 
-impl fmt::Display for TFactor {
+impl fmt::Display for Factor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let comment = if self.comment != "" {
             format!(" # {}", self.comment)
@@ -436,16 +436,16 @@ impl fmt::Display for TFactor {
     }
 }
 
-impl str::FromStr for TFactor {
+impl str::FromStr for Factor {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<TFactor, Self::Err> {
+    fn from_str(s: &str) -> Result<Factor, Self::Err> {
         let items: Vec<&str> = s.trim().splitn(2, '#').map(|v| v.trim()).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(|v| v.trim()).collect();
         if items.len() < 6 {
             return Err(format_err!(
-                "Couldn't parse Weighting Factor (TFactor) from string"
+                "Couldn't parse Weighting Factor (Factor) from string"
             ));
         };
         let carrier: Carrier = items[0].parse()?;
@@ -454,7 +454,7 @@ impl str::FromStr for TFactor {
         let step: Step = items[3].parse()?;
         let ren: f32 = items[4].parse()?;
         let nren: f32 = items[5].parse()?;
-        Ok(TFactor {
+        Ok(Factor {
             carrier,
             source,
             dest,
@@ -474,12 +474,12 @@ impl str::FromStr for TFactor {
 // ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
 // ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
 #[derive(Debug, Clone)]
-pub struct TComponents {
-    pub cmeta: Vec<TMeta>,
-    pub cdata: Vec<TComponent>,
+pub struct Components {
+    pub cmeta: Vec<Meta>,
+    pub cdata: Vec<Component>,
 }
 
-impl fmt::Display for TComponents {
+impl fmt::Display for Components {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let metalines = self.cmeta
             .iter()
@@ -495,10 +495,10 @@ impl fmt::Display for TComponents {
     }
 }
 
-impl str::FromStr for TComponents {
+impl str::FromStr for Components {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<TComponents, Self::Err> {
+    fn from_str(s: &str) -> Result<Components, Self::Err> {
         let lines: Vec<&str> = s.lines().map(|v| v.trim()).collect();
         let metalines = lines
             .iter()
@@ -508,10 +508,10 @@ impl str::FromStr for TComponents {
             .filter(|l| !(l.starts_with('#') || l.starts_with("vector,") || l.is_empty()));
         let cmeta = metalines
             .map(|e| e.parse())
-            .collect::<Result<Vec<TMeta>, _>>()?;
+            .collect::<Result<Vec<Meta>, _>>()?;
         let cdata = datalines
             .map(|e| e.parse())
-            .collect::<Result<Vec<TComponent>, _>>()?;
+            .collect::<Result<Vec<Component>, _>>()?;
         {
             let cdata_lens: Vec<_> = cdata.iter().map(|e| e.values.len()).collect();
             if &cdata_lens.iter().max().unwrap() != &cdata_lens.iter().min().unwrap() {
@@ -521,18 +521,18 @@ impl str::FromStr for TComponents {
                 ));
             }
         }
-        Ok(TComponents { cmeta, cdata })
+        Ok(Components { cmeta, cdata })
     }
 }
 
 // List of Weighting Factors with Metadata
 #[derive(Debug, Clone)]
-pub struct TFactors {
-    pub wmeta: Vec<TMeta>,
-    pub wdata: Vec<TFactor>,
+pub struct Factors {
+    pub wmeta: Vec<Meta>,
+    pub wdata: Vec<Factor>,
 }
 
-impl fmt::Display for TFactors {
+impl fmt::Display for Factors {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let metalines = self.wmeta
             .iter()
@@ -548,10 +548,10 @@ impl fmt::Display for TFactors {
     }
 }
 
-impl str::FromStr for TFactors {
+impl str::FromStr for Factors {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<TFactors, Self::Err> {
+    fn from_str(s: &str) -> Result<Factors, Self::Err> {
         let lines: Vec<&str> = s.lines().map(|v| v.trim()).collect();
         let metalines = lines
             .iter()
@@ -561,11 +561,11 @@ impl str::FromStr for TFactors {
             .filter(|l| !(l.starts_with('#') || l.starts_with("vector,") || l.is_empty()));
         let wmeta = metalines
             .map(|e| e.parse())
-            .collect::<Result<Vec<TMeta>, _>>()?;
+            .collect::<Result<Vec<Meta>, _>>()?;
         let wdata = datalines
             .map(|e| e.parse())
-            .collect::<Result<Vec<TFactor>, _>>()?;
-        Ok(TFactors { wmeta, wdata })
+            .collect::<Result<Vec<Factor>, _>>()?;
+        Ok(Factors { wmeta, wdata })
     }
 }
 
@@ -574,7 +574,7 @@ impl str::FromStr for TFactors {
 
 // Type to hold results of energy balance by carrier
 #[derive(Debug, Clone)]
-pub struct CarrierBalance {
+pub struct BalanceForCarrier {
     pub used_EPB: Vec<f32>,
     pub used_nEPB: Vec<f32>,
     pub produced_bygen: HashMap<CSubtype, Vec<f32>>, // es CSubtype pero es COGENERACION o INSITU (sourcetypes != RED)
@@ -609,7 +609,7 @@ pub struct CarrierBalance {
 
 // Type to hold global balance results, either in absolute value or by m2.
 #[derive(Debug, Copy, Clone, Default)]
-pub struct TTotalBalance {
+pub struct BalanceTotal {
     pub A: RenNren,
     pub B: RenNren,
     pub we_del: RenNren,
@@ -620,14 +620,14 @@ pub struct TTotalBalance {
 // Type to hold data and results of energy balance
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct TBalance {
-    pub components: TComponents,
-    pub wfactors: TFactors,
+pub struct Balance {
+    pub components: Components,
+    pub wfactors: Factors,
     pub k_exp: f32,
     pub arearef: f32,
-    pub balance_cr_i: HashMap<Carrier, CarrierBalance>,
-    pub balance: TTotalBalance,
-    pub balance_m2: TTotalBalance,
+    pub balance_cr_i: HashMap<Carrier, BalanceForCarrier>,
+    pub balance: BalanceTotal,
+    pub balance_m2: BalanceTotal,
 }
 
 #[cfg(test)]
@@ -686,18 +686,18 @@ mod tests {
 
     #[test]
     fn tmeta() {
-        let meta = TMeta {
+        let meta = Meta {
             key: "CTE_FUENTE".to_string(),
             value: "CTE2013".to_string(),
         };
         let metastr = "#META CTE_FUENTE: CTE2013";
         assert_eq!(format!("{}", meta), metastr);
-        assert_eq!(format!("{}", metastr.parse::<TMeta>().unwrap()), metastr);
+        assert_eq!(format!("{}", metastr.parse::<Meta>().unwrap()), metastr);
     }
 
     #[test]
     fn tcomponent() {
-        let component1 = TComponent {
+        let component1 = Component {
             carrier: "ELECTRICIDAD".parse().unwrap(),
             ctype: "CONSUMO".parse().unwrap(),
             csubtype: "EPB".parse().unwrap(),
@@ -708,7 +708,7 @@ mod tests {
             comment: "Comentario cons 1".into(),
         };
         let component1str = "ELECTRICIDAD, CONSUMO, EPB, REF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
-        let component2 = TComponent {
+        let component2 = Component {
             carrier: "ELECTRICIDAD".parse().unwrap(),
             ctype: "PRODUCCION".parse().unwrap(),
             csubtype: "INSITU".parse().unwrap(),
@@ -729,19 +729,19 @@ mod tests {
 
         // roundtrip building from/to string
         assert_eq!(
-            format!("{}", component2str.parse::<TComponent>().unwrap()),
+            format!("{}", component2str.parse::<Component>().unwrap()),
             component2str
         );
         // roundtrip building from/to string for legacy format
         assert_eq!(
-            format!("{}", component2strlegacy.parse::<TComponent>().unwrap()),
+            format!("{}", component2strlegacy.parse::<Component>().unwrap()),
             component2str
         );
     }
 
     #[test]
     fn tfactor() {
-        let factor1 = TFactor {
+        let factor1 = Factor {
             carrier: "ELECTRICIDAD".parse().unwrap(),
             source: "RED".parse().unwrap(),
             dest: "input".parse().unwrap(),
@@ -758,7 +758,7 @@ mod tests {
 
         // roundtrip building from/to string
         assert_eq!(
-            format!("{}", factor2str.parse::<TComponent>().unwrap()),
+            format!("{}", factor2str.parse::<Component>().unwrap()),
             factor2str
         );
     }
@@ -771,7 +771,7 @@ ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28
 
         // roundtrip building from/to string
         assert_eq!(
-            format!("{}", tcomponents1.parse::<TComponents>().unwrap()),
+            format!("{}", tcomponents1.parse::<Components>().unwrap()),
             tcomponents1
         );
     }
@@ -785,7 +785,7 @@ ELECTRICIDAD, INSITU, input, A, 1.000, 0.000 # Recursos usados para producir ele
 
         // roundtrip building from/to string
         assert_eq!(
-            format!("{}", tfactors1.parse::<TFactors>().unwrap()),
+            format!("{}", tfactors1.parse::<Factors>().unwrap()),
             tfactors1
         );
     }
