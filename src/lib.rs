@@ -38,6 +38,7 @@ extern crate strum;
 extern crate strum_macros;
 
 pub mod epbd;
+pub mod rennren;
 pub mod types;
 pub mod vecops;
 

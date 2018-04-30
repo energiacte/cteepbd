@@ -41,9 +41,9 @@ use std::collections::HashMap;
 use failure::Error;
 //use failure::ResultExt;
 
+use rennren::RenNren;
 use types::{CSubtype, CType, Carrier, Dest, Source, Step};
-use types::{Balance, BalanceForCarrier, BalanceTotal, Component, Components, Factor, Factors,
-            RenNren};
+use types::{Balance, BalanceForCarrier, BalanceTotal, Component, Components, Factor, Factors};
 
 use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
 
