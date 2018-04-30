@@ -42,7 +42,8 @@ use failure::Error;
 //use failure::ResultExt;
 
 use types::{CSubtype, CType, Carrier, Dest, Source, Step};
-use types::{RenNren, CarrierBalance, TBalance, TComponent, TComponents, TFactor, TFactors, TTotalBalance};
+use types::{CarrierBalance, RenNren, TBalance, TComponent, TComponents, TFactor, TFactors,
+            TTotalBalance};
 
 use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
 
@@ -160,46 +161,53 @@ pub fn balance_cr(
     // Implementation WITHOUT priorities on energy use
 
     // * Fraction of produced energy of type i (origin from generator i) (formula 14)
-    let acc_hash: HashMap<CSubtype, f32> = HashMap::new();
-    let f_pr_cr_i = pr_generators.iter().fold(acc_hash, |mut acc, gen| {
-        {
-            let val = acc.entry(*gen).or_insert(0.0);
-            if E_pr_cr_an > 1e-3 {
-                *val = E_pr_cr_pr_i_an[gen] / E_pr_cr_an;
+    let f_pr_cr_i = pr_generators
+        .iter()
+        .fold(HashMap::<CSubtype, f32>::new(), |mut acc, gen| {
+            {
+                let val = acc.entry(*gen).or_insert(0.0);
+                if E_pr_cr_an > 1e-3 {
+                    *val = E_pr_cr_pr_i_an[gen] / E_pr_cr_an;
+                }
             }
-        }
-        acc
-    });
+            acc
+        });
 
     // * Energy used for produced carrier energy type i (origin from generator i) (formula 15)
-    let acc_hash: HashMap<CSubtype, Vec<f32>> = HashMap::new();
-    let E_pr_cr_i_used_EPus_t = pr_generators.iter().fold(acc_hash, |mut acc, gen| {
-        {
-            let val = acc.entry(*gen).or_insert_with(|| vec![0.0; num_steps]);
-            *val = veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i[gen]);
-        }
-        acc
-    });
+    let E_pr_cr_i_used_EPus_t = pr_generators.iter().fold(
+        HashMap::<CSubtype, Vec<f32>>::new(),
+        |mut acc, gen| {
+            {
+                let val = acc.entry(*gen).or_insert_with(|| vec![0.0; num_steps]);
+                *val = veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i[gen]);
+            }
+            acc
+        },
+    );
 
     // * Exported energy from generator i (origin i) (formula 16)
-    let acc_hash: HashMap<CSubtype, Vec<f32>> = HashMap::new();
-    let E_exp_cr_pr_i_t = pr_generators.iter().fold(acc_hash, |mut acc, gen| {
-        {
-            let val = acc.entry(*gen).or_insert_with(|| vec![0.0; num_steps]);
-            *val = vecvecdif(&E_pr_cr_pr_i_t[gen], &E_pr_cr_i_used_EPus_t[gen]);
-        }
-        acc
-    });
+    let E_exp_cr_pr_i_t = pr_generators.iter().fold(
+        HashMap::<CSubtype, Vec<f32>>::new(),
+        |mut acc, gen| {
+            {
+                let val = acc.entry(*gen).or_insert_with(|| vec![0.0; num_steps]);
+                *val = vecvecdif(&E_pr_cr_pr_i_t[gen], &E_pr_cr_i_used_EPus_t[gen]);
+            }
+            acc
+        },
+    );
 
     // * Annually exported energy from generator i (origin i)
-    let acc_hash: HashMap<CSubtype, f32> = HashMap::new();
-    let E_exp_cr_pr_i_an = pr_generators.iter().fold(acc_hash, |mut acc, gen| {
-        {
-            let val = acc.entry(*gen).or_insert(0.0);
-            *val = vecsum(&E_exp_cr_pr_i_t[gen]);
-        }
-        acc
-    });
+    let E_exp_cr_pr_i_an = pr_generators.iter().fold(
+        HashMap::<CSubtype, f32>::new(),
+        |mut acc, gen| {
+            {
+                let val = acc.entry(*gen).or_insert(0.0);
+                *val = vecsum(&E_exp_cr_pr_i_t[gen]);
+            }
+            acc
+        },
+    );
 
     // -------- Weighted delivered and exported energy (11.6.2.1, 11.6.2.2, 11.6.2.3 + eq 2, 3)
     // NOTE: All weighting factors have been considered constant through all timesteps
@@ -259,32 +267,32 @@ pub fn balance_cr(
 
         // * Fraction of produced energy tipe i (origin from generator i) that is exported (formula 14)
         // NOTE: simplified for annual computations (not valid for timestep calculation)
-        let acc_hash: HashMap<CSubtype, f32> = HashMap::new();
-        let F_pr_i = pr_generators.iter().fold(acc_hash, |mut acc, gen| {
-            let E_exp_cr_gen_an = E_exp_cr_pr_i_an[gen];
-            if E_exp_cr_gen_an == 0.0 {
-                return acc;
-            } // Don't store generators without generation
-            acc.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_gen_an);
-            acc
-        });
+        let F_pr_i = pr_generators
+            .iter()
+            .fold(HashMap::<CSubtype, f32>::new(), |mut acc, gen| {
+                let E_exp_cr_gen_an = E_exp_cr_pr_i_an[gen];
+                if E_exp_cr_gen_an == 0.0 {
+                    return acc;
+                } // Don't store generators without generation
+                acc.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_gen_an);
+                acc
+            });
         // Generators (produced energy sources) that are exporting some energy (!= 0)
         let exp_generators: Vec<_> = F_pr_i.keys().collect();
 
         // Weighting factors for energy exported to nEP uses (step A) (~formula 24)
         let f_we_exp_cr_stepA_nEPus: RenNren = if E_exp_cr_used_nEPus_an == 0.0 {
+            // No exported energy to nEP uses
             RenNren::new() // ren: 0.0, nren: 0.0
         } else {
             // There's exported energy to nEP uses
-            let mut fpA_nEPus_i = fp_cr
-                .iter()
-                .filter(|fp| fp.dest == Dest::to_nEPB && fp.step == Step::A);
-            // TODO: A check to ensure that fpA_g exist for all gen values should move here from the closure
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     let acc_ok = acc?;
-                    let fpA_nEPus_i_gen = fpA_nEPus_i
+                    let fpA_nEPus_i = fp_cr
+                        .iter()
+                        .filter(|fp| fp.dest == Dest::to_nEPB && fp.step == Step::A)
                         .find(|fp| {
                             // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
                             match *gen {
@@ -300,8 +308,8 @@ pub fn balance_cr(
                                 gen
                             )
                         })?;
-                    Ok(acc_ok + (fpA_nEPus_i_gen.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpA_nEPus_i * F_pr_i[gen]
+                    Ok(acc_ok + (fpA_nEPus_i.factors() * F_pr_i[gen]))
+                })? // suma de todos los i: fpA_nEPus_i[gen] * F_pr_i[gen]
         };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
@@ -309,15 +317,14 @@ pub fn balance_cr(
             // No energy exported to grid
             RenNren::new() // ren: 0.0, nren: 0.0
         } else {
-            let mut fpA_grid_i = fp_cr
-                .iter()
-                .filter(|fp| fp.dest == Dest::to_grid && fp.step == Step::A);
             // TODO: A check to ensure that fpA_g exist for all gen values should move here from the closure
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     let acc_ok = acc?;
-                    let fpA_grid_i_gen = fpA_grid_i
+                    let fpA_grid_i = fp_cr
+                        .iter()
+                        .filter(|fp| fp.dest == Dest::to_grid && fp.step == Step::A)
                         .find(|fp| {
                             // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
                             match *gen {
@@ -333,8 +340,8 @@ pub fn balance_cr(
                                 gen
                             )
                         })?;
-                    Ok(acc_ok + (fpA_grid_i_gen.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpA_grid_i * F_pr_i[gen];
+                    Ok(acc_ok + (fpA_grid_i.factors() * F_pr_i[gen]))
+                })? // suma de todos los i: fpA_grid_i[gen] * F_pr_i[gen];
         };
 
         // Weighted exported energy according to resources used to generate that energy (formula 23)
@@ -348,20 +355,19 @@ pub fn balance_cr(
             // No energy exported to nEP uses
             RenNren::new() // ren: 0.0, nren: 0.0
         } else {
-            let mut fpB_nEPus_i = fp_cr
-                .iter()
-                .filter(|fp| fp.dest == Dest::to_nEPB && fp.step == Step::B);
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     let acc_ok = acc?;
-                    let fpB_nEPus_i_gen = fpB_nEPus_i
+                    let fpB_nEPus_i = fp_cr
+                        .iter()
+                        .filter(|fp| fp.dest == Dest::to_nEPB && fp.step == Step::B)
                         .find(|fp|
-                        // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
-                        match *gen {
-                            CSubtype::INSITU => fp.source == Source::INSITU,
-                            CSubtype::COGENERACION => fp.source == Source::COGENERACION,
-                            _ => false,
+                            // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
+                            match *gen {
+                                CSubtype::INSITU => fp.source == Source::INSITU,
+                                CSubtype::COGENERACION => fp.source == Source::COGENERACION,
+                                _ => false,
                         })
                         .ok_or_else(|| {
                             format_err!(
@@ -370,8 +376,8 @@ pub fn balance_cr(
                                 gen
                             )
                         })?;
-                    Ok(acc_ok + (fpB_nEPus_i_gen.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpB_nEPus_i * F_pr_i[gen]
+                    Ok(acc_ok + (fpB_nEPus_i.factors() * F_pr_i[gen]))
+                })? // suma de todos los i: fpB_nEPus_i[gen] * F_pr_i[gen]
         };
 
         // Weighting factors for energy exported to the grid (step B)
@@ -379,20 +385,19 @@ pub fn balance_cr(
             // No energy exported to grid
             RenNren::new() // ren: 0.0, nren: 0.0
         } else {
-            let mut fpB_grid_i = fp_cr
-                .iter()
-                .filter(|fp| fp.dest == Dest::to_grid && fp.step == Step::B);
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     let acc_ok = acc?;
-                    let fpB_grid_i_gen = fpB_grid_i
+                    let fpB_grid_i = fp_cr
+                        .iter()
+                        .filter(|fp| fp.dest == Dest::to_grid && fp.step == Step::B)
                         .find(|fp|
-                    // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
-                        match *gen {
-                            CSubtype::INSITU => fp.source == Source::INSITU,
-                            CSubtype::COGENERACION => fp.source == Source::COGENERACION,
-                            _ => false,
+                            // NOTE: Convert from CSubtype (TCOMPONENT type) to Source (WFACTOR)
+                            match *gen {
+                                CSubtype::INSITU => fp.source == Source::INSITU,
+                                CSubtype::COGENERACION => fp.source == Source::COGENERACION,
+                                _ => false,
                         })
                         .ok_or_else(|| {
                             format_err!(
@@ -401,8 +406,8 @@ pub fn balance_cr(
                                 gen
                             )
                         })?;
-                    Ok(acc_ok + (fpB_grid_i_gen.factors() * F_pr_i[gen]))
-                })? // suma de todos los i: fpB_grid_i * F_pr_i[gen];
+                    Ok(acc_ok + (fpB_grid_i.factors() * F_pr_i[gen]))
+                })? // suma de todos los i: fpB_grid_i[gen] * F_pr_i[gen];
         };
 
         // Effect of exported energy on weighted energy performance (step B) (formula 26)
