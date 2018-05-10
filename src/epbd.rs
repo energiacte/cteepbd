@@ -65,12 +65,12 @@ use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecve
 /// * the weighting factor list is empty
 /// * no match is found for the given criteria
 /// 
-fn fp_src<'a>(
-    fp_cr: &'a [Factor],
+fn fp_src(
+    fp_cr: &[Factor],
     source: Source,
     dest: Dest,
     step: Step,
-) -> Result<&'a Factor, Error> {
+) -> Result<&Factor, Error> {
     fp_cr
         .iter()
         .find(|fp| fp.dest == dest && fp.step == step && fp.source == source)
