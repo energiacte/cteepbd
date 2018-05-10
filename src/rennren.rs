@@ -24,12 +24,12 @@
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
 
-// Energy pairs representing renewable and non renewable energy quantities or factors
+/// Energy pairs representing renewable and non renewable energy quantities or factors.
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct RenNren {
-    // Renewable energy or factor
+    /// Renewable energy or factor
     pub ren: f32,
-    // Non Renewable energy or factor
+    /// Non Renewable energy or factor
     pub nren: f32,
 }
 
@@ -39,12 +39,12 @@ impl RenNren {
         Default::default()
     }
 
-    // Total renewable + non renewable
+    /// Total renewable + non renewable energy
     pub fn tot(&self) -> f32 {
         self.ren + self.nren
     }
 
-    // Renewable energy ratio
+    /// Renewable energy ratio
     pub fn rer(&self) -> f32 {
         let tot = self.tot();
         if tot == 0.0 {
