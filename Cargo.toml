@@ -8,8 +8,13 @@ failure = "*"
 lazy_static = "*"
 maplit = "*"
 num= "*"
-strum = "0.9.0"
-strum_macros = "0.9.0"
+strum = "*"
+strum_macros = "*"
 
 [dev-dependencies]
 pretty_assertions = "*"
+
+#[profile.release]
+#debug = true
+#opt-level = "z"
+#lto = true
