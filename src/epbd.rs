@@ -22,19 +22,19 @@
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
 //            Daniel Jiménez González <dani@ietcc.csic.es>
 
-// ENERGYCALCULATIONS - Implementation of the ISO EN 52000-1 standard
+/// ENERGYCALCULATIONS - Implementation of the ISO EN 52000-1 standard
 
-//   Energy performance of buildings - Overarching EPB assessment - General framework and procedures
+///   Energy performance of buildings - Overarching EPB assessment - General framework and procedures
 
-//   This implementation has used the following assumptions:
-//   - weighting factors are constant for all timesteps
-//   - no priority is set for energy production (average step A weighting factor f_we_el_stepA)
-//   - all on-site produced energy from non cogeneration sources is considered as delivered
-//   - the load matching factor is constant and equal to 1.0
+///   This implementation has used the following assumptions:
+///   - weighting factors are constant for all timesteps
+///   - no priority is set for energy production (average step A weighting factor f_we_el_stepA)
+///   - all on-site produced energy from non cogeneration sources is considered as delivered
+///   - the load matching factor is constant and equal to 1.0
 
-//   TODO:
-//   - allow other values of the load matching factor (or functions) (formula 32, B.32)
-//   - get results by use items (service), maybe using the reverse method E.3 (E.3.6, E.3.7)
+///   TODO:
+///   - allow other values of the load matching factor (or functions) (formula 32, B.32)
+///   - get results by use items (service), maybe using the reverse method E.3 (E.3.6, E.3.7)
 
 use std::collections::HashMap;
 
@@ -53,7 +53,18 @@ use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecve
 
 // /////////////// Aux functions for weighting factor selection //////////////////
 
-// Weighting factor for step 'step' of energy exported to 'dest' uses for the given 'source'
+/// Find weighting factor for 'step' of energy exported to 'dest' from the given energy 'source'.
+/// 
+/// * `fp_cr` - weighting factor list for a given energy carrier where search is done
+/// * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
+/// * `dest` - match this energy destination (use)
+/// * `step` - match this calculation step
+/// 
+/// # Errors
+/// 
+/// * the weighting factor list is empty
+/// * no match is found for the given criteria
+/// 
 fn fp_src<'a>(
     fp_cr: &'a [Factor],
     source: Source,
@@ -78,7 +89,19 @@ fn fp_src<'a>(
         })
 }
 
-// Weighting factor for 'step' of energy to 'dest' uses from the 'gen' generator source
+/// Find weighting factor for 'step' of energy to 'dest' uses from the 'gen' type.
+///
+/// * `fp_cr` - weighting factor list for a given energy carrier where search is done
+/// * `gen` - match generator (carrier subtype / origin) (i.e. `INSITU` or `COGENERACION`)
+/// * `dest` - match this energy destination (`to_nEPB`, `to_grid`, `input`)
+/// * `step` - match this calculation step (`A`, `B`)
+/// 
+/// # Errors
+/// 
+/// * the weighting factor list is empty
+/// * no match is found
+/// * the `gen` type doesn't match an energy source type (i.e. `INSITU` or `COGENERACION`)
+/// 
 fn fp_gen<'a>(
     fp_cr: &'a [Factor],
     gen: &CSubtype,
@@ -94,21 +117,26 @@ fn fp_gen<'a>(
 
 // ///////////// By Carrier timestep and annual computations ////////////
 
-// Calculate energy balance for carrier
-//
-//    cr_i_list: list of components for carrier_i
-//    k_exp: exported energy factor [0, 1]
-//    fp_cr: weighting factors for carrier
-//
-//    This follows the ISO EN 52000-1 procedure for calculation of delivered,
-//    exported and weighted energy balance.
-//
+/// Calculate energy balance for carrier.
+///
+/// This follows the ISO EN 52000-1 procedure for calculation of delivered,
+/// exported and weighted energy balance.
+///
+/// * `cr_i_list` - list of components for carrier_i
+/// * `k_exp` - exported energy factor [0, 1]
+/// * `fp_cr` - weighting factors for carrier
+/// 
+/// # Errors
+/// 
+/// * Missing weighting factors for a carrier, origin, destination or calculation step
+/// 
 pub fn balance_cr(
     cr_i_list: &[Component],
     fp_cr: &[Factor],
     k_exp: f32,
 ) -> Result<BalanceForCarrier, Error> {
-    let num_steps = cr_i_list[0].values.len(); // All carriers have the same timesteps (see FromStr for Components)
+     // All carriers have the same timesteps (see FromStr for Components)
+    let num_steps = cr_i_list[0].values.len();
 
     // * Energy used by technical systems for EPB services, for each time step
     let E_EPus_cr_t = cr_i_list
@@ -384,10 +412,10 @@ pub fn balance_cr(
     Ok(BalanceForCarrier {
         used_EPB: E_EPus_cr_t,
         used_nEPB: E_nEPus_cr_t,
-        produced_bygen: E_pr_cr_pr_i_t,
-        produced_bygen_an: E_pr_cr_pr_i_an,
         produced: E_pr_cr_t,
         produced_an: E_pr_cr_an,
+        produced_bygen: E_pr_cr_pr_i_t,
+        produced_bygen_an: E_pr_cr_pr_i_an,
         f_match: f_match_t, // load matching factor
         // E_pr_cr_used_EPus_t <- produced_used_EPus
         // E_pr_cr_i_used_EPus_t <- produced_used_EPus_bygen
@@ -415,9 +443,18 @@ pub fn balance_cr(
     })
 }
 
-// Compute overall energy performance by aggregating results for all energy carriers
-//
-//
+/// Compute overall energy performance by aggregating results from all energy carriers.
+///
+/// * `components` - energy components
+/// * `wfactors` - weighting factors
+/// * `k_exp` - exported energy factor [0, 1]
+/// * `arearef` - reference area used for computing energy performance ratios
+///
+/// # Errors
+/// 
+/// * Use of an `arearef` less than 1e-3 raises an error
+/// * Missing weighting factors needed for balance computation
+/// 
 pub fn energy_performance(
     components: Components,
     wfactors: Factors,

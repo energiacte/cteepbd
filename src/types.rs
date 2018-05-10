@@ -21,6 +21,13 @@
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
+//TODO: cmeta -> meta, cdata -> data
+//TODO: wmeta -> meta, wdata -> data
+//TODO: Add carrier name as attribute in the BalanceForCarrier struct
+//TODO: implement Display for BalanceForCarrier to serialize and FromStr to deserialize? JSON?
+//TODO: add produced_used_EPus to BalanceForCarrier (E_pr_cr_used_EPus_t)
+//TODO: add produced_used_EPus_bygen to BalanceForCarrier (E_pr_cr_i_used_EPus_t)
+
 use std::collections::HashMap;
 use std::fmt;
 use std::str;
@@ -31,55 +38,81 @@ use rennren::RenNren;
 
 // == Common properties (carriers + weighting factors) ==
 
-// Carrier name of an energy component or weighting factor
+/// Energy carrier.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString)]
 pub enum Carrier {
+    /// Electricity
     ELECTRICIDAD,
+    /// Environment thermal energy
     MEDIOAMBIENTE,
+    /// Biofuel
     BIOCARBURANTE,
+    /// Biomass
     BIOMASA,
+    /// Densified biomass (pellets)
     BIOMASADENSIFICADA,
+    /// Coal
     CARBON,
+    /// Fuel oil
     FUELOIL,
+    /// Natural gas
     GASNATURAL,
+    /// Diesel oil
     GASOLEO,
+    /// LPG - Liquefied petroleum gas
     GLP,
+    /// Generic energy carrier 1
     RED1,
+    /// Generic energy carrier 2
     RED2,
 }
 
 // == Energy Components ==
 
-// Produced or consumed energy type of an energy component
+/// Produced or consumed energy type of an energy component.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum CType {
+    /// Produced energy
     PRODUCCION,
+    /// Consumed energy
     CONSUMO,
 }
 
-// Production origin or use destination subtype of an energy component
+/// Production origin or use destination subtype of an energy component.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Display, EnumString)]
 pub enum CSubtype {
+    /// on site energy source
     INSITU,
+    /// cogeneration energy source
     COGENERACION,
+    /// EPB use
     EPB,
+    /// Non EPB use
     NEPB,
 }
 
-// Destination Service or use of an energy component
+/// Destination Service or use of an energy component.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display)]
 pub enum Service {
+    /// DHW
     ACS,
+    /// Heating
     CAL,
+    /// Cooling
     REF,
+    /// Ventilation
     VEN,
+    /// Lighting
     ILU,
+    /// Humidification
     HU,
+    /// Dehumidification
     DHU,
+    /// Undefined or generic use
     NDEF,
 }
 
@@ -108,45 +141,53 @@ impl str::FromStr for Service {
 
 // == Weighting factors ==
 
-// Source of energy for a weighting factor
+/// Source of energy for a weighting factor.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum Source {
+    /// Grid source
     RED,
+    /// Insitu generation source
     INSITU,
+    /// Cogeneration source
     COGENERACION,
 }
 
-// Destination of energy for a weighting factor
+/// Destination of energy for a weighting factor.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum Dest {
+    /// Building delivery destination
     input,
+    /// Grid destination
     to_grid,
+    /// Non EPB uses destination
     to_nEPB,
 }
 
-// Calculation step for a weighting factor
+/// Calculation step for a weighting factor.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString)]
 pub enum Step {
+    /// Calculation step A
     A,
+    /// Calculation step B
     B,
 }
 
 // == General types ==
 
-// Metadata Struct
-// * objects of type 'META' represent metadata of components or weighting factors
-//   - key is the metadata name
-//   - value is the metadata value
+/// Metadata of components or weighting factors
 #[derive(Debug, Clone)]
 pub struct Meta {
+    /// metadata name.
     pub key: String,
+    /// metadata value
     pub value: String,
 }
 
 impl fmt::Display for Meta {
+    /// Textual representation of metadata.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "#META {}: {}", self.key, self.value)
     }
@@ -168,21 +209,20 @@ impl str::FromStr for Meta {
     }
 }
 
-// Energy Component Struct, representing an energy carrier component
-//   - carrier is the carrier name
-//   - ctype is either 'PRODUCCION' or 'CONSUMO' for produced or used energy
-//   - csubtype defines:
-//     - the energy origin for produced energy (INSITU or COGENERACION)
-//     - the energy end use (EPB or NEPB) for delivered energy
-//   - values is a list of energy values, one for each timestep
-//   - comment is a comment string for the carrier
+/// Energy Component Struct, representing an energy carrier component
 #[derive(Debug, Clone)]
 pub struct Component {
+    /// Carrier name
     pub carrier: Carrier,
+    /// Produced (`PRODUCCION`) or consumed (`CONSUMO`) component type
     pub ctype: CType,
+    /// Energy origin (`INSITU` or `COGENERACION`) for produced component types or end use type (`EPB` or `NEPB`) for consumed component types
     pub csubtype: CSubtype,
+    /// End use
     pub service: Service,
+    /// List of energy values, one value for each timestep
     pub values: Vec<f32>,
+    /// Descriptive comment string
     pub comment: String,
 }
 
@@ -242,27 +282,25 @@ impl str::FromStr for Component {
     }
 }
 
-// Weighting Factor Struct
-//
-// It can represent the renewable and non renewable weighting factors,
-// and is used for primary energy computation, but could also be used to get CO2 depending
-// on how the values are obtained.
-//
-//   - carrier is the carrier name
-//   - source is the origin that provides the carrier (RED, INSITU or COGENERACION)
-//   - dest is the destination use of the energy (input, to_grid, to_nEPB)
-//   - step is the evaluation step
-//   - ren is the renewable amount for a unit of this carrier
-//   - nren is the non renewable amount for a unit of this carrier
-//   - comment is a comment string for the weighting factor
+/// Weighting Factor Struct
+///
+/// It can represent the renewable and non renewable primary energy weighting factors,
+/// but can be used for CO2 or any other indicators depending on how the values are obtained.
 #[derive(Debug, Clone)]
 pub struct Factor {
+    /// Energy carrier
     pub carrier: Carrier,
+    /// Carrier source (`RED`, `INSITU` or `COGENERACION`)
     pub source: Source,
+    /// Destination use of the energy (`input`, `to_grid`, `to_nEPB`)
     pub dest: Dest,
+    /// Evaluation step
     pub step: Step,
+    /// Renewable primary energy for each end use unit of this carrier
     pub ren: f32,
+    /// Non renewable primary energy for each end use unit of this carrier
     pub nren: f32,
+    /// Descriptive comment string for the weighting factor
     pub comment: String,
 }
 
@@ -322,15 +360,16 @@ impl str::FromStr for Factor {
 
 // == Data + Metadata Types ==
 
-// Components bundles a list of component data (Component) with its metadata (Meta)
-//
-// #META CTE_AREAREF: 100.5
-// ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
-// ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
-// TODO: cmeta -> meta, cdata -> data
+/// List of component data bundled with its metadata
+///
+/// #META CTE_AREAREF: 100.5
+/// ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
+/// ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
 #[derive(Debug, Clone)]
 pub struct Components {
+    /// Component list
     pub cmeta: Vec<Meta>,
+    /// Metadata
     pub cdata: Vec<Component>,
 }
 
@@ -380,11 +419,12 @@ impl str::FromStr for Components {
     }
 }
 
-// Factors bundles a list of weighting factors (Factor) with its metadata (Meta)
-// TODO: wmeta -> meta, wdata -> data
+/// List of weighting factors bundled with its metadata
 #[derive(Debug, Clone)]
 pub struct Factors {
+    /// Weighting factors list
     pub wmeta: Vec<Meta>,
+    /// Metadata
     pub wdata: Vec<Factor>,
 }
 
@@ -425,65 +465,100 @@ impl str::FromStr for Factors {
     }
 }
 
-// Results Struct for Output
-//TODO: implement Display to serialize and FromStr to deserialize? JSON?
-
-// BalanceForCarrier holds detailed results of the energy balance for a carrier
-// TODO: add a carrier attribute to hold the carrier name.
+/// Detailed results of the energy balance computation for a given carrier
 #[derive(Debug, Clone)]
 pub struct BalanceForCarrier {
+    /// Energy used for EPB uses in each timestep
     pub used_EPB: Vec<f32>,
+    /// Used energy for non EPB uses in each timestep
     pub used_nEPB: Vec<f32>,
-    pub produced_bygen: HashMap<CSubtype, Vec<f32>>, // es CSubtype pero es COGENERACION o INSITU (sourcetypes != RED)
-    pub produced_bygen_an: HashMap<CSubtype, f32>,
+    /// Produced energy in each timestep
     pub produced: Vec<f32>,
+    /// Produced energy (from all sources)
     pub produced_an: f32,
-    pub f_match: Vec<f32>, // load matching factor
-    // E_pr_cr_used_EPus_t <- produced_used_EPus
-    // E_pr_cr_i_used_EPus_t <- produced_used_EPus_bygen
+    /// Produced energy in each timestep by non grid source (COGENERACION / INSITU)
+    pub produced_bygen: HashMap<CSubtype, Vec<f32>>,
+    /// Produced energy by non grid source (COGENERACION / INSITU)
+    pub produced_bygen_an: HashMap<CSubtype, f32>,
+    // TODO: add these:
+    // - E_pr_cr_used_EPus_t <- produced_used_EPus
+    // - E_pr_cr_i_used_EPus_t <- produced_used_EPus_bygen
+    /// Load matching factor
+    pub f_match: Vec<f32>,
+    /// Exported energy to the grid and non EPB uses in each timestep
     pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
+    /// Exported energy to the grid and non EPB uses
     pub exported_an: f32,
+    /// Exported energy to the grid and non EPB uses in each timestep, by generation source
     pub exported_bygen: HashMap<CSubtype, Vec<f32>>, // cambiado origin -> gen
+    /// Exported energy to the grid and non EPB uses, by generation source
     pub exported_bygen_an: HashMap<CSubtype, f32>,   // cambiado origin -> gen
+    /// Exported energy to the grid in each timestep
     pub exported_grid: Vec<f32>,
+    /// Exported energy to the grid
     pub exported_grid_an: f32,
+    /// Exported energy to non EPB uses in each timestep
     pub exported_nEPB: Vec<f32>,
+    /// Exported energy to non EPB uses
     pub exported_nEPB_an: f32,
+    /// Delivered energy by the grid in each timestep
     pub delivered_grid: Vec<f32>,
+    /// Delivered energy by the grid
     pub delivered_grid_an: f32,
-    // Weighted energy: { ren, nren }
+    /// Weighted delivered energy by the grid
     pub we_delivered_grid_an: RenNren,
+    /// Weighted delivered energy by any energy production sources
     pub we_delivered_prod_an: RenNren,
+    /// Weighted delivered energy by the grid and any energy production sources
     pub we_delivered_an: RenNren,
+    /// Weighted exported energy for calculation step A
     pub we_exported_an_A: RenNren,
+    /// Weighted exported energy for non EPB uses and calculation step AB
     pub we_exported_nEPB_an_AB: RenNren,
+    /// Weighted exported energy to the grid and calculation step AB
     pub we_exported_grid_an_AB: RenNren,
+    /// Weighted exported energy and calculation step AB
     pub we_exported_an_AB: RenNren,
+    /// Weighted exported energy for calculation step A+B
     pub we_exported_an: RenNren,
+    /// Weighted energy for calculation step A
     pub we_an_A: RenNren,
+    /// Weighted energy
     pub we_an: RenNren,
 }
 
-// BalanceTotal holds global balance results, either in absolute value or by m2.
+/// Global balance results (all carriers), either in absolute value or by m2.
 #[derive(Debug, Copy, Clone, Default)]
 pub struct BalanceTotal {
+    /// Balance result for calculation step A
     pub A: RenNren,
+    /// Balance result for calculation step A+B
     pub B: RenNren,
+    /// Weighted delivered energy
     pub we_del: RenNren,
+    /// Weighted exported energy for calculation step A
     pub we_exp_A: RenNren,
+    /// Weighted exported energy for calculation step A+B
     pub we_exp: RenNren,
 }
 
-// Balance holds both the data and the results of an energy performance computation
+/// Data and results of an energy performance computation
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Balance {
+    /// Energy components (produced and consumed energy data + metadata)
     pub components: Components,
+    /// Weighting factors (weighting factors + metadata)
     pub wfactors: Factors,
+    /// Exported energy factor [0, 1]
     pub k_exp: f32,
+    /// Reference area used for energy performance ratios (>1e-3)
     pub arearef: f32,
+    /// Energy balance results by carrier
     pub balance_cr_i: HashMap<Carrier, BalanceForCarrier>,
+    /// Global energy balance results
     pub balance: BalanceTotal,
+    /// Global energy balance results expressed as area ratios
     pub balance_m2: BalanceTotal,
 }
 
