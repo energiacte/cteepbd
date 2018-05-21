@@ -34,7 +34,7 @@ pub struct RenNren {
 }
 
 impl RenNren {
-    // Default constructor -> { ren: 0.0, nren: 0.0 }
+    /// Default constructor -> { ren: 0.0, nren: 0.0 }
     pub fn new() -> Self {
         Default::default()
     }
