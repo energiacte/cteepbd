@@ -35,15 +35,14 @@
 ///   TODO:
 ///   - allow other values of the load matching factor (or functions) (formula 32, B.32)
 ///   - get results by use items (service), maybe using the reverse method E.3 (E.3.6, E.3.7)
-
 use std::collections::HashMap;
 
 use failure::Error;
 //use failure::ResultExt;
 
 use rennren::RenNren;
-use types::{CSubtype, CType, Carrier, Dest, Source, Step};
 use types::{Balance, BalanceForCarrier, BalanceTotal, Component, Components, Factor, Factors};
+use types::{CSubtype, CType, Carrier, Dest, Source, Step};
 
 use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
 
@@ -54,23 +53,18 @@ use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecve
 // /////////////// Aux functions for weighting factor selection //////////////////
 
 /// Find weighting factor for 'step' of energy exported to 'dest' from the given energy 'source'.
-/// 
+///
 /// * `fp_cr` - weighting factor list for a given energy carrier where search is done
 /// * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
 /// * `dest` - match this energy destination (use)
 /// * `step` - match this calculation step
-/// 
+///
 /// # Errors
-/// 
+///
 /// * the weighting factor list is empty
 /// * no match is found for the given criteria
-/// 
-fn fp_src(
-    fp_cr: &[Factor],
-    source: Source,
-    dest: Dest,
-    step: Step,
-) -> Result<&Factor, Error> {
+///
+fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor, Error> {
     fp_cr
         .iter()
         .find(|fp| fp.dest == dest && fp.step == step && fp.source == source)
@@ -95,13 +89,13 @@ fn fp_src(
 /// * `gen` - match generator (carrier subtype / origin) (i.e. `INSITU` or `COGENERACION`)
 /// * `dest` - match this energy destination (`to_nEPB`, `to_grid`, `input`)
 /// * `step` - match this calculation step (`A`, `B`)
-/// 
+///
 /// # Errors
-/// 
+///
 /// * the weighting factor list is empty
 /// * no match is found
 /// * the `gen` type doesn't match an energy source type (i.e. `INSITU` or `COGENERACION`)
-/// 
+///
 fn fp_gen<'a>(
     fp_cr: &'a [Factor],
     gen: &CSubtype,
@@ -125,17 +119,17 @@ fn fp_gen<'a>(
 /// * `cr_i_list` - list of components for carrier_i
 /// * `k_exp` - exported energy factor [0, 1]
 /// * `fp_cr` - weighting factors for carrier
-/// 
+///
 /// # Errors
-/// 
+///
 /// * Missing weighting factors for a carrier, origin, destination or calculation step
-/// 
+///
 pub fn balance_cr(
     cr_i_list: &[Component],
     fp_cr: &[Factor],
     k_exp: f32,
 ) -> Result<BalanceForCarrier, Error> {
-     // All carriers have the same timesteps (see FromStr for Components)
+    // All carriers have the same timesteps (see FromStr for Components)
     let num_steps = cr_i_list[0].values.len();
 
     // * Energy used by technical systems for EPB services, for each time step
@@ -332,8 +326,8 @@ pub fn balance_cr(
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     Ok(
-                        acc?
-                            + (fp_gen(fp_cr, gen, Dest::to_nEPB, Step::A)?.factors() * F_pr_i[gen]),
+                        acc? + (fp_gen(fp_cr, gen, Dest::to_nEPB, Step::A)?.factors()
+                            * F_pr_i[gen]),
                     )
                 })? // sum all i (non grid sources): fpA_nEPus_i[gen] * F_pr_i[gen]
         };
@@ -347,8 +341,8 @@ pub fn balance_cr(
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     Ok(
-                        acc?
-                            + (fp_gen(fp_cr, gen, Dest::to_grid, Step::A)?.factors() * F_pr_i[gen]),
+                        acc? + (fp_gen(fp_cr, gen, Dest::to_grid, Step::A)?.factors()
+                            * F_pr_i[gen]),
                     )
                 })? // sum all i (non grid sources): fpA_grid_i[gen] * F_pr_i[gen];
         };
@@ -368,8 +362,8 @@ pub fn balance_cr(
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     Ok(
-                        acc?
-                            + (fp_gen(fp_cr, gen, Dest::to_nEPB, Step::B)?.factors() * F_pr_i[gen]),
+                        acc? + (fp_gen(fp_cr, gen, Dest::to_nEPB, Step::B)?.factors()
+                            * F_pr_i[gen]),
                     )
                 })? // sum all i (non grid sources): fpB_nEPus_i[gen] * F_pr_i[gen]
         };
@@ -383,8 +377,8 @@ pub fn balance_cr(
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
                     Ok(
-                        acc?
-                            + (fp_gen(fp_cr, gen, Dest::to_grid, Step::B)?.factors() * F_pr_i[gen]),
+                        acc? + (fp_gen(fp_cr, gen, Dest::to_grid, Step::B)?.factors()
+                            * F_pr_i[gen]),
                     )
                 })? // sum all i (non grid sources): fpB_grid_i[gen] * F_pr_i[gen];
         };
@@ -451,10 +445,10 @@ pub fn balance_cr(
 /// * `arearef` - reference area used for computing energy performance ratios
 ///
 /// # Errors
-/// 
+///
 /// * Use of an `arearef` less than 1e-3 raises an error
 /// * Missing weighting factors needed for balance computation
-/// 
+///
 pub fn energy_performance(
     components: Components,
     wfactors: Factors,
