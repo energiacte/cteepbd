@@ -26,8 +26,8 @@
 // Vector utilities
 // -----------------------------------------------------------------------------------
 
-use std;
 use num::{Float, Num, Zero};
+use std;
 
 //export const zip = (...rows: any[]): any[] => [...rows[0]].map((_, c) => rows.map(row => row[c]));
 
@@ -104,7 +104,7 @@ mod tests {
             veclistsum(&[
                 &vec![1.0, 1.0, 1.0],
                 &vec![2.0, 2.0, 2.0],
-                &vec![3.0, 3.0, 3.0]
+                &vec![3.0, 3.0, 3.0],
             ])
         );
     }
