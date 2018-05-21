@@ -39,6 +39,18 @@ impl RenNren {
         Default::default()
     }
 
+    /// Build from a list of 2 elements
+    pub fn from_iter(seq: &[f32]) -> Option<Self> {
+        if seq.len() != 2 {
+            None
+        } else {
+            Some(Self {
+                ren: seq[0],
+                nren: seq[1],
+            })
+        }
+    }
+
     /// Total renewable + non renewable energy
     pub fn tot(&self) -> f32 {
         self.ren + self.nren
