@@ -31,6 +31,7 @@
 use std::collections::HashMap;
 use std::fmt;
 use std::str;
+use std::str::FromStr;
 
 use failure::Error;
 
@@ -360,6 +361,67 @@ impl str::FromStr for Factor {
 
 // == Data + Metadata Types ==
 
+/// Common trait for handling metadata
+
+pub trait MetaVec {
+    fn get_metavec(&self) -> &Vec<Meta>;
+    fn get_mut_metavec(&mut self) -> &mut Vec<Meta>;
+
+    /// Check if key is included in metadata
+    fn has_meta(&self, key: &str) -> bool {
+        self.get_metavec().iter().any(|m| m.key == key)
+    }
+
+    /// Get (optional) metadata value by key
+    fn get_meta(&self, key: &str) -> Option<String> {
+        self.get_metavec()
+            .iter()
+            .find(|m| m.key == key)
+            .and_then(|v| Some(v.value.clone()))
+    }
+
+    /// Get (optional) metadata value (f32) by key as f32
+    fn get_meta_f32(&self, key: &str) -> Option<f32> {
+        self.get_metavec()
+            .iter()
+            .find(|m| m.key == key)
+            .and_then(|v| f32::from_str(v.value.trim()).ok())
+    }
+
+    /// Get (optional) metadata value (f32, f32) by key as RenNren struct
+    fn get_meta_rennren(&self, key: &str) -> Option<RenNren> {
+        self.get_metavec()
+            .iter()
+            .find(|m| m.key == key)
+            .and_then(|v| {
+                let vals = v.value
+                    .split(',')
+                    .map(|s| f32::from_str(s.trim()).ok())
+                    .collect::<Option<Vec<f32>>>()
+                    .expect(&format!(
+                        "No se puede transformar el metadato a RenNren: {:?}",
+                        v
+                    ));
+                RenNren::from_iter(&vals)
+            })
+    }
+
+    /// Update metadata value for key or insert new metadata.
+    fn update_meta(&mut self, key: &str, value: &str) {
+        let val = value.to_string();
+        let wmeta = self.get_mut_metavec();
+        let metapos = wmeta.iter().position(|m| m.key == key);
+        if let Some(pos) = metapos {
+            wmeta[pos].value = val;
+        } else {
+            wmeta.push(Meta {
+                key: key.to_string(),
+                value: val,
+            });
+        };
+    }
+}
+
 /// List of component data bundled with its metadata
 ///
 /// #META CTE_AREAREF: 100.5
@@ -371,6 +433,15 @@ pub struct Components {
     pub cmeta: Vec<Meta>,
     /// Metadata
     pub cdata: Vec<Component>,
+}
+
+impl MetaVec for Components {
+    fn get_metavec(&self) -> &Vec<Meta> {
+        &self.cmeta
+    }
+    fn get_mut_metavec(&mut self) -> &mut Vec<Meta> {
+        &mut self.cmeta
+    }
 }
 
 impl fmt::Display for Components {
@@ -426,6 +497,15 @@ pub struct Factors {
     pub wmeta: Vec<Meta>,
     /// Metadata
     pub wdata: Vec<Factor>,
+}
+
+impl MetaVec for Factors {
+    fn get_metavec(&self) -> &Vec<Meta> {
+        &self.wmeta
+    }
+    fn get_mut_metavec(&mut self) -> &mut Vec<Meta> {
+        &mut self.wmeta
+    }
 }
 
 impl fmt::Display for Factors {
