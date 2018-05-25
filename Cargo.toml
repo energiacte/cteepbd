@@ -4,9 +4,9 @@ version = "0.1.0"
 authors = ["Rafael Villar Burke <pachi@ietcc.csic.es>"]
 
 [dependencies]
+clap = "*"
 failure = "*"
-lazy_static = "*"
-maplit = "*"
+itertools = "*"
 num= "*"
 strum = "*"
 strum_macros = "*"

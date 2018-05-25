@@ -27,19 +27,14 @@ extern crate pretty_assertions;
 
 #[macro_use]
 extern crate failure;
-
-#[macro_use]
-extern crate maplit;
-
+extern crate itertools;
 extern crate num;
-
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;
 
+pub mod cte;
 pub mod epbd;
 pub mod rennren;
 pub mod types;
 pub mod vecops;
-
-//pub use vecops::*;
