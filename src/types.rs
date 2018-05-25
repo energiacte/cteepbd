@@ -201,8 +201,14 @@ impl str::FromStr for Meta {
         // Remove start of line with #META or #CTE_
         let items: Vec<&str> = s.trim()[5..].splitn(2, ':').map(|v| v.trim()).collect();
         if items.len() == 2 {
-            let key = items[0].to_string();
-            let value = items[1].to_string();
+            let key = match items[0].trim() {
+                // Fix legacy values
+                "Localizacion" => "CTE_LOCALIZACION".to_string(),
+                "Area_ref" => "CTE_AREAREF".to_string(),
+                "kexp" => "CTE_KEXP".to_string(),
+                x => x.to_string(),
+            };
+            let value = items[1].trim().to_string();
             Ok(Meta { key, value })
         } else {
             Err(format_err!("Couldn't parse Metadata from string"))
@@ -251,17 +257,36 @@ impl str::FromStr for Component {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Component, Self::Err> {
+        use self::CSubtype::*;
+        use self::CType::*;
+        use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
+
         let items: Vec<&str> = s.trim().splitn(2, '#').map(|v| v.trim()).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(|v| v.trim()).collect();
         if items.len() < 4 {
             return Err(format_err!(
-                "Couldn't parse Component (Component) from string"
+                "Couldn't parse Component (Component) from string: {}",
+                s
             ));
         };
         let carrier: Carrier = items[0].parse()?;
         let ctype: CType = items[1].parse()?;
         let csubtype: CSubtype = items[2].parse()?;
+        let carrier_ok = match ctype {
+            CONSUMO => match csubtype {
+                EPB | NEPB => true,
+                _ => false,
+            },
+            PRODUCCION => match csubtype {
+                INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
+                COGENERACION => carrier == ELECTRICIDAD,
+                _ => false,
+            },
+        };
+        if !carrier_ok {
+            return Err(format_err!("Wrong Component definition in string: {}", s));
+        }
         //This accounts for the legacy version, which may not have a service type
         let maybeservice: Result<Service, _> = items[3].parse();
         let (valuesidx, service) = match maybeservice {
@@ -594,7 +619,7 @@ pub struct BalanceForCarrier {
     /// Exported energy to the grid and non EPB uses in each timestep, by generation source
     pub exported_bygen: HashMap<CSubtype, Vec<f32>>, // cambiado origin -> gen
     /// Exported energy to the grid and non EPB uses, by generation source
-    pub exported_bygen_an: HashMap<CSubtype, f32>,   // cambiado origin -> gen
+    pub exported_bygen_an: HashMap<CSubtype, f32>, // cambiado origin -> gen
     /// Exported energy to the grid in each timestep
     pub exported_grid: Vec<f32>,
     /// Exported energy to the grid
