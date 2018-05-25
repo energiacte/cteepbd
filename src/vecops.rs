@@ -29,12 +29,11 @@
 use num::{Float, Num, Zero};
 use std;
 
-//export const zip = (...rows: any[]): any[] => [...rows[0]].map((_, c) => rows.map(row => row[c]));
 
 // Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
 pub fn veclistsum<T>(veclist: &[&Vec<T>]) -> Vec<T>
 where
-    T: Num + Copy + Clone,
+    T: Num + Copy,
 {
     let maxlen: usize = veclist.iter().map(|lst| lst.len()).max().unwrap_or(0_usize);
     veclist.iter().fold(vec![Zero::zero()], |acc, ref x| {
