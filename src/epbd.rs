@@ -163,13 +163,13 @@ pub fn balance_cr(
 
     // Annually produced on-site energy from generator i (origin i)
     let mut E_pr_cr_pr_i_an = HashMap::<CSubtype, f32>::new();
-    for gen in pr_generators.iter() {
+    for gen in &pr_generators {
         E_pr_cr_pr_i_an.insert(*gen, vecsum(&E_pr_cr_pr_i_t[gen]));
     }
 
     // * Energy produced on-site and inside the assessment boundary (formula 30)
     let mut E_pr_cr_t = vec![0.0; num_steps];
-    for gen in pr_generators.iter() {
+    for gen in &pr_generators {
         E_pr_cr_t = vecvecsum(&E_pr_cr_t, &E_pr_cr_pr_i_t[gen])
     }
     let E_pr_cr_an = vecsum(&E_pr_cr_t);
@@ -212,7 +212,7 @@ pub fn balance_cr(
 
     // * Fraction of produced energy of type i (origin from generator i) (formula 14)
     let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
-    for gen in pr_generators.iter() {
+    for gen in &pr_generators {
         f_pr_cr_i.insert(
             *gen,
             if E_pr_cr_an > 1e-3 {
@@ -225,13 +225,13 @@ pub fn balance_cr(
 
     // * Energy used for produced carrier energy type i (origin from generator i) (formula 15)
     let mut E_pr_cr_i_used_EPus_t = HashMap::<CSubtype, Vec<f32>>::new();
-    for gen in pr_generators.iter() {
+    for gen in &pr_generators {
         E_pr_cr_i_used_EPus_t.insert(*gen, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i[gen]));
     }
 
     // * Exported energy from generator i (origin i) (formula 16)
     let mut E_exp_cr_pr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
-    for gen in pr_generators.iter() {
+    for gen in &pr_generators {
         E_exp_cr_pr_i_t.insert(
             *gen,
             vecvecdif(&E_pr_cr_pr_i_t[gen], &E_pr_cr_i_used_EPus_t[gen]),
@@ -240,7 +240,7 @@ pub fn balance_cr(
 
     // * Annually exported energy from generator i (origin i)
     let mut E_exp_cr_pr_i_an = HashMap::<CSubtype, f32>::new();
-    for gen in pr_generators.iter() {
+    for gen in &pr_generators {
         E_exp_cr_pr_i_an.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]));
     }
 
@@ -282,7 +282,7 @@ pub fn balance_cr(
         // * Fraction of produced energy tipe i (origin from generator i) that is exported (formula 14)
         // NOTE: simplified for annual computations (not valid for timestep calculation)
         let mut F_pr_i = HashMap::<CSubtype, f32>::new();
-        for gen in pr_generators.iter() {
+        for gen in &pr_generators {
             // Do not store generators without generation
             if E_exp_cr_pr_i_an[gen] != 0.0 {
                 F_pr_i.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_pr_i_an[gen]);
