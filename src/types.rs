@@ -306,6 +306,28 @@ pub struct Factor {
 }
 
 impl Factor {
+    /// Constructor
+    pub fn new(
+        carrier: Carrier,
+        source: Source,
+        dest: Dest,
+        step: Step,
+        ren: f32,
+        nren: f32,
+        comment: String,
+    ) -> Factor {
+        Factor {
+            carrier,
+            source,
+            dest,
+            step,
+            ren,
+            nren,
+            comment,
+        }
+    }
+
+    /// Get factors as RenNren struct
     pub fn factors(&self) -> RenNren {
         RenNren {
             ren: self.ren,
