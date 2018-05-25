@@ -39,12 +39,13 @@ use std::collections::HashMap;
 
 use failure::Error;
 //use failure::ResultExt;
+use itertools::Itertools;
 
 use rennren::RenNren;
 use types::{Balance, BalanceForCarrier, BalanceTotal, Component, Components, Factor, Factors};
 use types::{CSubtype, CType, Carrier, Dest, Source, Step};
 
-use vecops::{veckmul, veclistsum, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
+use vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
 
 // --------------------------------------------------------------------
 // Energy calculation functions
@@ -145,48 +146,38 @@ pub fn balance_cr(
         .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
 
     // * Produced on-site energy and inside the assessment boundary, by generator i (origin i)
-    let acc_hash: HashMap<CSubtype, Vec<f32>> = HashMap::new();
-    let E_pr_cr_pr_i_t = cr_i_list
+    let mut E_pr_cr_pr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
+    for comp in cr_i_list
         .iter()
-        .filter(|cr| cr.ctype == CType::PRODUCCION)
-        .fold(acc_hash, |mut acc, cr| {
-            {
-                let vals = acc.entry(cr.csubtype)
-                    .or_insert_with(|| vec![0.0; num_steps]);
-                *vals = vecvecsum(vals, &cr.values);
-            }
-            acc
-        });
+        .filter(|comp| comp.ctype == CType::PRODUCCION)
+    {
+        E_pr_cr_pr_i_t
+            .entry(comp.csubtype)
+            .and_modify(|e| *e = vecvecsum(e, &comp.values))
+            .or_insert_with(|| comp.values.clone());
+    }
 
     // PRODUCED ENERGY GENERATORS (CSubtype::INSITU or CSubtype::COGENERACION)
+    // generators are unique in this list
     let pr_generators: Vec<CSubtype> = E_pr_cr_pr_i_t.keys().cloned().collect(); // INSITU, COGENERACION
 
     // Annually produced on-site energy from generator i (origin i)
-    let acc_hash: HashMap<CSubtype, f32> = HashMap::new();
-    let E_pr_cr_pr_i_an = pr_generators.iter().fold(acc_hash, |mut acc, gen| {
-        {
-            let val = acc.entry(*gen).or_insert(0.0);
-            *val += vecsum(&E_pr_cr_pr_i_t[gen]);
-        }
-        acc
-    });
+    let mut E_pr_cr_pr_i_an = HashMap::<CSubtype, f32>::new();
+    for gen in pr_generators.iter() {
+        E_pr_cr_pr_i_an.insert(*gen, vecsum(&E_pr_cr_pr_i_t[gen]));
+    }
 
     // * Energy produced on-site and inside the assessment boundary (formula 30)
-    let E_pr_cr_t = if !pr_generators.is_empty() {
-        let pr_vals: Vec<_> = pr_generators
-            .iter()
-            .map(|gen| &E_pr_cr_pr_i_t[gen])
-            .collect();
-        veclistsum(pr_vals.as_slice())
-    } else {
-        vec![0.0; num_steps]
-    };
+    let mut E_pr_cr_t = vec![0.0; num_steps];
+    for gen in pr_generators.iter() {
+        E_pr_cr_t = vecvecsum(&E_pr_cr_t, &E_pr_cr_pr_i_t[gen])
+    }
     let E_pr_cr_an = vecsum(&E_pr_cr_t);
 
     // * Produced energy from all origins for EPB services for each time step (formula 31)
     // TODO: f_match_t constant for electricity (formula 32)
     // TODO: let f_match_t = fmatch(E_pr_cr_t / E_EPus_cr_t)
-    let f_match_t = vec![1.0; E_EPus_cr_t.len()];
+    let f_match_t = vec![1.0; num_steps];
 
     let E_pr_cr_used_EPus_t = vecvecmul(&f_match_t, &vecvecmin(&E_EPus_cr_t, &E_pr_cr_t));
 
@@ -220,53 +211,38 @@ pub fn balance_cr(
     // Implementation WITHOUT priorities on energy use
 
     // * Fraction of produced energy of type i (origin from generator i) (formula 14)
-    let f_pr_cr_i = pr_generators
-        .iter()
-        .fold(HashMap::<CSubtype, f32>::new(), |mut acc, gen| {
-            {
-                let val = acc.entry(*gen).or_insert(0.0);
-                if E_pr_cr_an > 1e-3 {
-                    *val = E_pr_cr_pr_i_an[gen] / E_pr_cr_an;
-                }
-            }
-            acc
-        });
+    let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
+    for gen in pr_generators.iter() {
+        f_pr_cr_i.insert(
+            *gen,
+            if E_pr_cr_an > 1e-3 {
+                E_pr_cr_pr_i_an[gen] / E_pr_cr_an
+            } else {
+                0.0
+            },
+        );
+    }
 
     // * Energy used for produced carrier energy type i (origin from generator i) (formula 15)
-    let E_pr_cr_i_used_EPus_t = pr_generators.iter().fold(
-        HashMap::<CSubtype, Vec<f32>>::new(),
-        |mut acc, gen| {
-            {
-                let val = acc.entry(*gen).or_insert_with(|| vec![0.0; num_steps]);
-                *val = veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i[gen]);
-            }
-            acc
-        },
-    );
+    let mut E_pr_cr_i_used_EPus_t = HashMap::<CSubtype, Vec<f32>>::new();
+    for gen in pr_generators.iter() {
+        E_pr_cr_i_used_EPus_t.insert(*gen, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i[gen]));
+    }
 
     // * Exported energy from generator i (origin i) (formula 16)
-    let E_exp_cr_pr_i_t = pr_generators.iter().fold(
-        HashMap::<CSubtype, Vec<f32>>::new(),
-        |mut acc, gen| {
-            {
-                let val = acc.entry(*gen).or_insert_with(|| vec![0.0; num_steps]);
-                *val = vecvecdif(&E_pr_cr_pr_i_t[gen], &E_pr_cr_i_used_EPus_t[gen]);
-            }
-            acc
-        },
-    );
+    let mut E_exp_cr_pr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
+    for gen in pr_generators.iter() {
+        E_exp_cr_pr_i_t.insert(
+            *gen,
+            vecvecdif(&E_pr_cr_pr_i_t[gen], &E_pr_cr_i_used_EPus_t[gen]),
+        );
+    }
 
     // * Annually exported energy from generator i (origin i)
-    let E_exp_cr_pr_i_an = pr_generators.iter().fold(
-        HashMap::<CSubtype, f32>::new(),
-        |mut acc, gen| {
-            {
-                let val = acc.entry(*gen).or_insert(0.0);
-                *val = vecsum(&E_exp_cr_pr_i_t[gen]);
-            }
-            acc
-        },
-    );
+    let mut E_exp_cr_pr_i_an = HashMap::<CSubtype, f32>::new();
+    for gen in pr_generators.iter() {
+        E_exp_cr_pr_i_an.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]));
+    }
 
     // -------- Weighted delivered and exported energy (11.6.2.1, 11.6.2.2, 11.6.2.3 + eq 2, 3)
     // NOTE: All weighting factors have been considered constant through all timesteps
@@ -305,15 +281,13 @@ pub fn balance_cr(
 
         // * Fraction of produced energy tipe i (origin from generator i) that is exported (formula 14)
         // NOTE: simplified for annual computations (not valid for timestep calculation)
-        let F_pr_i = pr_generators
-            .iter()
-            .fold(HashMap::<CSubtype, f32>::new(), |mut acc, gen| {
-                let E_exp_cr_gen_an = E_exp_cr_pr_i_an[gen];
-                if E_exp_cr_gen_an != 0.0 {
-                    acc.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_gen_an);
-                } // Do not store generators without generation
-                acc
-            });
+        let mut F_pr_i = HashMap::<CSubtype, f32>::new();
+        for gen in pr_generators.iter() {
+            // Do not store generators without generation
+            if E_exp_cr_pr_i_an[gen] != 0.0 {
+                F_pr_i.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_pr_i_an[gen]);
+            }
+        }
         // Generators (produced energy sources) that are exporting some energy (!= 0)
         let exp_generators: Vec<_> = F_pr_i.keys().collect();
 
@@ -450,8 +424,8 @@ pub fn balance_cr(
 /// * Missing weighting factors needed for balance computation
 ///
 pub fn energy_performance(
-    components: Components,
-    wfactors: Factors,
+    components: &Components,
+    wfactors: &Factors,
     k_exp: f32,
     arearef: f32,
 ) -> Result<Balance, Error> {
@@ -461,11 +435,9 @@ pub fn energy_performance(
         arearef
     );
 
-    let carriers = components.cdata.clone();
-    let fps = wfactors.wdata.clone();
-    let mut carriers_set: Vec<Carrier> = carriers.iter().map(|e| e.carrier).collect();
-    carriers_set.sort_unstable();
-    carriers_set.dedup();
+    let carriers = &components.cdata;
+    let fps = &wfactors.wdata;
+    let carriers_set: Vec<Carrier> = carriers.iter().map(|e| e.carrier).unique().collect();
 
     // Compute balance for each carrier
     let mut balance_cr_i: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
@@ -510,8 +482,8 @@ pub fn energy_performance(
 
     // Global data and results
     Ok(Balance {
-        components,
-        wfactors,
+        components: components.clone(),
+        wfactors: wfactors.clone(),
         k_exp,
         arearef,
         balance_cr_i,
