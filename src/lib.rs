@@ -29,6 +29,10 @@ extern crate pretty_assertions;
 extern crate failure;
 extern crate itertools;
 extern crate num;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 extern crate strum;
 #[macro_use]
 extern crate strum_macros;

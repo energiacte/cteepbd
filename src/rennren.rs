@@ -25,7 +25,7 @@ use std::fmt;
 use std::ops::{Add, Mul, Sub};
 
 /// Energy pairs representing renewable and non renewable energy quantities or factors.
-#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Default, Serialize)]
 pub struct RenNren {
     /// Renewable energy or factor
     pub ren: f32,
