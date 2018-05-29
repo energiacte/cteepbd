@@ -49,6 +49,17 @@ use epbdrs::types::{Balance, MetaVec, Service};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
+fn rennren_from_args(values: Option<clap::Values>) -> Option<RenNren> {
+    values.and_then(|v| {
+        let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
+        let userval = RenNren {
+            ren: vv[0],
+            nren: vv[1],
+        };
+        Some(userval)
+    })
+}
+
 fn readfile(path: &Path) -> Result<String, Error> {
     let mut f = File::open(path).context(format!("Archivo {} no encontrado", path.display()))?;
     let mut contents = String::new();
@@ -324,188 +335,114 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // Factores de paso ---------------------------------------------------------------------------
 
+    // Origen del dato
+    let mut orig = "";
+
     // 1. Localización de los factores de paso genéricos y redefinibles a través de la CLI
     // 1.1 Coeficiente de paso de vector genérico 1 - RED1
-    let red1 = matches
-        .values_of("red1")
-        .and_then(|v| {
-            let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let userval = RenNren {
-                ren: vv[0],
-                nren: vv[1],
-            };
-            if verbosity > 2 {
-                println!("Factores de paso para RED1 (usuario): {}", userval)
-            };
-            if components_is_some {
-                components.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", userval.ren, userval.nren));
-            }
+    let red1 = rennren_from_args(matches.values_of("red1"))
+        .and_then(|userval| {
+            orig = "usuario";
             Some(userval)
         })
         .or_else(|| {
-            if !components_is_some {
-                None
+            if let Some(metaval) = components.get_meta_rennren("CTE_RED1") {
+                orig = "metadatos";
+                Some(metaval)
             } else {
-                match components.get_meta_rennren("CTE_RED1") {
-                    Some(metaval) => {
-                        if verbosity > 2 {
-                            println!("Factores de paso para RED1 (metadatos): {}", metaval);
-                        }
-                        Some(metaval)
-                    }
-                    _ => None,
-                }
+                None
             }
         })
         .or_else(|| {
-            let defaultval = cte::CTE_RED_DEFAULTS_RED1;
-            if verbosity > 2 {
-                println!("Factores de paso para RED1 (predefinido): {}", defaultval);
-            }
-            Some(defaultval)
+            orig = "predefinido";
+            Some(cte::CTE_RED_DEFAULTS_RED1)
         });
+    if verbosity > 2 {
+        println!("Factores de paso para RED1 ({}): {}", orig, red1.unwrap())
+    };
+    if components_is_some {
+        let red1 = red1.unwrap();
+        components.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
+    }
 
     // 1.2 Coeficiente de paso de vector genérico 2 - RED2
-    let red2 = matches
-        .values_of("red2")
-        .and_then(|v| {
-            let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let userval = RenNren {
-                ren: vv[0],
-                nren: vv[1],
-            };
-            if verbosity > 2 {
-                println!("Factores de paso para RED2 (usuario): {}", userval);
-            }
-            if components_is_some {
-                components.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", userval.ren, userval.nren));
-            }
+    let red2 = rennren_from_args(matches.values_of("red2"))
+        .and_then(|userval| {
+            orig = "usuario";
             Some(userval)
         })
         .or_else(|| {
-            if !components_is_some {
-                None
+            if let Some(metaval) = components.get_meta_rennren("CTE_RED2") {
+                orig = "metadatos";
+                Some(metaval)
             } else {
-                match components.get_meta_rennren("CTE_RED2") {
-                    Some(metaval) => {
-                        if verbosity > 2 {
-                            println!("Factores de paso para RED2 (metadatos): {}", metaval);
-                        }
-                        Some(metaval)
-                    }
-                    _ => None,
-                }
+                None
             }
         })
         .or_else(|| {
-            let defaultval = cte::CTE_RED_DEFAULTS_RED2;
-            if verbosity > 2 {
-                println!("Factores de paso para RED2 (predefinido): {}", defaultval);
-            }
-            Some(defaultval)
+            orig = "predefinido";
+            Some(cte::CTE_RED_DEFAULTS_RED2)
         });
+    if verbosity > 2 {
+        println!("Factores de paso para RED2 ({}): {}", orig, red2.unwrap());
+    }
+    if components_is_some {
+        let red2 = red2.unwrap();
+        components.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
+    }
 
     // 1.3 Coeficiente de paso de cogeneración a la red - COGEN
-    let cogen = matches
-        .values_of("cogen")
-        .and_then(|v| {
-            let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let userval = RenNren {
-                ren: vv[0],
-                nren: vv[1],
-            };
-            if verbosity > 2 {
-                println!(
-                    "Factores de paso para COGENERACION a la red (usuario): {}",
-                    userval
-                );
-            }
-            if components_is_some {
-                components
-                    .update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", userval.ren, userval.nren));
-            }
+    let cogen = rennren_from_args(matches.values_of("cogen"))
+        .and_then(|userval| {
+            orig = "usuario";
             Some(userval)
         })
         .or_else(|| {
-            if !components_is_some {
-                None
+            if let Some(metaval) = components.get_meta_rennren("CTE_COGEN") {
+                orig = "metadatos";
+                Some(metaval)
             } else {
-                match components.get_meta_rennren("CTE_COGEN") {
-                    Some(metaval) => {
-                        if verbosity > 2 {
-                            println!(
-                                "Factores de paso para COGENERACION a la red (metadatos): {}",
-                                metaval
-                            );
-                        }
-                        Some(metaval)
-                    }
-                    _ => None,
-                }
+                None
             }
         })
         .or_else(|| {
-            let defaultval = cte::CTE_COGEN_DEFAULTS_TO_GRID;
-            if verbosity > 2 {
-                println!(
-                    "Factores de paso para COGENERACION a la red (predefinido): {}",
-                    defaultval
-                );
-            }
-            Some(defaultval)
+            orig = "predefinido";
+            Some(cte::CTE_COGEN_DEFAULTS_TO_GRID)
         });
+    if verbosity > 2 {
+        println!("Factores de paso para COGENERACION a la red ({}): {}", orig, cogen.unwrap());
+    }
+    if components_is_some {
+        let cogen = cogen.unwrap();
+        components.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
+    }
 
-    // 1.4 Coeficiente de paso de cogeneración a usos no EPB - COGENNEPB
-    let cogennepb = matches
-        .values_of("cogennepb")
-        .and_then(|v| {
-            let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let userval = RenNren {
-                ren: vv[0],
-                nren: vv[1],
-            };
-            if verbosity > 2 {
-                println!(
-                    "Factores de paso para COGENERACION a usos no EPB (usuario): {}",
-                    userval
-                );
-            }
-            if components_is_some {
-                components.update_meta(
-                    "CTE_COGENNEPB",
-                    &format!("{:.3}, {:.3}", userval.ren, userval.nren),
-                );
-            }
+    // 1.4 Coeficiente de paso de cogeneración a usos no EPB
+    let cogennepb = rennren_from_args(matches.values_of("cogennepb"))
+        .and_then(|userval| {
+            orig = "usuario";
             Some(userval)
         })
         .or_else(|| {
-            if !components_is_some {
-                None
+            if let Some(metaval) = components.get_meta_rennren("CTE_COGENNEPB") {
+                orig = "metadatos";
+                Some(metaval)
             } else {
-                match components.get_meta_rennren("CTE_COGENNEPB") {
-                    Some(metaval) => {
-                        if verbosity > 2 {
-                            println!(
-                                "Factores de paso para COGENERACION a usos no EPB (metadatos): {}",
-                                metaval
-                            );
-                        }
-                        Some(metaval)
-                    }
-                    _ => None,
-                }
+                None
             }
         })
         .or_else(|| {
-            let defaultval = cte::CTE_COGEN_DEFAULTS_TO_NEPB;
-            if verbosity > 2 {
-                println!(
-                    "Factores de paso para COGENERACION a usos no EPB (predefinido): {}",
-                    defaultval
-                );
-            }
-            Some(defaultval)
+            orig = "predefinido";
+            Some(cte::CTE_COGEN_DEFAULTS_TO_NEPB)
         });
+    if verbosity > 2 {
+        println!("Factores de paso para COGENERACION a usos no EPB ({}): {}", orig, cogennepb.unwrap());
+    }
+
+    if components_is_some {
+        let cogennepb = cogen.unwrap();
+        components.update_meta("CTE_COGENNEPB", &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren));
+    }
 
     // 2. Definición de los factores de paso principales
     let mut fpdata =
