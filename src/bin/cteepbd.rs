@@ -721,7 +721,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         if matches.is_present("archivo_salida_json") {
             let path = Path::new(matches.value_of_os("archivo_salida_json").unwrap());
             if verbosity > 0 {
-                println!("Resultados en formato JSON: \"{:?}\"", path.display());
+                println!("Resultados en formato JSON: {:?}", path.display());
             }
             let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|error| {
                 eprintln!("ERROR: No se ha podido convertir el balance al formato JSON");
@@ -736,7 +736,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         if matches.is_present("archivo_salida_xml") {
             let path = Path::new(matches.value_of_os("archivo_salida_xml").unwrap());
             if verbosity > 0 {
-                println!("Resultados en formato XML: \"{:?}\"", path.display());
+                println!("Resultados en formato XML: {:?}", path.display());
             }
             let xml = cte::balance_to_XML(&balance);
             writefile(&path, xml.as_bytes());
