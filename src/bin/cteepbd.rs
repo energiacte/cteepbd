@@ -330,39 +330,39 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         .values_of("red1")
         .and_then(|v| {
             let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let red1 = RenNren {
+            let userval = RenNren {
                 ren: vv[0],
                 nren: vv[1],
             };
             if verbosity > 2 {
-                println!("Factores de paso para RED1 (usuario): {}", red1)
+                println!("Factores de paso para RED1 (usuario): {}", userval)
             };
             if components_is_some {
-                components.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
+                components.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", userval.ren, userval.nren));
             }
-            Some(red1)
+            Some(userval)
         })
         .or_else(|| {
             if !components_is_some {
                 None
             } else {
                 match components.get_meta_rennren("CTE_RED1") {
-                    Some(red1) => {
+                    Some(metaval) => {
                         if verbosity > 2 {
-                            println!("Factores de paso para RED1 (metadatos): {}", red1);
+                            println!("Factores de paso para RED1 (metadatos): {}", metaval);
                         }
-                        Some(red1)
+                        Some(metaval)
                     }
                     _ => None,
                 }
             }
         })
         .or_else(|| {
-            let red1 = cte::CTE_RED_DEFAULTS_RED1;
+            let defaultval = cte::CTE_RED_DEFAULTS_RED1;
             if verbosity > 2 {
-                println!("Factores de paso para RED1 (predefinido): {}", red1);
+                println!("Factores de paso para RED1 (predefinido): {}", defaultval);
             }
-            Some(red1)
+            Some(defaultval)
         });
 
     // 1.2 Coeficiente de paso de vector genérico 2 - RED2
@@ -370,39 +370,39 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         .values_of("red2")
         .and_then(|v| {
             let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let red2 = RenNren {
+            let userval = RenNren {
                 ren: vv[0],
                 nren: vv[1],
             };
             if verbosity > 2 {
-                println!("Factores de paso para RED2 (usuario): {}", red2);
+                println!("Factores de paso para RED2 (usuario): {}", userval);
             }
             if components_is_some {
-                components.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
+                components.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", userval.ren, userval.nren));
             }
-            Some(red2)
+            Some(userval)
         })
         .or_else(|| {
             if !components_is_some {
                 None
             } else {
                 match components.get_meta_rennren("CTE_RED2") {
-                    Some(red2) => {
+                    Some(metaval) => {
                         if verbosity > 2 {
-                            println!("Factores de paso para RED2 (metadatos): {}", red2);
+                            println!("Factores de paso para RED2 (metadatos): {}", metaval);
                         }
-                        Some(red2)
+                        Some(metaval)
                     }
                     _ => None,
                 }
             }
         })
         .or_else(|| {
-            let red2 = cte::CTE_RED_DEFAULTS_RED2;
+            let defaultval = cte::CTE_RED_DEFAULTS_RED2;
             if verbosity > 2 {
-                println!("Factores de paso para RED2 (predefinido): {}", red2);
+                println!("Factores de paso para RED2 (predefinido): {}", defaultval);
             }
-            Some(red2)
+            Some(defaultval)
         });
 
     // 1.3 Coeficiente de paso de cogeneración a la red - COGEN
@@ -410,49 +410,49 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         .values_of("cogen")
         .and_then(|v| {
             let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let cogen = RenNren {
+            let userval = RenNren {
                 ren: vv[0],
                 nren: vv[1],
             };
             if verbosity > 2 {
                 println!(
                     "Factores de paso para COGENERACION a la red (usuario): {}",
-                    cogen
+                    userval
                 );
             }
             if components_is_some {
                 components
-                    .update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
+                    .update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", userval.ren, userval.nren));
             }
-            Some(cogen)
+            Some(userval)
         })
         .or_else(|| {
             if !components_is_some {
                 None
             } else {
                 match components.get_meta_rennren("CTE_COGEN") {
-                    Some(cogen) => {
+                    Some(metaval) => {
                         if verbosity > 2 {
                             println!(
                                 "Factores de paso para COGENERACION a la red (metadatos): {}",
-                                cogen
+                                metaval
                             );
                         }
-                        Some(cogen)
+                        Some(metaval)
                     }
                     _ => None,
                 }
             }
         })
         .or_else(|| {
-            let cogen = cte::CTE_COGEN_DEFAULTS_TO_GRID;
+            let defaultval = cte::CTE_COGEN_DEFAULTS_TO_GRID;
             if verbosity > 2 {
                 println!(
                     "Factores de paso para COGENERACION a la red (predefinido): {}",
-                    cogen
+                    defaultval
                 );
             }
-            Some(cogen)
+            Some(defaultval)
         });
 
     // 1.4 Coeficiente de paso de cogeneración a usos no EPB - COGENNEPB
@@ -460,51 +460,51 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         .values_of("cogennepb")
         .and_then(|v| {
             let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-            let cogen = RenNren {
+            let userval = RenNren {
                 ren: vv[0],
                 nren: vv[1],
             };
             if verbosity > 2 {
                 println!(
                     "Factores de paso para COGENERACION a usos no EPB (usuario): {}",
-                    cogen
+                    userval
                 );
             }
             if components_is_some {
                 components.update_meta(
                     "CTE_COGENNEPB",
-                    &format!("{:.3}, {:.3}", cogen.ren, cogen.nren),
+                    &format!("{:.3}, {:.3}", userval.ren, userval.nren),
                 );
             }
-            Some(cogen)
+            Some(userval)
         })
         .or_else(|| {
             if !components_is_some {
                 None
             } else {
                 match components.get_meta_rennren("CTE_COGENNEPB") {
-                    Some(cogen) => {
+                    Some(metaval) => {
                         if verbosity > 2 {
                             println!(
                                 "Factores de paso para COGENERACION a usos no EPB (metadatos): {}",
-                                cogen
+                                metaval
                             );
                         }
-                        Some(cogen)
+                        Some(metaval)
                     }
                     _ => None,
                 }
             }
         })
         .or_else(|| {
-            let cogen = cte::CTE_COGEN_DEFAULTS_TO_NEPB;
+            let defaultval = cte::CTE_COGEN_DEFAULTS_TO_NEPB;
             if verbosity > 2 {
                 println!(
                     "Factores de paso para COGENERACION a usos no EPB (predefinido): {}",
-                    cogen
+                    defaultval
                 );
             }
-            Some(cogen)
+            Some(defaultval)
         });
 
     // 2. Definición de los factores de paso principales
