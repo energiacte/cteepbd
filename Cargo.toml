@@ -5,6 +5,7 @@ authors = ["Rafael Villar Burke <pachi@ietcc.csic.es>"]
 
 [dependencies]
 clap = "*"
+exitcode = "*"
 failure = "*"
 itertools = "*"
 num= "*"
