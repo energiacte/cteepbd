@@ -38,8 +38,8 @@ use std::process;
 use std::str::FromStr;
 
 use clap::{App, Arg};
-use failure::Fail;
 use failure::Error;
+use failure::Fail;
 use failure::ResultExt;
 
 use epbdrs::cte;
@@ -59,12 +59,19 @@ fn readfile(path: &Path) -> Result<String, Error> {
 
 fn writefile(path: &Path, content: &[u8]) {
     let mut file = match File::create(&path) {
-        Err(err) => panic!("ERROR: no se ha podido escribir en \"{}\": {:?}",
-                        path.display(), err.cause()),
+        Err(err) => panic!(
+            "ERROR: no se ha podido escribir en \"{}\": {:?}",
+            path.display(),
+            err.cause()
+        ),
         Ok(file) => file,
     };
     if let Err(err) = file.write_all(content) {
-        panic!("No se ha podido escribir en {}: {:?}", path.display(), err.cause())
+        panic!(
+            "No se ha podido escribir en {}: {:?}",
+            path.display(),
+            err.cause()
+        )
     }
 }
 
@@ -223,14 +230,13 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     println!("** Datos de entrada");
 
     // Componentes energéticos ---------------------------------------------------------------------
-    let components = if let Some(archivo_componentes) = matches.value_of("archivo_componentes")
-    {
+    let components = if let Some(archivo_componentes) = matches.value_of("archivo_componentes") {
         let path = Path::new(archivo_componentes);
         let componentsstring = match readfile(path) {
             Ok(componentsstring) => {
                 println!("Componentes energéticos: \"{}\"", path.display());
                 componentsstring
-            },
+            }
             Err(err) => {
                 eprintln!(
                     "ERROR: No se ha podido leer el archivo de componentes energéticos \"{}\" -> {}",
@@ -247,11 +253,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 } else {
                     Some(components)
                 }
-            },
+            }
             Err(err) => {
                 eprintln!(
                     "ERROR: Formato incorrecto del archivo de componentes \"{}\" -> {}",
-                    archivo_componentes, err.cause()
+                    archivo_componentes,
+                    err.cause()
                 );
                 process::exit(exitcode::DATAERR);
             }
@@ -328,7 +335,8 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 nren: vv[1],
             };
             if verbosity > 2 {
-                println!("Factores de paso para RED1 (usuario): {}", red1)};
+                println!("Factores de paso para RED1 (usuario): {}", red1)
+            };
             if components_is_some {
                 components.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
             }
@@ -341,7 +349,8 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 match components.get_meta_rennren("CTE_RED1") {
                     Some(red1) => {
                         if verbosity > 2 {
-                        println!("Factores de paso para RED1 (metadatos): {}", red1);}
+                            println!("Factores de paso para RED1 (metadatos): {}", red1);
+                        }
                         Some(red1)
                     }
                     _ => None,
@@ -351,7 +360,8 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         .or_else(|| {
             let red1 = cte::CTE_RED_DEFAULTS_RED1;
             if verbosity > 2 {
-            println!("Factores de paso para RED1 (predefinido): {}", red1);}
+                println!("Factores de paso para RED1 (predefinido): {}", red1);
+            }
             Some(red1)
         });
 
@@ -364,7 +374,9 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 ren: vv[0],
                 nren: vv[1],
             };
-            if verbosity > 2 { println!("Factores de paso para RED2 (usuario): {}", red2 );}
+            if verbosity > 2 {
+                println!("Factores de paso para RED2 (usuario): {}", red2);
+            }
             if components_is_some {
                 components.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
             }
@@ -377,9 +389,8 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 match components.get_meta_rennren("CTE_RED2") {
                     Some(red2) => {
                         if verbosity > 2 {
-                        println!("Factores de paso para RED2 (metadatos): {}",
-                            red2
-                        );}
+                            println!("Factores de paso para RED2 (metadatos): {}", red2);
+                        }
                         Some(red2)
                     }
                     _ => None,
@@ -388,10 +399,9 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         })
         .or_else(|| {
             let red2 = cte::CTE_RED_DEFAULTS_RED2;
-            if verbosity > 2 { println!(
-                "Factores de paso para RED2 (predefinido): {}",
-                red2
-            );}
+            if verbosity > 2 {
+                println!("Factores de paso para RED2 (predefinido): {}", red2);
+            }
             Some(red2)
         });
 
@@ -405,10 +415,11 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 nren: vv[1],
             };
             if verbosity > 2 {
-            println!(
-                "Factores de paso para COGENERACION a la red (usuario): {}",
-                cogen
-            );}
+                println!(
+                    "Factores de paso para COGENERACION a la red (usuario): {}",
+                    cogen
+                );
+            }
             if components_is_some {
                 components
                     .update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
@@ -421,10 +432,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             } else {
                 match components.get_meta_rennren("CTE_COGEN") {
                     Some(cogen) => {
-                        if verbosity > 2 { println!(
-                            "Factores de paso para COGENERACION a la red (metadatos): {}",
-                            cogen
-                        );}
+                        if verbosity > 2 {
+                            println!(
+                                "Factores de paso para COGENERACION a la red (metadatos): {}",
+                                cogen
+                            );
+                        }
                         Some(cogen)
                     }
                     _ => None,
@@ -433,10 +446,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         })
         .or_else(|| {
             let cogen = cte::CTE_COGEN_DEFAULTS_TO_GRID;
-            if verbosity > 2 { println!(
-                "Factores de paso para COGENERACION a la red (predefinido): {}",
-                cogen
-            );}
+            if verbosity > 2 {
+                println!(
+                    "Factores de paso para COGENERACION a la red (predefinido): {}",
+                    cogen
+                );
+            }
             Some(cogen)
         });
 
@@ -449,10 +464,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 ren: vv[0],
                 nren: vv[1],
             };
-            if verbosity > 2 { println!(
-                "Factores de paso para COGENERACION a usos no EPB (usuario): {}",
-                cogen
-            );}
+            if verbosity > 2 {
+                println!(
+                    "Factores de paso para COGENERACION a usos no EPB (usuario): {}",
+                    cogen
+                );
+            }
             if components_is_some {
                 components.update_meta(
                     "CTE_COGENNEPB",
@@ -467,7 +484,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             } else {
                 match components.get_meta_rennren("CTE_COGENNEPB") {
                     Some(cogen) => {
-                        if verbosity > 2 { println!("Factores de paso para COGENERACION a usos no EPB (metadatos): {}", cogen);}
+                        if verbosity > 2 {
+                            println!(
+                                "Factores de paso para COGENERACION a usos no EPB (metadatos): {}",
+                                cogen
+                            );
+                        }
                         Some(cogen)
                     }
                     _ => None,
@@ -476,10 +498,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         })
         .or_else(|| {
             let cogen = cte::CTE_COGEN_DEFAULTS_TO_NEPB;
-            if verbosity > 2 {println!(
-                "Factores de paso para COGENERACION a usos no EPB (predefinido): {}",
-                cogen
-            );}
+            if verbosity > 2 {
+                println!(
+                    "Factores de paso para COGENERACION a usos no EPB (predefinido): {}",
+                    cogen
+                );
+            }
             Some(cogen)
         });
 
@@ -574,7 +598,6 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     let mut arearef;
     // Se define CTE_AREAREF en metadatos de componentes energéticos
     if components_is_some && components.has_meta("CTE_AREAREF") {
-
         arearef = components.get_meta_f32("CTE_AREAREF").unwrap_or_else(|| {
             println!("El área de referencia de los metadatos no es un valor numérico válido");
             process::exit(exitcode::DATAERR);
@@ -650,7 +673,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         }
         writefile(&path, components_string.as_bytes());
         if verbosity > 0 {
-            println!("Guardado archivo de componentes energéticos: {}", path.display());
+            println!(
+                "Guardado archivo de componentes energéticos: {}",
+                path.display()
+            );
         }
     }
 
@@ -694,21 +720,24 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         // Guardar balance en formato json
         if matches.is_present("archivo_salida_json") {
             let path = Path::new(matches.value_of_os("archivo_salida_json").unwrap());
-            if verbosity > 0 { println!("Resultados en formato JSON: \"{:?}\"", path.display()); }
-            let json = serde_json::to_string_pretty(&balance)
-                .unwrap_or_else(|error| {
-                    eprintln!("ERROR: No se ha podido convertir el balance al formato JSON");
-                    if verbosity > 2 {
-                        println!("{:?}, {:?}", error.cause(), error.backtrace())
-                    };
-                    process::exit(exitcode::DATAERR);
-                });
+            if verbosity > 0 {
+                println!("Resultados en formato JSON: \"{:?}\"", path.display());
+            }
+            let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|error| {
+                eprintln!("ERROR: No se ha podido convertir el balance al formato JSON");
+                if verbosity > 2 {
+                    println!("{:?}, {:?}", error.cause(), error.backtrace())
+                };
+                process::exit(exitcode::DATAERR);
+            });
             writefile(&path, json.as_bytes());
         }
         // Guardar balance en formato XML
         if matches.is_present("archivo_salida_xml") {
             let path = Path::new(matches.value_of_os("archivo_salida_xml").unwrap());
-            if verbosity > 0 { println!("Resultados en formato XML: \"{:?}\"", path.display()); }
+            if verbosity > 0 {
+                println!("Resultados en formato XML: \"{:?}\"", path.display());
+            }
             let xml = cte::balance_to_XML(&balance);
             writefile(&path, xml.as_bytes());
         }
