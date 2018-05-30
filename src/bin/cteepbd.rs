@@ -350,7 +350,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         Default::default()
     };
 
-    if verbosity > 1 && components.cmeta.len() > 0 {
+    if verbosity > 1 && !components.cmeta.is_empty() {
         println!("Metadatos de componentes:");
         for meta in &components.cmeta {
             println!("  {}: {}", meta.key, meta.value);
@@ -433,7 +433,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         };
 
     // Simplificación de los factores de paso -----------------------------------------------------------------
-    if components.cdata.len() > 0 && !matches.is_present("nosimplificafps") {
+    if !matches.is_present("nosimplificafps") && !components.cdata.is_empty() {
         let oldfplen = fpdata.wdata.len();
         cte::strip_wfactors(&mut fpdata, &components);
         if verbosity > 1 {
@@ -552,7 +552,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Cálculo del balance -------------------------------------------------------------------------
-    let balance: Option<Balance> = if components.cdata.len() > 0 {
+    let balance: Option<Balance> = if !components.cdata.is_empty() {
         Some(
             energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|error| {
                 eprintln!("ERROR: No se ha podido calcular el balance energético");
