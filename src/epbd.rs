@@ -125,11 +125,13 @@ fn fp_gen<'a>(
 ///
 /// * Missing weighting factors for a carrier, origin, destination or calculation step
 ///
+#[allow(non_snake_case)]
 pub fn balance_cr(
     cr_i_list: &[Component],
     fp_cr: &[Factor],
     k_exp: f32,
 ) -> Result<BalanceForCarrier, Error> {
+
     // All carriers have the same timesteps (see FromStr for Components)
     let num_steps = cr_i_list[0].values.len();
 

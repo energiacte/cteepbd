@@ -593,6 +593,7 @@ impl str::FromStr for Factors {
 }
 
 /// Detailed results of the energy balance computation for a given carrier
+#[allow(non_snake_case)]
 #[derive(Debug, Clone, Serialize)]
 pub struct BalanceForCarrier {
     /// Energy used for EPB uses in each timestep
@@ -655,6 +656,7 @@ pub struct BalanceForCarrier {
 }
 
 /// Global balance results (all carriers), either in absolute value or by m2.
+#[allow(non_snake_case)]
 #[derive(Debug, Copy, Clone, Default, Serialize)]
 pub struct BalanceTotal {
     /// Balance result for calculation step A

@@ -576,6 +576,7 @@ pub fn strip_wfactors(wfactors: &mut Factors, components: &Components) {
 // Funcionalidad para generar RER para ACS en perímetro nearby -------------------------
 
 /// Selecciona subconjunto de componentes relacionados con el servicio indicado.
+#[allow(non_snake_case)]
 pub fn components_by_service(components: &Components, service: Service) -> Components {
     // 1. Toma todos los consumos y producciones imputadas al servicio (p.e. ACS)
     // Nota: los consumos de MEDIOAMBIENTE de un servicio ya están equilibrados
