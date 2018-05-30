@@ -449,7 +449,14 @@ pub trait MetaVec {
                         "No se puede transformar el metadato a RenNren: {:?}",
                         v
                     ));
-                RenNren::from_iter(&vals)
+                if vals.len() != 2 {
+                    None
+                } else {
+                    Some(RenNren {
+                        ren: vals[0],
+                        nren: vals[1],
+                    })
+                }
             })
     }
 
