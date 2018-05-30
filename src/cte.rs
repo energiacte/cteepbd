@@ -272,7 +272,7 @@ pub fn fix_wfactors(
     wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
 
     // Vectores existentes
-    let CARRIERS: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
+    let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
 
     // Asegura que existe MEDIOAMBIENTE, INSITU, input, A, 1.0, 0.0
     let has_ma_insitu_input_a = wfactors.wdata.iter().any(|f| {
@@ -309,7 +309,7 @@ pub fn fix_wfactors(
         ));
     }
     // Asegura que existe ELECTRICIDAD, INSITU, input, A, 1.0, 0.0 si hay ELECTRICIDAD
-    let has_elec_and_elec_insitu_input_a = CARRIERS.contains(&Carrier::ELECTRICIDAD)
+    let has_elec_and_elec_insitu_input_a = wf_carriers.contains(&Carrier::ELECTRICIDAD)
         && !wfactors.wdata.iter().any(|f| {
             f.carrier == Carrier::ELECTRICIDAD && f.source == Source::INSITU
                 && f.dest == Dest::input
@@ -326,7 +326,7 @@ pub fn fix_wfactors(
         ));
     }
     // Asegura definición de factores de red para todos los vectores energéticos
-    let has_grid_factors_for_all_carriers = CARRIERS.iter().all(|&c| {
+    let has_grid_factors_for_all_carriers = wf_carriers.iter().all(|&c| {
         wfactors.wdata.iter().any(|f| {
             f.carrier == c && f.source == Source::RED && f.dest == Dest::input && f.step == Step::A
         })
@@ -352,7 +352,7 @@ pub fn fix_wfactors(
     ];
     for (c, s) in &exp_carriers {
         // Asegura que existe VECTOR, SRC, to_grid | to_nEPB, A, ren, nren
-        let fpAinput = wfactors
+        let fp_a_input = wfactors
             .wdata
             .iter()
             .find(|f| {
@@ -366,17 +366,14 @@ pub fn fix_wfactors(
         if !has_to_grid {
             if *s != Source::COGENERACION {
                 // VECTOR, SRC, to_grid, A, ren, nren === VECTOR, SRC, input, A, ren, nren
-                if fpAinput.is_some() {
-                    let f = fpAinput.as_ref().unwrap();
-                    wfactors.wdata.push(Factor::new(
-                        f.carrier,
-                        f.source,
-                        Dest::to_grid,
-                        Step::A,
-                        f.ren,
-                        f.nren,
-                        "Recursos usados para producir la energía exportada a la red".to_string(),
-                    ));
+                if fp_a_input.is_some() {
+                    let f = fp_a_input.as_ref().unwrap();
+                    wfactors.wdata.push(Factor {
+                        dest: Dest::to_grid,
+                        step: Step::A,
+                        comment: "Recursos usados para producir la energía exportada a la red".to_string(),
+                        ..*f
+                    });
                 } else {
                     bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso A", c);
                 }
@@ -401,25 +398,22 @@ pub fn fix_wfactors(
         if !has_to_nepb {
             if *s != Source::COGENERACION {
                 // VECTOR, SRC, to_nEPB, A, ren, nren == VECTOR, SRC, input, A, ren, nren
-                if fpAinput.is_some() {
-                    let f = fpAinput.as_ref().unwrap();
-                    wfactors.wdata.push(Factor::new(
-                        f.carrier,
-                        f.source,
-                        Dest::to_nEPB,
-                        Step::A,
-                        f.ren,
-                        f.nren,
-                        "Recursos usados para producir la energía exportada a usos no EPB"
-                            .to_string(),
-                    ));
+                if fp_a_input.is_some() {
+                    let f = fp_a_input.as_ref().unwrap();
+                    wfactors.wdata.push(Factor {
+                        dest: Dest::to_nEPB,
+                        step: Step::A,
+                        comment:
+                            "Recursos usados para producir la energía exportada a usos no EPB"
+                                .to_string(),
+                        ..*f
+                    });
                 } else {
                     bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso A", c);
                 }
             } else {
                 // TODO: Si está definido para to_grid (no por defecto) y no para to_nEPB, qué hacemos? usamos por defecto? usamos igual a to_grid?
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, to_nEPB, A, ren, nren - ver 9.6.6.2.3
-                #[cfg_attr(clippy, allow(float_cmp))]
                 let value_origin = if ((cogennepb.ren - CTE_COGEN_DEFAULTS_TO_NEPB.ren).abs()
                     < EPSILON)
                     && ((cogennepb.nren - CTE_COGEN_DEFAULTS_TO_NEPB.nren).abs() < EPSILON)
@@ -434,7 +428,7 @@ pub fn fix_wfactors(
             }
         }
         // Asegura que existe VECTOR, SRC, to_grid | to_nEPB, B, ren, nren
-        let fpAredinput = wfactors
+        let fp_a_red_input = wfactors
             .wdata
             .iter()
             .find(|f| {
@@ -447,8 +441,8 @@ pub fn fix_wfactors(
         });
         if !has_to_grid_b {
             // VECTOR, SRC, to_grid, B, ren, nren == VECTOR, RED, input, A, ren, nren
-            if fpAredinput.is_some() {
-                let f = fpAredinput.as_ref().unwrap();
+            if fp_a_red_input.is_some() {
+                let f = fp_a_red_input.as_ref().unwrap();
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::to_grid, Step::B, f.ren, f.nren,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a la red".to_string()));
             } else {
@@ -460,8 +454,8 @@ pub fn fix_wfactors(
         });
         if !has_to_nepb_b {
             // VECTOR, SRC, to_nEPB, B, ren, nren == VECTOR, RED, input, A, ren, nren
-            if fpAredinput.is_some() {
-                let f = fpAredinput.as_ref().unwrap();
+            if fp_a_red_input.is_some() {
+                let f = fp_a_red_input.as_ref().unwrap();
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::to_nEPB, Step::B, f.ren, f.nren,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB".to_string()));
             } else {
@@ -543,33 +537,33 @@ pub fn new_wfactors(
 ///  - para exportación a usos no EPB si no se aparecen en los datos
 ///  - de electricidad in situ si no aparece una producción de ese tipo
 pub fn strip_wfactors(wfactors: &mut Factors, components: &Components) {
-    let CARRIERS: Vec<_> = components
+    let wf_carriers: Vec<_> = components
         .cdata
         .iter()
         .map(|c| c.carrier)
         .unique()
         .collect();
-    let HASCOGEN = components
+    let has_cogen = components
         .cdata
         .iter()
         .any(|c| c.csubtype == CSubtype::COGENERACION);
-    let HASNEPB = components
+    let has_nepb = components
         .cdata
         .iter()
         .any(|c| c.csubtype == CSubtype::NEPB);
-    let HASELECINSITU = components
+    let has_elec_insitu = components
         .cdata
         .iter()
         .any(|c| c.carrier == Carrier::ELECTRICIDAD && c.csubtype == CSubtype::INSITU);
-    wfactors.wdata.retain(|f| CARRIERS.contains(&f.carrier));
+    wfactors.wdata.retain(|f| wf_carriers.contains(&f.carrier));
     wfactors
         .wdata
-        .retain(|f| f.source != Source::COGENERACION || HASCOGEN);
+        .retain(|f| f.source != Source::COGENERACION || has_cogen);
     wfactors
         .wdata
-        .retain(|f| f.dest != Dest::to_nEPB || HASNEPB);
+        .retain(|f| f.dest != Dest::to_nEPB || has_nepb);
     wfactors.wdata.retain(|f| {
-        f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || HASELECINSITU
+        f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_insitu
     });
 }
 
@@ -706,8 +700,9 @@ C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}",
 }
 
 /// Sustituye símbolos reservados en XML.
-pub fn escapeXML(unescaped: &str) -> String {
-    unescaped.replace('&', "&amp;")
+pub fn escape_xml(unescaped: &str) -> String {
+    unescaped
+        .replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
         .replace('\\', "&apos;")
@@ -715,7 +710,7 @@ pub fn escapeXML(unescaped: &str) -> String {
 }
 
 /// Muestra balance en formato XML.
-pub fn balance_to_XML(balanceobj: &Balance) -> String {
+pub fn balance_to_xml(balanceobj: &Balance) -> String {
     let Balance {
         components,
         wfactors,
@@ -734,8 +729,8 @@ pub fn balance_to_XML(balanceobj: &Balance) -> String {
         .map(|m| {
             format!(
                 "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
-                escapeXML(&m.key),
-                escapeXML(&m.value)
+                escape_xml(&m.key),
+                escape_xml(&m.value)
             )
         })
         .join("\n");
@@ -752,7 +747,7 @@ pub fn balance_to_XML(balanceobj: &Balance) -> String {
                 comment,
             } = f;
             format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><Comentario>{}</Comentario></Dato>",
-            carrier, source, dest, step, ren, nren, escapeXML(comment))
+            carrier, source, dest, step, ren, nren, escape_xml(comment))
         })
         .join("\n");
     let cmetastring = cmeta
@@ -760,8 +755,8 @@ pub fn balance_to_XML(balanceobj: &Balance) -> String {
         .map(|m| {
             format!(
                 "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
-                escapeXML(&m.key),
-                escapeXML(&m.value)
+                escape_xml(&m.key),
+                escape_xml(&m.value)
             )
         })
         .join("\n");
@@ -788,7 +783,7 @@ pub fn balance_to_XML(balanceobj: &Balance) -> String {
                 csubtype,
                 service,
                 vals,
-                escapeXML(comment)
+                escape_xml(comment)
             )
         })
         .join("\n");

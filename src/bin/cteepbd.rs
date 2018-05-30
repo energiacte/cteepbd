@@ -596,7 +596,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             if verbosity > 0 {
                 println!("Resultados en formato XML: {:?}", path.display());
             }
-            let xml = cte::balance_to_XML(&balance);
+            let xml = cte::balance_to_xml(&balance);
             writefile(&path, xml.as_bytes());
         }
         // Mostrar siempre en formato plain
