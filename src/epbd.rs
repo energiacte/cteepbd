@@ -439,28 +439,26 @@ pub fn energy_performance(
         arearef
     );
 
-    let carriers = &components.cdata;
-    let fps = &wfactors.wdata;
-    let carriers_set: Vec<Carrier> = carriers.iter().map(|e| e.carrier).unique().collect();
+    let carriers: Vec<Carrier> = components.cdata.iter().map(|e| e.carrier).unique().collect();
 
     // Compute balance for each carrier
     let mut balance_cr_i: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
-    for &carrier in &carriers_set {
-        let cr_i: Vec<Component> = carriers
+    for &carrier in &carriers {
+        let cr_i: Vec<Component> = components.cdata
             .iter()
             .filter(|e| e.carrier == carrier)
             .cloned()
             .collect();
-        let fp_cr: Vec<Factor> = fps.iter()
+        let fp_cr: Vec<Factor> = wfactors.wdata.iter()
             .filter(|e| e.carrier == carrier)
             .cloned()
             .collect();
-        let bal = balance_cr(&cr_i, &fp_cr, k_exp)?;
+        let bal = balance_cr(carrier, &cr_i, &fp_cr, k_exp)?;
         balance_cr_i.insert(carrier, bal);
     }
 
     // Accumulate partial balance values for total balance
-    let balance: BalanceTotal = carriers_set
+    let balance: BalanceTotal = carriers
         .iter()
         .fold(BalanceTotal::default(), |mut acc, cr| {
             // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
