@@ -127,6 +127,7 @@ fn fp_gen<'a>(
 ///
 #[allow(non_snake_case)]
 pub fn balance_cr(
+    carrier: Carrier,
     cr_i_list: &[Component],
     fp_cr: &[Factor],
     k_exp: f32,
@@ -380,6 +381,7 @@ pub fn balance_cr(
     let E_we_cr_an: RenNren = E_we_del_cr_an - E_we_exp_cr_an;
 
     Ok(BalanceForCarrier {
+        carrier: carrier,
         used_EPB: E_EPus_cr_t,
         used_nEPB: E_nEPus_cr_t,
         produced: E_pr_cr_t,

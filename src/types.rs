@@ -21,10 +21,6 @@
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
-//TODO: cmeta -> meta, cdata -> data
-//TODO: wmeta -> meta, wdata -> data
-//TODO: Add carrier name as attribute in the BalanceForCarrier struct
-//TODO: implement Display for BalanceForCarrier to serialize and FromStr to deserialize? JSON?
 //TODO: add produced_used_EPus to BalanceForCarrier (E_pr_cr_used_EPus_t)
 //TODO: add produced_used_EPus_bygen to BalanceForCarrier (E_pr_cr_i_used_EPus_t)
 
@@ -603,6 +599,8 @@ impl str::FromStr for Factors {
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Serialize)]
 pub struct BalanceForCarrier {
+    /// Energy carrier
+    pub carrier: Carrier,
     /// Energy used for EPB uses in each timestep
     pub used_EPB: Vec<f32>,
     /// Used energy for non EPB uses in each timestep
