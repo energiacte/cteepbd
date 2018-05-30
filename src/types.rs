@@ -37,7 +37,8 @@ use rennren::RenNren;
 
 /// Energy carrier.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString,
+         Serialize)]
 pub enum Carrier {
     /// Electricity
     ELECTRICIDAD,
@@ -719,7 +720,7 @@ mod tests {
             csubtype: "EPB".parse().unwrap(),
             service: "REF".parse().unwrap(),
             values: vec![
-                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
             comment: "Comentario cons 1".into(),
         };
@@ -730,7 +731,7 @@ mod tests {
             csubtype: "INSITU".parse().unwrap(),
             service: "NDEF".parse().unwrap(),
             values: vec![
-                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0
+                1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
             comment: "Comentario prod 1".into(),
         };

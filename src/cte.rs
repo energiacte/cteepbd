@@ -371,7 +371,8 @@ pub fn fix_wfactors(
                     wfactors.wdata.push(Factor {
                         dest: Dest::to_grid,
                         step: Step::A,
-                        comment: "Recursos usados para producir la energía exportada a la red".to_string(),
+                        comment: "Recursos usados para producir la energía exportada a la red"
+                            .to_string(),
                         ..*f
                     });
                 } else {

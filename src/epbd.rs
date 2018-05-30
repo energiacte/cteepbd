@@ -38,7 +38,6 @@
 use std::collections::HashMap;
 
 use failure::Error;
-//use failure::ResultExt;
 use itertools::Itertools;
 
 use rennren::RenNren;
@@ -132,7 +131,6 @@ pub fn balance_cr(
     fp_cr: &[Factor],
     k_exp: f32,
 ) -> Result<BalanceForCarrier, Error> {
-
     // All carriers have the same timesteps (see FromStr for Components)
     let num_steps = cr_i_list[0].values.len();
 
@@ -216,14 +214,12 @@ pub fn balance_cr(
     // * Fraction of produced energy of type i (origin from generator i) (formula 14)
     let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
     for gen in &pr_generators {
-        f_pr_cr_i.insert(
-            *gen,
-            if E_pr_cr_an > 1e-3 {
-                E_pr_cr_pr_i_an[gen] / E_pr_cr_an
-            } else {
-                0.0
-            },
-        );
+        let f = if E_pr_cr_an > 1e-3 {
+            E_pr_cr_pr_i_an[gen] / E_pr_cr_an
+        } else {
+            0.0
+        };
+        f_pr_cr_i.insert(*gen, f);
     }
 
     // * Energy used for produced carrier energy type i (origin from generator i) (formula 15)
@@ -439,17 +435,25 @@ pub fn energy_performance(
         arearef
     );
 
-    let carriers: Vec<Carrier> = components.cdata.iter().map(|e| e.carrier).unique().collect();
+    let carriers: Vec<Carrier> = components
+        .cdata
+        .iter()
+        .map(|e| e.carrier)
+        .unique()
+        .collect();
 
     // Compute balance for each carrier
     let mut balance_cr_i: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
     for &carrier in &carriers {
-        let cr_i: Vec<Component> = components.cdata
+        let cr_i: Vec<Component> = components
+            .cdata
             .iter()
             .filter(|e| e.carrier == carrier)
             .cloned()
             .collect();
-        let fp_cr: Vec<Factor> = wfactors.wdata.iter()
+        let fp_cr: Vec<Factor> = wfactors
+            .wdata
+            .iter()
             .filter(|e| e.carrier == carrier)
             .cloned()
             .collect();

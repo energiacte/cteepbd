@@ -27,14 +27,14 @@
 // -----------------------------------------------------------------------------------
 
 use num::{Float, Num, Zero};
-use std::iter::{Sum, FromIterator};
+use std::iter::{FromIterator, Sum};
 use std::ops::Deref;
 
 /// Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
 pub fn veclistsum<T, U>(veclist: &[&U]) -> Vec<T>
 where
     T: Num + Copy,
-    U: FromIterator<T> + Deref<Target=[T]>
+    U: FromIterator<T> + Deref<Target = [T]>,
 {
     let maxlen: usize = veclist.iter().map(|lst| lst.len()).max().unwrap_or(0_usize);
     veclist.iter().fold(vec![Zero::zero()], |acc, ref x| {
@@ -50,7 +50,7 @@ where
 pub fn vecvecmin<T, U>(vec1: &U, vec2: &U) -> Vec<T>
 where
     T: Float,
-    U: Deref<Target=[T]>
+    U: Deref<Target = [T]>,
 {
     vec1.iter()
         .enumerate()
@@ -62,7 +62,7 @@ where
 pub fn vecvecsum<T, U>(vec1: &U, vec2: &U) -> Vec<T>
 where
     T: Float,
-    U: Deref<Target=[T]>
+    U: Deref<Target = [T]>,
 {
     vec1.iter()
         .enumerate()
@@ -74,7 +74,7 @@ where
 pub fn vecvecdif<T, U>(vec1: &U, vec2: &U) -> Vec<T>
 where
     T: Float,
-    U: Deref<Target=[T]>
+    U: Deref<Target = [T]>,
 {
     vec1.iter()
         .enumerate()
@@ -86,7 +86,7 @@ where
 pub fn vecvecmul<T, U>(vec1: &U, vec2: &U) -> Vec<T>
 where
     T: Float,
-    U: Deref<Target=[T]>
+    U: Deref<Target = [T]>,
 {
     vec1.iter()
         .enumerate()
@@ -100,7 +100,7 @@ where
 pub fn veckmul<T, U>(vec1: &U, k: T) -> Vec<T>
 where
     T: Float,
-    U: Deref<Target=[T]>
+    U: Deref<Target = [T]>,
 {
     vec1.iter().map(|el| *el * k).collect()
 }
@@ -109,11 +109,10 @@ where
 pub fn vecsum<'a, T, U>(vec: &'a U) -> T
 where
     T: Float + Sum<&'a T> + 'a,
-    U: Deref<Target=[T]>
+    U: Deref<Target = [T]>,
 {
     vec.iter().sum()
 }
-
 
 #[cfg(test)]
 mod tests {
