@@ -33,7 +33,7 @@ extern crate serde_json;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use std::process;
+use std::process::exit;
 use std::str::FromStr;
 
 use clap::{App, Arg};
@@ -224,7 +224,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             Daniel Jiménez González <danielj@ietcc.csic.es>
             Marta Sorribes Gil <msorribes@ietcc.csic.es>"
         );
-        process::exit(exitcode::OK);
+        exit(exitcode::OK);
     }
 
     // Prólogo ------------------------------------------------------------------------------------
@@ -252,7 +252,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     "ERROR: No se ha podido leer el archivo de componentes energéticos \"{}\" -> {}",
                     path.display(), err.cause()
                 );
-                process::exit(exitcode::IOERR);
+                exit(exitcode::IOERR);
             }
         };
         match cte::parse_components(&componentsstring) {
@@ -270,7 +270,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     archivo_componentes,
                     err.cause()
                 );
-                process::exit(exitcode::DATAERR);
+                exit(exitcode::DATAERR);
             }
         }
     } else {
@@ -299,14 +299,14 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             if verbosity > 2 {
                 println!("{}", error)
             };
-            process::exit(exitcode::DATAERR);
+            exit(exitcode::DATAERR);
         });
         if kexp < 0.0 || kexp > 1.0 {
             eprintln!(
                 "ERROR: el factor de exportación debe estar entre 0.00 y 1.00 y vale {:.2}",
                 kexp
             );
-            process::exit(exitcode::DATAERR);
+            exit(exitcode::DATAERR);
         };
         if kexp != cte::KEXP_DEFAULT {
             println!(
@@ -324,11 +324,11 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             if verbosity > 2 {
                 println!("{}", error)
             };
-            process::exit(exitcode::DATAERR);
+            exit(exitcode::DATAERR);
         });
         if arearef <= 1e-3 {
             eprintln!("ERROR: el área de referencia definida por el usuario debe ser mayor que 0.00 y vale {:.2}", arearef);
-            process::exit(exitcode::DATAERR);
+            exit(exitcode::DATAERR);
         }
     }
 
@@ -458,7 +458,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                         "ERROR: No se ha podido leer el archivo de factores de paso \"{}\" -> {}",
                         path.display(), err.cause()
                     );
-                    process::exit(exitcode::IOERR);
+                    exit(exitcode::IOERR);
                 }
             };
             cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, true)
@@ -468,7 +468,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                         path.display(), error.cause()
                     );
                     if verbosity > 2 { println!("{}", error.backtrace()) };
-                    process::exit(exitcode::DATAERR);
+                    exit(exitcode::DATAERR);
                 })
         // Definición por localización
         } else {
@@ -495,14 +495,14 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 })
                 .or_else(|| {
                     eprintln!("ERROR: Sin datos suficientes para determinar los factores de paso");
-                    process::exit(exitcode::USAGE);
+                    exit(exitcode::USAGE);
                 }).unwrap();
 
             cte::new_wfactors(&localizacion, cogen, cogennepb, red1, red2, false)
                 .unwrap_or_else(|error| {
                     println!("ERROR: No se han podido generar los factores de paso");
                     if verbosity > 2 { println!("{}, {}", error.cause(), error.backtrace()) };
-                    process::exit(exitcode::DATAERR);
+                    exit(exitcode::DATAERR);
                 })
         };
 
@@ -536,7 +536,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     if components_is_some && components.has_meta("CTE_AREAREF") {
         arearef = components.get_meta_f32("CTE_AREAREF").unwrap_or_else(|| {
             println!("El área de referencia de los metadatos no es un valor numérico válido");
-            process::exit(exitcode::DATAERR);
+            exit(exitcode::DATAERR);
         });
         if matches.occurrences_of("arearef") == 0 {
             println!("Área de referencia (metadatos) [m2]: {:.2}", arearef);
@@ -574,7 +574,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     if components_is_some && components.has_meta("CTE_KEXP") {
         kexp = components.get_meta_f32("CTE_KEXP").unwrap_or_else(|| {
             println!("El factor de exportación de los metadatos no es un valor numérico válido");
-            process::exit(exitcode::DATAERR);
+            exit(exitcode::DATAERR);
         });
         if matches.occurrences_of("kexp") == 0 {
             println!("Factor de exportación (metadatos) [-]: {:.1}", kexp);
@@ -637,7 +637,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 if verbosity > 2 {
                     println!("{}, {}", error.cause(), error.backtrace())
                 };
-                process::exit(exitcode::DATAERR);
+                exit(exitcode::DATAERR);
             }),
         )
     } else if matches.is_present("gen_archivos_factores") {
@@ -664,7 +664,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 if verbosity > 2 {
                     println!("{:?}, {:?}", error.cause(), error.backtrace())
                 };
-                process::exit(exitcode::DATAERR);
+                exit(exitcode::DATAERR);
             });
             writefile(&path, json.as_bytes());
         }
