@@ -44,7 +44,7 @@ use failure::ResultExt;
 use epbdrs::cte;
 use epbdrs::epbd::*;
 use epbdrs::rennren::RenNren;
-use epbdrs::types::{Balance, MetaVec, Service};
+use epbdrs::types::{Balance, Components, MetaVec, Service};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
@@ -84,6 +84,83 @@ fn writefile(path: &Path, content: &[u8]) {
         )
     }
 }
+
+// Funciones auxiliares de validación y obtención de valores
+
+/// Comprueba validez del valor del factor de exportación de la CLI.
+fn validate_kexp(matches: &clap::ArgMatches, verbosity: u64) {
+    if matches.is_present("kexp") {
+        let kexp = value_t!(matches, "kexp", f32).unwrap_or_else(|error| {
+            eprintln!("ERROR: El área de referencia indicado no es un valor numérico válido");
+            if verbosity > 2 {
+                println!("{}", error)
+            };
+            exit(exitcode::DATAERR);
+        });
+        if kexp < 0.0 || kexp > 1.0 {
+            eprintln!(
+                "ERROR: el factor de exportación debe estar entre 0.00 y 1.00 y vale {:.2}",
+                kexp
+            );
+            exit(exitcode::DATAERR);
+        };
+        if kexp != cte::KEXP_DEFAULT {
+            println!(
+                "AVISO: factor de exportación k_exp ({:.2}) distinto al reglamentario ({:.2})",
+                kexp,
+                cte::KEXP_DEFAULT
+            );
+        };
+    }
+}
+
+/// Comprueba validez del dato de area en la CLI.
+fn validate_arearef(matches: &clap::ArgMatches, verbosity: u64) {
+    if matches.is_present("arearef") {
+        let arearef = value_t!(matches, "arearef", f32).unwrap_or_else(|error| {
+            println!("El área de referencia indicado no es un valor numérico válido");
+            if verbosity > 2 {
+                println!("{}", error)
+            };
+            exit(exitcode::DATAERR);
+        });
+        if arearef <= 1e-3 {
+            eprintln!("ERROR: el área de referencia definida por el usuario debe ser mayor que 0.00 y vale {:.2}", arearef);
+            exit(exitcode::DATAERR);
+        }
+    }
+}
+
+/// Obtiene factor de paso priorizando CLI -> metadatos -> valor por defecto.
+fn get_factor(matches: &clap::ArgMatches, components: &mut Components, verbosity: u64, arg: &str, meta: &str, descr: &str, default: RenNren) -> RenNren {
+    // Origen del dato
+    let mut orig = "";
+    let factor = rennren_from_args(matches.values_of(arg))
+        .and_then(|userval| {
+            orig = "usuario";
+            Some(userval)
+        })
+        .or_else(|| {
+            if let Some(metaval) = components.get_meta_rennren(meta) {
+                orig = "metadatos";
+                Some(metaval)
+            } else {
+                None
+            }
+        })
+        .or_else(|| {
+            orig = "predefinido";
+            Some(default)
+        })
+        .unwrap();
+    if verbosity > 2 {
+        println!("Factores de paso para {} ({}): {}", descr, orig, factor)
+    };
+    components.update_meta(meta, &format!("{:.3}, {:.3}", factor.ren, factor.nren));
+    factor
+}
+
+// Función principal ------------------------------------------------------------------------------
 
 fn main() {
     let matches = App::new("CteEPBD")
@@ -240,52 +317,40 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     println!("** Datos de entrada");
 
     // Componentes energéticos ---------------------------------------------------------------------
-    let components = if let Some(archivo_componentes) = matches.value_of("archivo_componentes") {
+    let mut components = if let Some(archivo_componentes) = matches.value_of("archivo_componentes") {
         let path = Path::new(archivo_componentes);
-        let componentsstring = match readfile(path) {
-            Ok(componentsstring) => {
-                println!("Componentes energéticos: \"{}\"", path.display());
-                componentsstring
-            }
-            Err(err) => {
-                eprintln!(
-                    "ERROR: No se ha podido leer el archivo de componentes energéticos \"{}\" -> {}",
-                    path.display(), err.cause()
-                );
-                exit(exitcode::IOERR);
-            }
-        };
-        match cte::parse_components(&componentsstring) {
-            Ok(components) => {
-                // Estamos en cálculo de ACS en nearby
-                if matches.is_present("acsnrb") {
-                    Some(cte::components_by_service(&components, Service::ACS))
-                } else {
-                    Some(components)
+        if let Ok(componentsstring) = readfile(path) {
+            println!("Componentes energéticos: \"{}\"", path.display());
+            match cte::parse_components(&componentsstring) {
+                Ok(components) => {
+                    // Estamos en cálculo de ACS en nearby
+                    if matches.is_present("acsnrb") {
+                        cte::components_by_service(&components, Service::ACS)
+                    } else {
+                        components
+                    }
+                }
+                Err(err) => {
+                    eprintln!(
+                        "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
+                        archivo_componentes,
+                        err.cause()
+                    );
+                    exit(exitcode::DATAERR);
                 }
             }
-            Err(err) => {
+        } else {
                 eprintln!(
-                    "ERROR: Formato incorrecto del archivo de componentes \"{}\" -> {}",
-                    archivo_componentes,
-                    err.cause()
+                    "ERROR: No se ha podido leer el archivo de componentes energéticos {}",
+                    path.display()
                 );
-                exit(exitcode::DATAERR);
-            }
+                exit(exitcode::IOERR);
         }
     } else {
-        None
-    };
-    let components_is_some = components.is_some(); // Marcador de que hay datos disponibles
-
-    let mut components = if components_is_some {
-        components.unwrap()
-    } else {
-        // Componentes vacío
         Default::default()
     };
 
-    if verbosity > 1 && components_is_some {
+    if verbosity > 1 && components.cmeta.len() > 0 {
         println!("Metadatos de componentes:");
         for meta in &components.cmeta {
             println!("  {}: {}", meta.key, meta.value);
@@ -293,155 +358,22 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Comprobación del parámetro de factor de exportación kexp ----------------------------------------
-    if matches.is_present("kexp") {
-        let kexp = value_t!(matches, "kexp", f32).unwrap_or_else(|error| {
-            println!("El área de referencia indicado no es un valor numérico válido");
-            if verbosity > 2 {
-                println!("{}", error)
-            };
-            exit(exitcode::DATAERR);
-        });
-        if kexp < 0.0 || kexp > 1.0 {
-            eprintln!(
-                "ERROR: el factor de exportación debe estar entre 0.00 y 1.00 y vale {:.2}",
-                kexp
-            );
-            exit(exitcode::DATAERR);
-        };
-        if kexp != cte::KEXP_DEFAULT {
-            println!(
-                "AVISO: factor de exportación k_exp ({:.2}) distinto al reglamentario ({:.2})",
-                kexp,
-                cte::KEXP_DEFAULT
-            );
-        };
-    }
+    validate_kexp(&matches, verbosity);
 
     // Comprobación del parámetro de área de referencia -------------------------------------------------------------------------
-    if matches.is_present("arearef") {
-        let arearef = value_t!(matches, "arearef", f32).unwrap_or_else(|error| {
-            println!("El área de referencia indicado no es un valor numérico válido");
-            if verbosity > 2 {
-                println!("{}", error)
-            };
-            exit(exitcode::DATAERR);
-        });
-        if arearef <= 1e-3 {
-            eprintln!("ERROR: el área de referencia definida por el usuario debe ser mayor que 0.00 y vale {:.2}", arearef);
-            exit(exitcode::DATAERR);
-        }
-    }
+    validate_arearef(&matches, verbosity);
 
     // Factores de paso ---------------------------------------------------------------------------
 
-    // Origen del dato
-    let mut orig = "";
-
     // 1. Localización de los factores de paso genéricos y redefinibles a través de la CLI
     // 1.1 Coeficiente de paso de vector genérico 1 - RED1
-    let red1 = rennren_from_args(matches.values_of("red1"))
-        .and_then(|userval| {
-            orig = "usuario";
-            Some(userval)
-        })
-        .or_else(|| {
-            if let Some(metaval) = components.get_meta_rennren("CTE_RED1") {
-                orig = "metadatos";
-                Some(metaval)
-            } else {
-                None
-            }
-        })
-        .or_else(|| {
-            orig = "predefinido";
-            Some(cte::CTE_RED_DEFAULTS_RED1)
-        });
-    if verbosity > 2 {
-        println!("Factores de paso para RED1 ({}): {}", orig, red1.unwrap())
-    };
-    if components_is_some {
-        let red1 = red1.unwrap();
-        components.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
-    }
-
+    let red1 = Some(get_factor(&matches, &mut components, verbosity, "red1", "CTE_RED1", "RED1", cte::CTE_RED_DEFAULTS_RED1));
     // 1.2 Coeficiente de paso de vector genérico 2 - RED2
-    let red2 = rennren_from_args(matches.values_of("red2"))
-        .and_then(|userval| {
-            orig = "usuario";
-            Some(userval)
-        })
-        .or_else(|| {
-            if let Some(metaval) = components.get_meta_rennren("CTE_RED2") {
-                orig = "metadatos";
-                Some(metaval)
-            } else {
-                None
-            }
-        })
-        .or_else(|| {
-            orig = "predefinido";
-            Some(cte::CTE_RED_DEFAULTS_RED2)
-        });
-    if verbosity > 2 {
-        println!("Factores de paso para RED2 ({}): {}", orig, red2.unwrap());
-    }
-    if components_is_some {
-        let red2 = red2.unwrap();
-        components.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
-    }
-
+    let red2 = Some(get_factor(&matches, &mut components, verbosity, "red2", "CTE_RED2", "RED2", cte::CTE_RED_DEFAULTS_RED2));
     // 1.3 Coeficiente de paso de cogeneración a la red - COGEN
-    let cogen = rennren_from_args(matches.values_of("cogen"))
-        .and_then(|userval| {
-            orig = "usuario";
-            Some(userval)
-        })
-        .or_else(|| {
-            if let Some(metaval) = components.get_meta_rennren("CTE_COGEN") {
-                orig = "metadatos";
-                Some(metaval)
-            } else {
-                None
-            }
-        })
-        .or_else(|| {
-            orig = "predefinido";
-            Some(cte::CTE_COGEN_DEFAULTS_TO_GRID)
-        });
-    if verbosity > 2 {
-        println!("Factores de paso para COGENERACION a la red ({}): {}", orig, cogen.unwrap());
-    }
-    if components_is_some {
-        let cogen = cogen.unwrap();
-        components.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
-    }
-
+    let cogen = Some(get_factor(&matches, &mut components, verbosity, "cogen", "CTE_COGEN", "COGENERACION a la red", cte::CTE_COGEN_DEFAULTS_TO_GRID));
     // 1.4 Coeficiente de paso de cogeneración a usos no EPB
-    let cogennepb = rennren_from_args(matches.values_of("cogennepb"))
-        .and_then(|userval| {
-            orig = "usuario";
-            Some(userval)
-        })
-        .or_else(|| {
-            if let Some(metaval) = components.get_meta_rennren("CTE_COGENNEPB") {
-                orig = "metadatos";
-                Some(metaval)
-            } else {
-                None
-            }
-        })
-        .or_else(|| {
-            orig = "predefinido";
-            Some(cte::CTE_COGEN_DEFAULTS_TO_NEPB)
-        });
-    if verbosity > 2 {
-        println!("Factores de paso para COGENERACION a usos no EPB ({}): {}", orig, cogennepb.unwrap());
-    }
-
-    if components_is_some {
-        let cogennepb = cogen.unwrap();
-        components.update_meta("CTE_COGENNEPB", &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren));
-    }
+    let cogennepb = Some(get_factor(&matches, &mut components, verbosity, "cogennepb", "CTE_COGENNEPB", "COGENERACION a usos no EPB", cte::CTE_COGEN_DEFAULTS_TO_NEPB));
 
     // 2. Definición de los factores de paso principales
     let mut fpdata =
@@ -476,21 +408,15 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 .value_of("fps_loc")
                 .and_then(|v| {
                     println!("Factores de paso (usuario): {}", v);
-                    if components_is_some {
-                        components.update_meta("CTE_LOCALIZACION", v);
-                    }
+                    components.update_meta("CTE_LOCALIZACION", v);
                     Some(v.to_string())
                 })
                 .or_else(|| {
-                    if !components_is_some {
-                        None
+                    if let Some(loc) = components.get_meta("CTE_LOCALIZACION") {
+                        println!("Factores de paso (metadatos): {}", loc);
+                        Some(loc)
                     } else {
-                        match components.get_meta("CTE_LOCALIZACION") {
-                        Some(loc) => {
-                            println!("Factores de paso (metadatos): {}", loc);
-                            Some(loc) },
-                        _ => None
-                        }
+                        None
                     }
                 })
                 .or_else(|| {
@@ -507,7 +433,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         };
 
     // Simplificación de los factores de paso -----------------------------------------------------------------
-    if components_is_some && !matches.is_present("nosimplificafps") {
+    if components.cdata.len() > 0 && !matches.is_present("nosimplificafps") {
         let oldfplen = fpdata.wdata.len();
         cte::strip_wfactors(&mut fpdata, &components);
         if verbosity > 1 {
@@ -533,7 +459,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     let mut arearef;
     // Se define CTE_AREAREF en metadatos de componentes energéticos
-    if components_is_some && components.has_meta("CTE_AREAREF") {
+    if components.has_meta("CTE_AREAREF") {
         arearef = components.get_meta_f32("CTE_AREAREF").unwrap_or_else(|| {
             println!("El área de referencia de los metadatos no es un valor numérico válido");
             exit(exitcode::DATAERR);
@@ -559,9 +485,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Actualiza metadato CTE_AREAREF al valor seleccionado
-    if components_is_some {
-        components.update_meta("CTE_AREAREF", &format!("{:.2}", arearef));
-    }
+    components.update_meta("CTE_AREAREF", &format!("{:.2}", arearef));
 
     // kexp ------------------------------------------------------------------------------------------
     // Orden de prioridad:
@@ -571,7 +495,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     let mut kexp;
     // Se define CTE_KEXP en metadatos de componentes energéticos
-    if components_is_some && components.has_meta("CTE_KEXP") {
+    if components.has_meta("CTE_KEXP") {
         kexp = components.get_meta_f32("CTE_KEXP").unwrap_or_else(|| {
             println!("El factor de exportación de los metadatos no es un valor numérico válido");
             exit(exitcode::DATAERR);
@@ -596,9 +520,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         println!("Factor de exportación (predefinido) [-]: {:.1}", kexp);
     }
     // Actualiza metadato CTE_KEXP al valor seleccionado
-    if components_is_some {
-        components.update_meta("CTE_KEXP", &format!("{:.1}", kexp));
-    }
+    components.update_meta("CTE_KEXP", &format!("{:.1}", kexp));
 
     // Guardado de componentes energéticos -----------------------------------------------------------
     if matches.is_present("gen_archivo_componentes") {
@@ -630,7 +552,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Cálculo del balance -------------------------------------------------------------------------
-    let balance: Option<Balance> = if components_is_some {
+    let balance: Option<Balance> = if components.cdata.len() > 0 {
         Some(
             energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|error| {
                 eprintln!("ERROR: No se ha podido calcular el balance energético");
