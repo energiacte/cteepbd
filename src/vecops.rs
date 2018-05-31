@@ -26,16 +26,11 @@
 // Vector utilities
 // -----------------------------------------------------------------------------------
 
-use num::{Float, Num, Zero};
-use std::iter::{FromIterator, Sum};
-use std::ops::Deref;
+use num::{Float, Zero};
+use std::iter::Sum;
 
 /// Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
-pub fn veclistsum<T, U>(veclist: &[&U]) -> Vec<T>
-where
-    T: Num + Copy,
-    U: FromIterator<T> + Deref<Target = [T]>,
-{
+pub fn veclistsum<T: Float>(veclist: &[&[T]]) -> Vec<T> {
     let maxlen: usize = veclist.iter().map(|lst| lst.len()).max().unwrap_or(0_usize);
     veclist.iter().fold(vec![Zero::zero()], |acc, ref x| {
         (0..maxlen)
@@ -47,11 +42,7 @@ where
 }
 
 /// Elementwise minimum min res[i] = min(vec1[i], vec2[i])
-pub fn vecvecmin<T, U>(vec1: &U, vec2: &U) -> Vec<T>
-where
-    T: Float,
-    U: Deref<Target = [T]>,
-{
+pub fn vecvecmin<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
         .map(|(ii, el)| el.min(*vec2.get(ii).unwrap_or(&Zero::zero())))
@@ -59,11 +50,7 @@ where
 }
 
 /// Elementwise sum of arrays
-pub fn vecvecsum<T, U>(vec1: &U, vec2: &U) -> Vec<T>
-where
-    T: Float,
-    U: Deref<Target = [T]>,
-{
+pub fn vecvecsum<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
         .map(|(ii, el)| *el + *vec2.get(ii).unwrap_or(&Zero::zero()))
@@ -71,11 +58,7 @@ where
 }
 
 /// Elementwise difference res[i] = vec1[i] - vec2[i]
-pub fn vecvecdif<T, U>(vec1: &U, vec2: &U) -> Vec<T>
-where
-    T: Float,
-    U: Deref<Target = [T]>,
-{
+pub fn vecvecdif<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
         .map(|(ii, el)| *el - *vec2.get(ii).unwrap_or(&Zero::zero()))
@@ -83,33 +66,22 @@ where
 }
 
 /// Elementwise multiplication res[i] = vec1[i] * vec2[i]
-pub fn vecvecmul<T, U>(vec1: &U, vec2: &U) -> Vec<T>
-where
-    T: Float,
-    U: Deref<Target = [T]>,
-{
+pub fn vecvecmul<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     vec1.iter()
         .enumerate()
         .map(|(ii, el)| *el * *vec2.get(ii).unwrap_or(&Zero::zero()))
         .collect()
 }
 
-// TODO: Elementwise division res[i] = vec1[i] / vec2[i] for each vec1[i] != 0 if vec2 != 0
-
 /// Multiply vector by scalar
-pub fn veckmul<T, U>(vec1: &U, k: T) -> Vec<T>
-where
-    T: Float,
-    U: Deref<Target = [T]>,
-{
+pub fn veckmul<T: Float>(vec1: &[T], k: T) -> Vec<T> {
     vec1.iter().map(|el| *el * k).collect()
 }
 
 /// Sum all elements in a vector
-pub fn vecsum<'a, T, U>(vec: &'a U) -> T
+pub fn vecsum<'a, T>(vec: &'a [T]) -> T
 where
     T: Float + Sum<&'a T> + 'a,
-    U: Deref<Target = [T]>,
 {
     vec.iter().sum()
 }
@@ -120,6 +92,10 @@ mod tests {
 
     #[test]
     fn vecops_veclistsum() {
+        assert_eq!(
+            vec![6.0, 6.0, 6.0],
+            veclistsum(&[&[1.0, 1.0, 1.0], &[2.0, 2.0, 2.0], &[3.0, 3.0, 3.0]])
+        );
         assert_eq!(
             vec![6.0, 6.0, 6.0],
             veclistsum(&[
