@@ -194,7 +194,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn RenNren() {
+    fn ren_nren() {
         assert_eq!(
             RenNren {
                 ren: 3.0,
