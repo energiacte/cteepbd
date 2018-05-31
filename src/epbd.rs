@@ -125,7 +125,7 @@ fn fp_gen<'a>(
 /// * Missing weighting factors for a carrier, origin, destination or calculation step
 ///
 #[allow(non_snake_case)]
-pub fn balance_cr(
+fn balance_cr(
     carrier: Carrier,
     cr_i_list: &[Component],
     fp_cr: &[Factor],
@@ -252,10 +252,12 @@ pub fn balance_cr(
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid.factors(); // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources
-    let E_we_del_cr_pr_an = {
-        let E_pr_i = E_pr_cr_pr_i_an.get(&CSubtype::INSITU).unwrap_or(&0.0);
-        let fpA_pr_i = fp_src(fp_cr, Source::INSITU, Dest::input, Step::A)?;
-        E_pr_i * fpA_pr_i.factors()
+    let E_we_del_cr_pr_an = match E_pr_cr_pr_i_an.get(&CSubtype::INSITU) {
+        Some(E_pr_i) => {
+            let fpA_pr_i = fp_src(fp_cr, Source::INSITU, Dest::input, Step::A)?;
+            E_pr_i * fpA_pr_i.factors()
+        },
+        None => RenNren::default(),
     };
 
     // 3) Total delivered energy: grid + all non cogeneration
