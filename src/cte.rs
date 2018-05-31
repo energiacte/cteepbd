@@ -190,25 +190,19 @@ pub fn fix_components(components: &mut Components) {
             if consumed.is_empty() {
                 return None;
             }; // No hay consumo
-            let mut unbalanced_values = veclistsum(
-                consumed
-                    .iter()
-                    .map(|v| &v.values)
-                    .collect::<Vec<_>>()
-                    .as_slice(),
-            );
+            let mut unbalanced_values = veclistsum(&consumed
+                .iter()
+                .map(|&v| v.values.as_slice())
+                .collect::<Vec<_>>());
             let produced: Vec<_> = ecomps
                 .clone()
                 .filter(|c| c.ctype == CType::PRODUCCION)
                 .collect();
             if !produced.is_empty() {
-                let totproduced = veclistsum(
-                    produced
-                        .iter()
-                        .map(|v| &v.values)
-                        .collect::<Vec<_>>()
-                        .as_slice(),
-                );
+                let totproduced = veclistsum(&produced
+                    .iter()
+                    .map(|&v| v.values.as_slice())
+                    .collect::<Vec<_>>());
                 unbalanced_values = vecvecdif(&unbalanced_values, &totproduced)
                     .iter()
                     .map(|&v| if v > 0.0 { v } else { 0.0 })
