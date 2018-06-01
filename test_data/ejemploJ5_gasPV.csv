@@ -1,0 +1,5 @@
+#META Ejemplo: J5
+#META Descripcion: Caldera de gas y fotovoltaica (parcial) para consumos auxiliares
+ELECTRICIDAD,CONSUMO,EPB,NDEF,20
+ELECTRICIDAD,PRODUCCION,INSITU,NDEF,40
+GASNATURAL,CONSUMO,EPB,NDEF,190

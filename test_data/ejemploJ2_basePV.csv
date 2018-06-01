@@ -1,0 +1,4 @@
+#META Ejemplo: J2
+#META Descripcion: Todo eléctrico, con cobertura fotovoltaica del 50%
+ELECTRICIDAD,CONSUMO,EPB,NDEF,100.0
+ELECTRICIDAD,PRODUCCION,INSITU,NDEF,50.0
