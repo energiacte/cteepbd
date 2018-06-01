@@ -951,6 +951,14 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
         parse_components(&componentsstring).unwrap()
     }
 
+    fn wfactors_from_file(path: &str) -> Factors {
+        let path = Path::new(path);
+        let mut f = File::open(path).unwrap();
+        let mut wfactors_string = String::new();
+        f.read_to_string(&mut wfactors_string).unwrap();
+        parse_wfactors(&wfactors_string, None, None, None, None, false).unwrap()
+    }
+
     ///Approximate equality for RenNren values
     pub fn approx_equal(expected: RenNren, got: RenNren) -> bool {
         let dif_ren = expected.ren - got.ren;
@@ -1219,6 +1227,26 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
         ));
     }
 
+    #[test]
+    fn cte_6_K3_wfactors_file() {
+        let comps = components_from_file("test_data/ejemplo6K3.csv");
+        let FP: Factors = wfactors_from_file("test_data/factores_paso_test.csv");
+        let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+        assert!(approx_equal(
+            RenNren {
+                ren: 1385.5,
+                nren: -662.0
+            },
+            bal.balance_m2.B
+        ));
+        assert!(approx_equal(
+            RenNren {
+                ren: 1009.5,
+                nren: 842.0
+            },
+            bal.balance_m2.A
+        ));
+    }
 
     // *** Ejemplos ISO/TR 52000-2:2016 ---------------------------
 
@@ -1423,13 +1451,50 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
             },
             bal.balance_m2.B
         ));
+    }
+
+    #[test]
+    fn cte_EPBD() {
+        let comps = components_from_file("test_data/cteEPBD-N_R09_unif-ET5-V048R070-C1_peninsula.csv");
+        let FP = new_wfactors("PENINSULA", None, None, Some(CTE_RED_DEFAULTS_RED1), Some(CTE_RED_DEFAULTS_RED2), false).unwrap();
+        let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
         assert!(approx_equal(
             RenNren {
-                ren: 24.6,
-                nren: 18.9
+                ren: 2.2,
+                nren: 38.4
             },
-            bal.balance_m2.A
+            bal.balance_m2.B
         ));
     }
 
+    #[test]
+    fn cte_new_services_format() {
+        // Igual que N_R09, y usamos valores por defecto en función de fix_wfactors
+        let comps = components_from_file("test_data/newServicesFormat.csv");
+        let FP = get_ctefp_peninsula();
+        let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
+        assert!(approx_equal(
+            RenNren {
+                ren: 2.2,
+                nren: 38.4
+            },
+            bal.balance_m2.B
+        ));
+    }
+
+    #[test]
+    fn cte_new_services_format_ACS() {
+        // Igual que N_R09, y usamos valores por defecto en función de fix_wfactors
+        let mut comps = components_from_file("test_data/newServicesFormat.csv");
+        comps = components_by_service(&comps, Service::ACS);
+        let FP = get_ctefp_peninsula();
+        let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
+        assert!(approx_equal(
+            RenNren {
+                ren: 0.0,
+                nren: 12.4
+            },
+            bal.balance_m2.B
+        ));
+    }
 }
