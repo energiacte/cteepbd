@@ -11,6 +11,19 @@ test:
 run:
 	cargo run
 
+linux:
+	cargo build --release
+
+win32:
+	cargo build --release --target=i686-pc-windows-gnu
+
+build: linux win32
+	mkdir -p dist
+	cp target/i686-pc-windows-gnu/release/cteepbd.exe dist/
+	cp target/release/cteepbd dist/
+	strip dist/cteepbd.exe
+	strip dist/cteepbd
+
 clippy:
 	cargo +nightly clippy
 
