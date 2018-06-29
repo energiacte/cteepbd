@@ -398,7 +398,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     exit(exitcode::IOERR);
                 }
             };
-            cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, true)
+            cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, false)
                 .unwrap_or_else(|error| {
                     eprintln!(
                         "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
