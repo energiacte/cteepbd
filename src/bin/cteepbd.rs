@@ -380,6 +380,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // 1.4 Coeficiente de paso de cogeneración a usos no EPB
     let cogennepb = Some(get_factor(&matches, &mut components, verbosity, "cogennepb", "CTE_COGENNEPB", "COGENERACION a usos no EPB", cte::CTE_COGEN_DEFAULTS_TO_NEPB));
 
+    // FIXME: En el caso de que no se definan factores de paso en archivo o en interfaz, ahora mismo se define
+    // FIXME: un valor por defecto, pero ese valor se usa luego en parse_wfactors y puede contradecir los del
+    // FIXME: archivo. Esto no debería pasar en los valores por defecto. Tal vez debería en ese caso
+    // FIXME: devolverse None y solamente si no están definidos en el archivo de factores de paso usarse los predefinidos
+    // FIXME: Además, se muestran en la interfaz (-v) los factores de paso elegidos (que podrían ser definidos en la interfaz) antes de leer los del archivo
+
     // 2. Definición de los factores de paso principales
     let mut fpdata =
         // Definición desde archivo
