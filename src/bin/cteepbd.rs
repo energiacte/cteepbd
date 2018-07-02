@@ -160,6 +160,37 @@ fn get_factor(matches: &clap::ArgMatches, components: &mut Components, verbosity
     factor
 }
 
+// Carga componentes desde archivo o devuelve componentes por defecto
+fn get_components(archivo: Option<&str>) -> Components {
+    if let Some(archivo_componentes) = archivo {
+        let path = Path::new(archivo_componentes);
+        if let Ok(componentsstring) = readfile(path) {
+            println!("Componentes energéticos: \"{}\"", path.display());
+            match cte::parse_components(&componentsstring) {
+                Ok(components) => {
+                    components
+                }
+                Err(err) => {
+                    eprintln!(
+                        "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
+                        archivo_componentes,
+                        err.cause()
+                    );
+                    exit(exitcode::DATAERR);
+                }
+            }
+        } else {
+                eprintln!(
+                    "ERROR: No se ha podido leer el archivo de componentes energéticos {}",
+                    path.display()
+                );
+                exit(exitcode::IOERR);
+        }
+    } else {
+        Default::default()
+    }
+}
+
 // Función principal ------------------------------------------------------------------------------
 
 fn main() {
@@ -322,38 +353,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     println!("** Datos de entrada");
 
     // Componentes energéticos ---------------------------------------------------------------------
-    let mut components = if let Some(archivo_componentes) = matches.value_of("archivo_componentes") {
-        let path = Path::new(archivo_componentes);
-        if let Ok(componentsstring) = readfile(path) {
-            println!("Componentes energéticos: \"{}\"", path.display());
-            match cte::parse_components(&componentsstring) {
-                Ok(components) => {
-                    // Estamos en cálculo de ACS en nearby
-                    if matches.is_present("acsnrb") {
-                        cte::components_by_service(&components, Service::ACS)
-                    } else {
-                        components
-                    }
-                }
-                Err(err) => {
-                    eprintln!(
-                        "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
-                        archivo_componentes,
-                        err.cause()
-                    );
-                    exit(exitcode::DATAERR);
-                }
-            }
-        } else {
-                eprintln!(
-                    "ERROR: No se ha podido leer el archivo de componentes energéticos {}",
-                    path.display()
-                );
-                exit(exitcode::IOERR);
-        }
-    } else {
-        Default::default()
-    };
+    let mut components = get_components(matches.value_of("archivo_componentes"));
+
+    // Cálculo para servicio de ACS en nearby
+    if matches.is_present("acsnrb") {
+        components = cte::components_by_service(&components, Service::ACS)
+    }
 
     if verbosity > 1 && !components.cmeta.is_empty() {
         println!("Metadatos de componentes:");
