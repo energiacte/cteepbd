@@ -160,7 +160,7 @@ fn get_factor(matches: &clap::ArgMatches, components: &mut Components, verbosity
     factor
 }
 
-// Carga componentes desde archivo o devuelve componentes por defecto
+/// Carga componentes desde archivo o devuelve componentes por defecto
 fn get_components(archivo: Option<&str>) -> Components {
     if let Some(archivo_componentes) = archivo {
         let path = Path::new(archivo_componentes);
@@ -189,6 +189,70 @@ fn get_components(archivo: Option<&str>) -> Components {
     } else {
         Default::default()
     }
+}
+
+/// Obtén área de referencia, arearef
+/// Argumentos de CLI > Metadatos de componentes > Valor por defecto (AREAREF_DEFAULT = 1.0)
+fn get_arearef(components: &Components, matches: &clap::ArgMatches) -> f32 {
+    let mut arearef;
+    // Se define CTE_AREAREF en metadatos de componentes energéticos
+    if components.has_meta("CTE_AREAREF") {
+        arearef = components.get_meta_f32("CTE_AREAREF").unwrap_or_else(|| {
+            println!("El área de referencia de los metadatos no es un valor numérico válido");
+            exit(exitcode::DATAERR);
+        });
+        if matches.occurrences_of("arearef") == 0 {
+            println!("Área de referencia (metadatos) [m2]: {:.2}", arearef);
+        } else {
+            let m_arearef = value_t!(matches, "arearef", f32).unwrap();
+            if (arearef - m_arearef).abs() > 1e-3 {
+                println!("AVISO: El valor del área de referencia del archivo de componentes energéticos ({:.2}) no coincide con el valor definido por el usuario ({:.2})", arearef, m_arearef);
+            }
+            arearef = m_arearef;
+            println!("Área de referencia (usuario) [m2]: {:.2}", arearef);
+        }
+    // Área de referencia en la interfaz
+    } else if matches.occurrences_of("arearef") != 0 {
+        arearef = value_t!(matches, "arearef", f32).unwrap();
+        println!("Área de referencia (usuario) [m2]: {:.2}", arearef);
+    // Valor por defecto
+    } else {
+        arearef = cte::AREAREF_DEFAULT;
+        println!("Área de referencia (predefinida) [m2]: {:.2}", arearef);
+    }
+    arearef
+}
+
+/// Obtén factor de exportación, kexp
+/// Argumentos de CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
+fn get_kexp(components: &Components, matches: &clap::ArgMatches) -> f32 {
+    let mut kexp;
+    // Se define CTE_KEXP en metadatos de componentes energéticos
+    if components.has_meta("CTE_KEXP") {
+        kexp = components.get_meta_f32("CTE_KEXP").unwrap_or_else(|| {
+            println!("El factor de exportación de los metadatos no es un valor numérico válido");
+            exit(exitcode::DATAERR);
+        });
+        if matches.occurrences_of("kexp") == 0 {
+            println!("Factor de exportación (metadatos) [-]: {:.1}", kexp);
+        } else {
+            let m_kexp = value_t!(matches, "kexp", f32).unwrap();
+            if (kexp - m_kexp).abs() > 1e-3 {
+                println!("AVISO: El valor del factor de exportación del archivo de componentes energéticos ({:.1}) no coincide con el valor definido por el usuario ({:.1})", kexp, m_kexp);
+            }
+            kexp = m_kexp;
+            println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
+        }
+    // kexp definido en la interfaz
+    } else if matches.occurrences_of("kexp") != 0 {
+        kexp = value_t!(matches, "kexp", f32).unwrap();
+        println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
+    // Valor por defecto
+    } else {
+        kexp = cte::KEXP_DEFAULT;
+        println!("Factor de exportación (predefinido) [-]: {:.1}", kexp);
+    }
+    kexp
 }
 
 // Función principal ------------------------------------------------------------------------------
@@ -468,73 +532,16 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Área de referencia -------------------------------------------------------------------------
-    // Orden de prioridad:
-    // - Valor explícito en argumentos de CLI
-    // - Valor definido en metadatos de componentes
-    // - Valor por defecto (AREA_REF = 1)
-
-    let mut arearef;
-    // Se define CTE_AREAREF en metadatos de componentes energéticos
-    if components.has_meta("CTE_AREAREF") {
-        arearef = components.get_meta_f32("CTE_AREAREF").unwrap_or_else(|| {
-            println!("El área de referencia de los metadatos no es un valor numérico válido");
-            exit(exitcode::DATAERR);
-        });
-        if matches.occurrences_of("arearef") == 0 {
-            println!("Área de referencia (metadatos) [m2]: {:.2}", arearef);
-        } else {
-            let m_arearef = value_t!(matches, "arearef", f32).unwrap();
-            if (arearef - m_arearef).abs() > 1e-3 {
-                println!("AVISO: El valor del área de referencia del archivo de componentes energéticos ({:.2}) no coincide con el valor definido por el usuario ({:.2})", arearef, m_arearef);
-            }
-            arearef = m_arearef;
-            println!("Área de referencia (usuario) [m2]: {:.2}", arearef);
-        }
-    // Área de referencia en la interfaz
-    } else if matches.occurrences_of("arearef") != 0 {
-        arearef = value_t!(matches, "arearef", f32).unwrap();
-        println!("Área de referencia (usuario) [m2]: {:.2}", arearef);
-    // Valor por defecto
-    } else {
-        arearef = cte::AREAREF_DEFAULT;
-        println!("Área de referencia (predefinida) [m2]: {:.2}", arearef);
-    }
+    // Argumentos de CLI > Metadatos de componentes > Valor por defecto (AREA_REF = 1)
+    let arearef = get_arearef(&components, &matches);
 
     // Actualiza metadato CTE_AREAREF al valor seleccionado
     components.update_meta("CTE_AREAREF", &format!("{:.2}", arearef));
 
     // kexp ------------------------------------------------------------------------------------------
-    // Orden de prioridad:
-    // - Valor explícito en argumentos de CLI
-    // - Valor definido en metadatos de componentes
-    // - Valor por defecto (KEXP_REF = 0.0)
+    // Argumentos de CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
+    let kexp = get_kexp(&components, &matches);
 
-    let mut kexp;
-    // Se define CTE_KEXP en metadatos de componentes energéticos
-    if components.has_meta("CTE_KEXP") {
-        kexp = components.get_meta_f32("CTE_KEXP").unwrap_or_else(|| {
-            println!("El factor de exportación de los metadatos no es un valor numérico válido");
-            exit(exitcode::DATAERR);
-        });
-        if matches.occurrences_of("kexp") == 0 {
-            println!("Factor de exportación (metadatos) [-]: {:.1}", kexp);
-        } else {
-            let m_kexp = value_t!(matches, "kexp", f32).unwrap();
-            if (kexp - m_kexp).abs() > 1e-3 {
-                println!("AVISO: El valor del factor de exportación del archivo de componentes energéticos ({:.1}) no coincide con el valor definido por el usuario ({:.1})", kexp, m_kexp);
-            }
-            kexp = m_kexp;
-            println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
-        }
-    // kexp definido en la interfaz
-    } else if matches.occurrences_of("kexp") != 0 {
-        kexp = value_t!(matches, "kexp", f32).unwrap();
-        println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
-    // Valor por defecto
-    } else {
-        kexp = cte::KEXP_DEFAULT;
-        println!("Factor de exportación (predefinido) [-]: {:.1}", kexp);
-    }
     // Actualiza metadato CTE_KEXP al valor seleccionado
     components.update_meta("CTE_KEXP", &format!("{:.1}", kexp));
 
