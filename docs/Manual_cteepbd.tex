@@ -199,7 +199,7 @@ para su aplicación al CTE DB-HE (procedimiento EN ISO 52000-1) y formatos de da
 \newpage
 \section{Introducción}
 
-Este manual documenta el programa \texttt{epbdcalc}, elaborado por el \textit{Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)} en el marco del convenio vigente con el \textit{Ministerio de Fomento}, que implementa la metodología de cálculo de la eficiencia energética de los edificios descrita en la norma \textit{EN ISO 52000-1:2017} de \textit{Eficiencia energética de los edificios. Evaluación global. Parte 1: Marco general y procedimientos} dentro del alcance de la \textit{Directiva 2010/31/UE} relativa a la \textit{eficiencia energética de los edificios} (\textit{EPDB}).
+Este manual documenta el programa \texttt{cteepbd}, elaborado por el \textit{Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)} en el marco del convenio vigente con el \textit{Ministerio de Fomento}, que implementa la metodología de cálculo de la eficiencia energética de los edificios descrita en la norma \textit{EN ISO 52000-1:2017} de \textit{Eficiencia energética de los edificios. Evaluación global. Parte 1: Marco general y procedimientos} dentro del alcance de la \textit{Directiva 2010/31/UE} relativa a la \textit{eficiencia energética de los edificios} (\textit{EPDB}).
 
 El objetivo del programa es facilitar la aplicación de la metodología al \textit{Documento Básico de Ahorro de Energía} del \textit{Código Técnico de la Edificación} (\textit{CTE DB-HE}) y la adaptación de las herramientas de evaluación de la eficiencia energética.
 
@@ -224,7 +224,7 @@ The application evaluates both the delivered and exported energy according to th
 
 \subsection{Uso básico}
 
-La interacción con el programa se produce invocando el mismo (\texttt{epbdcalc} o \texttt{epbdcalc.exe} en sistemas Windows) a través de la línea de comandos del sistema operativo (señalada con \$ en este texto) y añadiendo los parámetros deseados, incluyendo al menos el archivo con los componentes energéticos\footnote{Estos datos se obtienen a partir de los resultados de un programa de evaluación de la eficiencia energética}, y los factores de paso, del siguiente modo:
+La interacción con el programa se produce invocando el mismo (\texttt{cteepbd} o \texttt{cteepbd.exe} en sistemas Windows) a través de la línea de comandos del sistema operativo (señalada con \$ en este texto) y añadiendo los parámetros deseados, incluyendo al menos el archivo con los componentes energéticos\footnote{Estos datos se obtienen a partir de los resultados de un programa de evaluación de la eficiencia energética}, y los factores de paso, del siguiente modo:
 
 \begin{Verbatim}[fontsize=\small]
 	$ cteepbd -c test_data/cte_test_carriers.csv -l PENINSULA
