@@ -12,13 +12,16 @@ test:
 run:
 	cargo run
 
+build:
+	cargo build
+
 linux:
 	cargo build --release
 
 win32:
 	cargo build --release --target=i686-pc-windows-gnu
 
-build: linux win32
+release: linux win32
 	mkdir -p dist
 	cp target/i686-pc-windows-gnu/release/cteepbd.exe dist/
 	cp target/release/cteepbd dist/
@@ -35,7 +38,7 @@ bloat:
 	cargo bloat --release -n 10
 	cargo bloat --release --crates -n 10
 
-cteepbd:
+cteepbd: build
 	${BUILDDIR}/${SCRIPT} --help
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 --red1 0 1.3 --red2 0 1.3
