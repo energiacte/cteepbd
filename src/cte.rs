@@ -250,6 +250,8 @@ pub fn fix_wfactors(
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     // Usa valores por defecto si no se definen los valores
+    // FIXME: esto sobreescribe con valores por defecto si el valor es None. Se debería
+    // FIXME: comprobar si están ya definidos
     let cogen = cogen.unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID);
     let cogennepb = cogennepb.unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB);
     let red1 = red1.unwrap_or(CTE_RED_DEFAULTS_RED1);
@@ -373,7 +375,6 @@ pub fn fix_wfactors(
                     bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso A", c);
                 }
             } else {
-                #[cfg_attr(clippy, allow(float_cmp))]
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, to_grid, A, ren, nren - ver 9.6.6.2.3
                 let value_origin = if ((cogen.ren - CTE_COGEN_DEFAULTS_TO_GRID.ren).abs() < EPSILON)
                     && ((cogen.nren - CTE_COGEN_DEFAULTS_TO_GRID.nren).abs() < EPSILON)

@@ -133,6 +133,7 @@ fn validate_arearef(matches: &clap::ArgMatches, verbosity: u64) {
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> valor por defecto.
 fn get_factor(matches: &clap::ArgMatches, components: &mut Components, verbosity: u64, arg: &str, meta: &str, descr: &str, default: RenNren) -> RenNren {
+    // TODO: Devolver Option<RenNren> y evitar uso de valores por defecto
     // Origen del dato
     let mut orig = "";
     let factor = rennren_from_args(matches.values_of(arg))

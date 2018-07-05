@@ -33,7 +33,7 @@
 ///   - the load matching factor is constant and equal to 1.0
 
 ///   TODO:
-///   - allow other values of the load matching factor (or functions) (formula 32, B.32)
+///   - allow other values of the load matching factor (or usign functions) f_match_t (formula 32, B.32)
 ///   - get results by use items (service), maybe using the reverse method E.3 (E.3.6, E.3.7)
 use std::collections::HashMap;
 
