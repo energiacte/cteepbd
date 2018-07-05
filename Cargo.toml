@@ -17,6 +17,7 @@ strum_macros = "*"
 
 [dev-dependencies]
 pretty_assertions = "*"
+assert_cli = "*"
 
 #[profile.release]
 #debug = true

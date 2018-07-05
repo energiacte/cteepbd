@@ -60,5 +60,5 @@ createtest: linux
 	target/release/cteepbd -c $(TESTDIR)/ejemploJ9_electr.csv -f $(FPTEST) > $(TESTDIR)/output/ejemploJ9_electr.out
 	target/release/cteepbd -h|fold -s -w105 > $(TESTDIR)/output/salida_ayuda.txt
 	target/release/cteepbd -c $(TESTDIR)/cte_test_carriers.csv -f $(FPTEST) > $(TESTDIR)/output/cte_test_carriers.out
-	target/release/cteepbd -N -c $(TESTDIR)/cte_test_carriers.csv -l PENINSULA > $(TESTDIR)/output/cte_test_carriers_ACS.out
-	target/release/cteepbd -c "$(TESTDIR)/cte_test_carriers.csv" -l PENINSULA --json "$(TESTDIR)/output/balance.json" --xml "$(TESTDIR)/output/balance.xml" > "$(TESTDIR)/output/balance.plain"
+	target/release/cteepbd -N -c $(TESTDIR)/${TESTCARRIERS} -l PENINSULA > $(TESTDIR)/output/cte_test_carriers_ACS.out
+	target/release/cteepbd -c $(TESTDIR)/${TESTCARRIERS} -l PENINSULA --json "$(TESTDIR)/output/balance.json" --xml "$(TESTDIR)/output/balance.xml" > "$(TESTDIR)/output/balance.plain"

@@ -992,7 +992,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1_base() {
-        let comps = components_from_file("test_data/ejemplo1base.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1base.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1006,7 +1006,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1_base_normativo() {
-        let comps = components_from_file("test_data/ejemplo1base.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1base.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1020,7 +1020,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1_PV() {
-        let comps = components_from_file("test_data/ejemplo1PV.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1PV.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1034,7 +1034,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1_PV_normativo() {
-        let comps = components_from_file("test_data/ejemplo1PV.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1PV.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1048,7 +1048,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1xPV() {
-        let comps = components_from_file("test_data/ejemplo1xPV.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1062,7 +1062,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1xPV_normativo() {
-        let comps = components_from_file("test_data/ejemplo1xPV.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1076,7 +1076,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1xPVk0() {
-        let comps = components_from_file("test_data/ejemplo1xPV.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, 0.0, 1.0).unwrap();
         assert!(approx_equal(
@@ -1090,7 +1090,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_1xPVk0_normativo() {
-        let comps = components_from_file("test_data/ejemplo1xPV.csv");
+        let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, 0.0, 1.0).unwrap();
         assert!(approx_equal(
@@ -1104,7 +1104,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_2xPVgas() {
-        let comps = components_from_file("test_data/ejemplo2xPVgas.csv");
+        let comps = components_from_file("test_data/extra/ejemplo2xPVgas.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1118,7 +1118,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_2xPVgas_normativo() {
-        let comps = components_from_file("test_data/ejemplo2xPVgas.csv");
+        let comps = components_from_file("test_data/extra/ejemplo2xPVgas.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1132,7 +1132,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_3_PV_BdC() {
-        let comps = components_from_file("test_data/ejemplo3PVBdC.csv");
+        let comps = components_from_file("test_data/extra/ejemplo3PVBdC.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1146,7 +1146,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_3_PV_BdC_normativo() {
-        let comps = components_from_file("test_data/ejemplo3PVBdC.csv");
+        let comps = components_from_file("test_data/extra/ejemplo3PVBdC.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1160,7 +1160,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_4_cgn_fosil() {
-        let comps = components_from_file("test_data/ejemplo4cgnfosil.csv");
+        let comps = components_from_file("test_data/extra/ejemplo4cgnfosil.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1174,7 +1174,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_4_cgn_fosil_normativo() {
-        let comps = components_from_file("test_data/ejemplo4cgnfosil.csv");
+        let comps = components_from_file("test_data/extra/ejemplo4cgnfosil.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1188,7 +1188,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_5_cgn_biogas() {
-        let comps = components_from_file("test_data/ejemplo5cgnbiogas.csv");
+        let comps = components_from_file("test_data/extra/ejemplo5cgnbiogas.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1202,7 +1202,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_5_cgn_biogas_normativo() {
-        let comps = components_from_file("test_data/ejemplo5cgnbiogas.csv");
+        let comps = components_from_file("test_data/extra/ejemplo5cgnbiogas.csv");
         let FP = get_ctefp_peninsula();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1216,7 +1216,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_6_K3() {
-        let comps = components_from_file("test_data/ejemplo6K3.csv");
+        let comps = components_from_file("test_data/extra/ejemplo6K3.csv");
         let FP: Factors = TESTFP.parse().unwrap();
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
@@ -1230,7 +1230,7 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_6_K3_wfactors_file() {
-        let comps = components_from_file("test_data/ejemplo6K3.csv");
+        let comps = components_from_file("test_data/extra/ejemplo6K3.csv");
         let FP: Factors = wfactors_from_file("test_data/factores_paso_test.csv");
         let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
         assert!(approx_equal(
