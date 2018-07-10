@@ -96,12 +96,7 @@ fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&F
 /// * no match is found
 /// * the `gen` type doesn't match an energy source type (i.e. `INSITU` or `COGENERACION`)
 ///
-fn fp_gen(
-    fp_cr: &[Factor],
-    gen: CSubtype,
-    dest: Dest,
-    step: Step,
-) -> Result<&Factor, Error> {
+fn fp_gen(fp_cr: &[Factor], gen: CSubtype, dest: Dest, step: Step) -> Result<&Factor, Error> {
     match gen {
         CSubtype::INSITU => fp_src(fp_cr, Source::INSITU, dest, step),
         CSubtype::COGENERACION => fp_src(fp_cr, Source::COGENERACION, dest, step),
@@ -256,7 +251,7 @@ fn balance_cr(
         Some(E_pr_i) => {
             let fpA_pr_i = fp_src(fp_cr, Source::INSITU, Dest::input, Step::A)?;
             E_pr_i * fpA_pr_i.factors()
-        },
+        }
         None => RenNren::default(),
     };
 
@@ -300,10 +295,8 @@ fn balance_cr(
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    Ok(
-                        acc? + (fp_gen(fp_cr, *gen, Dest::to_nEPB, Step::A)?.factors()
-                            * F_pr_i[gen]),
-                    )
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::to_nEPB, Step::A)?.factors() * F_pr_i[gen]))
                 })? // sum all i (non grid sources): fpA_nEPus_i[gen] * F_pr_i[gen]
         };
 
@@ -315,10 +308,8 @@ fn balance_cr(
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    Ok(
-                        acc? + (fp_gen(fp_cr, *gen, Dest::to_grid, Step::A)?.factors()
-                            * F_pr_i[gen]),
-                    )
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::to_grid, Step::A)?.factors() * F_pr_i[gen]))
                 })? // sum all i (non grid sources): fpA_grid_i[gen] * F_pr_i[gen];
         };
 
@@ -336,10 +327,8 @@ fn balance_cr(
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    Ok(
-                        acc? + (fp_gen(fp_cr, *gen, Dest::to_nEPB, Step::B)?.factors()
-                            * F_pr_i[gen]),
-                    )
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::to_nEPB, Step::B)?.factors() * F_pr_i[gen]))
                 })? // sum all i (non grid sources): fpB_nEPus_i[gen] * F_pr_i[gen]
         };
 
@@ -351,10 +340,8 @@ fn balance_cr(
             exp_generators
                 .iter()
                 .fold(Ok(RenNren::new()), |acc: Result<RenNren, Error>, &gen| {
-                    Ok(
-                        acc? + (fp_gen(fp_cr, *gen, Dest::to_grid, Step::B)?.factors()
-                            * F_pr_i[gen]),
-                    )
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::to_grid, Step::B)?.factors() * F_pr_i[gen]))
                 })? // sum all i (non grid sources): fpB_grid_i[gen] * F_pr_i[gen];
         };
 

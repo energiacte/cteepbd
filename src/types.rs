@@ -442,10 +442,9 @@ pub trait MetaVec {
                     .split(',')
                     .map(|s| f32::from_str(s.trim()).ok())
                     .collect::<Option<Vec<f32>>>()
-                    .unwrap_or_else(|| panic!(
-                        "No se puede transformar el metadato a RenNren: {:?}",
-                        v
-                    ));
+                    .unwrap_or_else(|| {
+                        panic!("No se puede transformar el metadato a RenNren: {:?}", v)
+                    });
                 if vals.len() != 2 {
                     None
                 } else {
