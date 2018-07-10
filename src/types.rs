@@ -515,7 +515,11 @@ impl str::FromStr for Components {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Components, Self::Err> {
-        let lines: Vec<&str> = s.lines().map(|v| v.trim()).collect();
+        let s_nobom = match s.starts_with("\u{feff}") {
+            true => &s[3..],
+            false => s,
+        };
+        let lines: Vec<&str> = s_nobom.lines().map(|v| v.trim()).collect();
         let metalines = lines
             .iter()
             .filter(|l| l.starts_with("#META") || l.starts_with("#CTE_"));
