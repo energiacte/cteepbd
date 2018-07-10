@@ -132,32 +132,28 @@ fn validate_arearef(matches: &clap::ArgMatches, verbosity: u64) {
 }
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> valor por defecto.
-fn get_factor(matches: &clap::ArgMatches, components: &mut Components, verbosity: u64, arg: &str, meta: &str, descr: &str, default: RenNren) -> RenNren {
-    // TODO: Devolver Option<RenNren> y evitar uso de valores por defecto
+fn get_factor(matches_values: Option<clap::Values>, components: &mut Components, verbosity: u64, meta: &str, descr: &str) -> Option<RenNren> {
     // Origen del dato
     let mut orig = "";
-    let factor = rennren_from_args(matches.values_of(arg))
+    let factor = rennren_from_args(matches_values)
         .and_then(|userval| {
             orig = "usuario";
             Some(userval)
         })
         .or_else(|| {
             if let Some(metaval) = components.get_meta_rennren(meta) {
-                orig = "metadatos";
+                orig = "metadatos de componentes";
                 Some(metaval)
             } else {
                 None
             }
-        })
-        .or_else(|| {
-            orig = "predefinido";
-            Some(default)
-        })
-        .unwrap();
-    if verbosity > 2 {
-        println!("Factores de paso para {} ({}): {}", descr, orig, factor)
+        });
+    if let Some(factor) = factor {
+        if verbosity > 2 {
+            println!("Factores de paso para {} ({}): {}", descr, orig, factor)
+        };
+        components.update_meta(meta, &format!("{:.3}, {:.3}", factor.ren, factor.nren));
     };
-    components.update_meta(meta, &format!("{:.3}, {:.3}", factor.ren, factor.nren));
     factor
 }
 
@@ -442,19 +438,13 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // 1. Localización de los factores de paso genéricos y redefinibles a través de la CLI
     // 1.1 Coeficiente de paso de vector genérico 1 - RED1
-    let red1 = Some(get_factor(&matches, &mut components, verbosity, "red1", "CTE_RED1", "RED1", cte::CTE_RED_DEFAULTS_RED1));
+    let red1 = get_factor(matches.values_of("red1"), &mut components, verbosity, "CTE_RED1", "RED1");
     // 1.2 Coeficiente de paso de vector genérico 2 - RED2
-    let red2 = Some(get_factor(&matches, &mut components, verbosity, "red2", "CTE_RED2", "RED2", cte::CTE_RED_DEFAULTS_RED2));
+    let red2 = get_factor(matches.values_of("red2"), &mut components, verbosity, "CTE_RED2", "RED2");
     // 1.3 Coeficiente de paso de cogeneración a la red - COGEN
-    let cogen = Some(get_factor(&matches, &mut components, verbosity, "cogen", "CTE_COGEN", "COGENERACION a la red", cte::CTE_COGEN_DEFAULTS_TO_GRID));
+    let cogen = get_factor(matches.values_of("cogen"), &mut components, verbosity, "CTE_COGEN", "COGENERACION a la red");
     // 1.4 Coeficiente de paso de cogeneración a usos no EPB
-    let cogennepb = Some(get_factor(&matches, &mut components, verbosity, "cogennepb", "CTE_COGENNEPB", "COGENERACION a usos no EPB", cte::CTE_COGEN_DEFAULTS_TO_NEPB));
-
-    // FIXME: En el caso de que no se definan factores de paso en archivo o en interfaz, ahora mismo se define
-    // FIXME: un valor por defecto, pero ese valor se usa luego en parse_wfactors y puede contradecir los del
-    // FIXME: archivo. Esto no debería pasar en el caso de valores por defecto. Tal vez debería en ese caso
-    // FIXME: devolverse None y solamente si no están definidos en el archivo de factores de paso usarse los predefinidos
-    // FIXME: Además, se muestran en la interfaz (-v) los factores de paso elegidos (que podrían ser definidos en la interfaz) antes de leer los del archivo
+    let cogennepb = get_factor(matches.values_of("cogennepb"), &mut components, verbosity, "CTE_COGENNEPB", "COGENERACION a usos no EPB");
 
     // 2. Definición de los factores de paso principales
     let mut fpdata =

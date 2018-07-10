@@ -249,22 +249,99 @@ pub fn fix_wfactors(
     red2: Option<RenNren>,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
-    // Usa valores por defecto si no se definen los valores
-    // FIXME: esto sobreescribe con valores por defecto si el valor es None. Se debería
-    // FIXME: comprobar si están ya definidos
-    let cogen = cogen.unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID);
-    let cogennepb = cogennepb.unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB);
-    let red1 = red1.unwrap_or(CTE_RED_DEFAULTS_RED1);
-    let red2 = red2.unwrap_or(CTE_RED_DEFAULTS_RED2);
+    // Selección de valores para cogen, cogennepb, red1 y red2:
+    // 1. el factor si está definido en los argumentos (es Some)
+    // 2. el factor de wfactors en los metadatos
+    // 2. el factor de wfactors en las líneas de factores
+    // 3. el factor por defecto
 
-    // Actualiza metadatos con valores bien conocidos
-    //let mut wfactors = wfactors;
+    let cogen = match cogen {
+        // 1. Valor de argumentos
+        Some(value) => value,
+        _ => {
+            // 2. Metadatos
+            wfactors.get_meta_rennren("CTE_COGEN").unwrap_or_else(|| {
+                wfactors.wdata.iter()
+                .find(|f| {
+                    f.source == Source::COGENERACION
+                    && f.step == Step::A
+                    && f.dest == Dest::to_grid
+                    })
+                // 3. Factores
+                .and_then(|f| Some(f.factors()))
+                // 4. Valor por defecto
+                .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID)
+            })
+        }
+    };
     wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
+
+    let cogennepb = match cogennepb {
+        // 1. Valor de argumentos
+        Some(value) => value,
+        _ => {
+            // 2. Metadatos
+            wfactors
+                .get_meta_rennren("CTE_COGENNEPB")
+                .unwrap_or_else(|| {
+                    wfactors.wdata.iter()
+                .find(|f| {
+                    f.source == Source::COGENERACION
+                    && f.step == Step::A
+                    && f.dest == Dest::to_nEPB
+                    })
+                // 3. Factores
+                .and_then(|f| Some(f.factors()))
+                // 4. Valor por defecto
+                .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB)
+                })
+        }
+    };
     wfactors.update_meta(
         "CTE_COGENNEPB",
         &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren),
     );
+
+    let red1 = match red1 {
+        // 1. Valor de argumentos
+        Some(value) => value,
+        _ => {
+            // 2. Metadatos
+            wfactors.get_meta_rennren("CTE_RED1").unwrap_or_else(|| {
+                wfactors.wdata.iter()
+                .find(|f| {
+                    f.carrier == Carrier::RED1
+                    && f.step == Step::A
+                    && f.dest == Dest::input
+                    })
+                // 3. Factores
+                .and_then(|f| Some(f.factors()))
+                // 4. Valor por defecto
+                .unwrap_or(CTE_RED_DEFAULTS_RED1)
+            })
+        }
+    };
     wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
+
+    let red2 = match red2 {
+        // 1. Valor de argumentos
+        Some(value) => value,
+        _ => {
+            // 2. Metadatos
+            wfactors.get_meta_rennren("CTE_RED2").unwrap_or_else(|| {
+                wfactors.wdata.iter()
+                .find(|f| {
+                    f.carrier == Carrier::RED2
+                    && f.step == Step::A
+                    && f.dest == Dest::input
+                    })
+                // 3. Factores
+                .and_then(|f| Some(f.factors()))
+                // 4. Valor por defecto
+                .unwrap_or(CTE_RED_DEFAULTS_RED2)
+            })
+        }
+    };
     wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
 
     // Vectores existentes
@@ -272,7 +349,9 @@ pub fn fix_wfactors(
 
     // Asegura que existe MEDIOAMBIENTE, INSITU, input, A, 1.0, 0.0
     let has_ma_insitu_input_a = wfactors.wdata.iter().any(|f| {
-        f.carrier == Carrier::MEDIOAMBIENTE && f.source == Source::INSITU && f.dest == Dest::input
+        f.carrier == Carrier::MEDIOAMBIENTE
+            && f.source == Source::INSITU
+            && f.dest == Dest::input
             && f.step == Step::A
     });
     if !has_ma_insitu_input_a {
@@ -288,7 +367,9 @@ pub fn fix_wfactors(
     }
     // Asegura que existe MEDIOAMBIENTE, RED, input, A, 1.0, 0.0
     let has_ma_red_input_a = wfactors.wdata.iter().any(|f| {
-        f.carrier == Carrier::MEDIOAMBIENTE && f.source == Source::RED && f.dest == Dest::input
+        f.carrier == Carrier::MEDIOAMBIENTE
+            && f.source == Source::RED
+            && f.dest == Dest::input
             && f.step == Step::A
     });
     if !has_ma_red_input_a {
@@ -307,7 +388,8 @@ pub fn fix_wfactors(
     // Asegura que existe ELECTRICIDAD, INSITU, input, A, 1.0, 0.0 si hay ELECTRICIDAD
     let has_elec_and_elec_insitu_input_a = wf_carriers.contains(&Carrier::ELECTRICIDAD)
         && !wfactors.wdata.iter().any(|f| {
-            f.carrier == Carrier::ELECTRICIDAD && f.source == Source::INSITU
+            f.carrier == Carrier::ELECTRICIDAD
+                && f.source == Source::INSITU
                 && f.dest == Dest::input
         });
     if has_elec_and_elec_insitu_input_a {
@@ -428,7 +510,9 @@ pub fn fix_wfactors(
             .wdata
             .iter()
             .find(|f| {
-                f.carrier == *c && f.source == Source::RED && f.dest == Dest::input
+                f.carrier == *c
+                    && f.source == Source::RED
+                    && f.dest == Dest::input
                     && f.step == Step::A
             })
             .and_then(|f| Some(f.clone()));
@@ -584,8 +668,10 @@ pub fn components_by_service(components: &Components, service: Service) -> Compo
         .cdata
         .iter()
         .filter(|c| {
-            c.carrier == Carrier::ELECTRICIDAD && c.ctype == CType::PRODUCCION
-                && c.csubtype == CSubtype::INSITU && c.service == Service::NDEF
+            c.carrier == Carrier::ELECTRICIDAD
+                && c.ctype == CType::PRODUCCION
+                && c.csubtype == CSubtype::INSITU
+                && c.service == Service::NDEF
         })
         .collect();
     if !pr_el_ndef.is_empty() {
@@ -650,7 +736,8 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
     let mut wdata: Vec<Factor> = Vec::new();
 
     for f in wfactors.wdata.iter().cloned() {
-        if f.source == Source::INSITU || f.source == Source::COGENERACION
+        if f.source == Source::INSITU
+            || f.source == Source::COGENERACION
             || CTE_NRBY.contains(&f.carrier)
         {
             wdata.push(f)
@@ -1456,8 +1543,16 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
 
     #[test]
     fn cte_EPBD() {
-        let comps = components_from_file("test_data/cteEPBD-N_R09_unif-ET5-V048R070-C1_peninsula.csv");
-        let FP = new_wfactors("PENINSULA", None, None, Some(CTE_RED_DEFAULTS_RED1), Some(CTE_RED_DEFAULTS_RED2), false).unwrap();
+        let comps =
+            components_from_file("test_data/cteEPBD-N_R09_unif-ET5-V048R070-C1_peninsula.csv");
+        let FP = new_wfactors(
+            "PENINSULA",
+            None,
+            None,
+            Some(CTE_RED_DEFAULTS_RED1),
+            Some(CTE_RED_DEFAULTS_RED2),
+            false,
+        ).unwrap();
         let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
         assert!(approx_equal(
             RenNren {
