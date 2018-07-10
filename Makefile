@@ -4,6 +4,7 @@ SCRIPT=cteepbd
 TESTDIR=test_data
 TESTFP:=test_data/factores_paso_PENINSULA_20140203.csv
 TESTCARRIERS:=test_data/cte_test_carriers.csv
+PDFLATEX := $(shell which pdflatex 2> /dev/null)
 
 test:
 	#cargo test -- nocapture
@@ -46,7 +47,8 @@ cteepbd: build
 	${BUILDDIR}/${SCRIPT} -c ${TESTCARRIERS} -l PENINSULA --acs_nearby
 
 FPTEST=test_data/factores_paso_test.csv
-createtest: linux
+docexamples: linux
+	$(info [INFO]: Generando ejemplos y archivos para el manual)
 	#$(PYTHON) $(TESTDIR)/createfiles.py
 	mkdir -p $(TESTDIR)/output
 	target/release/cteepbd -c $(TESTDIR)/ejemploJ1_base.csv -l PENINSULA > $(TESTDIR)/output/ejemploJ1_base_pen.out
@@ -62,3 +64,22 @@ createtest: linux
 	target/release/cteepbd -c $(TESTCARRIERS) -f $(FPTEST) > $(TESTDIR)/output/cte_test_carriers.out
 	target/release/cteepbd -N -c $(TESTCARRIERS) -l PENINSULA > $(TESTDIR)/output/cte_test_carriers_ACS.out
 	target/release/cteepbd -c $(TESTCARRIERS) -l PENINSULA --json "$(TESTDIR)/output/balance.json" --xml "$(TESTDIR)/output/balance.xml" > "$(TESTDIR)/output/balance.plain"
+
+docs: docexamples docs/Manual_cteepbd.tex
+	$(info [INFO]: Generando manual)
+ifndef PDFLATEX
+	$(error "Es necesario tener instalado pdflatex para generar la documentación")
+endif
+	cd docs && pdflatex --output-directory=build Manual_cteepbd.tex && pdflatex --output-directory=build Manual_cteepbd.tex
+	cp docs/build/Manual_cteepbd.pdf ./dist
+
+examples:
+	$(info [INFO]: Copiando archivos de ejemplo)
+	mkdir -p dist/test_data
+	cp test_data/*.csv dist/test_data
+
+bundle: release docs examples
+	$(info [INFO]: Generando archivo .zip de distribución)
+	cp LICENSE dist/LICENSE
+	cp README.md dist/README.md
+	cd dist && zip -r "../cteepbd-$(shell date +"%Y%m%d").zip" ./*
