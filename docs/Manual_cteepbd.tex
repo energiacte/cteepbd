@@ -274,19 +274,19 @@ Aunque el programa está concebido para calcular la eficiencia energética con f
 
 Algunos de los argumentos de la interfaz del programa \texttt{cteepbd} sirven para definir los datos de entrada para el cálculo del balance energético. Estos datos tienen preferencia sobre los parámetros definidos en los metadatos del archivo de definición de componentes energéticos.
 
-\textbf{\texttt{-a AREAREF}}
+\textbf{\texttt{-a, --arearef <AREAREF>}}
 
 Este argumento indica el área de referencia para el cálculo de ratios por superficie. Debe tenerse en cuenta que el balance energético no se calcula repercutido por superficie, sino en valor total, y solamente algunos tipos de salida utilizan este dato para algunos indicadores de eficiencia energética.
 
-\textbf{\texttt{-k KEXP}}
+\textbf{\texttt{-k, --kexp <KEXP>}}
 
 Este argumento indica el factor de exportación $k_{exp}$ usado para calcular la eficiencia energética. En condiciones \textit{CTE DB-HE} toma el valor $0.0$.
 
-\textbf{\texttt{-c ARCHIVO\_COMPONENTES}}
+\textbf{\texttt{-c, --archivo\_componentes <ARCHIVO\_COMPONENTES>}}
 
 Este argumento indica la ruta del archivo que define los componentes energéticos sobre los que se realiza el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatocomponentes} e incluye metadatos que pueden definir también algunos parámetros de cálculo, aunque con menor prioridad que las opciones definidas explícitamente a través de la interfaz del programa.
 
-\textbf{\texttt{-f ARCHIVO\_FACTORES}}
+\textbf{\texttt{-f, --archivo\_factores <ARCHIVO\_FACTORES>}}
 
 Este argumento indica la ruta del archivo de definición de los factores de paso para el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatofactorespaso}.
 Alternativamente, estos factores de paso pueden definirse mediante una localización (ver argumento \texttt{-l}).
@@ -295,7 +295,7 @@ Alternativamente, estos factores de paso pueden definirse mediante una localizac
 
 Este argumento indica los factores de paso para el cálculo de la eficiencia energética a partir de una localización. Puede tomar los valores \texttt{PENINSULA}, \texttt{CANARIAS}, \texttt{BALEARES} o \texttt{CEUTAYMELILLA} para generar los factores de paso reglamentarios correspondientes a dichas zonas \footnote{El \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016 contiene los valores aplicables en cada uno de los casos.}.
 
-\textbf{\texttt{-{}-acs\_nearby}}
+\textbf{\texttt{-N, -{}-acs\_nearby}}
 
 Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}). Este cálculo está orientado a la obtención de la fracción de energía renovable para uso de ACS para el perímetro próximo (\textit{RER}).
 
