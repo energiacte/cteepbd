@@ -683,7 +683,7 @@ Para ilustrar el funcionamiento del programa se han implementado algunos ejemplo
 Las llamadas al programa para calcular el caso se realizarían usando:
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd ruta/archivo_componentes_caso.csv -l PENINSULA
+    $ cteepbd -c ruta/archivo_componentes_caso.csv -l PENINSULA
 \end{Verbatim}
 %$
 
@@ -745,5 +745,57 @@ Este ejemplo J9 muestra un caso completamente eléctrico y con usos no EPB pero 
 \lstinputlisting[title={\textcolor{gray}{\footnotesize Componentes energéticos: ejemplos/ejemplos/ejemploJ9\_electr.csv}}]{../test_data/ejemploJ9_electr.csv}
 
 \lstinputlisting[language=, title={\textcolor{gray}{\footnotesize Resultados: ejemploJ9\_electr.out}}]{../test_data/output/ejemploJ9_electr.out}
+
+\clearpage
+\newpage
+\section{Integración de la herramienta \texttt{cteepbd} con programas de simulación}
+\label{sec:anexointegracion}
+\setcounter{figure}{0} % resetear contador por sección
+\setcounter{table}{0} % resetear contador por sección
+
+Este apéndice detalla aquellos aspectos más relevantes para la integración de la herramienta \texttt{cteepbd} con programas de simulación energética y de cumplimiento del \textit{CTE DB-HE}.
+
+\subsection{Llamada al programa y salida de resultados}
+
+El programa está pensado para ser llamado mediante un subproceso independiente, suministrando como parámetros al menos el archivo de componentes energéticos (p.e. \texttt{- c "Archivo\_de\_componentes.csv"}) y la localización (p.e. \texttt{-l PENINSULA}) del edificio.
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c ruta/archivo_componentes_caso.csv -l PENINSULA
+\end{Verbatim}
+%$
+
+El programa genera así una salida simple que puede redirigirse a un archivo para su postproceso por la herramienta de simulación o de cumplimiento reglamentario.
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c ruta/archivo_componentes.csv -l PENINSULA > archivo_salida.txt
+\end{Verbatim}
+%$
+
+Opcionalmente, puede solicitarse la salida en formato XML o JSON, siendo este última la más completa de todas ellas y la más estable.
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c ruta/archivo_componentes.csv -l PENINSULA --json archivo_salida.json
+\end{Verbatim}
+%$
+
+Para obtener la fracción renovable de ACS obtenida teniendo en cuenta la generación in situ o en las proximidades de la parcela se usa la opción \texttt{--acs\_nearby, N}:
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -N -c ruta/archivo_componentes.csv -l PENINSULA --json archivo_salida_ACS_nrb.json
+\end{Verbatim}
+%$
+
+\subsection{Preparación de los datos de entrada}
+
+Además de los detalles relacionados con el formato, descritas en la sección \textit{\nameref{sec:formatocomponentes}}, el archivo debe contener\footnote{Condiciones de acuerdo con la propuesta de actualización del DB-HE (2018) publicada para información pública. Estas condiciones podrían variar en función de las modificaciones sufridas tras el periodo de información pública.} la producción de energía obtenida \textit{in situ} (solar térmica, solar fotovoltaica, minieólica, geotérmica, etc) o mediante procesos de cogeneración y el consumo de energía final de los servicios de calefacción, refrigeración, ACS, ventilación y, en el caso de edificios de uso distinto al residencial privado, iluminación.
+
+Dentro de la energía final consumida debe tenerse en cuenta aquella energía renovable extraída del medioambiente. Por ejemplo, en el caso de una bomba de calor de SPF 2.5, se considera que por cada kWh eléctrico consumido el equipo consume también 1.5 kWh del medioambiente\footnote{Para el cálculo de la energía renovable procedente de las bombas de calor véase la \href{https://www.boe.es/doue/2013/062/L00027-00035.pdf}{Decisión de la Comisión, de 1 de marzo de 2013, por la que se establecen las directrices para el cálculo por los Estados miembros de la energía renovable procedente de las bombas de calor de diferentes tecnologías, conforme a lo dispuesto en el artículo 5 de la Directiva 2009/28/CE del Parlamento Europeo y del Consejo [notificada con el número C(2013) 1082]}.}.
+
+En el caso de que existan equipos de cogeneración, debe tenerse en cuenta que el balance de la energía producida y consumida incluye el consumo del combustible o vector energético usado para la cogeneración y la producción eléctrica con origen en la cogeneración. Dado que la energía térmica es producida y consumida \textit{in situ}, esta no atraviesa el perímetro de evaluación y, por tanto, no figura en el balance. En caso necesario, la imputación del consumo del combustible para la cogeneración puede realizarse a los servicios térmicos o eléctricos en función del rendimiento térmico y eléctrico, y debe reflejarse coherentemente en los factores de paso asignados a la electricidad procedente de la cogeneración\footnote{Para la asignación de factores de paso y el cálculo de la energía eléctrica y térmica producida, véanse los Anexos I y II de la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2012-82191}{Directiva 2012/27/UE del Parlamento Europeo y del Consejo, de 25 de octubre de 2012, relativa a la eficiencia energética, por la que se modifican las Directivas 2009/125/CE y 2010/30/UE, y por la que se derogan las Directivas 2004/8/CE y 2006/32/CE}, la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2008-82509}{Decisión de la Comisión, de 19 de noviembre de 2008, por la que se establecen orientaciones detalladas para la aplicación del anexo II de la Directiva 2004/8/CE del Parlamento Europeo y del Consejo [notificada con el número C(2008) 7294]}, y el apartado \textit{9.6.6 Factores de paso} de la \textit{UNE EN ISO 52000-1}.}.
+
+
+
+
+
 
 \end{document}
