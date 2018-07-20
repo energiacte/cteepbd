@@ -94,7 +94,7 @@ CARBON, RED, input, A, 0.002, 1.082 # Recursos usados para suministrar el vector
 FUELOIL, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, input, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, input, A, 0.030, 1.201 # Recursos usados para suministrar el vector desde la red
+GLP, RED, input, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
 ELECTRICIDAD, INSITU, input, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
 ELECTRICIDAD, COGENERACION, input, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
 ELECTRICIDAD, RED, input, A, 0.414, 1.954 # Recursos usados para suministrar electricidad (PENINSULA) desde la red
@@ -114,7 +114,7 @@ CARBON, RED, input, A, 0.002, 1.082 # Recursos usados para suministrar el vector
 FUELOIL, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, input, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, input, A, 0.030, 1.201 # Recursos usados para suministrar el vector desde la red
+GLP, RED, input, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
 ELECTRICIDAD, INSITU, input, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
 ELECTRICIDAD, COGENERACION, input, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
 ELECTRICIDAD, RED, input, A, 0.082, 2.968 # Recursos usados para suministrar electricidad (BALEARES) desde la red
@@ -134,7 +134,7 @@ CARBON, RED, input, A, 0.002, 1.082 # Recursos usados para suministrar el vector
 FUELOIL, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, input, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, input, A, 0.030, 1.201 # Recursos usados para suministrar el vector desde la red
+GLP, RED, input, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
 ELECTRICIDAD, INSITU, input, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
 ELECTRICIDAD, COGENERACION, input, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
 ELECTRICIDAD, RED, input, A, 0.070, 2.924 # Recursos usados para suministrar electricidad (CANARIAS) desde la red
@@ -154,7 +154,7 @@ CARBON, RED, input, A, 0.002, 1.082 # Recursos usados para suministrar el vector
 FUELOIL, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, input, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, input, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, input, A, 0.030, 1.201 # Recursos usados para suministrar el vector desde la red
+GLP, RED, input, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
 ELECTRICIDAD, INSITU, input, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
 ELECTRICIDAD, COGENERACION, input, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
 ELECTRICIDAD, RED, input, A, 0.072, 2.718 # Recursos usados para suministrar electricidad (CEUTA Y MELILLA) desde la red
