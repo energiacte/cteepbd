@@ -39,11 +39,6 @@ clippy:
 	$(info [INFO]: Comprobaciones con clippy)
 	cargo +nightly clippy
 
-updateclippy:
-	$(info [INFO]: Actualizando clippy)
-	cargo +nightly install --force clippy
-	#cargo +nightly install clippy --force --git https://github.com/rust-lang-nursery/rust-clippy.git
-
 bloat:
 	$(info [INFO]: Calculando consumo de espacio en archivo ejecutable)
 	cargo bloat --release -n 10
