@@ -1,23 +1,23 @@
 [package]
 name = "epbdrs"
-version = "0.9.2"
+version = "0.9.3"
 authors = ["Rafael Villar Burke <pachi@ietcc.csic.es>"]
 
 [dependencies]
-clap = "*"
-exitcode = "*"
-failure = "*"
-itertools = "*"
-num= "*"
-serde = "*"
-serde_json = "*"
-serde_derive = "*"
-strum = "*"
-strum_macros = "*"
+clap = "2.32.0"
+exitcode = "1.1.2"
+failure = "0.1.2"
+itertools = "0.7.8"
+num= "0.2.0"
+serde = "1.0.72"
+serde_json = "1.0.26"
+serde_derive = "1.0.72"
+strum = "0.10.0"
+strum_macros = "0.10.0"
 
 [dev-dependencies]
-pretty_assertions = "*"
-assert_cli = "*"
+pretty_assertions = "0.5.1"
+assert_cli = "0.6.3"
 
 #[profile.release]
 #debug = true

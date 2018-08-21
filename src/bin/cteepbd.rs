@@ -171,7 +171,7 @@ fn get_components(archivo: Option<&str>) -> Components {
                     eprintln!(
                         "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
                         archivo_componentes,
-                        err.cause()
+                        err.as_fail()
                     );
                     exit(exitcode::DATAERR);
                 }
@@ -459,7 +459,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 Err(err) => {
                     eprintln!(
                         "ERROR: No se ha podido leer el archivo de factores de paso \"{}\" -> {}",
-                        path.display(), err.cause()
+                        path.display(), err.as_fail()
                     );
                     exit(exitcode::IOERR);
                 }
@@ -468,7 +468,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 .unwrap_or_else(|error| {
                     eprintln!(
                         "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
-                        path.display(), error.cause()
+                        path.display(), error.as_fail()
                     );
                     if verbosity > 2 { println!("{}", error.backtrace()) };
                     exit(exitcode::DATAERR);
@@ -498,7 +498,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             cte::new_wfactors(&localizacion, cogen, cogennepb, red1, red2, false)
                 .unwrap_or_else(|error| {
                     println!("ERROR: No se han podido generar los factores de paso");
-                    if verbosity > 2 { println!("{}, {}", error.cause(), error.backtrace()) };
+                    if verbosity > 2 { println!("{}, {}", error.as_fail(), error.backtrace()) };
                     exit(exitcode::DATAERR);
                 })
         };
@@ -571,7 +571,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|error| {
                 eprintln!("ERROR: No se ha podido calcular el balance energético");
                 if verbosity > 2 {
-                    println!("{}, {}", error.cause(), error.backtrace())
+                    println!("{}, {}", error.as_fail(), error.backtrace())
                 };
                 exit(exitcode::DATAERR);
             }),
