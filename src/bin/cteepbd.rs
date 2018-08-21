@@ -308,7 +308,7 @@ Licencia: Publicado bajo licencia MIT.
         .arg(Arg::with_name("fps_loc")
             .short("l")
             .value_name("LOCALIZACION")
-            .possible_values(&["PENINSULA", "CANARIAS", "BALEARES", "CEUTAYMELILLA"])
+            .possible_values(&["PENINSULA", "CANARIAS", "BALEARES", "CEUTAMELILLA"])
             .required_unless_one(&["archivo_factores", "archivo_componentes"])
             .help("Localización que define los factores de paso\n")
             .takes_value(true)

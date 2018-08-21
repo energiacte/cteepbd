@@ -584,7 +584,7 @@ pub fn parse_wfactors(
 
 /// Genera factores de paso a partir de localización.
 ///
-/// Usa localización (PENINSULA, CANARIAS, BALEARES, CEUTAYMELILLA),
+/// Usa localización (PENINSULA, CANARIAS, BALEARES, CEUTAMELILLA),
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
 pub fn new_wfactors(
     loc: &str,
