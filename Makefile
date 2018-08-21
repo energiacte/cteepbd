@@ -5,6 +5,9 @@ TESTDIR=test_data
 TESTFP:=test_data/factores_paso_PENINSULA_20140203.csv
 TESTCARRIERS:=test_data/cte_test_carriers.csv
 PDFLATEX := $(shell which pdflatex 2> /dev/null)
+# Rutas al archivo zip, relativas al directorio de distribución "dist".
+OUTBUNDLE="../cteepbd-$(shell date +"%Y%m%d").zip"
+OUTBUNDLEBAK = "../cteepbd-$(shell date +"%Y%m%d").zip.bak"
 
 test:
 	$(info [INFO]: Ejecución de tests)
@@ -88,4 +91,5 @@ bundle: release docs examples
 	$(info [INFO]: Generando archivo .zip de distribución)
 	cp LICENSE dist/LICENSE
 	cp README.md dist/README.md
-	cd dist && zip -r "../cteepbd-$(shell date +"%Y%m%d").zip" ./*
+	cd dist && [ -f $(OUTBUNDLE) ] && mv $(OUTBUNDLE) $(OUTBUNDLEBAK)
+	cd dist && zip -r $(OUTBUNDLE) ./*
