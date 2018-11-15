@@ -28,6 +28,7 @@
 
 use num::{Float, Zero};
 use std::iter::Sum;
+use std::ops::Mul;
 
 /// Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
 pub fn veclistsum<T: Float>(veclist: &[&[T]]) -> Vec<T> {
@@ -74,9 +75,14 @@ pub fn vecvecmul<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
 }
 
 /// Multiply vector by scalar
-pub fn veckmul<T: Float>(vec1: &[T], k: T) -> Vec<T> {
-    vec1.iter().map(|el| *el * k).collect()
-}
+pub fn veckmul<T, I>(iter: I, k: T) -> Vec<T>
+    where
+        T: Float,
+        I: IntoIterator,
+        I::Item: Mul<T, Output=T>
+    {
+        iter.into_iter().map(|el| el * k).collect()
+    }
 
 /// Sum all elements in a vector
 pub fn vecsum<'a, T>(vec: &'a [T]) -> T
@@ -141,6 +147,7 @@ mod tests {
     #[test]
     fn vecops_veckmul() {
         assert_eq!(vec![2.0, 4.0, 6.0], veckmul(&[1.0, 2.0, 3.0], 2.0));
+        assert_eq!(vec![2.0, 4.0, 6.0], veckmul(vec![1.0, 2.0, 3.0], 2.0));
     }
 
     #[test]
