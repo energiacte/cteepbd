@@ -663,7 +663,7 @@ pub fn components_by_service(components: &Components, service: Service) -> Compo
         .collect();
 
     // 2. Reparte la producción de electricidad INSITU asignada a NDEF
-    // en la misma proporción del consumo de elec. del servicio en relación al del total de servicios
+    // proporcionalmente al consumo de elec. del servicio respecto al de todos los servicios
     let pr_el_ndef: Vec<_> = components
         .cdata
         .iter()
@@ -674,8 +674,8 @@ pub fn components_by_service(components: &Components, service: Service) -> Compo
                 && c.service == Service::NDEF
         })
         .collect();
+
     if !pr_el_ndef.is_empty() {
-        // Hay producción de electricidad in situ de NDEF (no asignada a un servicio)
         let c_el = components
             .cdata
             .iter()
@@ -687,23 +687,22 @@ pub fn components_by_service(components: &Components, service: Service) -> Compo
             .filter(|c| c.service == service)
             .map(|c| c.values.iter().sum::<f32>())
             .sum::<f32>();
-        let F_pr_srv = if c_el_tot > 0.0 {
-            c_el_srv_tot / c_el_tot
-        } else {
-            0.0
-        };
-        for c in &pr_el_ndef {
-            cdata.push(Component {
-                carrier: Carrier::ELECTRICIDAD,
-                ctype: CType::PRODUCCION,
-                csubtype: CSubtype::INSITU,
-                service,
-                values: veckmul(&c.values, F_pr_srv),
-                comment: format!(
-                    "{} Producción insitu proporcionalmente reasignada al servicio.",
-                    c.comment
-                ),
-            })
+
+        if c_el_tot > 0.0 && c_el_srv_tot > 0.0 {
+            let F_pr_srv = c_el_srv_tot / c_el_tot;
+            for c in &pr_el_ndef {
+                cdata.push(Component {
+                    carrier: Carrier::ELECTRICIDAD,
+                    ctype: CType::PRODUCCION,
+                    csubtype: CSubtype::INSITU,
+                    service,
+                    values: veckmul(&c.values, F_pr_srv),
+                    comment: format!(
+                        "{} Producción insitu proporcionalmente reasignada al servicio.",
+                        c.comment
+                    ),
+                })
+            }
         }
     }
 
