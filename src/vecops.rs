@@ -44,33 +44,37 @@ pub fn veclistsum<T: Float>(veclist: &[&[T]]) -> Vec<T> {
 
 /// Elementwise minimum min res[i] = min(vec1[i], vec2[i])
 pub fn vecvecmin<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
+    assert_eq!(vec1.len(), vec2.len());
     vec1.iter()
-        .enumerate()
-        .map(|(ii, el)| el.min(*vec2.get(ii).unwrap_or(&Zero::zero())))
+        .zip(vec2.iter())
+        .map(|(a, b)| a.min(*b))
         .collect()
 }
 
 /// Elementwise sum of arrays
 pub fn vecvecsum<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
+    assert_eq!(vec1.len(), vec2.len());
     vec1.iter()
-        .enumerate()
-        .map(|(ii, el)| *el + *vec2.get(ii).unwrap_or(&Zero::zero()))
+        .zip(vec2.iter())
+        .map(|(a, b)| *a + *b)
         .collect()
 }
 
 /// Elementwise difference res[i] = vec1[i] - vec2[i]
 pub fn vecvecdif<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
+    assert_eq!(vec1.len(), vec2.len());
     vec1.iter()
-        .enumerate()
-        .map(|(ii, el)| *el - *vec2.get(ii).unwrap_or(&Zero::zero()))
+        .zip(vec2.iter())
+        .map(|(a, b)| *a - *b)
         .collect()
 }
 
 /// Elementwise multiplication res[i] = vec1[i] * vec2[i]
 pub fn vecvecmul<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
+    assert_eq!(vec1.len(), vec2.len());
     vec1.iter()
-        .enumerate()
-        .map(|(ii, el)| *el * *vec2.get(ii).unwrap_or(&Zero::zero()))
+        .zip(vec2.iter())
+        .map(|(a, b)| *a * *b)
         .collect()
 }
 
