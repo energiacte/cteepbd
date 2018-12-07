@@ -56,7 +56,7 @@ impl RenNren {
 }
 
 impl fmt::Display for RenNren {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{{ ren: {:.3}, nren: {:.3} }}", self.ren, self.nren)
     }
 }

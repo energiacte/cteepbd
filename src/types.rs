@@ -31,14 +31,15 @@ use std::str::FromStr;
 
 use failure::Error;
 
-use rennren::RenNren;
+use crate::rennren::RenNren;
 
 // == Common properties (carriers + weighting factors) ==
 
 /// Energy carrier.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString,
-         Serialize)]
+#[derive(
+    Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString, Serialize,
+)]
 pub enum Carrier {
     /// Electricity
     ELECTRICIDAD,
@@ -186,7 +187,7 @@ pub struct Meta {
 
 impl fmt::Display for Meta {
     /// Textual representation of metadata.
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "#META {}: {}", self.key, self.value)
     }
 }
@@ -231,8 +232,9 @@ pub struct Component {
 }
 
 impl fmt::Display for Component {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let valuelist = self.values
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let valuelist = self
+            .values
             .iter()
             .map(|v| format!("{:.2}", v))
             .collect::<Vec<_>>()
@@ -359,7 +361,7 @@ impl Factor {
 }
 
 impl fmt::Display for Factor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let comment = if self.comment != "" {
             format!(" # {}", self.comment)
         } else {
@@ -438,7 +440,8 @@ pub trait MetaVec {
             .iter()
             .find(|m| m.key == key)
             .and_then(|v| {
-                let vals = v.value
+                let vals = v
+                    .value
                     .split(',')
                     .map(|s| f32::from_str(s.trim()).ok())
                     .collect::<Option<Vec<f32>>>()
@@ -495,13 +498,15 @@ impl MetaVec for Components {
 }
 
 impl fmt::Display for Components {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let metalines = self.cmeta
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let metalines = self
+            .cmeta
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()
             .join("\n");
-        let datalines = self.cdata
+        let datalines = self
+            .cdata
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()
@@ -514,7 +519,11 @@ impl str::FromStr for Components {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Components, Self::Err> {
-        let s_nobom = if s.starts_with("\u{feff}") { &s[3..] } else { s };
+        let s_nobom = if s.starts_with("\u{feff}") {
+            &s[3..]
+        } else {
+            s
+        };
         let lines: Vec<&str> = s_nobom.lines().map(|v| v.trim()).collect();
         let metalines = lines
             .iter()
@@ -560,13 +569,15 @@ impl MetaVec for Factors {
 }
 
 impl fmt::Display for Factors {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let metalines = self.wmeta
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let metalines = self
+            .wmeta
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()
             .join("\n");
-        let datalines = self.wdata
+        let datalines = self
+            .wdata
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()

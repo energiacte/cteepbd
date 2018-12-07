@@ -25,10 +25,10 @@
 
 #[macro_use]
 extern crate clap;
-extern crate epbdrs;
-extern crate exitcode;
-extern crate failure;
-extern crate serde_json;
+
+use exitcode;
+
+use serde_json;
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -48,7 +48,7 @@ use epbdrs::types::{Balance, Components, MetaVec, Service};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
-fn rennren_from_args(values: Option<clap::Values>) -> Option<RenNren> {
+fn rennren_from_args(values: Option<clap::Values<'_>>) -> Option<RenNren> {
     values.and_then(|v| {
         let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
         let userval = RenNren {
@@ -88,7 +88,7 @@ fn writefile(path: &Path, content: &[u8]) {
 // Funciones auxiliares de validación y obtención de valores
 
 /// Comprueba validez del valor del factor de exportación de la CLI.
-fn validate_kexp(matches: &clap::ArgMatches, verbosity: u64) {
+fn validate_kexp(matches: &clap::ArgMatches<'_>, verbosity: u64) {
     if matches.is_present("kexp") {
         let kexp = value_t!(matches, "kexp", f32).unwrap_or_else(|error| {
             eprintln!("ERROR: El área de referencia indicado no es un valor numérico válido");
@@ -115,7 +115,7 @@ fn validate_kexp(matches: &clap::ArgMatches, verbosity: u64) {
 }
 
 /// Comprueba validez del dato de area en la CLI.
-fn validate_arearef(matches: &clap::ArgMatches, verbosity: u64) {
+fn validate_arearef(matches: &clap::ArgMatches<'_>, verbosity: u64) {
     if matches.is_present("arearef") {
         let arearef = value_t!(matches, "arearef", f32).unwrap_or_else(|error| {
             println!("El área de referencia indicado no es un valor numérico válido");
@@ -132,7 +132,13 @@ fn validate_arearef(matches: &clap::ArgMatches, verbosity: u64) {
 }
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> valor por defecto.
-fn get_factor(matches_values: Option<clap::Values>, components: &mut Components, verbosity: u64, meta: &str, descr: &str) -> Option<RenNren> {
+fn get_factor(
+    matches_values: Option<clap::Values<'_>>,
+    components: &mut Components,
+    verbosity: u64,
+    meta: &str,
+    descr: &str,
+) -> Option<RenNren> {
     // Origen del dato
     let mut orig = "";
     let factor = rennren_from_args(matches_values)
@@ -164,9 +170,7 @@ fn get_components(archivo: Option<&str>) -> Components {
         if let Ok(componentsstring) = readfile(path) {
             println!("Componentes energéticos: \"{}\"", path.display());
             match cte::parse_components(&componentsstring) {
-                Ok(components) => {
-                    components
-                }
+                Ok(components) => components,
                 Err(err) => {
                     eprintln!(
                         "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
@@ -177,11 +181,11 @@ fn get_components(archivo: Option<&str>) -> Components {
                 }
             }
         } else {
-                eprintln!(
-                    "ERROR: No se ha podido leer el archivo de componentes energéticos {}",
-                    path.display()
-                );
-                exit(exitcode::IOERR);
+            eprintln!(
+                "ERROR: No se ha podido leer el archivo de componentes energéticos {}",
+                path.display()
+            );
+            exit(exitcode::IOERR);
         }
     } else {
         Default::default()
@@ -190,7 +194,7 @@ fn get_components(archivo: Option<&str>) -> Components {
 
 /// Obtén área de referencia, arearef
 /// Argumentos de CLI > Metadatos de componentes > Valor por defecto (AREAREF_DEFAULT = 1.0)
-fn get_arearef(components: &Components, matches: &clap::ArgMatches) -> f32 {
+fn get_arearef(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
     let mut arearef;
     // Se define CTE_AREAREF en metadatos de componentes energéticos
     if components.has_meta("CTE_AREAREF") {
@@ -222,7 +226,7 @@ fn get_arearef(components: &Components, matches: &clap::ArgMatches) -> f32 {
 
 /// Obtén factor de exportación, kexp
 /// Argumentos de CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
-fn get_kexp(components: &Components, matches: &clap::ArgMatches) -> f32 {
+fn get_kexp(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
     let mut kexp;
     // Se define CTE_KEXP en metadatos de componentes energéticos
     if components.has_meta("CTE_KEXP") {
@@ -438,13 +442,37 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // 1. Localización de los factores de paso genéricos y redefinibles a través de la CLI
     // 1.1 Coeficiente de paso de vector genérico 1 - RED1
-    let red1 = get_factor(matches.values_of("red1"), &mut components, verbosity, "CTE_RED1", "RED1");
+    let red1 = get_factor(
+        matches.values_of("red1"),
+        &mut components,
+        verbosity,
+        "CTE_RED1",
+        "RED1",
+    );
     // 1.2 Coeficiente de paso de vector genérico 2 - RED2
-    let red2 = get_factor(matches.values_of("red2"), &mut components, verbosity, "CTE_RED2", "RED2");
+    let red2 = get_factor(
+        matches.values_of("red2"),
+        &mut components,
+        verbosity,
+        "CTE_RED2",
+        "RED2",
+    );
     // 1.3 Coeficiente de paso de cogeneración a la red - COGEN
-    let cogen = get_factor(matches.values_of("cogen"), &mut components, verbosity, "CTE_COGEN", "COGENERACION a la red");
+    let cogen = get_factor(
+        matches.values_of("cogen"),
+        &mut components,
+        verbosity,
+        "CTE_COGEN",
+        "COGENERACION a la red",
+    );
     // 1.4 Coeficiente de paso de cogeneración a usos no EPB
-    let cogennepb = get_factor(matches.values_of("cogennepb"), &mut components, verbosity, "CTE_COGENNEPB", "COGENERACION a usos no EPB");
+    let cogennepb = get_factor(
+        matches.values_of("cogennepb"),
+        &mut components,
+        verbosity,
+        "CTE_COGENNEPB",
+        "COGENERACION a usos no EPB",
+    );
 
     // 2. Definición de los factores de paso principales
     let mut fpdata =

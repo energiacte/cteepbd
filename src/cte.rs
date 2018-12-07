@@ -26,10 +26,10 @@ use failure::Error;
 use itertools::Itertools;
 use std::f32::EPSILON;
 
-use rennren::RenNren;
-use types::{Balance, Component, Components, Factor, Factors, Meta, MetaVec};
-use types::{CSubtype, CType, Carrier, Dest, Service, Source, Step};
-use vecops::{veckmul, veclistsum, vecvecdif};
+use crate::rennren::RenNren;
+use crate::types::{Balance, Component, Components, Factor, Factors, Meta, MetaVec};
+use crate::types::{CSubtype, CType, Carrier, Dest, Service, Source, Step};
+use crate::vecops::{veckmul, veclistsum, vecvecdif};
 
 // ---------------------------------------------------------------------------------------------------------
 // Valores reglamentarios
@@ -190,19 +190,23 @@ pub fn fix_components(components: &mut Components) {
             if consumed.is_empty() {
                 return None;
             }; // No hay consumo
-            let mut unbalanced_values = veclistsum(&consumed
-                .iter()
-                .map(|&v| v.values.as_slice())
-                .collect::<Vec<_>>());
+            let mut unbalanced_values = veclistsum(
+                &consumed
+                    .iter()
+                    .map(|&v| v.values.as_slice())
+                    .collect::<Vec<_>>(),
+            );
             let produced: Vec<_> = ecomps
                 .clone()
                 .filter(|c| c.ctype == CType::PRODUCCION)
                 .collect();
             if !produced.is_empty() {
-                let totproduced = veclistsum(&produced
-                    .iter()
-                    .map(|&v| v.values.as_slice())
-                    .collect::<Vec<_>>());
+                let totproduced = veclistsum(
+                    &produced
+                        .iter()
+                        .map(|&v| v.values.as_slice())
+                        .collect::<Vec<_>>(),
+                );
                 unbalanced_values = vecvecdif(&unbalanced_values, &totproduced)
                     .iter()
                     .map(|&v| if v > 0.0 { v } else { 0.0 })
@@ -261,16 +265,18 @@ pub fn fix_wfactors(
         _ => {
             // 2. Metadatos
             wfactors.get_meta_rennren("CTE_COGEN").unwrap_or_else(|| {
-                wfactors.wdata.iter()
-                .find(|f| {
-                    f.source == Source::COGENERACION
-                    && f.step == Step::A
-                    && f.dest == Dest::to_grid
+                wfactors
+                    .wdata
+                    .iter()
+                    .find(|f| {
+                        f.source == Source::COGENERACION
+                            && f.step == Step::A
+                            && f.dest == Dest::to_grid
                     })
-                // 3. Factores
-                .and_then(|f| Some(f.factors()))
-                // 4. Valor por defecto
-                .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID)
+                    // 3. Factores
+                    .and_then(|f| Some(f.factors()))
+                    // 4. Valor por defecto
+                    .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID)
             })
         }
     };
@@ -284,16 +290,18 @@ pub fn fix_wfactors(
             wfactors
                 .get_meta_rennren("CTE_COGENNEPB")
                 .unwrap_or_else(|| {
-                    wfactors.wdata.iter()
-                .find(|f| {
-                    f.source == Source::COGENERACION
-                    && f.step == Step::A
-                    && f.dest == Dest::to_nEPB
-                    })
-                // 3. Factores
-                .and_then(|f| Some(f.factors()))
-                // 4. Valor por defecto
-                .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB)
+                    wfactors
+                        .wdata
+                        .iter()
+                        .find(|f| {
+                            f.source == Source::COGENERACION
+                                && f.step == Step::A
+                                && f.dest == Dest::to_nEPB
+                        })
+                        // 3. Factores
+                        .and_then(|f| Some(f.factors()))
+                        // 4. Valor por defecto
+                        .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB)
                 })
         }
     };
@@ -308,16 +316,16 @@ pub fn fix_wfactors(
         _ => {
             // 2. Metadatos
             wfactors.get_meta_rennren("CTE_RED1").unwrap_or_else(|| {
-                wfactors.wdata.iter()
-                .find(|f| {
-                    f.carrier == Carrier::RED1
-                    && f.step == Step::A
-                    && f.dest == Dest::input
+                wfactors
+                    .wdata
+                    .iter()
+                    .find(|f| {
+                        f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::input
                     })
-                // 3. Factores
-                .and_then(|f| Some(f.factors()))
-                // 4. Valor por defecto
-                .unwrap_or(CTE_RED_DEFAULTS_RED1)
+                    // 3. Factores
+                    .and_then(|f| Some(f.factors()))
+                    // 4. Valor por defecto
+                    .unwrap_or(CTE_RED_DEFAULTS_RED1)
             })
         }
     };
@@ -329,16 +337,16 @@ pub fn fix_wfactors(
         _ => {
             // 2. Metadatos
             wfactors.get_meta_rennren("CTE_RED2").unwrap_or_else(|| {
-                wfactors.wdata.iter()
-                .find(|f| {
-                    f.carrier == Carrier::RED2
-                    && f.step == Step::A
-                    && f.dest == Dest::input
+                wfactors
+                    .wdata
+                    .iter()
+                    .find(|f| {
+                        f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::input
                     })
-                // 3. Factores
-                .and_then(|f| Some(f.factors()))
-                // 4. Valor por defecto
-                .unwrap_or(CTE_RED_DEFAULTS_RED2)
+                    // 3. Factores
+                    .and_then(|f| Some(f.factors()))
+                    // 4. Valor por defecto
+                    .unwrap_or(CTE_RED_DEFAULTS_RED2)
             })
         }
     };
@@ -680,10 +688,12 @@ pub fn components_by_service(components: &Components, service: Service) -> Compo
             .cdata
             .iter()
             .filter(|c| c.carrier == Carrier::ELECTRICIDAD && c.ctype == CType::CONSUMO);
-        let c_el_tot = c_el.clone()
+        let c_el_tot = c_el
+            .clone()
             .map(|c| c.values.iter().sum::<f32>())
             .sum::<f32>();
-        let c_el_srv_tot = c_el.clone()
+        let c_el_srv_tot = c_el
+            .clone()
             .filter(|c| c.service == service)
             .map(|c| c.values.iter().sum::<f32>())
             .sum::<f32>();
@@ -912,7 +922,7 @@ mod tests {
     use super::Service::*;
     use super::*;
     // use types::BalanceTotal;
-    use epbd::energy_performance;
+    use crate::epbd::energy_performance;
 
     const TESTFPJ: &'static str = "vector, fuente, uso, step, ren, nren
 ELECTRICIDAD, RED, input, A, 0.5, 2.0
@@ -1551,7 +1561,8 @@ ELECTRICIDAD, COGENERACION, to_nEPB, B, 0.5, 2.0
             Some(CTE_RED_DEFAULTS_RED1),
             Some(CTE_RED_DEFAULTS_RED2),
             false,
-        ).unwrap();
+        )
+        .unwrap();
         let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
         assert!(approx_equal(
             RenNren {

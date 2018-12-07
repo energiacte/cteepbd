@@ -54,39 +54,30 @@ pub fn vecvecmin<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
 /// Elementwise sum of arrays
 pub fn vecvecsum<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     assert_eq!(vec1.len(), vec2.len());
-    vec1.iter()
-        .zip(vec2.iter())
-        .map(|(a, b)| *a + *b)
-        .collect()
+    vec1.iter().zip(vec2.iter()).map(|(a, b)| *a + *b).collect()
 }
 
 /// Elementwise difference res[i] = vec1[i] - vec2[i]
 pub fn vecvecdif<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     assert_eq!(vec1.len(), vec2.len());
-    vec1.iter()
-        .zip(vec2.iter())
-        .map(|(a, b)| *a - *b)
-        .collect()
+    vec1.iter().zip(vec2.iter()).map(|(a, b)| *a - *b).collect()
 }
 
 /// Elementwise multiplication res[i] = vec1[i] * vec2[i]
 pub fn vecvecmul<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
     assert_eq!(vec1.len(), vec2.len());
-    vec1.iter()
-        .zip(vec2.iter())
-        .map(|(a, b)| *a * *b)
-        .collect()
+    vec1.iter().zip(vec2.iter()).map(|(a, b)| *a * *b).collect()
 }
 
 /// Multiply vector by scalar
 pub fn veckmul<T, I>(iter: I, k: T) -> Vec<T>
-    where
-        T: Float,
-        I: IntoIterator,
-        I::Item: Mul<T, Output=T>
-    {
-        iter.into_iter().map(|el| el * k).collect()
-    }
+where
+    T: Float,
+    I: IntoIterator,
+    I::Item: Mul<T, Output = T>,
+{
+    iter.into_iter().map(|el| el * k).collect()
+}
 
 /// Sum all elements in a vector
 pub fn vecsum<'a, T>(vec: &'a [T]) -> T

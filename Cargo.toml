@@ -2,6 +2,7 @@
 name = "epbdrs"
 version = "0.9.3"
 authors = ["Rafael Villar Burke <pachi@ietcc.csic.es>"]
+edition = "2018"
 
 [dependencies]
 clap = "2.32.0"
