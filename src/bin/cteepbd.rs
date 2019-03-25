@@ -41,10 +41,12 @@ use failure::Error;
 use failure::Fail;
 use failure::ResultExt;
 
-use epbdrs::cte;
-use epbdrs::epbd::*;
-use epbdrs::rennren::RenNren;
-use epbdrs::types::{Balance, Components, MetaVec, Service};
+use cteepbd::{
+    cte,
+    epbd::*,
+    rennren::RenNren,
+    types::{Balance, Components, MetaVec, Service},
+};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
