@@ -3,6 +3,12 @@ name = "cteepbd"
 version = "0.9.3"
 authors = ["Rafael Villar Burke <pachi@ietcc.csic.es>"]
 edition = "2018"
+description = "Computation of energy balance of buildings according to UNE-EN ISO 52000-1:2017 to comply with CTE DB-HE 2018"
+repository = "https://github.com/energiacte/cteepbd"
+readme = "README.md"
+keywords = ["buildings", "energy", "UNE-EN ISO 52000", "CTE", "DB-HE"]
+categories = ["command-line-utilities", "science"]
+license = "MIT"
 
 [dependencies]
 clap = "2.32.0"
