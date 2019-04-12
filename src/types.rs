@@ -157,11 +157,11 @@ pub enum Source {
 #[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize)]
 pub enum Dest {
     /// Building delivery destination
-    input,
+    SUMINISTRO,
     /// Grid destination
-    to_grid,
+    A_RED,
     /// Non EPB uses destination
-    to_nEPB,
+    A_NEPB,
 }
 
 /// Calculation step for a weighting factor.
@@ -317,7 +317,7 @@ pub struct Factor {
     pub carrier: Carrier,
     /// Carrier source (`RED`, `INSITU` or `COGENERACION`)
     pub source: Source,
-    /// Destination use of the energy (`input`, `to_grid`, `to_nEPB`)
+    /// Destination use of the energy (`SUMINISTRO`, `A_RED`, `A_NEPB`)
     pub dest: Dest,
     /// Evaluation step
     pub step: Step,
@@ -772,13 +772,13 @@ mod tests {
         let factor1 = Factor {
             carrier: "ELECTRICIDAD".parse().unwrap(),
             source: "RED".parse().unwrap(),
-            dest: "input".parse().unwrap(),
+            dest: "SUMINISTRO".parse().unwrap(),
             step: "A".parse().unwrap(),
             ren: 0.414,
             nren: 1.954,
             comment: "Electricidad de red paso A".into(),
         };
-        let factor1str = "ELECTRICIDAD, RED, input, A, 0.414, 1.954 # Electricidad de red paso A";
+        let factor1str = "ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Electricidad de red paso A";
         let factor2str = "ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
 
         // consumer component
@@ -808,8 +808,8 @@ ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28
     fn tfactors() {
         let tfactors1 = "#META CTE_FUENTE: CTE2013
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
-ELECTRICIDAD, RED, input, A, 0.414, 1.954 # Recursos usados para suministrar electricidad (peninsular) desde la red
-ELECTRICIDAD, INSITU, input, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ";
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Recursos usados para suministrar electricidad (peninsular) desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ";
 
         // roundtrip building from/to string
         assert_eq!(

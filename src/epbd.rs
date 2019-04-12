@@ -89,7 +89,7 @@ fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&F
 ///
 /// * `fp_cr` - weighting factor list for a given energy carrier where search is done
 /// * `gen` - match generator (carrier subtype / origin) (i.e. `INSITU` or `COGENERACION`)
-/// * `dest` - match this energy destination (`to_nEPB`, `to_grid`, `input`)
+/// * `dest` - match this energy destination (`A_NEPB`, `A_RED`, `SUMINISTRO`)
 /// * `step` - match this calculation step (`A`, `B`)
 ///
 /// # Errors
@@ -245,13 +245,13 @@ fn balance_cr(
     // NOTE: This allows using annual quantities and not timestep expressions
 
     // * Weighted energy for delivered energy: the cost of producing that energy
-    let fpA_grid = fp_src(fp_cr, Source::RED, Dest::input, Step::A)?;
+    let fpA_grid = fp_src(fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid.factors(); // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources
     let E_we_del_cr_pr_an = match E_pr_cr_pr_i_an.get(&CSubtype::INSITU) {
         Some(E_pr_i) => {
-            let fpA_pr_i = fp_src(fp_cr, Source::INSITU, Dest::input, Step::A)?;
+            let fpA_pr_i = fp_src(fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)?;
             E_pr_i * fpA_pr_i.factors()
         }
         None => RenNren::default(),
@@ -298,7 +298,7 @@ fn balance_cr(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::to_nEPB, Step::A)?.factors() * F_pr_i[gen]))
+                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * F_pr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_nEPus_i[gen] * F_pr_i[gen]
         };
@@ -312,7 +312,7 @@ fn balance_cr(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::to_grid, Step::A)?.factors() * F_pr_i[gen]))
+                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * F_pr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_grid_i[gen] * F_pr_i[gen];
         };
@@ -332,7 +332,7 @@ fn balance_cr(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::to_nEPB, Step::B)?.factors() * F_pr_i[gen]))
+                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * F_pr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_nEPus_i[gen] * F_pr_i[gen]
         };
@@ -346,7 +346,7 @@ fn balance_cr(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::to_grid, Step::B)?.factors() * F_pr_i[gen]))
+                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * F_pr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_grid_i[gen] * F_pr_i[gen];
         };
