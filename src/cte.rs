@@ -259,7 +259,18 @@ pub fn parse_components(datastring: &str) -> Result<Components, Error> {
 
 /// Asegura consistencia de factores de paso definidos y deduce algunos de los que falten.
 ///
-/// También elimina los destinados a exportación A_NEPB por defecto (pueden dejarse con opción a false)
+/// Realiza los siguientes pasos:
+/// - añade factores definidos por usuario
+/// - asegura definición de factores de producción in situ
+/// - asegura definición de factores desde la red para todos los vectores
+/// - asegura que factor paso A para suministro de cogeneración es 0.0 (se considera en vector original)
+/// - asegura definición de factores a la red para vectores con exportación
+/// - asegura que existe RED1 | RED2 en suministro
+/// - elimina factores con destino nEPB si stripnepb es true
+/// 
+/// Los factores destinados a exportación A_NEPB se eliminan por defecto (pueden dejarse con opción a false)
+/// 
+/// TODO: se deberían separar algunos de estos pasos como métodos de Factors
 pub fn fix_wfactors(
     mut wfactors: Factors,
     cogen: Option<RenNren>,
@@ -288,9 +299,9 @@ pub fn fix_wfactors(
                             && f.step == Step::A
                             && f.dest == Dest::A_RED
                     })
-                    // 3. Factores
+                    // 3. Factores en metadatos
                     .and_then(|f| Some(f.factors()))
-                    // 4. Valor por defecto
+                    // 4. Valor por defecto si no hay nada
                     .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID)
             })
         }
@@ -313,9 +324,9 @@ pub fn fix_wfactors(
                                 && f.step == Step::A
                                 && f.dest == Dest::A_NEPB
                         })
-                        // 3. Factores
+                        // 3. Factores en metadatos
                         .and_then(|f| Some(f.factors()))
-                        // 4. Valor por defecto
+                        // 4. Valor por defecto si no hay nada
                         .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB)
                 })
         }
@@ -337,9 +348,9 @@ pub fn fix_wfactors(
                     .find(|f| {
                         f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::SUMINISTRO
                     })
-                    // 3. Factores
+                    // 3. Factores en metadatos
                     .and_then(|f| Some(f.factors()))
-                    // 4. Valor por defecto
+                    // 4. Valor por defecto si no hay nada
                     .unwrap_or(CTE_RED_DEFAULTS_RED1)
             })
         }
@@ -358,9 +369,9 @@ pub fn fix_wfactors(
                     .find(|f| {
                         f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::SUMINISTRO
                     })
-                    // 3. Factores
+                    // 3. Factores en metadatos
                     .and_then(|f| Some(f.factors()))
-                    // 4. Valor por defecto
+                    // 4. Valor por defecto si no hay nada
                     .unwrap_or(CTE_RED_DEFAULTS_RED2)
             })
         }
