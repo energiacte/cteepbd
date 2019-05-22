@@ -166,40 +166,52 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.072, 2.718 # Recursos usados para suministra
 
 // -------------------- vectores energéticos -------------------------------------------
 
-/// Asegura vectores válidos y balance de consumos de vectores de producción in situ.
+/// Asegura que la energía MEDIOAMBIENTE consumida está equilibrada por una producción in situ
 ///
-/// Completa el balance de las producciones in situ cuando el consumo de esos vectores supera la producción
+/// Completa el balance de las producciones in situ de energía procedente del medioambiente
+/// cuando el consumo de esos vectores supera la producción. Es solamente una comodidad, para no
+/// tener que declarar las producciones de MEDIOAMBIENTE, solo los consumos.
+/// 
 /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
 pub fn fix_components(components: &mut Components) {
+    // Localiza componentes de energía procedente del medioambiente
     let envcomps: Vec<_> = components
         .cdata
         .iter()
         .cloned()
         .filter(|c| c.carrier == Carrier::MEDIOAMBIENTE)
         .collect();
+    // Identifica servicios
     let services: Vec<_> = envcomps.iter().map(|c| c.service).unique().collect();
 
+    // Genera componentes de consumo no compensados con producción
     let mut balancecomps: Vec<Component> = services
         .iter()
         .map(|&service| {
+            // Componentes para el servicio
             let ecomps = envcomps.iter().filter(|c| c.service == service);
+            // Componentes de consumo del servicio
             let consumed: Vec<_> = ecomps
                 .clone()
                 .filter(|c| c.ctype == CType::CONSUMO)
                 .collect();
+            // Si no hay consumo que compensar con producción retornamos None
             if consumed.is_empty() {
                 return None;
-            }; // No hay consumo
+            };
+            // Consumos no compensados con producción
             let mut unbalanced_values = veclistsum(
                 &consumed
                     .iter()
                     .map(|&v| v.values.as_slice())
                     .collect::<Vec<_>>(),
             );
+            // Componentes de producción del servicio
             let produced: Vec<_> = ecomps
                 .clone()
                 .filter(|c| c.ctype == CType::PRODUCCION)
                 .collect();
+            // Descontamos la producción existente de los consumos
             if !produced.is_empty() {
                 let totproduced = veclistsum(
                     &produced
@@ -212,10 +224,12 @@ pub fn fix_components(components: &mut Components) {
                     .map(|&v| if v > 0.0 { v } else { 0.0 })
                     .collect();
             }
+            // Si no hay desequilibrio retornamos None
             if unbalanced_values.iter().sum::<f32>() == 0.0 {
                 return None;
-            }; // Ya está equilibrado
+            };
 
+            // Si hay desequilibrio agregamos un componente de producción
             Some(Component {
                 carrier: Carrier::MEDIOAMBIENTE,
                 ctype: CType::PRODUCCION,
@@ -230,6 +244,7 @@ pub fn fix_components(components: &mut Components) {
         .filter(|v| v.is_some())
         .collect::<Option<Vec<_>>>()
         .unwrap_or_else(|| vec![]);
+    // Agrega componentes no compensados
     components.cdata.append(&mut balancecomps);
 }
 
