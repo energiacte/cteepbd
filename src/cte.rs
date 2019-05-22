@@ -916,11 +916,11 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
     <kexp>{:.2}</kexp>
     <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
     <Epm2><!-- ep [kWh/m2.a] -->
-        <ren>{:.1}</ren>
+        <tot>{:.1}</tot>
         <nren>{:.1}</nren>
     </Epm2>
 </BalanceEPB>",
-        wmetastring, wdatastring, cmetastring, cdatastring, k_exp, arearef, ren, nren
+        wmetastring, wdatastring, cmetastring, cdatastring, k_exp, arearef, ren + nren , nren
     )
 }
 
