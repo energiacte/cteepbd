@@ -113,6 +113,9 @@ pub enum Service {
     DHU,
     /// Undefined or generic use
     NDEF,
+    // TODO:
+    // BAC
+    // Building automation and control
 }
 
 impl str::FromStr for Service {

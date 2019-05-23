@@ -30,6 +30,7 @@
 ///   - weighting factors are constant for all timesteps
 ///   - no priority is set for energy production (average step A weighting factor f_we_el_stepA)
 ///   - all on-site produced energy from non cogeneration sources is considered as delivered
+///   - on-site produced energy is not compensated on a service by service basis, but on a by carrier basis
 ///   - the load matching factor is constant and equal to 1.0
 
 ///   TODO:
