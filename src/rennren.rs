@@ -28,9 +28,18 @@ use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 #[derive(Debug, Copy, Clone, PartialEq, Default, Serialize)]
 pub struct RenNren {
     /// Renewable energy or factor
+    #[serde(serialize_with = "round_serialize_2")]
     pub ren: f32,
     /// Non Renewable energy or factor
+    #[serde(serialize_with = "round_serialize_2")]
     pub nren: f32,
+}
+
+fn round_serialize_2<S>(x: &f32, s: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    s.serialize_f32(format!("{:.2}", x).parse::<f32>().unwrap())
 }
 
 impl RenNren {
