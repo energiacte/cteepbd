@@ -781,7 +781,8 @@ mod tests {
             nren: 1.954,
             comment: "Electricidad de red paso A".into(),
         };
-        let factor1str = "ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Electricidad de red paso A";
+        let factor1str =
+            "ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Electricidad de red paso A";
         let factor2str = "ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
 
         // consumer component

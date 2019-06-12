@@ -291,18 +291,19 @@ fn balance_cr(
         let exp_generators: Vec<_> = F_pr_i.keys().collect();
 
         // Weighting factors for energy exported to nEP uses (step A) (~formula 24)
-        let f_we_exp_cr_stepA_nEPus: RenNren = if E_exp_cr_used_nEPus_an == 0.0 {
-            // No exported energy to nEP uses
-            RenNren::new() // ren: 0.0, nren: 0.0
-        } else {
-            exp_generators.iter().fold(
-                Ok(RenNren::new()),
-                |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * F_pr_i[gen]))
-                },
-            )? // sum all i (non grid sources): fpA_nEPus_i[gen] * F_pr_i[gen]
-        };
+        let f_we_exp_cr_stepA_nEPus: RenNren =
+            if E_exp_cr_used_nEPus_an == 0.0 {
+                // No exported energy to nEP uses
+                RenNren::new() // ren: 0.0, nren: 0.0
+            } else {
+                exp_generators.iter().fold(
+                    Ok(RenNren::new()),
+                    |acc: Result<RenNren, Error>, &gen| {
+                        Ok(acc?
+                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * F_pr_i[gen]))
+                    },
+                )? // sum all i (non grid sources): fpA_nEPus_i[gen] * F_pr_i[gen]
+            };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
         let f_we_exp_cr_stepA_grid: RenNren = if E_exp_cr_grid_an == 0.0 {
@@ -312,8 +313,7 @@ fn balance_cr(
             exp_generators.iter().fold(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * F_pr_i[gen]))
+                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * F_pr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_grid_i[gen] * F_pr_i[gen];
         };
@@ -325,18 +325,19 @@ fn balance_cr(
         // * Step B: weighting depends on exported energy generation and avoided resources on the grid
 
         // Factors of contribution for energy exported to nEP uses (step B)
-        let f_we_exp_cr_used_nEPus = if E_exp_cr_used_nEPus_an == 0.0 {
-            // No energy exported to nEP uses
-            RenNren::new() // ren: 0.0, nren: 0.0
-        } else {
-            exp_generators.iter().fold(
-                Ok(RenNren::new()),
-                |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * F_pr_i[gen]))
-                },
-            )? // sum all i (non grid sources): fpB_nEPus_i[gen] * F_pr_i[gen]
-        };
+        let f_we_exp_cr_used_nEPus =
+            if E_exp_cr_used_nEPus_an == 0.0 {
+                // No energy exported to nEP uses
+                RenNren::new() // ren: 0.0, nren: 0.0
+            } else {
+                exp_generators.iter().fold(
+                    Ok(RenNren::new()),
+                    |acc: Result<RenNren, Error>, &gen| {
+                        Ok(acc?
+                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * F_pr_i[gen]))
+                    },
+                )? // sum all i (non grid sources): fpB_nEPus_i[gen] * F_pr_i[gen]
+            };
 
         // Weighting factors for energy exported to the grid (step B)
         let f_we_exp_cr_grid = if E_exp_cr_grid_an == 0.0 {
@@ -346,8 +347,7 @@ fn balance_cr(
             exp_generators.iter().fold(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * F_pr_i[gen]))
+                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * F_pr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_grid_i[gen] * F_pr_i[gen];
         };
