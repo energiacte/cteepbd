@@ -43,9 +43,9 @@ use itertools::Itertools;
 
 use crate::rennren::RenNren;
 use crate::types::{
-    Balance, BalanceForCarrier, BalanceTotal, Component, Components, Factor, Factors,
+    Balance, BalanceForCarrier, BalanceTotal, CSubtype, CType, Carrier, Component, Components,
+    Dest, Factor, Factors, Service, Source, Step, SERVICES,
 };
-use crate::types::{CSubtype, CType, Carrier, Dest, Source, Step};
 
 use crate::vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
 
@@ -372,6 +372,22 @@ fn balance_cr(
     // Partial result for carrier (formula 2)
     let E_we_cr_an: RenNren = E_we_del_cr_an - E_we_exp_cr_an;
 
+    // Weighted energy by use (for EPB services)
+    let mut E_we_cr_an_A_byuse: HashMap<Service, RenNren> = HashMap::new();
+    let mut E_we_cr_an_byuse: HashMap<Service, RenNren> = HashMap::new();
+    // Compute share factors for each EPB use
+    let f_us_cr_i = compute_factor_by_use_cr_i(cr_i_list);
+    // Weighted energy for each use item (EPB services)
+    for service in &SERVICES {
+        let f_us_k_cr_i = *f_us_cr_i.get(service).unwrap_or(&0.0f32);
+        if f_us_k_cr_i != 0.0 {
+            // Step A
+            E_we_cr_an_A_byuse.insert(service.clone(), E_we_cr_an_A * f_us_k_cr_i);
+            // Step B (E.2.6)
+            E_we_cr_an_byuse.insert(service.clone(), E_we_cr_an * f_us_k_cr_i);
+        }
+    }
+
     Ok(BalanceForCarrier {
         carrier,
         used_EPB: E_EPus_cr_t,
@@ -403,8 +419,43 @@ fn balance_cr(
         we_exported_an_AB: E_we_exp_cr_an_AB,
         we_exported_an: E_we_exp_cr_an,
         we_an_A: E_we_cr_an_A,
+        we_an_A_byuse: E_we_cr_an_A_byuse,
         we_an: E_we_cr_an,
+        we_an_byuse: E_we_cr_an_byuse,
     })
+}
+
+/// Compute share of each EPB use for a given carrier i
+///
+/// It uses the reverse calculation method (E.3.6)
+/// * `cr_i_list` - components list for the selected carrier i
+///
+pub fn compute_factor_by_use_cr_i(cr_i_list: &[Component]) -> HashMap<Service, f32> {
+    let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
+    // Energy use components (EPB uses) for current carrier i
+    let cr_i_use_list = cr_i_list
+        .iter()
+        .filter(|c| c.ctype == CType::CONSUMO && c.csubtype == CSubtype::EPB);
+    // Energy use for all EPB services and carrier i (Q_Epus_cr_i)
+    let q_us_all: f32 = cr_i_use_list
+        .clone()
+        .map(|c| c.values.iter().sum::<f32>())
+        .sum();
+    if q_us_all != 0.0 {
+        // No energy use for this carrier!
+        // Collect share of step A weighted energy for each use item (service)
+        for us in SERVICES.iter().cloned() {
+            // Energy use for use k
+            let q_us_k: f32 = cr_i_use_list
+                .clone()
+                .filter(|c| &c.service == &us)
+                .map(|c| c.values.iter().sum::<f32>())
+                .sum();
+            // Factor for use k
+            factors_us_k.insert(us, q_us_k / q_us_all);
+        }
+    }
+    factors_us_k
 }
 
 /// Compute overall energy performance by aggregating results from all energy carriers.
@@ -469,14 +520,32 @@ pub fn energy_performance(
             acc.we_del += balance_cr_i[cr].we_delivered_an;
             acc.we_exp_A += balance_cr_i[cr].we_exported_an_A;
             acc.we_exp += balance_cr_i[cr].we_exported_an;
+            // Weighted energy for each use item (EPB services)
+            for service in &SERVICES {
+                // Step A
+                if let Some(value) = balance_cr_i[cr].we_an_A_byuse.get(service) {
+                    *acc.A_byuse.entry(service.clone()).or_default() += *value
+                }
+                // Step B
+                if let Some(value) = balance_cr_i[cr].we_an_byuse.get(service) {
+                    *acc.B_byuse.entry(service.clone()).or_default() += *value;
+                }
+            }
             acc
         });
 
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
+    let mut A_byuse = balance.A_byuse.clone();
+    for (_, val) in A_byuse.iter_mut() { *val *= k_area }
+    let mut B_byuse = balance.B_byuse.clone();
+    for (_, val) in B_byuse.iter_mut() { *val *= k_area }
+
     let balance_m2 = BalanceTotal {
         A: k_area * balance.A,
+        A_byuse,
         B: k_area * balance.B,
+        B_byuse,
         we_del: k_area * balance.we_del,
         we_exp_A: k_area * balance.we_exp_A,
         we_exp: k_area * balance.we_exp,

@@ -683,18 +683,26 @@ pub struct BalanceForCarrier {
     pub we_exported_an: RenNren,
     /// Weighted energy for calculation step A
     pub we_an_A: RenNren,
+    /// Weighted energy for calculation step A, by use (for EPB services)
+    pub we_an_A_byuse: HashMap<Service, RenNren>,
     /// Weighted energy
     pub we_an: RenNren,
+    /// Weighted energy, by use (for EPB services)
+    pub we_an_byuse: HashMap<Service, RenNren>,
 }
 
 /// Global balance results (all carriers), either in absolute value or by m2.
 #[allow(non_snake_case)]
-#[derive(Debug, Copy, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct BalanceTotal {
     /// Balance result for calculation step A
     pub A: RenNren,
+    /// Weighted energy for calculation step A, by use (for EPB services)
+    pub A_byuse: HashMap<Service, RenNren>,
     /// Balance result for calculation step A+B
     pub B: RenNren,
+    /// Weighted energy, by use (for EPB services)
+    pub B_byuse: HashMap<Service, RenNren>,
     /// Weighted delivered energy
     pub we_del: RenNren,
     /// Weighted exported energy for calculation step A
