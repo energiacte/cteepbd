@@ -22,7 +22,7 @@
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
 use std::fmt;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// Energy pairs representing renewable and non renewable energy quantities or factors.
 #[derive(Debug, Copy, Clone, PartialEq, Default, Serialize)]
@@ -89,6 +89,16 @@ impl<'a> Add for &'a RenNren {
     }
 }
 
+// Implement +=
+impl AddAssign for RenNren {
+    fn add_assign(&mut self, other: RenNren) {
+        *self = RenNren {
+            ren: self.ren + other.ren,
+            nren: self.nren + other.nren,
+        };
+    }
+}
+
 // Implement substraction
 impl Sub for RenNren {
     type Output = RenNren;
@@ -109,6 +119,16 @@ impl<'a> Sub for &'a RenNren {
             ren: self.ren - other.ren,
             nren: self.nren - other.nren,
         }
+    }
+}
+
+// Implement -=
+impl SubAssign for RenNren {
+    fn sub_assign(&mut self, other: RenNren) {
+        *self = RenNren {
+            ren: self.ren - other.ren,
+            nren: self.nren - other.nren,
+        };
     }
 }
 
@@ -189,12 +209,22 @@ impl<'a> Mul<&'a RenNren> for f32 {
 
 // TODO: &f32 * &rennren -> impl<'a, 'b> Mul<&'b RenNRenPair> for &'a f32
 
+// Implement RenNren *= f32
+impl MulAssign<f32> for RenNren {
+    fn mul_assign(&mut self, rhs: f32) {
+        *self = RenNren {
+            ren: self.ren * rhs,
+            nren: self.nren * rhs,
+        };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn ren_nren() {
+    fn add() {
         assert_eq!(
             RenNren {
                 ren: 3.0,
@@ -210,6 +240,26 @@ mod tests {
         );
         assert_eq!(
             RenNren {
+                ren: 3.0,
+                nren: 3.0,
+            },
+            {
+                let mut a = RenNren {
+                    ren: 1.0,
+                    nren: 0.0,
+                };
+                a += RenNren {
+                    ren: 2.0,
+                    nren: 3.0,
+                };
+                a
+            }
+        );
+    }
+    #[test]
+    fn sub() {
+        assert_eq!(
+            RenNren {
                 ren: -1.0,
                 nren: -3.0,
             },
@@ -222,6 +272,26 @@ mod tests {
             }
         );
         assert_eq!(
+            RenNren {
+                ren: -1.0,
+                nren: -3.0,
+            },
+            {
+                let mut a = RenNren {
+                    ren: 1.0,
+                    nren: 0.0,
+                };
+                a -= RenNren {
+                    ren: 2.0,
+                    nren: 3.0,
+                };
+                a
+            }
+        );
+    }
+    #[test]
+    fn display() {
+        assert_eq!(
             format!(
                 "{}",
                 RenNren {
@@ -231,6 +301,9 @@ mod tests {
             ),
             "{ ren: 1.000, nren: 0.000 }"
         );
+    }
+    #[test]
+    fn mul() {
         assert_eq!(
             RenNren {
                 ren: 2.2,
@@ -239,6 +312,20 @@ mod tests {
             2.0 * RenNren {
                 ren: 1.1,
                 nren: 2.2,
+            }
+        );
+        assert_eq!(
+            RenNren {
+                ren: 2.2,
+                nren: 4.4,
+            },
+            {
+                let mut a = RenNren {
+                    ren: 1.1,
+                    nren: 2.2,
+                };
+                a *= 2.0;
+                a
             }
         );
     }
