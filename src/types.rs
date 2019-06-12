@@ -118,6 +118,18 @@ pub enum Service {
     // Building automation and control
 }
 
+pub const SERVICES: [Service; 8] = [
+    Service::ACS,
+    Service::CAL,
+    Service::REF,
+    Service::VEN,
+    Service::ILU,
+    Service::HU,
+    Service::DHU,
+    Service::NDEF,
+    // BAC
+];
+
 impl str::FromStr for Service {
     type Err = Error;
 
