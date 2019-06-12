@@ -462,13 +462,13 @@ pub fn energy_performance(
         .iter()
         .fold(BalanceTotal::default(), |mut acc, cr| {
             // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
-            acc.A = acc.A + balance_cr_i[cr].we_an_A;
+            acc.A += balance_cr_i[cr].we_an_A;
             // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
-            acc.B = acc.B + balance_cr_i[cr].we_an;
+            acc.B += balance_cr_i[cr].we_an;
             // Weighted energy partials
-            acc.we_del = acc.we_del + balance_cr_i[cr].we_delivered_an;
-            acc.we_exp_A = acc.we_exp_A + balance_cr_i[cr].we_exported_an_A;
-            acc.we_exp = acc.we_exp + balance_cr_i[cr].we_exported_an;
+            acc.we_del += balance_cr_i[cr].we_delivered_an;
+            acc.we_exp_A += balance_cr_i[cr].we_exported_an_A;
+            acc.we_exp += balance_cr_i[cr].we_exported_an;
             acc
         });
 
