@@ -244,16 +244,8 @@ fn update_user_wfactors(wfactors: &mut Factors, user_wfactors: &UserWFactors) {
 /// TODO: se deberían separar algunos de estos pasos como métodos de Factors
 pub fn fix_wfactors(
     mut wfactors: Factors,
-    user_wfactors: &UserWFactors,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
-    let UserWFactors {
-        cogen,
-        cogennepb,
-        red1,
-        red2,
-    } = user_wfactors;
-
     // Vectores existentes
     let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
 
@@ -371,6 +363,7 @@ pub fn fix_wfactors(
                 }
             } else {
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren - ver 9.6.6.2.3
+                let cogen = wfactors.get_meta_rennren("CTE_COGEN").unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID);
                 let value_origin = if ((cogen.ren - CTE_COGEN_DEFAULTS_TO_GRID.ren).abs() < EPSILON)
                     && ((cogen.nren - CTE_COGEN_DEFAULTS_TO_GRID.nren).abs() < EPSILON)
                 {
@@ -405,6 +398,7 @@ pub fn fix_wfactors(
             } else {
                 // TODO: Si está definido para A_RED (no por defecto) y no para A_NEPB, qué hacemos? usamos por defecto? usamos igual a A_RED?
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
+                let cogennepb = wfactors.get_meta_rennren("CTE_COGENNEPB").unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB);
                 let value_origin = if ((cogennepb.ren - CTE_COGEN_DEFAULTS_TO_NEPB.ren).abs()
                     < EPSILON)
                     && ((cogennepb.nren - CTE_COGEN_DEFAULTS_TO_NEPB.nren).abs() < EPSILON)
@@ -461,6 +455,7 @@ pub fn fix_wfactors(
         f.carrier == Carrier::RED1 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
     });
     if !has_red1_red_input {
+        let red1 = wfactors.get_meta_rennren("CTE_RED1").unwrap_or(CTE_RED_DEFAULTS_RED1);
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
           red1.ren, red1.nren, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
     }
@@ -468,6 +463,7 @@ pub fn fix_wfactors(
         f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
     });
     if !has_red2_red_input {
+        let red2 = wfactors.get_meta_rennren("CTE_RED2").unwrap_or(CTE_RED_DEFAULTS_RED2);
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
           red2.ren, red2.nren, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
     }
@@ -492,7 +488,7 @@ pub fn parse_wfactors(
     let mut wfactors: Factors = wfactorsstring.parse()?;
     let user_wfactors: UserWFactors = find_user_wfactors(&wfactors, cogen, cogennepb, red1, red2);
     update_user_wfactors(&mut wfactors, &user_wfactors);
-    fix_wfactors(wfactors, &user_wfactors, stripnepb)
+    fix_wfactors(wfactors, stripnepb)
 }
 
 /// Genera factores de paso a partir de localización.
@@ -521,7 +517,7 @@ pub fn new_wfactors(
     let mut wfactors: Factors = wfactorsstring.parse()?;
     let user_wfactors: UserWFactors = find_user_wfactors(&wfactors, cogen, cogennepb, red1, red2);
     update_user_wfactors(&mut wfactors, &user_wfactors);
-    fix_wfactors(wfactors, &user_wfactors, stripnepb)
+    fix_wfactors(wfactors, stripnepb)
 }
 
 /// Elimina factores de paso no usados en los datos de vectores energéticos.
