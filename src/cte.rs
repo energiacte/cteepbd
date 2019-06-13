@@ -45,7 +45,7 @@ use crate::vecops::{veckmul, veclistsum, vecvecdif};
 /// Completa el balance de las producciones in situ de energía procedente del medioambiente
 /// cuando el consumo de esos vectores supera la producción. Es solamente una comodidad, para no
 /// tener que declarar las producciones de MEDIOAMBIENTE, solo los consumos.
-/// 
+///
 /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
 pub fn fix_components(components: &mut Components) {
     // Localiza componentes de energía procedente del medioambiente
@@ -141,9 +141,9 @@ pub fn parse_components(datastring: &str) -> Result<Components, Error> {
 /// - asegura definición de factores a la red para vectores con exportación
 /// - asegura que existe RED1 | RED2 en suministro
 /// - elimina factores con destino nEPB si stripnepb es true
-/// 
+///
 /// Los factores destinados a exportación A_NEPB se eliminan por defecto (pueden dejarse con opción a false)
-/// 
+///
 /// TODO: se deberían separar algunos de estos pasos como métodos de Factors
 pub fn fix_wfactors(
     mut wfactors: Factors,
@@ -220,7 +220,9 @@ pub fn fix_wfactors(
                     .wdata
                     .iter()
                     .find(|f| {
-                        f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::SUMINISTRO
+                        f.carrier == Carrier::RED1
+                            && f.step == Step::A
+                            && f.dest == Dest::SUMINISTRO
                     })
                     // 3. Factores en metadatos
                     .and_then(|f| Some(f.factors()))
@@ -241,7 +243,9 @@ pub fn fix_wfactors(
                     .wdata
                     .iter()
                     .find(|f| {
-                        f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::SUMINISTRO
+                        f.carrier == Carrier::RED2
+                            && f.step == Step::A
+                            && f.dest == Dest::SUMINISTRO
                     })
                     // 3. Factores en metadatos
                     .and_then(|f| Some(f.factors()))
@@ -314,7 +318,10 @@ pub fn fix_wfactors(
     // Asegura definición de factores de red para todos los vectores energéticos
     let has_grid_factors_for_all_carriers = wf_carriers.iter().all(|&c| {
         wfactors.wdata.iter().any(|f| {
-            f.carrier == c && f.source == Source::RED && f.dest == Dest::SUMINISTRO && f.step == Step::A
+            f.carrier == c
+                && f.source == Source::RED
+                && f.dest == Dest::SUMINISTRO
+                && f.step == Step::A
         })
     });
     if !has_grid_factors_for_all_carriers {
@@ -452,18 +459,16 @@ pub fn fix_wfactors(
         }
     }
     // Asegura que existe RED1 | RED2, RED, SUMINISTRO, A, ren, nren
-    let has_red1_red_input = wfactors
-        .wdata
-        .iter()
-        .any(|f| f.carrier == Carrier::RED1 && f.source == Source::RED && f.dest == Dest::SUMINISTRO);
+    let has_red1_red_input = wfactors.wdata.iter().any(|f| {
+        f.carrier == Carrier::RED1 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
+    });
     if !has_red1_red_input {
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
           red1.ren, red1.nren, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
     }
-    let has_red2_red_input = wfactors
-        .wdata
-        .iter()
-        .any(|f| f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO);
+    let has_red2_red_input = wfactors.wdata.iter().any(|f| {
+        f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
+    });
     if !has_red2_red_input {
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
           red2.ren, red2.nren, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
@@ -805,7 +810,14 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         <nren>{:.1}</nren>
     </Epm2>
 </BalanceEPB>",
-        wmetastring, wdatastring, cmetastring, cdatastring, k_exp, arearef, ren + nren , nren
+        wmetastring,
+        wdatastring,
+        cmetastring,
+        cdatastring,
+        k_exp,
+        arearef,
+        ren + nren,
+        nren
     )
 }
 
