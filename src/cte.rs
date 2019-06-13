@@ -144,8 +144,8 @@ pub struct UserWFactors {
 /// 2. el factor de wfactors en las líneas de factores
 /// 3. el factor por defecto
 ///
-fn set_user_wfactors(
-    wfactors: &mut Factors,
+fn find_user_wfactors(
+    wfactors: &Factors,
     cogen: Option<RenNren>,
     cogennepb: Option<RenNren>,
     red1: Option<RenNren>,
@@ -211,10 +211,27 @@ fn set_user_wfactors(
     }
 }
 
+/// Actualiza factores de usuario en metadatos
+fn update_user_wfactors(wfactors: &mut Factors, user_wfactors: &UserWFactors) {
+    let UserWFactors {
+        cogen,
+        cogennepb,
+        red1,
+        red2,
+    } = user_wfactors;
+
+    wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
+    wfactors.update_meta(
+        "CTE_COGENNEPB",
+        &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren),
+    );
+    wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
+    wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
+}
+
 /// Asegura consistencia de factores de paso definidos y deduce algunos de los que falten.
 ///
 /// Realiza los siguientes pasos:
-/// - añade factores definidos por usuario
 /// - asegura definición de factores de producción in situ
 /// - asegura definición de factores desde la red para todos los vectores
 /// - asegura que factor paso A para suministro de cogeneración es 0.0 (se considera en vector original)
@@ -473,8 +490,8 @@ pub fn parse_wfactors(
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    let user_wfactors: UserWFactors =
-        set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
+    let user_wfactors: UserWFactors = find_user_wfactors(&wfactors, cogen, cogennepb, red1, red2);
+    update_user_wfactors(&mut wfactors, &user_wfactors);
     fix_wfactors(wfactors, &user_wfactors, stripnepb)
 }
 
@@ -502,8 +519,8 @@ pub fn new_wfactors(
         ),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    let user_wfactors: UserWFactors =
-        set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
+    let user_wfactors: UserWFactors = find_user_wfactors(&wfactors, cogen, cogennepb, red1, red2);
+    update_user_wfactors(&mut wfactors, &user_wfactors);
     fix_wfactors(wfactors, &user_wfactors, stripnepb)
 }
 
