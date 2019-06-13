@@ -7,6 +7,7 @@ Factores de paso constantes a lo largo de los intervalos de cálculo
 */
 
 use crate::rennren::RenNren;
+use crate::types::{Carrier};
 
 /// Valor por defecto del área de referencia.
 pub const AREAREF_DEFAULT: f32 = 1.0;
@@ -47,6 +48,15 @@ pub const CTE_COGEN_DEFAULTS_TO_NEPB: RenNren = RenNren {
 // CTE_COGEN -> num, num
 // CTE_RED1 -> num, num
 // CTE_RED2 -> num, num
+
+/// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
+pub const CTE_NRBY: [Carrier; 5] = [
+    Carrier::BIOMASA,
+    Carrier::BIOMASADENSIFICADA,
+    Carrier::RED1,
+    Carrier::RED2,
+    Carrier::MEDIOAMBIENTE,
+]; // Ver B.23. Solo biomasa sólida
 
 /// Factores de paso reglamentarios (RITE 20/07/2014) para Península.
 pub const CTE_FP_PENINSULA: &str = "
