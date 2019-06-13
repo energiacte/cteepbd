@@ -130,6 +130,105 @@ pub fn parse_components(datastring: &str) -> Result<Components, Error> {
 }
 
 // // ---------------------- Factores de paso -----------------------------------------------
+pub struct UserWFactors {
+    cogen: RenNren,
+    cogennepb: RenNren,
+    red1: RenNren,
+    red2: RenNren,
+}
+
+/// Selecciona valores de factores definidos por el usuario (cogen, cogennepb, red1 y red2)
+///
+/// 1. el factor si está definido en los argumentos (es Some)
+/// 2. el factor de wfactors en los metadatos
+/// 2. el factor de wfactors en las líneas de factores
+/// 3. el factor por defecto
+///
+fn set_user_wfactors(
+    wfactors: &mut Factors,
+    cogen: Option<RenNren>,
+    cogennepb: Option<RenNren>,
+    red1: Option<RenNren>,
+    red2: Option<RenNren>,
+) -> UserWFactors {
+    let cogen = cogen
+        .or_else(||
+            wfactors.get_meta_rennren("CTE_COGEN"))
+        .or_else(||
+            wfactors
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.source == Source::COGENERACION 
+                        && f.step == Step::A 
+                        && f.dest == Dest::A_RED
+                })
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID);
+
+    wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
+
+    let cogennepb = cogennepb
+        .or_else(||
+            wfactors.get_meta_rennren("CTE_COGENNEPB"))
+        .or_else(||
+            wfactors
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.source == Source::COGENERACION
+                        && f.step == Step::A
+                        && f.dest == Dest::A_NEPB
+                })
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB);
+
+    wfactors.update_meta(
+        "CTE_COGENNEPB",
+        &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren),
+    );
+
+    let red1 = red1
+        .or_else(||
+            wfactors.get_meta_rennren("CTE_RED1"))
+        .or_else(||
+            wfactors
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.carrier == Carrier::RED1
+                        && f.step == Step::A
+                        && f.dest == Dest::SUMINISTRO
+                })
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_RED_DEFAULTS_RED1);
+
+    wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
+
+    let red2 = red2
+        .or_else(||
+            wfactors.get_meta_rennren("CTE_RED2"))
+        .or_else(||
+            wfactors
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.carrier == Carrier::RED2
+                        && f.step == Step::A
+                        && f.dest == Dest::SUMINISTRO
+                })
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_RED_DEFAULTS_RED2);
+
+    wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
+
+    UserWFactors {
+        cogen: cogen,
+        cogennepb: cogennepb,
+        red1: red1,
+        red2: red2,
+    }
+}
 
 /// Asegura consistencia de factores de paso definidos y deduce algunos de los que falten.
 ///
@@ -147,86 +246,15 @@ pub fn parse_components(datastring: &str) -> Result<Components, Error> {
 /// TODO: se deberían separar algunos de estos pasos como métodos de Factors
 pub fn fix_wfactors(
     mut wfactors: Factors,
-    cogen: Option<RenNren>,
-    cogennepb: Option<RenNren>,
-    red1: Option<RenNren>,
-    red2: Option<RenNren>,
+    user_wfactors: &UserWFactors,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
-    // Selección de valores para cogen, cogennepb, red1 y red2:
-    // 1. el factor si está definido en los argumentos (es Some)
-    // 2. el factor de wfactors en los metadatos
-    // 2. el factor de wfactors en las líneas de factores
-    // 3. el factor por defecto
-
-    let cogen = cogen // 1. Valor de argumentos
-        .or_else(|| // 2. Metadatos
-            wfactors.get_meta_rennren("CTE_COGEN"))
-        .or_else(|| // 3. Factores en metadatos
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_RED
-                })
-                .and_then(|f| Some(f.factors())))
-        .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID); // 4. Valor por defecto si no hay nada
-
-    wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
-
-    let cogennepb = cogennepb // 1. Valor de argumentos
-        .or_else(|| // 2. Metadatos
-            wfactors.get_meta_rennren("CTE_COGENNEPB"))
-        .or_else(|| // 3. Factores en metadatos
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.source == Source::COGENERACION
-                        && f.step == Step::A
-                        && f.dest == Dest::A_NEPB
-                })
-                .and_then(|f| Some(f.factors())))
-        .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB); // 4. Valor por defecto si no hay nada
-
-    wfactors.update_meta(
-        "CTE_COGENNEPB",
-        &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren),
-    );
-
-    let red1 = red1 // 1. Valor de argumentos
-        .or_else(|| // 2. Metadatos
-            wfactors.get_meta_rennren("CTE_RED1"))
-        .or_else(|| // 3. Factores en metadatos
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.carrier == Carrier::RED1
-                        && f.step == Step::A
-                        && f.dest == Dest::SUMINISTRO
-                })
-                .and_then(|f| Some(f.factors())))
-        .unwrap_or(CTE_RED_DEFAULTS_RED1); // 4. Valor por defecto
-
-    wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
-
-    let red2 = red2 // 1. Valor de argumentos
-        .or_else(|| // 2. Metadatos
-            wfactors.get_meta_rennren("CTE_RED2"))
-        .or_else(|| // 3. Factores en metadatos
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.carrier == Carrier::RED2
-                        && f.step == Step::A
-                        && f.dest == Dest::SUMINISTRO
-                })
-                .and_then(|f| Some(f.factors())))
-        .unwrap_or(CTE_RED_DEFAULTS_RED2); // 4. Valor por defecto si no hay nada
-
-    wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
+    let UserWFactors {
+        cogen,
+        cogennepb,
+        red1,
+        red2,
+    } = user_wfactors;
 
     // Vectores existentes
     let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
@@ -463,8 +491,10 @@ pub fn parse_wfactors(
     red2: Option<RenNren>,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
-    let wfactors: Factors = wfactorsstring.parse()?;
-    fix_wfactors(wfactors, cogen, cogennepb, red1, red2, stripnepb)
+    let mut wfactors: Factors = wfactorsstring.parse()?;
+    let user_wfactors: UserWFactors =
+        set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
+    fix_wfactors(wfactors, &user_wfactors, stripnepb)
 }
 
 /// Genera factores de paso a partir de localización.
@@ -490,8 +520,10 @@ pub fn new_wfactors(
             loc
         ),
     };
-    let wfactors: Factors = wfactorsstring.parse()?;
-    fix_wfactors(wfactors, cogen, cogennepb, red1, red2, stripnepb)
+    let mut wfactors: Factors = wfactorsstring.parse()?;
+    let user_wfactors: UserWFactors =
+        set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
+    fix_wfactors(wfactors, &user_wfactors, stripnepb)
 }
 
 /// Elimina factores de paso no usados en los datos de vectores energéticos.
