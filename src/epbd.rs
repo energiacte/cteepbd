@@ -448,7 +448,7 @@ pub fn compute_factor_by_use_cr_i(cr_i_list: &[Component]) -> HashMap<Service, f
             // Energy use for use k
             let q_us_k: f32 = cr_i_use_list
                 .clone()
-                .filter(|c| &c.service == &us)
+                .filter(|c| c.service == us)
                 .map(|c| c.values.iter().sum::<f32>())
                 .sum();
             // Factor for use k

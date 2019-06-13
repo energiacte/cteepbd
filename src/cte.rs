@@ -115,7 +115,7 @@ pub fn fix_components(components: &mut Components) {
                         .into(),
             })
         })
-        .filter(|v| v.is_some())
+        .filter(std::option::Option::is_some)
         .collect::<Option<Vec<_>>>()
         .unwrap_or_else(|| vec![]);
     // Agrega componentes no compensados
@@ -223,10 +223,10 @@ fn set_user_wfactors(
     wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
 
     UserWFactors {
-        cogen: cogen,
-        cogennepb: cogennepb,
-        red1: red1,
-        red2: red2,
+        cogen,
+        cogennepb,
+        red1,
+        red2,
     }
 }
 

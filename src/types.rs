@@ -212,7 +212,7 @@ impl str::FromStr for Meta {
 
     fn from_str(s: &str) -> Result<Meta, Self::Err> {
         // Remove start of line with #META or #CTE_
-        let items: Vec<&str> = s.trim()[5..].splitn(2, ':').map(|v| v.trim()).collect();
+        let items: Vec<&str> = s.trim()[5..].splitn(2, ':').map(str::trim).collect();
         if items.len() == 2 {
             let key = match items[0].trim() {
                 // Fix legacy values
@@ -275,9 +275,9 @@ impl str::FromStr for Component {
         use self::CType::*;
         use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
 
-        let items: Vec<&str> = s.trim().splitn(2, '#').map(|v| v.trim()).collect();
+        let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
-        let items: Vec<&str> = items[0].split(',').map(|v| v.trim()).collect();
+        let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 4 {
             return Err(format_err!(
                 "Couldn't parse Component (Component) from string: {}",
@@ -394,9 +394,9 @@ impl str::FromStr for Factor {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Factor, Self::Err> {
-        let items: Vec<&str> = s.trim().splitn(2, '#').map(|v| v.trim()).collect();
+        let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
-        let items: Vec<&str> = items[0].split(',').map(|v| v.trim()).collect();
+        let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 6 {
             return Err(format_err!(
                 "Couldn't parse Weighting Factor (Factor) from string"
@@ -539,7 +539,7 @@ impl str::FromStr for Components {
         } else {
             s
         };
-        let lines: Vec<&str> = s_nobom.lines().map(|v| v.trim()).collect();
+        let lines: Vec<&str> = s_nobom.lines().map(str::trim).collect();
         let metalines = lines
             .iter()
             .filter(|l| l.starts_with("#META") || l.starts_with("#CTE_"));
@@ -605,7 +605,7 @@ impl str::FromStr for Factors {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Factors, Self::Err> {
-        let lines: Vec<&str> = s.lines().map(|v| v.trim()).collect();
+        let lines: Vec<&str> = s.lines().map(str::trim).collect();
         let metalines = lines
             .iter()
             .filter(|l| l.starts_with("#META") || l.starts_with("#CTE_"));
