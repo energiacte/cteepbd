@@ -152,75 +152,56 @@ fn set_user_wfactors(
     red2: Option<RenNren>,
 ) -> UserWFactors {
     let cogen = cogen
-        .or_else(||
-            wfactors.get_meta_rennren("CTE_COGEN"))
-        .or_else(||
+        .or_else(|| wfactors.get_meta_rennren("CTE_COGEN"))
+        .or_else(|| {
             wfactors
                 .wdata
                 .iter()
                 .find(|f| {
-                    f.source == Source::COGENERACION 
-                        && f.step == Step::A 
-                        && f.dest == Dest::A_RED
+                    f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_RED
                 })
-                .and_then(|f| Some(f.factors())))
+                .and_then(|f| Some(f.factors()))
+        })
         .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID);
 
-    wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
-
     let cogennepb = cogennepb
-        .or_else(||
-            wfactors.get_meta_rennren("CTE_COGENNEPB"))
-        .or_else(||
+        .or_else(|| wfactors.get_meta_rennren("CTE_COGENNEPB"))
+        .or_else(|| {
             wfactors
                 .wdata
                 .iter()
                 .find(|f| {
-                    f.source == Source::COGENERACION
-                        && f.step == Step::A
-                        && f.dest == Dest::A_NEPB
+                    f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_NEPB
                 })
-                .and_then(|f| Some(f.factors())))
+                .and_then(|f| Some(f.factors()))
+        })
         .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB);
 
-    wfactors.update_meta(
-        "CTE_COGENNEPB",
-        &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren),
-    );
-
     let red1 = red1
-        .or_else(||
-            wfactors.get_meta_rennren("CTE_RED1"))
-        .or_else(||
+        .or_else(|| wfactors.get_meta_rennren("CTE_RED1"))
+        .or_else(|| {
             wfactors
                 .wdata
                 .iter()
                 .find(|f| {
-                    f.carrier == Carrier::RED1
-                        && f.step == Step::A
-                        && f.dest == Dest::SUMINISTRO
+                    f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::SUMINISTRO
                 })
-                .and_then(|f| Some(f.factors())))
+                .and_then(|f| Some(f.factors()))
+        })
         .unwrap_or(CTE_RED_DEFAULTS_RED1);
 
-    wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
-
     let red2 = red2
-        .or_else(||
-            wfactors.get_meta_rennren("CTE_RED2"))
-        .or_else(||
+        .or_else(|| wfactors.get_meta_rennren("CTE_RED2"))
+        .or_else(|| {
             wfactors
                 .wdata
                 .iter()
                 .find(|f| {
-                    f.carrier == Carrier::RED2
-                        && f.step == Step::A
-                        && f.dest == Dest::SUMINISTRO
+                    f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::SUMINISTRO
                 })
-                .and_then(|f| Some(f.factors())))
+                .and_then(|f| Some(f.factors()))
+        })
         .unwrap_or(CTE_RED_DEFAULTS_RED2);
-
-    wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
 
     UserWFactors {
         cogen,
