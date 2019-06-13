@@ -159,101 +159,73 @@ pub fn fix_wfactors(
     // 2. el factor de wfactors en las líneas de factores
     // 3. el factor por defecto
 
-    let cogen = match cogen {
-        // 1. Valor de argumentos
-        Some(value) => value,
-        _ => {
-            // 2. Metadatos
-            wfactors.get_meta_rennren("CTE_COGEN").unwrap_or_else(|| {
-                wfactors
-                    .wdata
-                    .iter()
-                    .find(|f| {
-                        f.source == Source::COGENERACION
-                            && f.step == Step::A
-                            && f.dest == Dest::A_RED
-                    })
-                    // 3. Factores en metadatos
-                    .and_then(|f| Some(f.factors()))
-                    // 4. Valor por defecto si no hay nada
-                    .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID)
-            })
-        }
-    };
+    let cogen = cogen // 1. Valor de argumentos
+        .or_else(|| // 2. Metadatos
+            wfactors.get_meta_rennren("CTE_COGEN"))
+        .or_else(|| // 3. Factores en metadatos
+            wfactors
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_RED
+                })
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID); // 4. Valor por defecto si no hay nada
+
     wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
 
-    let cogennepb = match cogennepb {
-        // 1. Valor de argumentos
-        Some(value) => value,
-        _ => {
-            // 2. Metadatos
+    let cogennepb = cogennepb // 1. Valor de argumentos
+        .or_else(|| // 2. Metadatos
+            wfactors.get_meta_rennren("CTE_COGENNEPB"))
+        .or_else(|| // 3. Factores en metadatos
             wfactors
-                .get_meta_rennren("CTE_COGENNEPB")
-                .unwrap_or_else(|| {
-                    wfactors
-                        .wdata
-                        .iter()
-                        .find(|f| {
-                            f.source == Source::COGENERACION
-                                && f.step == Step::A
-                                && f.dest == Dest::A_NEPB
-                        })
-                        // 3. Factores en metadatos
-                        .and_then(|f| Some(f.factors()))
-                        // 4. Valor por defecto si no hay nada
-                        .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB)
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.source == Source::COGENERACION
+                        && f.step == Step::A
+                        && f.dest == Dest::A_NEPB
                 })
-        }
-    };
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB); // 4. Valor por defecto si no hay nada
+
     wfactors.update_meta(
         "CTE_COGENNEPB",
         &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren),
     );
 
-    let red1 = match red1 {
-        // 1. Valor de argumentos
-        Some(value) => value,
-        _ => {
-            // 2. Metadatos
-            wfactors.get_meta_rennren("CTE_RED1").unwrap_or_else(|| {
-                wfactors
-                    .wdata
-                    .iter()
-                    .find(|f| {
-                        f.carrier == Carrier::RED1
-                            && f.step == Step::A
-                            && f.dest == Dest::SUMINISTRO
-                    })
-                    // 3. Factores en metadatos
-                    .and_then(|f| Some(f.factors()))
-                    // 4. Valor por defecto si no hay nada
-                    .unwrap_or(CTE_RED_DEFAULTS_RED1)
-            })
-        }
-    };
+    let red1 = red1 // 1. Valor de argumentos
+        .or_else(|| // 2. Metadatos
+            wfactors.get_meta_rennren("CTE_RED1"))
+        .or_else(|| // 3. Factores en metadatos
+            wfactors
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.carrier == Carrier::RED1
+                        && f.step == Step::A
+                        && f.dest == Dest::SUMINISTRO
+                })
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_RED_DEFAULTS_RED1); // 4. Valor por defecto
+
     wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
 
-    let red2 = match red2 {
-        // 1. Valor de argumentos
-        Some(value) => value,
-        _ => {
-            // 2. Metadatos
-            wfactors.get_meta_rennren("CTE_RED2").unwrap_or_else(|| {
-                wfactors
-                    .wdata
-                    .iter()
-                    .find(|f| {
-                        f.carrier == Carrier::RED2
-                            && f.step == Step::A
-                            && f.dest == Dest::SUMINISTRO
-                    })
-                    // 3. Factores en metadatos
-                    .and_then(|f| Some(f.factors()))
-                    // 4. Valor por defecto si no hay nada
-                    .unwrap_or(CTE_RED_DEFAULTS_RED2)
-            })
-        }
-    };
+    let red2 = red2 // 1. Valor de argumentos
+        .or_else(|| // 2. Metadatos
+            wfactors.get_meta_rennren("CTE_RED2"))
+        .or_else(|| // 3. Factores en metadatos
+            wfactors
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.carrier == Carrier::RED2
+                        && f.step == Step::A
+                        && f.dest == Dest::SUMINISTRO
+                })
+                .and_then(|f| Some(f.factors())))
+        .unwrap_or(CTE_RED_DEFAULTS_RED2); // 4. Valor por defecto si no hay nada
+
     wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
 
     // Vectores existentes
