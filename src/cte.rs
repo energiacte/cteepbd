@@ -130,27 +130,22 @@ pub fn parse_components(datastring: &str) -> Result<Components, Error> {
 }
 
 // // ---------------------- Factores de paso -----------------------------------------------
-pub struct UserWFactors {
-    cogen: RenNren,
-    cogennepb: RenNren,
-    red1: RenNren,
-    red2: RenNren,
-}
 
-/// Selecciona valores de factores definidos por el usuario (cogen, cogennepb, red1 y red2)
+/// Actualiza factores definidos por el usuario en los metadatos (cogen, cogennepb, red1 y red2)
 ///
+/// Utiliza:
 /// 1. el factor si está definido en los argumentos (es Some)
 /// 2. el factor de wfactors en los metadatos
 /// 2. el factor de wfactors en las líneas de factores
 /// 3. el factor por defecto
 ///
-fn find_user_wfactors(
-    wfactors: &Factors,
+fn set_user_wfactors(
+    wfactors: &mut Factors,
     cogen: Option<RenNren>,
     cogennepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
-) -> UserWFactors {
+) {
     let cogen = cogen
         .or_else(|| wfactors.get_meta_rennren("CTE_COGEN"))
         .or_else(|| {
@@ -203,23 +198,7 @@ fn find_user_wfactors(
         })
         .unwrap_or(CTE_RED_DEFAULTS_RED2);
 
-    UserWFactors {
-        cogen,
-        cogennepb,
-        red1,
-        red2,
-    }
-}
-
-/// Actualiza factores de usuario en metadatos
-fn update_user_wfactors(wfactors: &mut Factors, user_wfactors: &UserWFactors) {
-    let UserWFactors {
-        cogen,
-        cogennepb,
-        red1,
-        red2,
-    } = user_wfactors;
-
+    // Actualiza factores de usuario en metadatos
     wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
     wfactors.update_meta(
         "CTE_COGENNEPB",
@@ -486,8 +465,7 @@ pub fn parse_wfactors(
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    let user_wfactors: UserWFactors = find_user_wfactors(&wfactors, cogen, cogennepb, red1, red2);
-    update_user_wfactors(&mut wfactors, &user_wfactors);
+    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -515,8 +493,7 @@ pub fn new_wfactors(
         ),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    let user_wfactors: UserWFactors = find_user_wfactors(&wfactors, cogen, cogennepb, red1, red2);
-    update_user_wfactors(&mut wfactors, &user_wfactors);
+    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
     fix_wfactors(wfactors, stripnepb)
 }
 
