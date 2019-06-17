@@ -128,7 +128,7 @@ fn validate_arearef(matches: &clap::ArgMatches<'_>, verbosity: u64) {
     }
 }
 
-/// Obtiene factor de paso priorizando CLI -> metadatos -> valor por defecto.
+/// Obtiene factor de paso priorizando CLI -> metadatos -> None.
 fn get_factor(
     matches_values: Option<clap::Values<'_>>,
     components: &mut Components,
