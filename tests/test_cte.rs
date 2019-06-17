@@ -70,7 +70,7 @@ ELECTRICIDAD, COGENERACION, A_NEPB, B, 0.5, 2.0
 const TESTKEXP: f32 = 1.0;
 
 fn get_ctefp_peninsula() -> Factors {
-    new_wfactors("PENINSULA", None, None, None, None, false).unwrap()
+    new_wfactors("PENINSULA", None, None, None, None, CTE_DEFAULTS_WF_EP, false).unwrap()
 }
 
 fn get_energydatalist() -> Components {
@@ -140,7 +140,7 @@ fn wfactors_from_file(path: &str) -> Factors {
     let mut f = File::open(path).unwrap();
     let mut wfactors_string = String::new();
     f.read_to_string(&mut wfactors_string).unwrap();
-    parse_wfactors(&wfactors_string, None, None, None, None, false).unwrap()
+    parse_wfactors(&wfactors_string, None, None, None, None, CTE_DEFAULTS_WF_EP, false).unwrap()
 }
 
 ///Approximate equality for RenNren values
@@ -646,6 +646,7 @@ fn cte_EPBD() {
         None,
         Some(CTE_DEFAULTS_WF_EP.red1),
         Some(CTE_DEFAULTS_WF_EP.red2),
+        CTE_DEFAULTS_WF_EP,
         false,
     )
     .unwrap();

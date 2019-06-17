@@ -276,10 +276,11 @@ pub fn parse_wfactors(
     cogennepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
+    defaults: CteDefaultsWF,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
+    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -293,21 +294,22 @@ pub fn new_wfactors(
     cogennepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
+    defaults: CteDefaultsWF,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     // XXX: usar tipos en lugar de cadenas de texto
     let wfactorsstring = match &*loc {
-        "PENINSULA" => CTE_DEFAULTS_WF_EP.loc_peninsula,
-        "BALEARES" => CTE_DEFAULTS_WF_EP.loc_baleares,
-        "CANARIAS" => CTE_DEFAULTS_WF_EP.loc_canarias,
-        "CEUTAMELILLA" => CTE_DEFAULTS_WF_EP.loc_ceutamelilla,
+        "PENINSULA" => defaults.loc_peninsula,
+        "BALEARES" => defaults.loc_baleares,
+        "CANARIAS" => defaults.loc_canarias,
+        "CEUTAMELILLA" => defaults.loc_ceutamelilla,
         _ => bail!(
             "Localización \"{}\" desconocida al generar factores de paso",
             loc
         ),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2);
+    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -324,6 +326,7 @@ pub fn set_user_wfactors(
     cogennepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
+    defaults: CteDefaultsWF
 ) {
     let cogen = cogen
         .or_else(|| wfactors.get_meta_rennren("CTE_COGEN"))
@@ -336,7 +339,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_grid);
+        .unwrap_or(defaults.cogen_to_grid);
 
     let cogennepb = cogennepb
         .or_else(|| wfactors.get_meta_rennren("CTE_COGENNEPB"))
@@ -349,7 +352,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_nepb);
+        .unwrap_or(defaults.cogen_to_nepb);
 
     let red1 = red1
         .or_else(|| wfactors.get_meta_rennren("CTE_RED1"))
@@ -362,7 +365,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_DEFAULTS_WF_EP.red1);
+        .unwrap_or(defaults.red1);
 
     let red2 = red2
         .or_else(|| wfactors.get_meta_rennren("CTE_RED2"))
@@ -375,7 +378,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_DEFAULTS_WF_EP.red2);
+        .unwrap_or(defaults.red2);
 
     // Actualiza factores de usuario en metadatos
     wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));

@@ -41,7 +41,7 @@ use failure::Error;
 use failure::Fail;
 use failure::ResultExt;
 
-use cteepbd::*;
+use cteepbd::{*, cte::CTE_DEFAULTS_WF_EP};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
@@ -488,7 +488,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     );
                     exit(exitcode::IOERR);
                 });
-            cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, false)
+            cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, CTE_DEFAULTS_WF_EP, false)
                 .unwrap_or_else(|error| {
                     eprintln!(
                         "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
@@ -519,7 +519,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     exit(exitcode::USAGE);
                 }).unwrap();
 
-            cte::new_wfactors(&localizacion, cogen, cogennepb, red1, red2, false)
+            cte::new_wfactors(&localizacion, cogen, cogennepb, red1, red2, CTE_DEFAULTS_WF_EP, false)
                 .unwrap_or_else(|error| {
                     println!("ERROR: No se han podido generar los factores de paso");
                     if verbosity > 2 { println!("{}, {}", error.as_fail(), error.backtrace()) };
