@@ -476,19 +476,18 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         // Definición desde archivo
         if let Some(archivo_factores) = matches.value_of("archivo_factores") {
             let path = Path::new(archivo_factores);
-            let fpstring = match readfile(path) {
-                Ok(fpstring) => {
+            let fpstring = readfile(path)
+                .and_then(|fpstring| {
                     println!("Factores de paso (archivo): \"{}\"", path.display());
-                    fpstring
-                },
-                Err(err) => {
+                    Ok(fpstring)
+                })
+                .unwrap_or_else(|err| {
                     eprintln!(
                         "ERROR: No se ha podido leer el archivo de factores de paso \"{}\" -> {}",
                         path.display(), err.as_fail()
                     );
                     exit(exitcode::IOERR);
-                }
-            };
+                });
             cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, false)
                 .unwrap_or_else(|error| {
                     eprintln!(
