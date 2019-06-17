@@ -41,12 +41,7 @@ use failure::Error;
 use failure::Fail;
 use failure::ResultExt;
 
-use cteepbd::{
-    cte,
-    epbd::*,
-    rennren::RenNren,
-    types::{Balance, Components, MetaVec, Service},
-};
+use cteepbd::*;
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
