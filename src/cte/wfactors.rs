@@ -1,6 +1,6 @@
 /*! # Manejo de factores de paso para el CTE
 
-Utilidades para la gestión de factores de paso para el CTE
+Factores de paso y utilidades para la gestión de factores de paso para el CTE
 
 */
 
@@ -8,12 +8,147 @@ use failure::Error;
 use itertools::Itertools;
 use std::f32::EPSILON;
 
-use super::data::*;
-
 use crate::rennren::RenNren;
 use crate::types::{CSubtype, Carrier, Dest, Source, Step};
 use crate::types::{Components, Factor, Factors, Meta, MetaVec};
 
+// Localizaciones válidas para CTE
+// const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELILLA"];
+
+// Valores bien conocidos de metadatos:
+// CTE_AREAREF -> num
+// CTE_KEXP -> num
+// CTE_LOCALIZACION -> str
+// CTE_COGEN -> num, num
+// CTE_RED1 -> num, num
+// CTE_RED2 -> num, num
+
+/// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
+pub const CTE_NRBY: [Carrier; 5] = [
+    Carrier::BIOMASA,
+    Carrier::BIOMASADENSIFICADA,
+    Carrier::RED1,
+    Carrier::RED2,
+    Carrier::MEDIOAMBIENTE,
+]; // Ver B.23. Solo biomasa sólida
+
+// ---------------- Valores por defecto -----------------------
+
+/// Valores por defecto para factores de paso
+pub struct CteDefaultsWF {
+    /// Valores por defecto para factores de paso de redes de distrito 1.
+    /// RED1, RED, SUMINISTRO, A, ren, nren
+    pub red1: RenNren,
+    /// Valores por defecto para factores de paso de redes de distrito 2.
+    /// RED2, RED, SUMINISTRO, A, ren, nren
+    pub red2: RenNren,
+    /// Valores por defecto para exportación a la red (paso A) de electricidad cogenerada.
+    /// ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren
+    pub cogen_to_grid: RenNren,
+    /// Valores por defecto para exportación a usos no EPB (paso A) de electricidad cogenerada.
+    /// ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren
+    pub cogen_to_nepb: RenNren,
+    /// Factores de paso reglamentarios (RITE 20/07/2014) para Península.
+    pub loc_peninsula: &'static str,
+    /// Factores de paso reglamentarios (RITE 20/07/2014) para Baleares.
+    pub loc_baleares: &'static str,
+    /// Factores de paso reglamentarios (RITE 20/07/2014) para Canarias.
+    pub loc_canarias: &'static str,
+    /// Factores de paso reglamentarios (RITE 20/07/2014) para Ceuta y Melilla.
+    pub loc_ceutamelilla: &'static str,
+}
+
+/// Valores por defecto para energía primaria
+pub const CTE_DEFAULTS_WF_EP: CteDefaultsWF = CteDefaultsWF {
+    red1: RenNren {
+        ren: 0.0,
+        nren: 1.3,
+    },
+    red2: RenNren {
+        ren: 0.0,
+        nren: 1.3,
+    },
+    cogen_to_grid: RenNren {
+        ren: 0.0,
+        nren: 2.5,
+    },
+    cogen_to_nepb: RenNren {
+        ren: 0.0,
+        nren: 2.5,
+    },
+    loc_peninsula: "
+#META CTE_FUENTE: CTE2013
+#META CTE_LOCALIZACION: PENINSULA
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
+FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Recursos usados para suministrar electricidad (PENINSULA) desde la red
+",
+    loc_baleares: "
+#META CTE_FUENTE: CTE2013
+#META CTE_LOCALIZACION: BALEARES
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
+FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.082, 2.968 # Recursos usados para suministrar electricidad (BALEARES) desde la red
+",
+    loc_canarias: "
+#META CTE_FUENTE: CTE2013
+#META CTE_LOCALIZACION: CANARIAS
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
+FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.070, 2.924 # Recursos usados para suministrar electricidad (CANARIAS) desde la red
+",
+    loc_ceutamelilla: "
+#META CTE_FUENTE: CTE2013
+#META CTE_LOCALIZACION: CEUTAMELILLA
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
+FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.072, 2.718 # Recursos usados para suministrar electricidad (CEUTA Y MELILLA) desde la red
+",
+};
 /// Lee factores de paso desde cadena y sanea los resultados.
 pub fn parse_wfactors(
     wfactorsstring: &str,
@@ -42,10 +177,10 @@ pub fn new_wfactors(
 ) -> Result<Factors, Error> {
     // XXX: usar tipos en lugar de cadenas de texto
     let wfactorsstring = match &*loc {
-        "PENINSULA" => CTE_FP_PENINSULA,
-        "BALEARES" => CTE_FP_BALEARES,
-        "CANARIAS" => CTE_FP_CANARIAS,
-        "CEUTAMELILLA" => CTE_FP_CEUTAMELILLA,
+        "PENINSULA" => CTE_DEFAULTS_WF_EP.loc_peninsula,
+        "BALEARES" => CTE_DEFAULTS_WF_EP.loc_baleares,
+        "CANARIAS" => CTE_DEFAULTS_WF_EP.loc_canarias,
+        "CEUTAMELILLA" => CTE_DEFAULTS_WF_EP.loc_ceutamelilla,
         _ => bail!(
             "Localización \"{}\" desconocida al generar factores de paso",
             loc
@@ -82,7 +217,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID);
+        .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_grid);
 
     let cogennepb = cogennepb
         .or_else(|| wfactors.get_meta_rennren("CTE_COGENNEPB"))
@@ -95,7 +230,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB);
+        .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_nepb);
 
     let red1 = red1
         .or_else(|| wfactors.get_meta_rennren("CTE_RED1"))
@@ -108,7 +243,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_RED_DEFAULTS_RED1);
+        .unwrap_or(CTE_DEFAULTS_WF_EP.red1);
 
     let red2 = red2
         .or_else(|| wfactors.get_meta_rennren("CTE_RED2"))
@@ -121,7 +256,7 @@ pub fn set_user_wfactors(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(CTE_RED_DEFAULTS_RED2);
+        .unwrap_or(CTE_DEFAULTS_WF_EP.red2);
 
     // Actualiza factores de usuario en metadatos
     wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
@@ -266,9 +401,9 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren - ver 9.6.6.2.3
                 let cogen = wfactors
                     .get_meta_rennren("CTE_COGEN")
-                    .unwrap_or(CTE_COGEN_DEFAULTS_TO_GRID);
-                let value_origin = if ((cogen.ren - CTE_COGEN_DEFAULTS_TO_GRID.ren).abs() < EPSILON)
-                    && ((cogen.nren - CTE_COGEN_DEFAULTS_TO_GRID.nren).abs() < EPSILON)
+                    .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_grid);
+                let value_origin = if ((cogen.ren - CTE_DEFAULTS_WF_EP.cogen_to_grid.ren).abs() < EPSILON)
+                    && ((cogen.nren - CTE_DEFAULTS_WF_EP.cogen_to_grid.nren).abs() < EPSILON)
                 {
                     "(Valor predefinido)"
                 } else {
@@ -303,10 +438,10 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
                 let cogennepb = wfactors
                     .get_meta_rennren("CTE_COGENNEPB")
-                    .unwrap_or(CTE_COGEN_DEFAULTS_TO_NEPB);
-                let value_origin = if ((cogennepb.ren - CTE_COGEN_DEFAULTS_TO_NEPB.ren).abs()
+                    .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_nepb);
+                let value_origin = if ((cogennepb.ren - CTE_DEFAULTS_WF_EP.cogen_to_nepb.ren).abs()
                     < EPSILON)
-                    && ((cogennepb.nren - CTE_COGEN_DEFAULTS_TO_NEPB.nren).abs() < EPSILON)
+                    && ((cogennepb.nren - CTE_DEFAULTS_WF_EP.cogen_to_nepb.nren).abs() < EPSILON)
                 {
                     "(Valor predefinido)"
                 } else {
@@ -362,7 +497,7 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
     if !has_red1_red_input {
         let red1 = wfactors
             .get_meta_rennren("CTE_RED1")
-            .unwrap_or(CTE_RED_DEFAULTS_RED1);
+            .unwrap_or(CTE_DEFAULTS_WF_EP.red1);
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
           red1.ren, red1.nren, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
     }
@@ -372,7 +507,7 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
     if !has_red2_red_input {
         let red2 = wfactors
             .get_meta_rennren("CTE_RED2")
-            .unwrap_or(CTE_RED_DEFAULTS_RED2);
+            .unwrap_or(CTE_DEFAULTS_WF_EP.red2);
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
           red2.ren, red2.nren, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
     }

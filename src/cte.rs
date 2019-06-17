@@ -32,13 +32,17 @@
 
 mod balance;
 mod components;
-mod data;
 mod wfactors;
 
 pub use balance::*;
 pub use components::*;
-pub use data::*;
 pub use wfactors::*;
+
+/// Valor por defecto del área de referencia.
+pub const AREAREF_DEFAULT: f32 = 1.0;
+/// Valor predefinido del factor de exportación. Valor reglamentario.
+pub const KEXP_DEFAULT: f32 = 0.0;
+
 
 #[cfg(test)]
 #[allow(non_snake_case)]
@@ -692,8 +696,8 @@ ELECTRICIDAD, COGENERACION, A_NEPB, B, 0.5, 2.0
             "PENINSULA",
             None,
             None,
-            Some(CTE_RED_DEFAULTS_RED1),
-            Some(CTE_RED_DEFAULTS_RED2),
+            Some(CTE_DEFAULTS_WF_EP.red1),
+            Some(CTE_DEFAULTS_WF_EP.red2),
             false,
         )
         .unwrap();
