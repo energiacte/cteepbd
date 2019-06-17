@@ -470,6 +470,7 @@ pub fn compute_factor_by_use_cr_i(cr_i_list: &[Component]) -> HashMap<Service, f
 /// * Use of an `arearef` less than 1e-3 raises an error
 /// * Missing weighting factors needed for balance computation
 ///
+#[allow(non_snake_case)]
 pub fn energy_performance(
     components: &Components,
     wfactors: &Factors,
