@@ -40,3 +40,7 @@ pub mod epbd;
 pub mod rennren;
 pub mod types;
 pub mod vecops;
+
+pub use types::*;
+pub use rennren::*;
+pub use epbd::*;
