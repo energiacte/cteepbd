@@ -316,7 +316,6 @@ pub fn new_wfactors(
 /// Utiliza:
 /// 1. el factor si está definido en los argumentos (es Some)
 /// 2. el factor de wfactors en los metadatos
-/// 2. el factor de wfactors en las líneas de factores
 /// 3. el factor por defecto
 ///
 pub fn set_user_wfactors(
