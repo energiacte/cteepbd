@@ -109,14 +109,13 @@ pub enum Service {
     HU,
     /// Dehumidification
     DHU,
+    /// Building automation and control
+    BAC,
     /// Undefined or generic use
     NDEF,
-    // TODO:
-    // BAC
-    // Building automation and control
 }
 
-pub const SERVICES: [Service; 8] = [
+pub const SERVICES: [Service; 9] = [
     Service::ACS,
     Service::CAL,
     Service::REF,
@@ -124,8 +123,8 @@ pub const SERVICES: [Service; 8] = [
     Service::ILU,
     Service::HU,
     Service::DHU,
+    Service::BAC,
     Service::NDEF,
-    // BAC
 ];
 
 impl str::FromStr for Service {
@@ -144,6 +143,7 @@ impl str::FromStr for Service {
             "ILU" => Ok(Service::ILU),
             "HU" => Ok(Service::HU),
             "DHU" => Ok(Service::DHU),
+            "BAC" => Ok(Service::BAC),
             "" => Ok(Service::NDEF),
             "NDEF" => Ok(Service::NDEF),
             _ => Err(format_err!("Service not found")),
