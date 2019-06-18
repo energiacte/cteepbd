@@ -53,8 +53,6 @@ pub enum Carrier {
     BIOMASADENSIFICADA,
     /// Coal
     CARBON,
-    /// Fuel oil
-    FUELOIL,
     /// Natural gas
     GASNATURAL,
     /// Diesel oil

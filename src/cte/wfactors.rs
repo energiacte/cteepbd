@@ -110,7 +110,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministr
 BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
@@ -128,7 +127,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministr
 BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
@@ -146,7 +144,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministr
 BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
@@ -164,7 +161,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministr
 BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
@@ -203,7 +199,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar
 BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
@@ -221,7 +216,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar
 BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
@@ -239,7 +233,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar
 BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
@@ -257,7 +250,6 @@ BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar
 BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
 CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-FUELOIL, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red (Fueloil = Gasóleo)
 GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
 GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
 GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
