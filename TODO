@@ -1,3 +1,6 @@
 
-- allow load matching factor values (or functions) that are not 1 (formula 32, B.32)
-- generalize to compute CO2 emissions using appropriate weighting factors.
+- epbd: allow load matching factor values (or functions) that are not 1 (formula 32, B.32)
+- tests:
+    - cte: check non matching computation modes in component metadata and weighting factors metadata
+    - cte: check results by use items
+    - cte: check results using emission factors
