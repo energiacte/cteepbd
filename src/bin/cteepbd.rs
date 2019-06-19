@@ -41,7 +41,7 @@ use failure::Error;
 use failure::Fail;
 use failure::ResultExt;
 
-use cteepbd::{*, cte::CTE_DEFAULTS_WF_EP};
+use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNren, Service};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
@@ -129,21 +129,35 @@ fn validate_arearef(matches: &clap::ArgMatches<'_>, verbosity: u64) {
 }
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> None.
+///
+/// En modo de cálculo de emisiones solamente se usan datos de los metadatos
+/// si está definido el metadato CTE_FACTORES_TIPO y tiene valor FINAL_A_CO2
 fn get_factor(
     matches_values: Option<clap::Values<'_>>,
     components: &mut Components,
-    verbosity: u64,
+    mode: &cte::WFactorsMode,
     meta: &str,
     descr: &str,
+    verbosity: u64,
 ) -> Option<RenNren> {
     // Origen del dato
     let mut orig = "";
     let factor = rennren_from_args(matches_values)
         .and_then(|userval| {
+            // Dato desde línea de comandos
             orig = "usuario";
             Some(userval)
         })
         .or_else(|| {
+            // Dato de metadatos de componentes
+            // En modo CO2 solamente se usan los valores de metadatos
+            // cuando se defina ese modo en CTE_FACTORES_TIPO
+            if mode == &cte::WFactorsMode::CO2
+                && !components
+                    .has_meta_value("CTE_FACTORES_TIPO", cte::WFactorsMode::CO2.as_meta_value())
+            {
+                return None;
+            }
             if let Some(metaval) = components.get_meta_rennren(meta) {
                 orig = "metadatos de componentes";
                 Some(metaval)
@@ -288,6 +302,15 @@ Licencia: Publicado bajo licencia MIT.
             .help("Factor de exportación (k_exp)")
             .takes_value(true)
             .display_order(2))
+        .arg(Arg::with_name("modo")
+            .short("m")
+            .long("modo")
+            .default_value("EP")
+            .value_name("INDICADOR")
+            .possible_values(&["EP", "CO2"])
+            .help("Modo de cálculo: energía primaria (EP) o emisiones (CO2)")
+            .takes_value(true)
+            .display_order(3))
         .arg(Arg::with_name("archivo_componentes")
             .short("c")
             .long("archivo_componentes")
@@ -295,7 +318,7 @@ Licencia: Publicado bajo licencia MIT.
             .help("Archivo de definición de los componentes energéticos")
             .takes_value(true)
             //.validator(clap_validators::fs::is_file))
-            .display_order(3))
+            .display_order(4))
         .arg(Arg::with_name("archivo_factores")
             .short("f")
             .long("archivo_factores")
@@ -305,7 +328,7 @@ Licencia: Publicado bajo licencia MIT.
             .help("Archivo de definición de los componentes energéticos")
             .takes_value(true)
             //.validator(clap_validators::fs::is_file))
-            .display_order(3))
+            .display_order(5))
         .arg(Arg::with_name("fps_loc")
             .short("l")
             .value_name("LOCALIZACION")
@@ -313,7 +336,7 @@ Licencia: Publicado bajo licencia MIT.
             .required_unless_one(&["archivo_factores", "archivo_componentes"])
             .help("Localización que define los factores de paso\n")
             .takes_value(true)
-            .display_order(4))
+            .display_order(6))
         .arg(Arg::with_name("gen_archivo_componentes")
             .long("oc")
             .value_name("GEN_ARCHIVO_COMPONENTES")
@@ -414,6 +437,20 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     println!("** Datos de entrada");
 
+    // Modo de cálculo -----------------------------------------------------------------------------
+
+    // Cálculo de energía primaria o de emisiones de CO2
+    let mode = match matches.value_of("modo") {
+        Some("CO2") => cte::WFactorsMode::CO2,
+        _ => cte::WFactorsMode::EP,
+    };
+
+    let wfactors_defaults = match mode {
+        cte::WFactorsMode::CO2 => cte::CTE_DEFAULTS_WF_CO2,
+        _ => cte::CTE_DEFAULTS_WF_EP,
+    };
+    println!("Indicador: {}", mode);
+
     // Componentes energéticos ---------------------------------------------------------------------
     let mut components = get_components(matches.value_of("archivo_componentes"));
 
@@ -442,33 +479,37 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     let red1 = get_factor(
         matches.values_of("red1"),
         &mut components,
-        verbosity,
+        &mode,
         "CTE_RED1",
         "RED1",
+        verbosity,
     );
     // 1.2 Coeficiente de paso de vector genérico 2 - RED2
     let red2 = get_factor(
         matches.values_of("red2"),
         &mut components,
-        verbosity,
+        &mode,
         "CTE_RED2",
         "RED2",
+        verbosity,
     );
     // 1.3 Coeficiente de paso de cogeneración a la red - COGEN
     let cogen = get_factor(
         matches.values_of("cogen"),
         &mut components,
-        verbosity,
+        &mode,
         "CTE_COGEN",
         "COGENERACION a la red",
+        verbosity,
     );
     // 1.4 Coeficiente de paso de cogeneración a usos no EPB
     let cogennepb = get_factor(
         matches.values_of("cogennepb"),
         &mut components,
-        verbosity,
+        &mode,
         "CTE_COGENNEPB",
         "COGENERACION a usos no EPB",
+        verbosity,
     );
 
     // 2. Definición de los factores de paso principales
@@ -488,7 +529,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     );
                     exit(exitcode::IOERR);
                 });
-            cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, CTE_DEFAULTS_WF_EP, false)
+            cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, wfactors_defaults, false)
                 .unwrap_or_else(|error| {
                     eprintln!(
                         "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
@@ -518,8 +559,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     eprintln!("ERROR: Sin datos suficientes para determinar los factores de paso");
                     exit(exitcode::USAGE);
                 }).unwrap();
-
-            cte::new_wfactors(&localizacion, cogen, cogennepb, red1, red2, CTE_DEFAULTS_WF_EP, false)
+            cte::new_wfactors(&localizacion, cogen, cogennepb, red1, red2, wfactors_defaults, false)
                 .unwrap_or_else(|error| {
                     println!("ERROR: No se han podido generar los factores de paso");
                     if verbosity > 2 { println!("{}, {}", error.as_fail(), error.backtrace()) };

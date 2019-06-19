@@ -437,6 +437,12 @@ pub trait MetaVec {
         self.get_metavec().iter().any(|m| m.key == key)
     }
 
+    fn has_meta_value(&self, key: &str, value: &str) -> bool {
+        self.get_meta(key)
+            .map(|v| v == value)
+            .unwrap_or(false)
+    }
+
     /// Get (optional) metadata value by key
     fn get_meta(&self, key: &str) -> Option<String> {
         self.get_metavec()

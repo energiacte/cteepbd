@@ -43,6 +43,7 @@ use crate::types::{Components, Factor, Factors, Meta, MetaVec};
 // CTE_AREAREF -> num
 // CTE_KEXP -> num
 // CTE_LOCALIZACION -> str
+// CTE_FACTORES_TIPO: FINAL_A_PRIMARIA | FINAL_A_CO2
 // CTE_COGEN -> num, num
 // CTE_RED1 -> num, num
 // CTE_RED2 -> num, num
@@ -56,10 +57,32 @@ pub const CTE_NRBY: [Carrier; 5] = [
     Carrier::MEDIOAMBIENTE,
 ]; // Ver B.23. Solo biomasa sólida
 
+/// Tipo de factores de conversión de energía final empleados:
+/// - a energía primaria
+/// - a emisiones de CO2
+#[derive(Clone, Copy, Debug, Display, PartialEq)]
+pub enum WFactorsMode {
+    /// Cálculo de energía primaria
+    EP,
+    /// Cálculo de emisiones de CO2
+    CO2,
+}
+
+impl WFactorsMode {
+    pub fn as_meta_value(&self) -> &'static str {
+        match self {
+            WFactorsMode::CO2 => "FINAL_A_EMISIONES",
+            _ => "FINAL_A_PRIMARIA",
+        }
+    }
+}
+
 // ---------------- Valores por defecto -----------------------
 
 /// Valores por defecto para factores de paso
 pub struct CteDefaultsWF {
+    /// Tipo de factores de conversión usados (p.e., a energía primaria o a emisiones)
+    pub mode: WFactorsMode,
     /// Valores por defecto para factores de paso de redes de distrito 1.
     /// RED1, RED, SUMINISTRO, A, ren, nren
     pub red1: RenNren,
@@ -84,6 +107,7 @@ pub struct CteDefaultsWF {
 
 /// Valores por defecto para energía primaria
 pub const CTE_DEFAULTS_WF_EP: CteDefaultsWF = CteDefaultsWF {
+    mode: WFactorsMode::EP,
     red1: RenNren {
         ren: 0.0,
         nren: 1.3,
@@ -103,6 +127,7 @@ pub const CTE_DEFAULTS_WF_EP: CteDefaultsWF = CteDefaultsWF {
     loc_peninsula: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: PENINSULA
+#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
 #META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -120,6 +145,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Recursos usados para suministra
     loc_baleares: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: BALEARES
+#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
 #META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -137,6 +163,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.082, 2.968 # Recursos usados para suministra
     loc_canarias: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: CANARIAS
+#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
 #META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -154,6 +181,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.070, 2.924 # Recursos usados para suministra
     loc_ceutamelilla: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: CEUTAMELILLA
+#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
 #META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -173,6 +201,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.072, 2.718 # Recursos usados para suministra
 
 /// Valores por defecto para emisiones de CO2. El valor final se lee en la fracción no renovable
 pub const CTE_DEFAULTS_WF_CO2: CteDefaultsWF = CteDefaultsWF {
+    mode: WFactorsMode::CO2,
     red1: RenNren {
         ren: 0.0,
         nren: 0.300,
@@ -192,6 +221,7 @@ pub const CTE_DEFAULTS_WF_CO2: CteDefaultsWF = CteDefaultsWF {
     loc_peninsula: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: PENINSULA
+#META CTE_FACTORES_TIPO: FINAL_A_CO2
 #META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -209,6 +239,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.331 # Recursos usados para suministrar 
     loc_baleares: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: BALEARES
+#META CTE_FACTORES_TIPO: FINAL_A_CO2
 #META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -226,6 +257,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.932 # Recursos usados para suministrar 
     loc_canarias: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: CANARIAS
+#META CTE_FACTORES_TIPO: FINAL_A_CO2
 #META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -243,6 +275,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.776 # Recursos usados para suministrar 
     loc_ceutamelilla: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: CEUTAMELILLA
+#META CTE_FACTORES_TIPO: FINAL_A_CO2
 #META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
 MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
 MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
@@ -272,7 +305,13 @@ pub fn parse_wfactors(
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
+
+    if wfactors.has_meta_value("CTE_FACTORES_TIPO", WFactorsMode::CO2.as_meta_value())
+        && defaults.mode != WFactorsMode::CO2
+    {
+        bail!("Factores de emisión incoherentes para el cálculo de emisiones");
+    }
+    set_user_wfactors_and_mode(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -301,7 +340,7 @@ pub fn new_wfactors(
         ),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
+    set_user_wfactors_and_mode(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -312,13 +351,13 @@ pub fn new_wfactors(
 /// 2. el factor de wfactors en los metadatos
 /// 3. el factor por defecto
 ///
-pub fn set_user_wfactors(
+pub fn set_user_wfactors_and_mode(
     wfactors: &mut Factors,
     cogen: Option<RenNren>,
     cogennepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
-    defaults: CteDefaultsWF
+    defaults: CteDefaultsWF,
 ) {
     let cogen = cogen
         .or_else(|| wfactors.get_meta_rennren("CTE_COGEN"))
@@ -380,6 +419,9 @@ pub fn set_user_wfactors(
     );
     wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
     wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
+
+    // Actualiza modo de cálculo
+    wfactors.update_meta("CTE_FACTORES_TIPO", defaults.mode.as_meta_value());
 }
 
 /// Asegura consistencia de factores de paso definidos y deduce algunos de los que falten.
@@ -516,7 +558,8 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
                 let cogen = wfactors
                     .get_meta_rennren("CTE_COGEN")
                     .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_grid);
-                let value_origin = if ((cogen.ren - CTE_DEFAULTS_WF_EP.cogen_to_grid.ren).abs() < EPSILON)
+                let value_origin = if ((cogen.ren - CTE_DEFAULTS_WF_EP.cogen_to_grid.ren).abs()
+                    < EPSILON)
                     && ((cogen.nren - CTE_DEFAULTS_WF_EP.cogen_to_grid.nren).abs() < EPSILON)
                 {
                     "(Valor predefinido)"
@@ -539,9 +582,8 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
                     wfactors.wdata.push(Factor {
                         dest: Dest::A_NEPB,
                         step: Step::A,
-                        comment:
-                            "Recursos usados para producir la energía exportada a usos no EPB"
-                                .to_string(),
+                        comment: "Recursos usados para producir la energía exportada a usos no EPB"
+                            .to_string(),
                         ..*f
                     });
                 } else {

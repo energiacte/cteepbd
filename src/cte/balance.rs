@@ -30,8 +30,10 @@ Utilidades para la gestión de balances energéticos para el CTE
 
 use itertools::Itertools; // join
 
-use crate::rennren::RenNren;
-use crate::types::{Balance, Component, Factor};
+use crate::types::{Balance, Component, Factor, MetaVec};
+use crate::RenNren;
+use super::WFactorsMode;
+
 
 /// Muestra balance, paso B, de forma simplificada.
 pub fn balance_to_plain(balance: &Balance) -> String {
@@ -39,8 +41,16 @@ pub fn balance_to_plain(balance: &Balance) -> String {
         k_exp,
         arearef,
         balance_m2,
+        wfactors,
         ..
     } = balance;
+
+    let indicator_and_units =
+        if wfactors.has_meta_value("CTE_FACTORES_TIPO", WFactorsMode::CO2.as_meta_value()) {
+            "CO2_eq [kg_CO2e/m2.an]"
+        } else {
+            "C_ep [kWh/m2.an]"
+        };
     let RenNren { ren, nren } = balance_m2.B;
     let tot = balance_m2.B.tot();
     let rer = balance_m2.B.rer();
@@ -48,8 +58,8 @@ pub fn balance_to_plain(balance: &Balance) -> String {
     format!(
         "Area_ref = {:.2} [m2]
 k_exp = {:.2}
-C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}",
-        arearef, k_exp, ren, nren, tot, rer
+{}: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}",
+        arearef, k_exp, indicator_and_units, ren, nren, tot, rer
     )
 }
 
@@ -63,6 +73,13 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         balance_m2,
         ..
     } = balanceobj;
+
+    let indicator_and_units =
+        if wfactors.has_meta_value("CTE_FACTORES_TIPO", WFactorsMode::CO2.as_meta_value()) {
+            "CO2_eq [kg_CO2e/m2.an]"
+        } else {
+            "C_ep [kWh/m2.an]"
+        };
     let RenNren { ren, nren } = balance_m2.B;
     let cmeta = &components.cmeta;
     let cdata = &components.cdata;
@@ -152,7 +169,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
     </Componentes>
     <kexp>{:.2}</kexp>
     <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
-    <Epm2><!-- ep [kWh/m2.a] -->
+    <Epm2><!-- {} -->
         <tot>{:.1}</tot>
         <nren>{:.1}</nren>
     </Epm2>
@@ -163,6 +180,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         cdatastring,
         k_exp,
         arearef,
+        indicator_and_units,
         ren + nren,
         nren
     )
