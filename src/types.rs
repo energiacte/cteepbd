@@ -144,10 +144,16 @@ impl str::FromStr for Service {
             "HU" => Ok(Service::HU),
             "DHU" => Ok(Service::DHU),
             "BAC" => Ok(Service::BAC),
-            "" => Ok(Service::NDEF),
             "NDEF" => Ok(Service::NDEF),
+            "" => Ok(Service::default()),
             _ => Err(format_err!("Service not found")),
         }
+    }
+}
+
+impl Default for Service {
+    fn default() -> Service {
+            Service::NDEF
     }
 }
 
@@ -303,7 +309,7 @@ impl str::FromStr for Component {
         let maybeservice: Result<Service, _> = items[3].parse();
         let (valuesidx, service) = match maybeservice {
             Ok(s) => (4, s),
-            Err(_) => (3, Service::NDEF),
+            Err(_) => (3, Service::default()),
         };
         let values = items[valuesidx..]
             .iter()
