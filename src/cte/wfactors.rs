@@ -77,7 +77,7 @@ impl WFactorsMode {
     }
 }
 
-// ---------------- Valores por defecto -----------------------
+// ---------------- Valores por defecto y definibles por el usuario -----------------------
 
 /// Valores por defecto para factores de paso
 pub struct CteDefaultsWF {
@@ -297,8 +297,8 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.721 # Recursos usados para suministrar 
 /// Lee factores de paso desde cadena y sanea los resultados.
 pub fn parse_wfactors(
     wfactorsstring: &str,
-    cogen: Option<RenNren>,
-    cogennepb: Option<RenNren>,
+    cogen_to_grid: Option<RenNren>,
+    cogen_to_nepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
     defaults: CteDefaultsWF,
@@ -311,7 +311,7 @@ pub fn parse_wfactors(
     {
         bail!("Factores de emisión incoherentes para el cálculo de emisiones");
     }
-    set_user_wfactors_and_mode(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
+    set_user_wfactors_and_mode(&mut wfactors, cogen_to_grid, cogen_to_nepb, red1, red2, defaults);
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -321,8 +321,8 @@ pub fn parse_wfactors(
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
 pub fn new_wfactors(
     loc: &str,
-    cogen: Option<RenNren>,
-    cogennepb: Option<RenNren>,
+    cogen_to_grid: Option<RenNren>,
+    cogen_to_nepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
     defaults: CteDefaultsWF,
@@ -340,11 +340,11 @@ pub fn new_wfactors(
         ),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors_and_mode(&mut wfactors, cogen, cogennepb, red1, red2, defaults);
+    set_user_wfactors_and_mode(&mut wfactors, cogen_to_grid, cogen_to_nepb, red1, red2, defaults);
     fix_wfactors(wfactors, stripnepb)
 }
 
-/// Actualiza factores definidos por el usuario en los metadatos (cogen, cogennepb, red1 y red2)
+/// Actualiza factores definidos por el usuario en los metadatos (cogen_to_grid, cogen_to_nepb, red1 y red2)
 ///
 /// Utiliza:
 /// 1. el factor si está definido en los argumentos (es Some)
@@ -353,13 +353,13 @@ pub fn new_wfactors(
 ///
 pub fn set_user_wfactors_and_mode(
     wfactors: &mut Factors,
-    cogen: Option<RenNren>,
-    cogennepb: Option<RenNren>,
+    cogen_to_grid: Option<RenNren>,
+    cogen_to_nepb: Option<RenNren>,
     red1: Option<RenNren>,
     red2: Option<RenNren>,
     defaults: CteDefaultsWF,
 ) {
-    let cogen = cogen
+    let cogen_to_grid = cogen_to_grid
         .or_else(|| wfactors.get_meta_rennren("CTE_COGEN"))
         .or_else(|| {
             wfactors
@@ -372,7 +372,7 @@ pub fn set_user_wfactors_and_mode(
         })
         .unwrap_or(defaults.cogen_to_grid);
 
-    let cogennepb = cogennepb
+    let cogen_to_nepb = cogen_to_nepb
         .or_else(|| wfactors.get_meta_rennren("CTE_COGENNEPB"))
         .or_else(|| {
             wfactors
@@ -412,10 +412,10 @@ pub fn set_user_wfactors_and_mode(
         .unwrap_or(defaults.red2);
 
     // Actualiza factores de usuario en metadatos
-    wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen.ren, cogen.nren));
+    wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen_to_grid.ren, cogen_to_grid.nren));
     wfactors.update_meta(
         "CTE_COGENNEPB",
-        &format!("{:.3}, {:.3}", cogennepb.ren, cogennepb.nren),
+        &format!("{:.3}, {:.3}", cogen_to_nepb.ren, cogen_to_nepb.nren),
     );
     wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
     wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
