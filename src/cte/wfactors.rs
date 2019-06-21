@@ -78,24 +78,26 @@ impl WFactorsMode {
 }
 
 // ---------------- Valores por defecto y definibles por el usuario -----------------------
+pub struct CteUserWF<T> {
+    /// Factores de paso de redes de distrito 1.
+    /// RED1, RED, SUMINISTRO, A, ren, nren
+    pub red1: T,
+    /// Factores de paso de redes de distrito 2.
+    /// RED2, RED, SUMINISTRO, A, ren, nren
+    pub red2: T,
+    /// Factores de paso para exportación a la red (paso A) de electricidad cogenerada.
+    /// ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren
+    pub cogen_to_grid: T,
+    /// Factores de paso para exportación a usos no EPB (paso A) de electricidad cogenerada.
+    /// ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren
+    pub cogen_to_nepb: T,
+}
 
 /// Valores por defecto para factores de paso
 pub struct CteDefaultsWF {
     /// Tipo de factores de conversión usados (p.e., a energía primaria o a emisiones)
     pub mode: WFactorsMode,
-    /// Valores por defecto para factores de paso de redes de distrito 1.
-    /// RED1, RED, SUMINISTRO, A, ren, nren
-    pub red1: RenNren,
-    /// Valores por defecto para factores de paso de redes de distrito 2.
-    /// RED2, RED, SUMINISTRO, A, ren, nren
-    pub red2: RenNren,
-    /// Valores por defecto para exportación a la red (paso A) de electricidad cogenerada.
-    /// ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren
-    pub cogen_to_grid: RenNren,
-    /// Valores por defecto para exportación a usos no EPB (paso A) de electricidad cogenerada.
-    /// ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren
-    pub cogen_to_nepb: RenNren,
-    /// Factores de paso reglamentarios (RITE 20/07/2014) para Península.
+    pub user: CteUserWF<RenNren>,
     pub loc_peninsula: &'static str,
     /// Factores de paso reglamentarios (RITE 20/07/2014) para Baleares.
     pub loc_baleares: &'static str,
@@ -108,21 +110,23 @@ pub struct CteDefaultsWF {
 /// Valores por defecto para energía primaria
 pub const CTE_DEFAULTS_WF_EP: CteDefaultsWF = CteDefaultsWF {
     mode: WFactorsMode::EP,
-    red1: RenNren {
-        ren: 0.0,
-        nren: 1.3,
-    },
-    red2: RenNren {
-        ren: 0.0,
-        nren: 1.3,
-    },
-    cogen_to_grid: RenNren {
-        ren: 0.0,
-        nren: 2.5,
-    },
-    cogen_to_nepb: RenNren {
-        ren: 0.0,
-        nren: 2.5,
+    user: CteUserWF {
+        red1: RenNren {
+            ren: 0.0,
+            nren: 1.3,
+        },
+        red2: RenNren {
+            ren: 0.0,
+            nren: 1.3,
+        },
+        cogen_to_grid: RenNren {
+            ren: 0.0,
+            nren: 2.5,
+        },
+        cogen_to_nepb: RenNren {
+            ren: 0.0,
+            nren: 2.5,
+        }
     },
     loc_peninsula: "
 #META CTE_FUENTE: CTE2013
@@ -198,25 +202,26 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.072, 2.718 # Recursos usados para suministra
 ",
 };
 
-
 /// Valores por defecto para emisiones de CO2. El valor final se lee en la fracción no renovable
 pub const CTE_DEFAULTS_WF_CO2: CteDefaultsWF = CteDefaultsWF {
     mode: WFactorsMode::CO2,
-    red1: RenNren {
-        ren: 0.0,
-        nren: 0.300,
-    },
-    red2: RenNren {
-        ren: 0.0,
-        nren: 0.300,
-    },
-    cogen_to_grid: RenNren {
-        ren: 0.0,
-        nren: 0.300,
-    },
-    cogen_to_nepb: RenNren {
-        ren: 0.0,
-        nren: 0.300,
+    user: CteUserWF {
+        red1: RenNren {
+            ren: 0.0,
+            nren: 0.300,
+        },
+        red2: RenNren {
+            ren: 0.0,
+            nren: 0.300,
+        },
+        cogen_to_grid: RenNren {
+            ren: 0.0,
+            nren: 0.300,
+        },
+        cogen_to_nepb: RenNren {
+            ren: 0.0,
+            nren: 0.300,
+        }
     },
     loc_peninsula: "
 #META CTE_FUENTE: CTE2013
@@ -370,7 +375,7 @@ pub fn set_user_wfactors_and_mode(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(defaults.cogen_to_grid);
+        .unwrap_or(defaults.user.cogen_to_grid);
 
     let cogen_to_nepb = cogen_to_nepb
         .or_else(|| wfactors.get_meta_rennren("CTE_COGENNEPB"))
@@ -383,7 +388,7 @@ pub fn set_user_wfactors_and_mode(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(defaults.cogen_to_nepb);
+        .unwrap_or(defaults.user.cogen_to_nepb);
 
     let red1 = red1
         .or_else(|| wfactors.get_meta_rennren("CTE_RED1"))
@@ -396,7 +401,7 @@ pub fn set_user_wfactors_and_mode(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(defaults.red1);
+        .unwrap_or(defaults.user.red1);
 
     let red2 = red2
         .or_else(|| wfactors.get_meta_rennren("CTE_RED2"))
@@ -409,7 +414,7 @@ pub fn set_user_wfactors_and_mode(
                 })
                 .and_then(|f| Some(f.factors()))
         })
-        .unwrap_or(defaults.red2);
+        .unwrap_or(defaults.user.red2);
 
     // Actualiza factores de usuario en metadatos
     wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen_to_grid.ren, cogen_to_grid.nren));
@@ -557,10 +562,11 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren - ver 9.6.6.2.3
                 let cogen = wfactors
                     .get_meta_rennren("CTE_COGEN")
-                    .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_grid);
-                let value_origin = if ((cogen.ren - CTE_DEFAULTS_WF_EP.cogen_to_grid.ren).abs()
+                    .unwrap_or(CTE_DEFAULTS_WF_EP.user.cogen_to_grid);
+                let value_origin = if ((cogen.ren - CTE_DEFAULTS_WF_EP.user.cogen_to_grid.ren)
+                    .abs()
                     < EPSILON)
-                    && ((cogen.nren - CTE_DEFAULTS_WF_EP.cogen_to_grid.nren).abs() < EPSILON)
+                    && ((cogen.nren - CTE_DEFAULTS_WF_EP.user.cogen_to_grid.nren).abs() < EPSILON)
                 {
                     "(Valor predefinido)"
                 } else {
@@ -594,10 +600,12 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
                 let cogennepb = wfactors
                     .get_meta_rennren("CTE_COGENNEPB")
-                    .unwrap_or(CTE_DEFAULTS_WF_EP.cogen_to_nepb);
-                let value_origin = if ((cogennepb.ren - CTE_DEFAULTS_WF_EP.cogen_to_nepb.ren).abs()
+                    .unwrap_or(CTE_DEFAULTS_WF_EP.user.cogen_to_nepb);
+                let value_origin = if ((cogennepb.ren - CTE_DEFAULTS_WF_EP.user.cogen_to_nepb.ren)
+                    .abs()
                     < EPSILON)
-                    && ((cogennepb.nren - CTE_DEFAULTS_WF_EP.cogen_to_nepb.nren).abs() < EPSILON)
+                    && ((cogennepb.nren - CTE_DEFAULTS_WF_EP.user.cogen_to_nepb.nren).abs()
+                        < EPSILON)
                 {
                     "(Valor predefinido)"
                 } else {
@@ -653,7 +661,7 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
     if !has_red1_red_input {
         let red1 = wfactors
             .get_meta_rennren("CTE_RED1")
-            .unwrap_or(CTE_DEFAULTS_WF_EP.red1);
+            .unwrap_or(CTE_DEFAULTS_WF_EP.user.red1);
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
           red1.ren, red1.nren, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
     }
@@ -663,7 +671,7 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
     if !has_red2_red_input {
         let red2 = wfactors
             .get_meta_rennren("CTE_RED2")
-            .unwrap_or(CTE_DEFAULTS_WF_EP.red2);
+            .unwrap_or(CTE_DEFAULTS_WF_EP.user.red2);
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
           red2.ren, red2.nren, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
     }
