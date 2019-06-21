@@ -302,11 +302,8 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.721 # Recursos usados para suministrar 
 /// Lee factores de paso desde cadena y sanea los resultados.
 pub fn parse_wfactors(
     wfactorsstring: &str,
-    cogen_to_grid: Option<RenNren>,
-    cogen_to_nepb: Option<RenNren>,
-    red1: Option<RenNren>,
-    red2: Option<RenNren>,
-    defaults: CteDefaultsWF,
+    user: &CteUserWF<Option<RenNren>>,
+    defaults: &CteDefaultsWF,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
@@ -318,10 +315,7 @@ pub fn parse_wfactors(
     }
     set_user_wfactors_and_mode(
         &mut wfactors,
-        cogen_to_grid,
-        cogen_to_nepb,
-        red1,
-        red2,
+        user,
         defaults,
     );
     fix_wfactors(wfactors, stripnepb)
@@ -333,11 +327,8 @@ pub fn parse_wfactors(
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
 pub fn new_wfactors(
     loc: &str,
-    cogen_to_grid: Option<RenNren>,
-    cogen_to_nepb: Option<RenNren>,
-    red1: Option<RenNren>,
-    red2: Option<RenNren>,
-    defaults: CteDefaultsWF,
+    user: &CteUserWF<Option<RenNren>>,
+    defaults: &CteDefaultsWF,
     stripnepb: bool,
 ) -> Result<Factors, Error> {
     // XXX: usar tipos en lugar de cadenas de texto
@@ -354,10 +345,7 @@ pub fn new_wfactors(
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors_and_mode(
         &mut wfactors,
-        cogen_to_grid,
-        cogen_to_nepb,
-        red1,
-        red2,
+        user,
         defaults,
     );
     fix_wfactors(wfactors, stripnepb)
@@ -372,13 +360,10 @@ pub fn new_wfactors(
 ///
 pub fn set_user_wfactors_and_mode(
     wfactors: &mut Factors,
-    cogen_to_grid: Option<RenNren>,
-    cogen_to_nepb: Option<RenNren>,
-    red1: Option<RenNren>,
-    red2: Option<RenNren>,
-    defaults: CteDefaultsWF,
+    user: &CteUserWF<Option<RenNren>>,
+    defaults: &CteDefaultsWF,
 ) {
-    let cogen_to_grid = cogen_to_grid
+    let cogen_to_grid = user.cogen_to_grid
         .or_else(|| wfactors.get_meta_rennren("CTE_COGEN"))
         .or_else(|| {
             wfactors
@@ -391,7 +376,7 @@ pub fn set_user_wfactors_and_mode(
         })
         .unwrap_or(defaults.user.cogen_to_grid);
 
-    let cogen_to_nepb = cogen_to_nepb
+    let cogen_to_nepb = user.cogen_to_nepb
         .or_else(|| wfactors.get_meta_rennren("CTE_COGENNEPB"))
         .or_else(|| {
             wfactors
@@ -404,7 +389,7 @@ pub fn set_user_wfactors_and_mode(
         })
         .unwrap_or(defaults.user.cogen_to_nepb);
 
-    let red1 = red1
+    let red1 = user.red1
         .or_else(|| wfactors.get_meta_rennren("CTE_RED1"))
         .or_else(|| {
             wfactors
@@ -417,7 +402,7 @@ pub fn set_user_wfactors_and_mode(
         })
         .unwrap_or(defaults.user.red1);
 
-    let red2 = red2
+    let red2 = user.red2
         .or_else(|| wfactors.get_meta_rennren("CTE_RED2"))
         .or_else(|| {
             wfactors

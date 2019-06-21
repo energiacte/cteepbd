@@ -444,11 +444,6 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         Some("CO2") => cte::WFactorsMode::CO2,
         _ => cte::WFactorsMode::EP,
     };
-
-    let wfactors_defaults = match mode {
-        cte::WFactorsMode::CO2 => cte::CTE_DEFAULTS_WF_CO2,
-        _ => cte::CTE_DEFAULTS_WF_EP,
-    };
     println!("Indicador: {}", mode);
 
     // Componentes energéticos ---------------------------------------------------------------------
@@ -474,43 +469,47 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // Factores de paso ---------------------------------------------------------------------------
 
-    // 1. Localización de los factores de paso genéricos y redefinibles a través de la CLI
-    // 1.1 Coeficiente de paso de vector genérico 1 - RED1
-    let red1 = get_factor(
-        matches.values_of("red1"),
-        &mut components,
-        &mode,
-        "CTE_RED1",
-        "RED1",
-        verbosity,
-    );
-    // 1.2 Coeficiente de paso de vector genérico 2 - RED2
-    let red2 = get_factor(
-        matches.values_of("red2"),
-        &mut components,
-        &mode,
-        "CTE_RED2",
-        "RED2",
-        verbosity,
-    );
-    // 1.3 Coeficiente de paso de cogeneración a la red - COGEN
-    let cogen = get_factor(
-        matches.values_of("cogen"),
-        &mut components,
-        &mode,
-        "CTE_COGEN",
-        "COGENERACION a la red",
-        verbosity,
-    );
-    // 1.4 Coeficiente de paso de cogeneración a usos no EPB
-    let cogennepb = get_factor(
-        matches.values_of("cogennepb"),
-        &mut components,
-        &mode,
-        "CTE_COGENNEPB",
-        "COGENERACION a usos no EPB",
-        verbosity,
-    );
+    // 0. Factores por defecto, según modo
+    let default_wf = match mode {
+        cte::WFactorsMode::CO2 => cte::CTE_DEFAULTS_WF_CO2,
+        _ => cte::CTE_DEFAULTS_WF_EP,
+    };
+
+    // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
+    let user_wf = cte::CteUserWF {
+        red1: get_factor(
+            matches.values_of("red1"),
+            &mut components,
+            &mode,
+            "CTE_RED1",
+            "RED1",
+            verbosity,
+        ),
+        red2: get_factor(
+            matches.values_of("red2"),
+            &mut components,
+            &mode,
+            "CTE_RED2",
+            "RED2",
+            verbosity,
+        ),
+        cogen_to_grid: get_factor(
+            matches.values_of("cogen"),
+            &mut components,
+            &mode,
+            "CTE_COGEN",
+            "COGENERACION a la red",
+            verbosity,
+        ),
+        cogen_to_nepb: get_factor(
+            matches.values_of("cogennepb"),
+            &mut components,
+            &mode,
+            "CTE_COGENNEPB",
+            "COGENERACION a usos no EPB",
+            verbosity,
+        ),
+    };
 
     // 2. Definición de los factores de paso principales
     let mut fpdata =
@@ -529,7 +528,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     );
                     exit(exitcode::IOERR);
                 });
-            cte::parse_wfactors(&fpstring, cogen, cogennepb, red1, red2, wfactors_defaults, false)
+            cte::parse_wfactors(&fpstring, &user_wf, &default_wf, false)
                 .unwrap_or_else(|error| {
                     eprintln!(
                         "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
@@ -559,7 +558,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     eprintln!("ERROR: Sin datos suficientes para determinar los factores de paso");
                     exit(exitcode::USAGE);
                 }).unwrap();
-            cte::new_wfactors(&localizacion, cogen, cogennepb, red1, red2, wfactors_defaults, false)
+            cte::new_wfactors(&localizacion, &user_wf, &default_wf, false)
                 .unwrap_or_else(|error| {
                     println!("ERROR: No se han podido generar los factores de paso");
                     if verbosity > 2 { println!("{}, {}", error.as_fail(), error.backtrace()) };
