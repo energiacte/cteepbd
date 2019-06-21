@@ -331,7 +331,6 @@ pub fn wfactors_from_loc(
     defaults: &CteDefaultsWF,
     strip_nepb: bool,
 ) -> Result<Factors, Error> {
-    // XXX: usar tipos en lugar de cadenas de texto
     let wfactorsstring = match &*loc {
         "PENINSULA" => defaults.loc_peninsula,
         "BALEARES" => defaults.loc_baleares,
@@ -443,7 +442,7 @@ pub fn set_user_wfactors_and_mode(
 ///
 /// Los factores destinados a exportación A_NEPB se eliminan por defecto (pueden dejarse con opción a false)
 ///
-/// TODO: se deberían separar algunos de estos pasos como métodos de Factors
+/// TODO: se deberían separar algunos de estos pasos como métodos de CteFactorsExt
 pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, Error> {
     // Vectores existentes
     let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
