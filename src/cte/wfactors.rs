@@ -300,7 +300,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.721 # Recursos usados para suministrar 
 // --------------------- Utilidades E/S ------------------------
 
 /// Lee factores de paso desde cadena y sanea los resultados.
-pub fn parse_wfactors(
+pub fn wfactors_from_str(
     wfactorsstring: &str,
     user: &CteUserWF<Option<RenNren>>,
     defaults: &CteDefaultsWF,
@@ -325,7 +325,7 @@ pub fn parse_wfactors(
 ///
 /// Usa localización (PENINSULA, CANARIAS, BALEARES, CEUTAMELILLA),
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
-pub fn new_wfactors(
+pub fn wfactors_from_loc(
     loc: &str,
     user: &CteUserWF<Option<RenNren>>,
     defaults: &CteDefaultsWF,

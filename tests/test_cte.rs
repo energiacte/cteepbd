@@ -76,7 +76,7 @@ fn get_ctefp_peninsula() -> Factors {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    new_wfactors("PENINSULA", &user_wf, &CTE_DEFAULTS_WF_EP, false).unwrap()
+    wfactors_from_loc("PENINSULA", &user_wf, &CTE_DEFAULTS_WF_EP, false).unwrap()
 }
 
 fn get_energydatalist() -> Components {
@@ -152,7 +152,7 @@ fn wfactors_from_file(path: &str) -> Factors {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    parse_wfactors(&wfactors_string, &user_wf, &CTE_DEFAULTS_WF_EP, false).unwrap()
+    wfactors_from_str(&wfactors_string, &user_wf, &CTE_DEFAULTS_WF_EP, false).unwrap()
 }
 
 ///Approximate equality for RenNren values
@@ -658,13 +658,7 @@ fn cte_EPBD() {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    let FP = new_wfactors(
-        "PENINSULA",
-        &user_wf,
-        &CTE_DEFAULTS_WF_EP,
-        false,
-    )
-    .unwrap();
+    let FP = wfactors_from_loc("PENINSULA", &user_wf, &CTE_DEFAULTS_WF_EP, false).unwrap();
     let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
     assert!(approx_equal(
         RenNren {
