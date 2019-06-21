@@ -145,12 +145,12 @@ fn balance_cr(
         .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
 
     // * Produced on-site energy and inside the assessment boundary, by generator i (origin i)
-    let mut E_pr_cr_pr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
+    let mut E_pr_cr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
     for comp in cr_i_list
         .iter()
         .filter(|comp| comp.ctype == CType::PRODUCCION)
     {
-        E_pr_cr_pr_i_t
+        E_pr_cr_i_t
             .entry(comp.csubtype)
             .and_modify(|e| *e = vecvecsum(e, &comp.values))
             .or_insert_with(|| comp.values.clone());
@@ -158,18 +158,18 @@ fn balance_cr(
 
     // PRODUCED ENERGY GENERATORS (CSubtype::INSITU or CSubtype::COGENERACION)
     // generators are unique in this list
-    let pr_generators: Vec<CSubtype> = E_pr_cr_pr_i_t.keys().cloned().collect(); // INSITU, COGENERACION
+    let pr_generators: Vec<CSubtype> = E_pr_cr_i_t.keys().cloned().collect(); // INSITU, COGENERACION
 
     // Annually produced on-site energy from generator i (origin i)
-    let mut E_pr_cr_pr_i_an = HashMap::<CSubtype, f32>::new();
+    let mut E_pr_cr_i_an = HashMap::<CSubtype, f32>::new();
     for gen in &pr_generators {
-        E_pr_cr_pr_i_an.insert(*gen, vecsum(&E_pr_cr_pr_i_t[gen]));
+        E_pr_cr_i_an.insert(*gen, vecsum(&E_pr_cr_i_t[gen]));
     }
 
     // * Energy produced on-site and inside the assessment boundary (formula 30)
     let mut E_pr_cr_t = vec![0.0; num_steps];
     for gen in &pr_generators {
-        E_pr_cr_t = vecvecsum(&E_pr_cr_t, &E_pr_cr_pr_i_t[gen])
+        E_pr_cr_t = vecvecsum(&E_pr_cr_t, &E_pr_cr_i_t[gen])
     }
     let E_pr_cr_an = vecsum(&E_pr_cr_t);
 
@@ -213,7 +213,7 @@ fn balance_cr(
     let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
     for gen in &pr_generators {
         let f = if E_pr_cr_an > 1e-3 {
-            E_pr_cr_pr_i_an[gen] / E_pr_cr_an
+            E_pr_cr_i_an[gen] / E_pr_cr_an
         } else {
             0.0
         };
@@ -227,18 +227,18 @@ fn balance_cr(
     }
 
     // * Exported energy from generator i (origin i) (formula 16)
-    let mut E_exp_cr_pr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
+    let mut E_exp_cr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
     for gen in &pr_generators {
-        E_exp_cr_pr_i_t.insert(
+        E_exp_cr_i_t.insert(
             *gen,
-            vecvecdif(&E_pr_cr_pr_i_t[gen], &E_pr_cr_i_used_EPus_t[gen]),
+            vecvecdif(&E_pr_cr_i_t[gen], &E_pr_cr_i_used_EPus_t[gen]),
         );
     }
 
     // * Annually exported energy from generator i (origin i)
-    let mut E_exp_cr_pr_i_an = HashMap::<CSubtype, f32>::new();
+    let mut E_exp_cr_i_an = HashMap::<CSubtype, f32>::new();
     for gen in &pr_generators {
-        E_exp_cr_pr_i_an.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]));
+        E_exp_cr_i_an.insert(*gen, vecsum(&E_exp_cr_i_t[gen]));
     }
 
     // -------- Weighted delivered and exported energy (11.6.2.1, 11.6.2.2, 11.6.2.3 + eq 2, 3)
@@ -249,17 +249,17 @@ fn balance_cr(
     let fpA_grid = fp_src(fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid.factors(); // formula 19, 39
 
-    // 2) Delivered energy from non cogeneration on-site sources
-    let E_we_del_cr_pr_an = match E_pr_cr_pr_i_an.get(&CSubtype::INSITU) {
-        Some(E_pr_i) => {
-            let fpA_pr_i = fp_src(fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)?;
-            E_pr_i * fpA_pr_i.factors()
+    // 2) Delivered energy from non cogeneration on-site sources (origin i)
+    let E_we_del_cr_i_an = match E_pr_cr_i_an.get(&CSubtype::INSITU) {
+        Some(E_pr_cr_i) => {
+            let fpA_pr_cr_i = fp_src(fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)?;
+            E_pr_cr_i * fpA_pr_cr_i.factors()
         }
         None => RenNren::default(),
     };
 
     // 3) Total delivered energy: grid + all non cogeneration
-    let E_we_del_cr_an = E_we_del_cr_grid_an + E_we_del_cr_pr_an; // formula 19, 39
+    let E_we_del_cr_an = E_we_del_cr_grid_an + E_we_del_cr_i_an; // formula 19, 39
 
     // // * Weighted energy for exported energy: depends on step A or B
 
@@ -280,15 +280,15 @@ fn balance_cr(
 
         // * Fraction of produced energy tipe i (origin from generator i) that is exported (formula 14)
         // NOTE: simplified for annual computations (not valid for timestep calculation)
-        let mut F_pr_i = HashMap::<CSubtype, f32>::new();
+        let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
         for gen in &pr_generators {
             // Do not store generators without generation
-            if E_exp_cr_pr_i_an[gen] != 0.0 {
-                F_pr_i.insert(*gen, vecsum(&E_exp_cr_pr_i_t[gen]) / E_exp_cr_pr_i_an[gen]);
+            if E_exp_cr_i_an[gen] != 0.0 {
+                f_pr_cr_i.insert(*gen, vecsum(&E_exp_cr_i_t[gen]) / E_exp_cr_i_an[gen]);
             }
         }
         // Generators (produced energy sources) that are exporting some energy (!= 0)
-        let exp_generators: Vec<_> = F_pr_i.keys().collect();
+        let exp_generators: Vec<_> = f_pr_cr_i.keys().collect();
 
         // Weighting factors for energy exported to nEP uses (step A) (~formula 24)
         let f_we_exp_cr_stepA_nEPus: RenNren =
@@ -300,9 +300,9 @@ fn balance_cr(
                     Ok(RenNren::new()),
                     |acc: Result<RenNren, Error>, &gen| {
                         Ok(acc?
-                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * F_pr_i[gen]))
+                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * f_pr_cr_i[gen]))
                     },
-                )? // sum all i (non grid sources): fpA_nEPus_i[gen] * F_pr_i[gen]
+                )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
             };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
@@ -313,9 +313,9 @@ fn balance_cr(
             exp_generators.iter().fold(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * F_pr_i[gen]))
+                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * f_pr_cr_i[gen]))
                 },
-            )? // sum all i (non grid sources): fpA_grid_i[gen] * F_pr_i[gen];
+            )? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
         };
 
         // Weighted exported energy according to resources used to generate that energy (formula 23)
@@ -334,9 +334,9 @@ fn balance_cr(
                     Ok(RenNren::new()),
                     |acc: Result<RenNren, Error>, &gen| {
                         Ok(acc?
-                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * F_pr_i[gen]))
+                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * f_pr_cr_i[gen]))
                     },
-                )? // sum all i (non grid sources): fpB_nEPus_i[gen] * F_pr_i[gen]
+                )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
             };
 
         // Weighting factors for energy exported to the grid (step B)
@@ -347,9 +347,9 @@ fn balance_cr(
             exp_generators.iter().fold(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * F_pr_i[gen]))
+                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * f_pr_cr_i[gen]))
                 },
-            )? // sum all i (non grid sources): fpB_grid_i[gen] * F_pr_i[gen];
+            )? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
         };
 
         // Effect of exported energy on weighted energy performance (step B) (formula 26)
@@ -394,15 +394,15 @@ fn balance_cr(
         used_nEPB: E_nEPus_cr_t,
         produced: E_pr_cr_t,
         produced_an: E_pr_cr_an,
-        produced_bygen: E_pr_cr_pr_i_t,
-        produced_bygen_an: E_pr_cr_pr_i_an,
+        produced_bygen: E_pr_cr_i_t,
+        produced_bygen_an: E_pr_cr_i_an,
         produced_used_EPus: E_pr_cr_used_EPus_t,
         produced_used_EPus_bygen: E_pr_cr_i_used_EPus_t,
         f_match: f_match_t, // load matching factor
         exported: E_exp_cr_t, // exp_used_nEPus + exp_grid
         exported_an: E_exp_cr_an,
-        exported_bygen: E_exp_cr_pr_i_t,
-        exported_bygen_an: E_exp_cr_pr_i_an,
+        exported_bygen: E_exp_cr_i_t,
+        exported_bygen_an: E_exp_cr_i_an,
         exported_grid: E_exp_cr_grid_t,
         exported_grid_an: E_exp_cr_grid_an,
         exported_nEPB: E_exp_cr_used_nEPus_t,
@@ -411,7 +411,7 @@ fn balance_cr(
         delivered_grid_an: E_del_cr_an,
         // Weighted energy: { ren, nren }
         we_delivered_grid_an: E_we_del_cr_grid_an,
-        we_delivered_prod_an: E_we_del_cr_pr_an,
+        we_delivered_prod_an: E_we_del_cr_i_an,
         we_delivered_an: E_we_del_cr_an,
         we_exported_an_A: E_we_exp_cr_an_A,
         we_exported_nEPB_an_AB: E_we_exp_cr_used_nEPus_an_AB,
