@@ -732,7 +732,7 @@ pub struct Balance {
     /// Reference area used for energy performance ratios (>1e-3)
     pub arearef: f32,
     /// Energy balance results by carrier
-    pub balance_cr_i: HashMap<Carrier, BalanceForCarrier>,
+    pub balance_cr: HashMap<Carrier, BalanceForCarrier>,
     /// Global energy balance results
     pub balance: BalanceTotal,
     /// Global energy balance results expressed as area ratios

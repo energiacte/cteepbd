@@ -123,7 +123,7 @@ fn fp_gen(fp_cr: &[Factor], gen: CSubtype, dest: Dest, step: Step) -> Result<&Fa
 /// * Missing weighting factors for a carrier, origin, destination or calculation step
 ///
 #[allow(non_snake_case)]
-fn balance_cr(
+fn balance_for_carrier(
     carrier: Carrier,
     cr_i_list: &[Component],
     fp_cr: &[Factor],
@@ -491,7 +491,7 @@ pub fn energy_performance(
         .collect();
 
     // Compute balance for each carrier
-    let mut balance_cr_i: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
+    let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
     for &carrier in &carriers {
         let cr_i: Vec<Component> = components
             .cdata
@@ -505,8 +505,8 @@ pub fn energy_performance(
             .filter(|e| e.carrier == carrier)
             .cloned()
             .collect();
-        let bal = balance_cr(carrier, &cr_i, &fp_cr, k_exp)?;
-        balance_cr_i.insert(carrier, bal);
+        let bal = balance_for_carrier(carrier, &cr_i, &fp_cr, k_exp)?;
+        balance_cr.insert(carrier, bal);
     }
 
     // Accumulate partial balance values for total balance
@@ -514,21 +514,21 @@ pub fn energy_performance(
         .iter()
         .fold(BalanceTotal::default(), |mut acc, cr| {
             // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
-            acc.A += balance_cr_i[cr].we_an_A;
+            acc.A += balance_cr[cr].we_an_A;
             // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
-            acc.B += balance_cr_i[cr].we_an;
+            acc.B += balance_cr[cr].we_an;
             // Weighted energy partials
-            acc.we_del += balance_cr_i[cr].we_delivered_an;
-            acc.we_exp_A += balance_cr_i[cr].we_exported_an_A;
-            acc.we_exp += balance_cr_i[cr].we_exported_an;
+            acc.we_del += balance_cr[cr].we_delivered_an;
+            acc.we_exp_A += balance_cr[cr].we_exported_an_A;
+            acc.we_exp += balance_cr[cr].we_exported_an;
             // Weighted energy for each use item (EPB services)
             for service in &SERVICES {
                 // Step A
-                if let Some(value) = balance_cr_i[cr].we_an_A_byuse.get(service) {
+                if let Some(value) = balance_cr[cr].we_an_A_byuse.get(service) {
                     *acc.A_byuse.entry(service.clone()).or_default() += *value
                 }
                 // Step B
-                if let Some(value) = balance_cr_i[cr].we_an_byuse.get(service) {
+                if let Some(value) = balance_cr[cr].we_an_byuse.get(service) {
                     *acc.B_byuse.entry(service.clone()).or_default() += *value;
                 }
             }
@@ -558,7 +558,7 @@ pub fn energy_performance(
         wfactors: wfactors.clone(),
         k_exp,
         arearef,
-        balance_cr_i,
+        balance_cr,
         balance,
         balance_m2,
     })
