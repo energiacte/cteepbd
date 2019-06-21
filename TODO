@@ -4,3 +4,12 @@
     - cte: check non matching computation modes in component metadata and weighting factors metadata
     - cte: check results by use items
     - cte: check results using emission factors
+
+    - Crear Trait CteFactorsExt con métodos de wfactors
+        - new_from_str(&str) -> Factors
+        - new_from_loc(&loc) -> Factors
+        - set_mode_and_default_wfactors(&mut self, &default_wf) -> Self
+        - set_user_wfactors(&mut self, &user_wf) -> Self
+        - fix(&mut self)
+        - strip_nepb(&mut self)
+        * podría funcionar con el patrón builder, con CteFactorsBuilder hasta devolver Factors en build()
