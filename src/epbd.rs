@@ -396,9 +396,9 @@ fn balance_cr(
         produced_an: E_pr_cr_an,
         produced_bygen: E_pr_cr_pr_i_t,
         produced_bygen_an: E_pr_cr_pr_i_an,
+        produced_used_EPus: E_pr_cr_used_EPus_t,
+        produced_used_EPus_bygen: E_pr_cr_i_used_EPus_t,
         f_match: f_match_t, // load matching factor
-        // E_pr_cr_used_EPus_t <- produced_used_EPus
-        // E_pr_cr_i_used_EPus_t <- produced_used_EPus_bygen
         exported: E_exp_cr_t, // exp_used_nEPus + exp_grid
         exported_an: E_exp_cr_an,
         exported_bygen: E_exp_cr_pr_i_t,

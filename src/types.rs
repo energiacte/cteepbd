@@ -21,9 +21,6 @@
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
-//TODO: add produced_used_EPus to BalanceForCarrier (E_pr_cr_used_EPus_t)
-//TODO: add produced_used_EPus_bygen to BalanceForCarrier (E_pr_cr_i_used_EPus_t)
-
 use std::collections::HashMap;
 use std::fmt;
 use std::str;
@@ -650,9 +647,10 @@ pub struct BalanceForCarrier {
     pub produced_bygen: HashMap<CSubtype, Vec<f32>>,
     /// Produced energy by non grid source (COGENERACION / INSITU)
     pub produced_bygen_an: HashMap<CSubtype, f32>,
-    // TODO: add these:
-    // - E_pr_cr_used_EPus_t <- produced_used_EPus
-    // - E_pr_cr_i_used_EPus_t <- produced_used_EPus_bygen
+    /// Produced energy from all origins and used for EPB services
+    pub produced_used_EPus: Vec<f32>,
+    /// Produced energy with origin in generator i and used for EPB services
+    pub produced_used_EPus_bygen: HashMap<CSubtype, Vec<f32>>,
     /// Load matching factor
     pub f_match: Vec<f32>,
     /// Exported energy to the grid and non EPB uses in each timestep
