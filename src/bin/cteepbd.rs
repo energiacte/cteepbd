@@ -337,6 +337,7 @@ Licencia: Publicado bajo licencia MIT.
             .help("Localización que define los factores de paso\n")
             .takes_value(true)
             .display_order(6))
+        // Archivos de salida
         .arg(Arg::with_name("gen_archivo_componentes")
             .long("oc")
             .value_name("GEN_ARCHIVO_COMPONENTES")
@@ -357,6 +358,12 @@ Licencia: Publicado bajo licencia MIT.
             .value_name("ARCHIVO_SALIDA_XML")
             .help("Archivo de salida de resultados detallados en formato XML")
             .takes_value(true))
+        .arg(Arg::with_name("archivo_salida_txt")
+            .long("txt")
+            .value_name("ARCHIVO_SALIDA_TXT")
+            .help("Archivo de salida de resultados detallados en formato texto simple")
+            .takes_value(true))
+        // Factores definidos por el usuario
         .arg(Arg::with_name("cogen")
             .long("cogen")
             .value_names(&["COGEN_ren", "COGEN_nren"])
@@ -375,15 +382,18 @@ Licencia: Publicado bajo licencia MIT.
             .help("Factores de paso (ren, nren) de la producción del vector RED2.\nP.e.: --red2 0 1.3")
             .takes_value(true)
             .number_of_values(2))
+        // Cálculo para servicio de ACS y factores en perímetro nearby
         .arg(Arg::with_name("acsnrb")
             .short("N")
             .long("acs_nearby")
             .requires("archivo_componentes")
             .help("Realiza el balance considerando solo el servicio de ACS y el perímetro nearby"))
+        // Simplificación de factores
         .arg(Arg::with_name("nosimplificafps")
             .short("F")
             .long("no_simplifica_fps")
             .help("Evita la simplificación de los factores de paso según los vectores definidos"))
+        // Opciones estándar: licencia y nivel de detalle
         .arg(Arg::with_name("showlicense")
             .short("L")
             .long("licencia")
@@ -676,12 +686,22 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             let xml = cte::balance_to_xml(&balance);
             writefile(&path, xml.as_bytes());
         }
-        // Mostrar siempre en formato plain
+        // Mostrar siempre en formato de texto plano
         if matches.is_present("acsnrb") {
             println!("** Balance energético (servicio de ACS, perímetro próximo)");
         } else {
             println!("** Balance energético");
         }
-        println!("{}", cte::balance_to_plain(&balance));
+        let plain = cte::balance_to_plain(&balance);
+        println!("{}", plain);
+
+        // Guardar balance en formato de texto plano
+        if matches.is_present("archivo_salida_txt") {
+            let path = Path::new(matches.value_of_os("archivo_salida_xml").unwrap());
+            if verbosity > 0 {
+                println!("Resultados en formato XML: {:?}", path.display());
+            }
+            writefile(&path, plain.as_bytes());
+        }
     };
 }
