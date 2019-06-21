@@ -220,7 +220,7 @@ fn balance_cr(
         f_pr_cr_i.insert(*gen, f);
     }
 
-    // * Energy used for produced carrier energy type i (origin from generator i) (formula 15)
+    // * Produced energy with origin from generator i and used for EPB services (formula 15)
     let mut E_pr_cr_i_used_EPus_t = HashMap::<CSubtype, Vec<f32>>::new();
     for gen in &pr_generators {
         E_pr_cr_i_used_EPus_t.insert(*gen, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i[gen]));
