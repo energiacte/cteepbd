@@ -550,20 +550,21 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         // Definición por localización
         } else {
             let localizacion = matches
+                // 1/2 Desde opción de CLI
                 .value_of("fps_loc")
                 .and_then(|v| {
                     println!("Factores de paso (usuario): {}", v);
                     components.update_meta("CTE_LOCALIZACION", v);
                     Some(v.to_string())
                 })
-                .or_else(|| {
-                    if let Some(loc) = components.get_meta("CTE_LOCALIZACION") {
+                // 2/2 desde metadatos de componentes
+                .or_else(|| components.get_meta("CTE_LOCALIZACION")
+                    .and_then(|loc| {
                         println!("Factores de paso (metadatos): {}", loc);
                         Some(loc)
-                    } else {
-                        None
-                    }
-                })
+                    })
+                )
+                // Error
                 .or_else(|| {
                     eprintln!("ERROR: Sin datos suficientes para determinar los factores de paso");
                     exit(exitcode::USAGE);
