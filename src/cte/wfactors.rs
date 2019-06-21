@@ -304,7 +304,7 @@ pub fn wfactors_from_str(
     wfactorsstring: &str,
     user: &CteUserWF<Option<RenNren>>,
     defaults: &CteDefaultsWF,
-    stripnepb: bool,
+    strip_nepb: bool,
 ) -> Result<Factors, Error> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
 
@@ -318,7 +318,7 @@ pub fn wfactors_from_str(
         user,
         defaults,
     );
-    fix_wfactors(wfactors, stripnepb)
+    fix_wfactors(wfactors, strip_nepb)
 }
 
 /// Genera factores de paso a partir de localización.
@@ -329,7 +329,7 @@ pub fn wfactors_from_loc(
     loc: &str,
     user: &CteUserWF<Option<RenNren>>,
     defaults: &CteDefaultsWF,
-    stripnepb: bool,
+    strip_nepb: bool,
 ) -> Result<Factors, Error> {
     // XXX: usar tipos en lugar de cadenas de texto
     let wfactorsstring = match &*loc {
@@ -348,7 +348,7 @@ pub fn wfactors_from_loc(
         user,
         defaults,
     );
-    fix_wfactors(wfactors, stripnepb)
+    fix_wfactors(wfactors, strip_nepb)
 }
 
 /// Actualiza factores definidos por el usuario en los metadatos (cogen_to_grid, cogen_to_nepb, red1 y red2)
@@ -439,12 +439,12 @@ pub fn set_user_wfactors_and_mode(
 /// - asegura que factor paso A para suministro de cogeneración es 0.0 (se considera en vector original)
 /// - asegura definición de factores a la red para vectores con exportación
 /// - asegura que existe RED1 | RED2 en suministro
-/// - elimina factores con destino nEPB si stripnepb es true
+/// - elimina factores con destino nEPB si strip_nepb es true
 ///
 /// Los factores destinados a exportación A_NEPB se eliminan por defecto (pueden dejarse con opción a false)
 ///
 /// TODO: se deberían separar algunos de estos pasos como métodos de Factors
-pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, Error> {
+pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, Error> {
     // Vectores existentes
     let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
 
@@ -678,8 +678,8 @@ pub fn fix_wfactors(mut wfactors: Factors, stripnepb: bool) -> Result<Factors, E
           red2.ren, red2.nren, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
     }
 
-    // Elimina destino nEPB si stripnepb es true
-    if stripnepb {
+    // Elimina destino nEPB si strip_nepb es true
+    if strip_nepb {
         wfactors.wdata.retain(|e| e.dest != Dest::A_NEPB);
     }
 
