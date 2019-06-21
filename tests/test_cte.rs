@@ -644,8 +644,8 @@ fn cte_EPBD() {
         "PENINSULA",
         None,
         None,
-        Some(CTE_DEFAULTS_WF_EP.red1),
-        Some(CTE_DEFAULTS_WF_EP.red2),
+        Some(CTE_DEFAULTS_WF_EP.user.red1),
+        Some(CTE_DEFAULTS_WF_EP.user.red2),
         CTE_DEFAULTS_WF_EP,
         false,
     )
