@@ -316,7 +316,14 @@ pub fn parse_wfactors(
     {
         bail!("Factores de emisión incoherentes para el cálculo de emisiones");
     }
-    set_user_wfactors_and_mode(&mut wfactors, cogen_to_grid, cogen_to_nepb, red1, red2, defaults);
+    set_user_wfactors_and_mode(
+        &mut wfactors,
+        cogen_to_grid,
+        cogen_to_nepb,
+        red1,
+        red2,
+        defaults,
+    );
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -345,7 +352,14 @@ pub fn new_wfactors(
         ),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors_and_mode(&mut wfactors, cogen_to_grid, cogen_to_nepb, red1, red2, defaults);
+    set_user_wfactors_and_mode(
+        &mut wfactors,
+        cogen_to_grid,
+        cogen_to_nepb,
+        red1,
+        red2,
+        defaults,
+    );
     fix_wfactors(wfactors, stripnepb)
 }
 
@@ -417,7 +431,10 @@ pub fn set_user_wfactors_and_mode(
         .unwrap_or(defaults.user.red2);
 
     // Actualiza factores de usuario en metadatos
-    wfactors.update_meta("CTE_COGEN", &format!("{:.3}, {:.3}", cogen_to_grid.ren, cogen_to_grid.nren));
+    wfactors.update_meta(
+        "CTE_COGEN",
+        &format!("{:.3}, {:.3}", cogen_to_grid.ren, cogen_to_grid.nren),
+    );
     wfactors.update_meta(
         "CTE_COGENNEPB",
         &format!("{:.3}, {:.3}", cogen_to_nepb.ren, cogen_to_nepb.nren),
