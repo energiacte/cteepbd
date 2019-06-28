@@ -127,7 +127,6 @@ pub fn fix_components(components: &mut Components) {
 // Funcionalidad para generar RER para ACS en perímetro nearby -------------------------
 
 /// Selecciona subconjunto de componentes relacionados con el servicio indicado.
-#[allow(non_snake_case)]
 pub fn components_by_service(components: &Components, service: Service) -> Components {
     // 1. Toma todos los consumos y producciones imputadas al servicio (p.e. ACS)
     // Nota: los consumos de MEDIOAMBIENTE de un servicio ya están equilibrados
@@ -168,14 +167,14 @@ pub fn components_by_service(components: &Components, service: Service) -> Compo
             .sum::<f32>();
 
         if c_el_tot > 0.0 && c_el_srv_tot > 0.0 {
-            let F_pr_srv = c_el_srv_tot / c_el_tot;
+            let fraction_pr_srv = c_el_srv_tot / c_el_tot;
             for c in &pr_el_ndef {
                 cdata.push(Component {
                     carrier: Carrier::ELECTRICIDAD,
                     ctype: CType::PRODUCCION,
                     csubtype: CSubtype::INSITU,
                     service,
-                    values: veckmul(&c.values, F_pr_srv),
+                    values: veckmul(&c.values, fraction_pr_srv),
                     comment: format!(
                         "{} Producción insitu proporcionalmente reasignada al servicio.",
                         c.comment
