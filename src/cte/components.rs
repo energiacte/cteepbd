@@ -26,12 +26,15 @@
 
 Utilidades para la gestión de componentes energéticos para el CTE
 
+Hipótesis:
+- Se completa automáticamente el consumo de energía procedente del medioambiente con una producción
+- No se permite la producción de electricidad a usos concretos (se asume NDEF)
 */
 
 use failure::Error;
 use itertools::Itertools;
 
-use crate::types::{CSubtype, CType, Carrier, Service, MetaVec};
+use crate::types::{CSubtype, CType, Carrier, MetaVec, Service};
 use crate::types::{Component, Components};
 use crate::vecops::{veckmul, veclistsum, vecvecdif};
 
@@ -42,14 +45,38 @@ pub fn parse_components(datastring: &str) -> Result<Components, Error> {
     Ok(components)
 }
 
+/// Corrige los componentes de consumo y producción
+///
+/// - Asegura que la energía MEDIOAMBIENTE consumida tiene su producción correspondiente
+/// - Asegura que la energía eléctrica producida no tiene un uso que no sea NDEF
+///
+/// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
+pub fn fix_components(components: &mut Components) {
+    force_ndef_use_for_electricity_production(components);
+    compensate_env_use(components);
+}
+
+/// Asegura que la energía eléctrica producida no tiene un uso que no sea NDEF
+///
+/// Esta restricción es propia de la implementación y de cómo hace el reparto de la producción,
+/// solamente en base al consumo de cada servicio y sin tener en cuenta si se define un destino
+//XXX: Esta restricción debería eliminarse
+pub fn force_ndef_use_for_electricity_production(components: &mut Components) {
+    // Localiza componentes de energía procedente del medioambiente
+    for component in &mut components.cdata {
+        if component.carrier == Carrier::ELECTRICIDAD && component.ctype == CType::PRODUCCION {
+            component.service = Service::NDEF
+        }
+    }
+}
+
+
 /// Asegura que la energía MEDIOAMBIENTE consumida está equilibrada por una producción in situ
 ///
 /// Completa el balance de las producciones in situ de energía procedente del medioambiente
 /// cuando el consumo de esos vectores supera la producción. Es solamente una comodidad, para no
 /// tener que declarar las producciones de MEDIOAMBIENTE, solo los consumos.
-///
-/// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
-pub fn fix_components(components: &mut Components) {
+pub fn compensate_env_use(components: &mut Components) {
     // Localiza componentes de energía procedente del medioambiente
     let envcomps: Vec<_> = components
         .cdata
@@ -59,6 +86,8 @@ pub fn fix_components(components: &mut Components) {
         .collect();
     // Identifica servicios
     let services: Vec<_> = envcomps.iter().map(|c| c.service).unique().collect();
+
+    // Asegura que la producción eléctrica no tiene un uso definido (es NDEF)
 
     // Genera componentes de consumo no compensados con producción
     let mut balancecomps: Vec<Component> = services

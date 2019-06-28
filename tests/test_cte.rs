@@ -699,3 +699,12 @@ fn cte_new_services_format_ACS() {
         bal.balance_m2.B
     ));
 }
+
+#[test]
+fn cte_force_electricity_prod_to_NDEF() {
+    let compstr= "ELECTRICIDAD,CONSUMO,EPB,CAL,20
+ELECTRICIDAD,PRODUCCION,INSITU,CAL,40";
+    // parse_components hace un parse y fix
+    let comps = parse_components(compstr).unwrap();
+    assert!(comps.cdata[1].service == Service::NDEF);
+}
