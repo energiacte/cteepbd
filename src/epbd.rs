@@ -35,7 +35,6 @@
 
 ///   TODO:
 ///   - allow other values of the load matching factor (or usign functions) f_match_t (formula 32, B.32)
-///   - get results by use items (service), maybe using the reverse method E.3 (E.3.6, E.3.7)
 use std::collections::HashMap;
 
 use failure::Error;
@@ -372,16 +371,22 @@ fn balance_for_carrier(
     // Partial result for carrier (formula 2)
     let E_we_cr_an: RenNren = E_we_del_cr_an - E_we_exp_cr_an;
 
-    // Compute share factors: used energy for service_i / used energy for all services) for each EPB use
+    // ================ Compute values by use ===============
+    // Compute fraction of used energy by use (for EPB services):
+    // used energy for service_i / used energy for all services)
     let f_us_cr = compute_factors_by_use_cr(cr_list);
+    // Annual energy use for carrier
+    let E_EPus_cr_an: f32 = E_EPus_cr_t.iter().sum();
 
-    // Weighted energy by use (for EPB services)
+    // Used (final) and Weighted energy for each use item (for EPB services)
+    let mut E_Epus_cr_an_byuse: HashMap<Service, f32> = HashMap::new();
     let mut E_we_cr_an_A_byuse: HashMap<Service, RenNren> = HashMap::new();
     let mut E_we_cr_an_byuse: HashMap<Service, RenNren> = HashMap::new();
-    // Weighted energy for each use item (EPB services)
     for service in &SERVICES {
         let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {
+            // Used energy
+            E_Epus_cr_an_byuse.insert(service.clone(), E_EPus_cr_an * f_us_k_cr);
             // Step A
             E_we_cr_an_A_byuse.insert(service.clone(), E_we_cr_an_A * f_us_k_cr);
             // Step B (E.2.6)
@@ -392,6 +397,7 @@ fn balance_for_carrier(
     Ok(BalanceForCarrier {
         carrier,
         used_EPB: E_EPus_cr_t,
+        used_EPB_an_byuse: E_Epus_cr_an_byuse,
         used_nEPB: E_nEPus_cr_t,
         produced: E_pr_cr_t,
         produced_an: E_pr_cr_an,
@@ -524,6 +530,10 @@ pub fn energy_performance(
             acc.we_exp += balance_cr[cr].we_exported_an;
             // Weighted energy for each use item (EPB services)
             for service in &SERVICES {
+                // Energy use
+                if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(service) {
+                    *acc.used_EPB_byuse.entry(service.clone()).or_default() += *value
+                }
                 // Step A
                 if let Some(value) = balance_cr[cr].we_an_A_byuse.get(service) {
                     *acc.A_byuse.entry(service.clone()).or_default() += *value
@@ -538,12 +548,15 @@ pub fn energy_performance(
 
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
+    let mut used_EPB_byuse = balance.used_EPB_byuse.clone();
+    for (_, val) in used_EPB_byuse.iter_mut() { *val *= k_area }
     let mut A_byuse = balance.A_byuse.clone();
     for (_, val) in A_byuse.iter_mut() { *val *= k_area }
     let mut B_byuse = balance.B_byuse.clone();
     for (_, val) in B_byuse.iter_mut() { *val *= k_area }
 
     let balance_m2 = BalanceTotal {
+        used_EPB_byuse,
         A: k_area * balance.A,
         A_byuse,
         B: k_area * balance.B,

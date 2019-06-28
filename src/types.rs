@@ -637,6 +637,8 @@ pub struct BalanceForCarrier {
     pub carrier: Carrier,
     /// Energy used for EPB uses in each timestep
     pub used_EPB: Vec<f32>,
+    /// Energy used for EPB uses, by use
+    pub used_EPB_an_byuse: HashMap<Service, f32>,
     /// Used energy for non EPB uses in each timestep
     pub used_nEPB: Vec<f32>,
     /// Produced energy in each timestep
@@ -703,6 +705,8 @@ pub struct BalanceForCarrier {
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct BalanceTotal {
+    /// Global energy use for EPB uses, by use
+    pub used_EPB_byuse: HashMap<Service, f32>,
     /// Balance result for calculation step A
     pub A: RenNren,
     /// Weighted energy for calculation step A, by use (for EPB services)
