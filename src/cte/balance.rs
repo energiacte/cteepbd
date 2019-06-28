@@ -30,9 +30,9 @@ Utilidades para la gestión de balances energéticos para el CTE
 
 use itertools::Itertools; // join
 
+use super::WFactorsMode;
 use crate::types::{Balance, Component, Factor, MetaVec};
 use crate::RenNren;
-use super::WFactorsMode;
 
 
 /// Muestra balance, paso B, de forma simplificada.
@@ -55,11 +55,43 @@ pub fn balance_to_plain(balance: &Balance) -> String {
     let tot = balance_m2.B.tot();
     let rer = balance_m2.B.rer();
 
+    // Final
+    let mut use_byuse = balance_m2
+        .used_EPB_byuse
+        .iter()
+        .map(|(k, v)| format!("{}: {:.2}", k, v))
+        .collect::<Vec<String>>();
+    use_byuse.sort();
+
+    // Ponderada por m2 (por uso)
+    let mut b_byuse = balance_m2
+        .B_byuse
+        .iter()
+        .map(|(k, v)| format!("{}: ren {:.2}, nren {:.2}", k, v.ren, v.nren))
+        .collect::<Vec<String>>();
+    b_byuse.sort();
+
     format!(
         "Area_ref = {:.2} [m2]
 k_exp = {:.2}
-{}: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}",
-        arearef, k_exp, indicator_and_units, ren, nren, tot, rer
+{}: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
+
+** Energía final (todos los vectores) [kWh/m2]:
+{}
+
+** {} por servicios y m2:
+{}
+",
+        arearef,
+        k_exp,
+        indicator_and_units,
+        ren,
+        nren,
+        tot,
+        rer,
+        use_byuse.join("\n"),
+        indicator_and_units,
+        b_byuse.join("\n")
     )
 }
 
