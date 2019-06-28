@@ -22,7 +22,7 @@
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
 //            Daniel Jiménez González <dani@ietcc.csic.es>
 
-/// ENERGYCALCULATIONS - Implementation of the ISO EN 52000-1 standard
+/// cteepbd - Implementation of the ISO EN 52000-1 standard
 
 ///   Energy performance of buildings - Overarching EPB assessment - General framework and procedures
 
@@ -290,19 +290,18 @@ fn balance_for_carrier(
         let exp_generators: Vec<_> = f_pr_cr_i.keys().collect();
 
         // Weighting factors for energy exported to nEP uses (step A) (~formula 24)
-        let f_we_exp_cr_stepA_nEPus: RenNren =
-            if E_exp_cr_used_nEPus_an == 0.0 {
-                // No exported energy to nEP uses
-                RenNren::new() // ren: 0.0, nren: 0.0
-            } else {
-                exp_generators.iter().fold(
-                    Ok(RenNren::new()),
-                    |acc: Result<RenNren, Error>, &gen| {
-                        Ok(acc?
-                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * f_pr_cr_i[gen]))
-                    },
-                )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
-            };
+        let f_we_exp_cr_stepA_nEPus: RenNren = if E_exp_cr_used_nEPus_an == 0.0 {
+            // No exported energy to nEP uses
+            RenNren::new() // ren: 0.0, nren: 0.0
+        } else {
+            exp_generators.iter().fold(
+                Ok(RenNren::new()),
+                |acc: Result<RenNren, Error>, &gen| {
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * f_pr_cr_i[gen]))
+                },
+            )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
+        };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
         let f_we_exp_cr_stepA_grid: RenNren = if E_exp_cr_grid_an == 0.0 {
@@ -312,7 +311,8 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * f_pr_cr_i[gen]))
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
         };
@@ -324,19 +324,18 @@ fn balance_for_carrier(
         // * Step B: weighting depends on exported energy generation and avoided resources on the grid
 
         // Factors of contribution for energy exported to nEP uses (step B)
-        let f_we_exp_cr_used_nEPus =
-            if E_exp_cr_used_nEPus_an == 0.0 {
-                // No energy exported to nEP uses
-                RenNren::new() // ren: 0.0, nren: 0.0
-            } else {
-                exp_generators.iter().fold(
-                    Ok(RenNren::new()),
-                    |acc: Result<RenNren, Error>, &gen| {
-                        Ok(acc?
-                            + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * f_pr_cr_i[gen]))
-                    },
-                )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
-            };
+        let f_we_exp_cr_used_nEPus = if E_exp_cr_used_nEPus_an == 0.0 {
+            // No energy exported to nEP uses
+            RenNren::new() // ren: 0.0, nren: 0.0
+        } else {
+            exp_generators.iter().fold(
+                Ok(RenNren::new()),
+                |acc: Result<RenNren, Error>, &gen| {
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * f_pr_cr_i[gen]))
+                },
+            )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
+        };
 
         // Weighting factors for energy exported to the grid (step B)
         let f_we_exp_cr_grid = if E_exp_cr_grid_an == 0.0 {
@@ -346,7 +345,8 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNren::new()),
                 |acc: Result<RenNren, Error>, &gen| {
-                    Ok(acc? + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * f_pr_cr_i[gen]))
+                    Ok(acc?
+                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
         };
@@ -405,7 +405,7 @@ fn balance_for_carrier(
         produced_bygen_an: E_pr_cr_i_an,
         produced_used_EPus: E_pr_cr_used_EPus_t,
         produced_used_EPus_bygen: E_pr_cr_i_used_EPus_t,
-        f_match: f_match_t, // load matching factor
+        f_match: f_match_t,   // load matching factor
         exported: E_exp_cr_t, // exp_used_nEPus + exp_grid
         exported_an: E_exp_cr_an,
         exported_bygen: E_exp_cr_i_t,
@@ -549,11 +549,17 @@ pub fn energy_performance(
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
     let mut used_EPB_byuse = balance.used_EPB_byuse.clone();
-    for (_, val) in used_EPB_byuse.iter_mut() { *val *= k_area }
+    for (_, val) in used_EPB_byuse.iter_mut() {
+        *val *= k_area
+    }
     let mut A_byuse = balance.A_byuse.clone();
-    for (_, val) in A_byuse.iter_mut() { *val *= k_area }
+    for (_, val) in A_byuse.iter_mut() {
+        *val *= k_area
+    }
     let mut B_byuse = balance.B_byuse.clone();
-    for (_, val) in B_byuse.iter_mut() { *val *= k_area }
+    for (_, val) in B_byuse.iter_mut() {
+        *val *= k_area
+    }
 
     let balance_m2 = BalanceTotal {
         used_EPB_byuse,
