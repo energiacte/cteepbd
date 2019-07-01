@@ -698,7 +698,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
         // Guardar balance en formato de texto plano
         if matches.is_present("archivo_salida_txt") {
-            let path = Path::new(matches.value_of_os("archivo_salida_xml").unwrap());
+            let path = Path::new(matches.value_of_os("archivo_salida_txt").unwrap());
             if verbosity > 0 {
                 println!("Resultados en formato XML: {:?}", path.display());
             }
