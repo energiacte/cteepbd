@@ -93,3 +93,6 @@ bundle: release docs examples
 	cp README.md dist/README.md
 	-cd dist && [ -e $(OUTBUNDLE) ] && mv $(OUTBUNDLE) $(OUTBUNDLEBAK)
 	cd dist && zip -r $(OUTBUNDLE) ./*
+
+genjson:
+	cargo run -- -c $(TESTCARRIERS) -l PENINSULA --json "prueba.json"
