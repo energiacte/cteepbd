@@ -178,10 +178,10 @@ para su aplicación al CTE DB-HE (procedimiento EN ISO 52000-1) y formatos de da
 \begin{center} \footnotesize
 
 \fbox{\parbox{.75\textwidth}{
-\textbf{\copyright ~ 2018 Ministerio de Fomento}\\
-\textbf{\phantom{\copyright ~ 2018 }Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)}\\[5pt]
+\textbf{\copyright ~ 2018-2019 Ministerio de Fomento}\\
+\textbf{\phantom{\copyright ~ 2018-2019 }Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)}\\[5pt]
 \textbf{Autores}:\\[5pt]
-\-\qquad Grupo de Energética Edificatoria y Sostenibilidad de la Unidad de Calidad en la Construcción:\\
+\-\qquad Grupo de Energética Edificatoria y Sostenibilidad de la Unidad de Calidad en la Construcción (IETcc-CSIC):\\
 \-\qquad Rafael Villar Burke \href{mailto:pachi@ietcc.csic.es}{<pachi@ietcc.csic.es>}\\
 \-\qquad Daniel Jiménez González \href{mailto:danielj@ietcc.csic.es}{<danielj@ietcc.csic.es>}\\
 \-\qquad Marta Sorribes Gil \href{mailto:msorribes@ietcc.csic.es}{<msorribes@ietcc.csic.es>}
@@ -225,22 +225,15 @@ The application evaluates both the delivered and exported energy according to th
 
 \subsection{Uso básico}
 
-La interacción con el programa se produce invocando el mismo (\texttt{cteepbd} o \texttt{cteepbd.exe} en sistemas Windows) a través de la línea de comandos del sistema operativo (señalada con \$ en este texto) y añadiendo los parámetros deseados, incluyendo al menos el archivo con los componentes energéticos\footnote{Estos datos se obtienen a partir de los resultados de un programa de evaluación de la eficiencia energética}, y los factores de paso, del siguiente modo:
+La interacción con el programa (\texttt{cteepbd}, o \texttt{cteepbd.exe} en sistemas Windows) se produce a través de la línea de comandos (señalada con \$ en este texto) indicando los parámetros deseados, que han de incluir al menos el archivo con los componentes energéticos\footnote{Estos datos se obtienen a partir de los resultados de un programa de evaluación de la eficiencia energética.} y los factores de paso:
 
 \begin{Verbatim}[fontsize=\small]
 	$ cteepbd -c test_data/cte_test_carriers.csv -l PENINSULA
 \end{Verbatim}
 %$
 
-La salida puede redirigirse a un archivo del siguiente modo:
-
-\begin{Verbatim}[fontsize=\small]
-	$ cteepbd -c test_data/cte_test_carriers.csv -l PENINSULA > balance.txt
-\end{Verbatim}
-%$
-
-La ejecución del programa realiza el procesado del archivo de componentes energéticos
-(\texttt{cte\_test\_carriers.csv} en el ejemplo) y emite los resultados  del cálculo del balance de energía primaria (paso B) por pantalla:
+La ejecución del programa procesa el archivo de componentes energéticos
+(\texttt{cte\_test\_carriers.csv} en el ejemplo) y emite los resultados por pantalla (balance de energía primaria (paso B) en el ejemplo):
 
 \VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers.out}
 
@@ -256,7 +249,9 @@ De forma análoga, se podrían obtener los resultados referidos únicamente al s
 
 \clearpage
 \newpage
-\subsection{Ayuda del programa y uso detallado}
+\subsection{Uso detallado}
+
+\subsubsection{Ayuda del programa}
 La llamada al programa sin ningún parámetro o con las opciones \texttt{-h} o \texttt{-{}-help} muestra la ayuda:
 
 \begin{Verbatim}[fontsize=\small]
@@ -267,7 +262,9 @@ La llamada al programa sin ningún parámetro o con las opciones \texttt{-h} o \
 \VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/salida_ayuda.txt}
 
 \begin{myquote}\footnotesize
-Aunque el programa está concebido para calcular la eficiencia energética con factores de paso y factor exportación arbitrarios, emplea de manera predeterminada valores normativos. Los resultados obtenidos solamente tienen sentido para la justificación de valores normativos si se utilizan con los parámetros adecuados.
+Aunque el programa está concebido para calcular la eficiencia energética con factores de paso y factor exportación arbitrarios, emplea de manera predeterminada valores normativos.
+
+Los resultados obtenidos solamente tienen sentido para la justificación de valores normativos si se utilizan con los parámetros adecuados.
 \end{myquote}
 
 \subsubsection{Argumentos de definición de los datos de entrada}
@@ -321,7 +318,7 @@ Este argumento indica los 2 factores de paso del vectores energético \texttt{RE
 
 El ejemplo \texttt{-{}-red1 0 1.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED2} son 0 (parte renovable) y 1.3 (parte no renovable).
 
-\subsubsection{Argumentos de definición de valores intermedios}
+\subsubsection{Argumentos de salida de valores de entrada modificados}
 
 Estos argumentos permiten obtener una salida en archivos de texto del procesado inicial de los datos de entrada.
 
