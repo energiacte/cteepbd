@@ -631,6 +631,7 @@ A continuación se muestra un ejemplo de la salida simple que genera el ejemplo 
 
 \newpage
 \subsection{Salida en formato XML}
+\label{subsec:formatoxml}
 
 Esta salida guarda la información en el formato XML.
 
@@ -642,6 +643,7 @@ A continuación se muestra la salida en el formato XML para el mismo caso anteri
 
 \newpage
 \subsection{Salida en formato JSON}
+\label{subsec:formatojson}
 
 Esta salida guarda la información en la notación de objetos de JavaScript (JSON) y permite obtener el mayor nivel de información disponible para la aplicación.
 
@@ -825,16 +827,27 @@ Este ejemplo J9 muestra un caso completamente eléctrico y con usos no EPB pero 
 
 \clearpage
 \newpage
-\section{Integración de la herramienta \texttt{cteepbd} con programas de simulación}
+\section{Integración de la herramienta \texttt{cteepbd} con programas de simulación para el cumplimiento del CTE DB-HE}
 \label{sec:anexointegracion}
 \setcounter{figure}{0} % resetear contador por sección
 \setcounter{table}{0} % resetear contador por sección
 
-Este apéndice detalla aquellos aspectos más relevantes para la integración de la herramienta \texttt{cteepbd} con programas de simulación energética y de cumplimiento del \textit{CTE DB-HE}.
+Este apéndice detalla aquellos aspectos más relevantes para la integración de la herramienta \texttt{cteepbd} con programas de simulación energética orientada al cumplimiento del \textit{CTE DB-HE}.
+
+\subsection{Preparación de los datos de entrada}
+
+Los programas de simulación energética son los responsables de realizar el cálculo de la energía final consumida por el edificio y de la energía final producida.
+
+Además de respetar el formato descrito en la sección \textit{\nameref{sec:formatocomponentes}}, el archivo de componentes energéticos debe incluir\footnote{Condiciones de acuerdo con la propuesta de actualización del DB-HE (2018) publicada para información pública. Estas condiciones podrían variar en función de las modificaciones sufridas tras el periodo de información pública.} la producción de energía obtenida \textit{in situ} (solar térmica, solar fotovoltaica, minieólica, geotérmica, etc) o mediante procesos de cogeneración y el consumo de energía final de los servicios de calefacción, refrigeración, ACS, ventilación y, en el caso de edificios de uso distinto al residencial privado, iluminación.
+
+En particular, debe recalcarse, por no ser habitual este cómputo hasta el momento, que la energía final consumida ha de incluir la energía térmica (renovable) extraída del medioambiente. Por ejemplo, en el caso de una bomba de calor de SPF 2.5, se considera que por cada kWh eléctrico consumido el equipo consume también 1.5 kWh del medioambiente\footnote{Para el cálculo de la energía renovable procedente de las bombas de calor véase la \href{https://www.boe.es/doue/2013/062/L00027-00035.pdf}{Decisión de la Comisión, de 1 de marzo de 2013, por la que se establecen las directrices para el cálculo por los Estados miembros de la energía renovable procedente de las bombas de calor de diferentes tecnologías, conforme a lo dispuesto en el artículo 5 de la Directiva 2009/28/CE del Parlamento Europeo y del Consejo [notificada con el número C(2013) 1082]}.}\footnote{En el caso de las bombas de calor, también hay que tener en cuenta que en el modo de refrigeración el equipo no extrae calor del medioambiente, sino que rechaza la transmisión del calor interno del edificio, de modo que el proceso no es simétrico en términos de energía que atraviesa la frontera de evaluación.}.
+
+En el caso de que existan equipos de cogeneración, debe tenerse en cuenta que el balance de la energía producida y consumida incluye el consumo del combustible o vector energético usado para la cogeneración y la producción eléctrica con origen en la cogeneración. Dado que la energía térmica es producida y consumida \textit{in situ}, esta no atraviesa el perímetro de evaluación y, por tanto, no figura en el balance. En caso necesario, la imputación del consumo del combustible para la cogeneración puede realizarse a los servicios térmicos o eléctricos en función del rendimiento térmico y eléctrico, y debe reflejarse coherentemente en los factores de paso asignados a la electricidad procedente de la cogeneración\footnote{Para la asignación de factores de paso y el cálculo de la energía eléctrica y térmica producida, véanse los Anexos I y II de la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2012-82191}{Directiva 2012/27/UE del Parlamento Europeo y del Consejo, de 25 de octubre de 2012, relativa a la eficiencia energética, por la que se modifican las Directivas 2009/125/CE y 2010/30/UE, y por la que se derogan las Directivas 2004/8/CE y 2006/32/CE}, la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2008-82509}{Decisión de la Comisión, de 19 de noviembre de 2008, por la que se establecen orientaciones detalladas para la aplicación del anexo II de la Directiva 2004/8/CE del Parlamento Europeo y del Consejo [notificada con el número C(2008) 7294]}, y el apartado \textit{9.6.6 Factores de paso} de la \textit{UNE EN ISO 52000-1}.}.
+
 
 \subsection{Llamada al programa y salida de resultados}
 
-El programa está pensado para ser llamado mediante un subproceso independiente, suministrando como parámetros al menos el archivo de componentes energéticos (p.e. \texttt{- c "Archivo\_de\_componentes.csv"}) y la localización (p.e. \texttt{-l PENINSULA}) del edificio.
+El programa está pensado para ser llamado mediante un subproceso independiente, suministrando como parámetros, al menos, el archivo de componentes energéticos (p.e. \texttt{-c ''componentes.cteepbd''}) y la localización (p.e. \texttt{-l PENINSULA}) del edificio.
 
 \begin{Verbatim}[fontsize=\small]
     $ cteepbd -c ruta/archivo_componentes_caso.csv -l PENINSULA
@@ -844,42 +857,153 @@ El programa está pensado para ser llamado mediante un subproceso independiente,
 El programa genera así una salida simple que puede redirigirse a un archivo para su postproceso por la herramienta de simulación o de cumplimiento reglamentario.
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c ruta/archivo_componentes.csv -l PENINSULA > archivo_salida.txt
+    $ cteepbd -c componentes.cteepbd -l PENINSULA > resultados_cteepbd_EP.txt
 \end{Verbatim}
 %$
 
-También puede usarse la opción de salida a archivo de texto plano:
+También puede usarse la opción de guardado a un archivo de texto plano:
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c ruta/archivo_componentes.csv -l PENINSULA --txt archivo_salida.txt
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --txt resultados_cteepbd_EP.txt
 \end{Verbatim}
 %$
 
-Opcionalmente, puede solicitarse la salida en formato XML o JSON, siendo esta última la más completa de todas ellas.
+En general, se recomienda utilizar la salida en formato \textit{JSON} (\autoref{subsec:formatojson}), que es la que contiene información más detallada y esta se recoge en un formato estructurado, fácil de procesar.
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c ruta/archivo_componentes.csv -l PENINSULA --json archivo_salida.json
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_EP.json
 \end{Verbatim}
 %$
 
-Para obtener la fracción renovable de ACS obtenida teniendo en cuenta la generación in situ o en las proximidades de la parcela se usa la opción \texttt{--acs\_nearby, N}:
+\subsection{Proceso general}
+
+El aprovechamiento de los datos generados por \texttt{cteepbd} para la verificación reglamentaria exige ejecutar el programa en varias ocasiones, variando las opciones elegidas y guardando los resultados de salida en archivos diferentes.
+
+Para la obtención de datos generales relativos al consumo de energía final y energía primaria se realizaría la llamada:
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -N -c ruta/archivo_componentes.csv -l PENINSULA --json archivo_salida_ACS_nrb.json
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_EP.json --xml resultados_cteepbd_EP.xml
 \end{Verbatim}
 %$
 
-\subsection{Preparación de los datos de entrada}
+Para el cálculo de la fracción renovable de ACS:
 
-Además de los detalles relacionados con el formato, descritas en la sección \textit{\nameref{sec:formatocomponentes}}, el archivo debe contener\footnote{Condiciones de acuerdo con la propuesta de actualización del DB-HE (2018) publicada para información pública. Estas condiciones podrían variar en función de las modificaciones sufridas tras el periodo de información pública.} la producción de energía obtenida \textit{in situ} (solar térmica, solar fotovoltaica, minieólica, geotérmica, etc) o mediante procesos de cogeneración y el consumo de energía final de los servicios de calefacción, refrigeración, ACS, ventilación y, en el caso de edificios de uso distinto al residencial privado, iluminación.
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -N -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_ACS_nrb_EP.json
+\end{Verbatim}
+%$
 
-Dentro de la energía final consumida debe tenerse en cuenta aquella energía renovable extraída del medioambiente. Por ejemplo, en el caso de una bomba de calor de SPF 2.5, se considera que por cada kWh eléctrico consumido el equipo consume también 1.5 kWh del medioambiente\footnote{Para el cálculo de la energía renovable procedente de las bombas de calor véase la \href{https://www.boe.es/doue/2013/062/L00027-00035.pdf}{Decisión de la Comisión, de 1 de marzo de 2013, por la que se establecen las directrices para el cálculo por los Estados miembros de la energía renovable procedente de las bombas de calor de diferentes tecnologías, conforme a lo dispuesto en el artículo 5 de la Directiva 2009/28/CE del Parlamento Europeo y del Consejo [notificada con el número C(2013) 1082]}.}.
+Y para obtener datos de emisiones de CO2:
 
-En el caso de que existan equipos de cogeneración, debe tenerse en cuenta que el balance de la energía producida y consumida incluye el consumo del combustible o vector energético usado para la cogeneración y la producción eléctrica con origen en la cogeneración. Dado que la energía térmica es producida y consumida \textit{in situ}, esta no atraviesa el perímetro de evaluación y, por tanto, no figura en el balance. En caso necesario, la imputación del consumo del combustible para la cogeneración puede realizarse a los servicios térmicos o eléctricos en función del rendimiento térmico y eléctrico, y debe reflejarse coherentemente en los factores de paso asignados a la electricidad procedente de la cogeneración\footnote{Para la asignación de factores de paso y el cálculo de la energía eléctrica y térmica producida, véanse los Anexos I y II de la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2012-82191}{Directiva 2012/27/UE del Parlamento Europeo y del Consejo, de 25 de octubre de 2012, relativa a la eficiencia energética, por la que se modifican las Directivas 2009/125/CE y 2010/30/UE, y por la que se derogan las Directivas 2004/8/CE y 2006/32/CE}, la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2008-82509}{Decisión de la Comisión, de 19 de noviembre de 2008, por la que se establecen orientaciones detalladas para la aplicación del anexo II de la Directiva 2004/8/CE del Parlamento Europeo y del Consejo [notificada con el número C(2008) 7294]}, y el apartado \textit{9.6.6 Factores de paso} de la \textit{UNE EN ISO 52000-1}.}.
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA -m CO2 --json resultados_cteepbd_CO2.json
+\end{Verbatim}
+%$
 
+Con estas tres llamadas
 
+En los siguientes subapartados se muestra cómo obtener información sobre los indicadores del \textit{CTE DB-HE} o la certificación energética utilizando esta salida en formato \textit{JSON}. Se hará referencia a los valores del objeto generado usando notación de punto (p.e., \texttt{balance.B.ren} se correponde al valor localizado con la clave \texttt{ren} en el objeto con clave \texttt{B} en el objeto con clave \texttt{balance}, perteneciente al objeto global).
 
+\subsection{Obtención del consumo de energía primaria no renovable y total}
 
+Estos indicadores de consumo de energía primaria se calculan usando el modo de cálculo por defecto (\texttt{-{}-modo EP}):
 
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_EP.json
+\end{Verbatim}
+%$
+
+El consumo de energía primaria no renovable, en $kWh/m^2$ se obtiene como resultado directo:
+
+$C_{ep,ren} [kWh/m^2] = \texttt{balance\_m2.B.ren}$
+
+Mientras que el consumo de energía primaria total se obtiene a partir de la suma del la parte renovable y no renovable del consumo:
+
+$C_{ep,tot} [kWh/m^2] = C_{ep,ren} + C_{ep,nren} = \texttt{balance\_m2.B.ren} + \texttt{balance\_m2.B.nren}$
+
+\subsection{Obtención de la fracción renovable de las necesidades de ACS}
+
+Para obtener la fracción renovable de ACS obtenida teniendo en cuenta la generación in situ o en las proximidades de la parcela se debe usar la opción \texttt{--acs\_nearby} o , \texttt{-N}:
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -N -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_ACS_nrb_EP.json
+\end{Verbatim}
+%$
+
+La fracción renovable ($RER_{acs,nrb}$) se obtiene a partir de los resultados de las partes renovable y no renovable del consumo:
+
+$RER_{acs,nrb} = C_{ep,ren} / C_{ep,tot} = \texttt{balance.B.ren} / (\texttt{balance.B.ren} + \texttt{balance.B.nren})$
+
+\subsection{Obtención del consumo de energía final por servicios}
+
+El consumo de energía final usada en servicios (sólo servicios EPB) se localiza en el objeto:
+
+$\texttt{balance\_m2.used\_EPB\_byuse}$
+
+donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$.
+
+Así, el consumo de energía final del servicio de calefacción se localizaría en:
+
+$\texttt{balance\_m2.used\_EPB\_byuse.CAL}$
+
+\textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo
+
+\subsection{Obtención del consumo de energía primaria por servicios}
+
+El consumo de energía primaria, desagregada por servicios (sólo servicios EPB), se localiza en el objeto:
+
+$\texttt{balance\_m2.B\_byuse}$
+
+donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$, y en sus componentes renovable y no renovable.
+
+Así, el consumo de energía primaria no renovable del servicio de calefacción se localizaría en:
+
+$\texttt{balance\_m2.B\_byuse.CAL.nren}$
+
+\textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo.
+
+\subsection{Obtención de la energía eléctrica generada y autoconsumida}
+
+La energía eléctrica generada in situ y autoconsumida (sólo en servicios EPB) se puede obtener a partir del balance para el vector energético \texttt{ELECTRICIDAD}, en la clave de energía consumida en usos EPB:
+
+$\texttt{balance\_cr.ELECTRICIDAD.used\_EPB}$
+
+Dicha clave contiene los valores para cada paso de cálculo de la energía eléctrica usada en servicios EPB, de modo que el valor total anual se obtiene como suma de los valores mensuales.
+
+\subsection{Obtención de las emisiones de CO2 y de las emisiones por servicio}
+
+Los cálculos usando factores de emisión en lugar de factores de energía primaria se obtienen modificando el modo de funcionamiento del programa a \texttt{CO2}:
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA -m CO2 --json resultados_cteepbd_CO2.json
+\end{Verbatim}
+%$
+
+El valor total de emisiones se encuentra en la fracción renovable del balance (paso B):
+
+$E_{CO2e} [kg_{CO2}] = \texttt{balance.B.nren}$
+
+y las emisiones repercutidas por la superficie de referencia en:
+
+$E_{CO2e} [kg_{CO2_e}/m^2] = \texttt{balance\_m2.B.nren}$
+
+Al igual que en el caso del consumo, es posible obtener los valores desagregados por servicios EPB en los objetos:
+
+$\texttt{balance.B\_byuse}$
+
+o, para valores repercutidos por la superficie útil:
+
+$\texttt{balance\_m2.B\_byuse}$
+
+\subsection{Obtención del fragmento XML para el Certificado energético}
+
+El programa \texttt{cteepbd} permite obtener el fragmento de \textit{XML} (\autoref{subsec:formatoxml}) con la información relativa a los componentes de consumo y producción de energía, factores de paso y balance energético, que es necesaria para la definición del Certificado energético en formato \textit{XML}.
+
+Para ello basta indicar la salida \texttt{XML}:
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --xml fragmentocert.xml
+\end{Verbatim}
+%$
 
 \end{document}
