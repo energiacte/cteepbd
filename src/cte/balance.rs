@@ -76,7 +76,7 @@ pub fn balance_to_plain(balance: &Balance) -> String {
 k_exp = {:.2}
 {}: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
 
-** Energía final (todos los vectores) [kWh/m2]:
+** Energía final (todos los vectores) [kWh/m2.an]:
 {}
 
 ** {} por servicios:
