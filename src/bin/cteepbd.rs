@@ -45,17 +45,6 @@ use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNren, Se
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
-fn rennren_from_args(values: Option<clap::Values<'_>>) -> Option<RenNren> {
-    values.and_then(|v| {
-        let vv: Vec<f32> = v.map(|vv| f32::from_str(vv.trim()).unwrap()).collect();
-        let userval = RenNren {
-            ren: vv[0],
-            nren: vv[1],
-        };
-        Some(userval)
-    })
-}
-
 fn readfile(path: &Path) -> Result<String, Error> {
     let mut f = File::open(path).context(format!("Archivo {} no encontrado", path.display()))?;
     let mut contents = String::new();
@@ -140,10 +129,26 @@ fn get_factor(
     descr: &str,
     verbosity: u64,
 ) -> Option<RenNren> {
+
     // Origen del dato
     let mut orig = "";
-    let factor = rennren_from_args(matches_values)
-        .and_then(|userval| {
+    let factor = matches_values
+        .and_then(|v| {
+            let vv: Vec<f32> = v
+                .map(|vv| {
+                    f32::from_str(vv.trim()).unwrap_or_else(|_| {
+                        eprintln!(
+                            "ERROR: Formato numérico incorrecto en el factor de paso {:?}",
+                            vv
+                        );
+                        exit(exitcode::DATAERR);
+                    })
+                })
+                .collect();
+            let userval = RenNren {
+                ren: vv[0],
+                nren: vv[1],
+            };
             // Dato desde línea de comandos
             orig = "usuario";
             Some(userval)
