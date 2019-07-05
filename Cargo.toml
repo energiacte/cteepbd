@@ -6,7 +6,7 @@ edition = "2018"
 description = "Computation of energy balance of buildings according to UNE-EN ISO 52000-1:2017 to comply with CTE DB-HE 2018"
 repository = "https://github.com/energiacte/cteepbd"
 readme = "README.md"
-keywords = ["buildings", "energy", "UNE-EN ISO 52000", "CTE", "DB-HE"]
+keywords = ["buildings", "energy", "CTE", "DB-HE", "NZEB"]
 categories = ["command-line-utilities", "science"]
 license = "MIT"
 
