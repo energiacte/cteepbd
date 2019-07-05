@@ -23,14 +23,27 @@ Produce los siguientes resultados por pantalla:
 ```language-plain
 
     ** Datos de entrada
+    Indicador: EP
     Componentes energéticos: "test_data/cte_test_carriers.csv"
-    Factores de paso (archivo): "test_data/factores_paso_test.csv"
+    Factores de paso (usuario): PENINSULA
     Área de referencia (metadatos) [m2]: 200.00
     Factor de exportación (metadatos) [-]: 0.0
     ** Balance energético
     Area_ref = 200.00 [m2]
     k_exp = 0.00
-    C_ep [kWh/m2.an]: ren = 25.4, nren = 19.4, tot = 44.8, RER = 0.57
+    C_ep [kWh/m2.an]: ren = 24.6, nren = 18.9, tot = 43.5, RER = 0.57
+
+    ** Energía final (todos los vectores) [kWh/m2.an]:
+    ACS: 11.22
+    CAL: 12.94
+    REF: 0.28
+    VEN: 5.81
+
+    ** C_ep [kWh/m2.an] por servicios:
+    ACS: ren 10.02, nren 4.01
+    CAL: ren 11.09, nren 6.18
+    REF: ren 0.16, nren 0.40
+    VEN: ren 3.32, nren 8.33
 
 ```
 
