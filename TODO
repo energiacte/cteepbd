@@ -1,15 +1,29 @@
+TODO
+----
 
-- epbd: allow load matching factor values (or functions) that are not 1 (formula 32, B.32)
+- epbd:
+    - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
+      Have a look to the proposed value from the TR.
+    - allow to assign produced energy to services (instead of generic imputation).
+      This has an effect on the computation of the share of produced energy, which should proceed
+      after discounting the produced energy to specific services.
+
 - tests:
     - cte: check non matching computation modes in component metadata and weighting factors metadata
     - cte: check results by use items
     - cte: check results using emission factors
 
-    - Crear Trait CteFactorsExt con métodos de wfactors
-        - new_from_str(&str) -> Factors
-        - new_from_loc(&loc) -> Factors
-        - set_mode_and_default_wfactors(&mut self, &default_wf) -> Self
-        - set_user_wfactors(&mut self, &user_wf) -> Self
-        - fix(&mut self)
-        - strip_nepb(&mut self)
-        * podría funcionar con el patrón builder, con CteFactorsBuilder hasta devolver Factors en build()
+Wishlist
+--------
+
+- use templates for output (plain, detailed, ...) depending on cli parameter
+
+- Create Trait CteFactorsExt with methods from wfactors.rs
+    - new_from_str(&str) -> Factors
+    - new_from_loc(&loc) -> Factors
+    - set_mode_and_default_wfactors(&mut self, &default_wf) -> Self
+    - set_user_wfactors(&mut self, &user_wf) -> Self
+    - fix(&mut self)
+    - strip_nepb(&mut self)
+    * It could work with the Builder pattern
+      working with a CteFactorsBuilder that builds a Factors object with its build() method.
