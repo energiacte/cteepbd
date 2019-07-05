@@ -1,10 +1,7 @@
-
-/target
-**/*.rs.bk
-
 /target
 **/*.rs.bk
 Cargo.lock
 
 test_data/output/**
 docs/auto/**
+*.tmp
