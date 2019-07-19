@@ -35,7 +35,7 @@ use crate::rennren::RenNren;
 /// Energy carrier.
 #[allow(non_camel_case_types)]
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString, Serialize,
+    Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString, Serialize, Deserialize
 )]
 pub enum Carrier {
     /// Electricity
@@ -66,7 +66,7 @@ pub enum Carrier {
 
 /// Produced or consumed energy type of an energy component.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
 pub enum CType {
     /// Produced energy
     PRODUCCION,
@@ -76,7 +76,7 @@ pub enum CType {
 
 /// Production origin or use destination subtype of an energy component.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Display, EnumString, Serialize)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Display, EnumString, Serialize, Deserialize)]
 pub enum CSubtype {
     /// on site energy source
     INSITU,
@@ -90,7 +90,7 @@ pub enum CSubtype {
 
 /// Destination Service or use of an energy component.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Display, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Display, Serialize, Deserialize)]
 pub enum Service {
     /// DHW
     ACS,
@@ -158,7 +158,7 @@ impl Default for Service {
 
 /// Source of energy for a weighting factor.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
 pub enum Source {
     /// Grid source
     RED,
@@ -170,7 +170,7 @@ pub enum Source {
 
 /// Destination of energy for a weighting factor.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
 pub enum Dest {
     /// Building delivery destination
     SUMINISTRO,
@@ -182,7 +182,7 @@ pub enum Dest {
 
 /// Calculation step for a weighting factor.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
 pub enum Step {
     /// Calculation step A
     A,
@@ -193,7 +193,7 @@ pub enum Step {
 // == General types ==
 
 /// Metadata of components or weighting factors
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Meta {
     /// metadata name.
     pub key: String,
@@ -231,7 +231,7 @@ impl str::FromStr for Meta {
 }
 
 /// Energy Component Struct, representing an energy carrier component
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Component {
     /// Carrier name
     pub carrier: Carrier,
@@ -327,7 +327,7 @@ impl str::FromStr for Component {
 ///
 /// It can represent the renewable and non renewable primary energy weighting factors,
 /// but can be used for CO2 or any other indicators depending on how the values are obtained.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Factor {
     /// Energy carrier
     pub carrier: Carrier,
@@ -502,7 +502,7 @@ pub trait MetaVec {
 /// #META CTE_AREAREF: 100.5
 /// ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
 /// ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Components {
     /// Component list
     pub cmeta: Vec<Meta>,
@@ -573,7 +573,7 @@ impl str::FromStr for Components {
 }
 
 /// List of weighting factors bundled with its metadata
-#[derive(Debug, Default, Clone, Serialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Factors {
     /// Weighting factors list
     pub wmeta: Vec<Meta>,
@@ -631,7 +631,7 @@ impl str::FromStr for Factors {
 
 /// Detailed results of the energy balance computation for a given carrier
 #[allow(non_snake_case)]
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BalanceForCarrier {
     /// Energy carrier
     pub carrier: Carrier,
@@ -703,7 +703,7 @@ pub struct BalanceForCarrier {
 
 /// Global balance results (all carriers), either in absolute value or by m2.
 #[allow(non_snake_case)]
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BalanceTotal {
     /// Global energy use for EPB uses, by use
     pub used_EPB_byuse: HashMap<Service, f32>,
@@ -725,7 +725,7 @@ pub struct BalanceTotal {
 
 /// Data and results of an energy performance computation
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Balance {
     /// Energy components (produced and consumed energy data + metadata)
     pub components: Components,

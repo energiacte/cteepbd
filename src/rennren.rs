@@ -25,7 +25,7 @@ use std::fmt;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 /// Energy pairs representing renewable and non renewable energy quantities or factors.
-#[derive(Debug, Copy, Clone, PartialEq, Default, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct RenNren {
     /// Renewable energy or factor
     #[serde(serialize_with = "round_serialize_2")]
