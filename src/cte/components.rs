@@ -142,7 +142,7 @@ pub fn compensate_env_use(components: &mut Components) {
                 service,
                 values: unbalanced_values,
                 comment:
-                    "Equilibrado de energía térmica insitu consumida y sin producción declarada"
+                    "Equilibrado de consumo sin producción declarada"
                         .into(),
             })
         })
