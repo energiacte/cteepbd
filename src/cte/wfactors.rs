@@ -108,7 +108,7 @@ pub struct CteDefaultsWF {
 }
 
 /// Valores por defecto para energía primaria
-pub const CTE_DEFAULTS_WF_EP: CteDefaultsWF = CteDefaultsWF {
+pub const CTE_DEFAULTS_WF2013: CteDefaultsWF = CteDefaultsWF {
     mode: WFactorsMode::EP,
     user: CteUserWF {
         red1: RenNrenCo2 {
@@ -471,11 +471,11 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren - ver 9.6.6.2.3
                 let cogen = wfactors
                     .get_meta_rennren("CTE_COGEN")
-                    .unwrap_or(CTE_DEFAULTS_WF_EP.user.cogen_to_grid);
-                let value_origin = if ((cogen.ren - CTE_DEFAULTS_WF_EP.user.cogen_to_grid.ren)
+                    .unwrap_or(CTE_DEFAULTS_WF2013.user.cogen_to_grid);
+                let value_origin = if ((cogen.ren - CTE_DEFAULTS_WF2013.user.cogen_to_grid.ren)
                     .abs()
                     < EPSILON)
-                    && ((cogen.nren - CTE_DEFAULTS_WF_EP.user.cogen_to_grid.nren).abs() < EPSILON)
+                    && ((cogen.nren - CTE_DEFAULTS_WF2013.user.cogen_to_grid.nren).abs() < EPSILON)
                 {
                     "(Valor predefinido)"
                 } else {
@@ -509,11 +509,11 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
                 // Valores por defecto para ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
                 let cogennepb = wfactors
                     .get_meta_rennren("CTE_COGENNEPB")
-                    .unwrap_or(CTE_DEFAULTS_WF_EP.user.cogen_to_nepb);
-                let value_origin = if ((cogennepb.ren - CTE_DEFAULTS_WF_EP.user.cogen_to_nepb.ren)
+                    .unwrap_or(CTE_DEFAULTS_WF2013.user.cogen_to_nepb);
+                let value_origin = if ((cogennepb.ren - CTE_DEFAULTS_WF2013.user.cogen_to_nepb.ren)
                     .abs()
                     < EPSILON)
-                    && ((cogennepb.nren - CTE_DEFAULTS_WF_EP.user.cogen_to_nepb.nren).abs()
+                    && ((cogennepb.nren - CTE_DEFAULTS_WF2013.user.cogen_to_nepb.nren).abs()
                         < EPSILON)
                 {
                     "(Valor predefinido)"
@@ -570,7 +570,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
     if !has_red1_red_input {
         let red1 = wfactors
             .get_meta_rennren("CTE_RED1")
-            .unwrap_or(CTE_DEFAULTS_WF_EP.user.red1);
+            .unwrap_or(CTE_DEFAULTS_WF2013.user.red1);
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
           red1.ren, red1.nren, red1.co2, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
     }
@@ -580,7 +580,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
     if !has_red2_red_input {
         let red2 = wfactors
             .get_meta_rennren("CTE_RED2")
-            .unwrap_or(CTE_DEFAULTS_WF_EP.user.red2);
+            .unwrap_or(CTE_DEFAULTS_WF2013.user.red2);
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
           red2.ren, red2.nren, red2.co2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
     }

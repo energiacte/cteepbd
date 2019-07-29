@@ -455,7 +455,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Factores de paso ---------------------------------------------------------------------------
 
     // 0. Factores por defecto, según modo
-    let default_wf = cte::CTE_DEFAULTS_WF_EP;
+    let default_wf = cte::CTE_DEFAULTS_WF2013;
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
     let user_wf = cte::CteUserWF {
