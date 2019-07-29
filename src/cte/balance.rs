@@ -32,7 +32,7 @@ use itertools::Itertools; // join
 
 use super::WFactorsMode;
 use crate::types::{Balance, Component, Factor, MetaVec};
-use crate::RenNren;
+use crate::RenNrenCo2;
 
 
 /// Muestra balance, paso B, de forma simplificada.
@@ -45,13 +45,14 @@ pub fn balance_to_plain(balance: &Balance) -> String {
         ..
     } = balance;
 
+    // XXX: TODO: Corregir
     let indicator_and_units =
         if wfactors.has_meta_value("CTE_FACTORES_TIPO", WFactorsMode::CO2.as_meta_value()) {
             "CO2_eq [kg_CO2e/m2.an]"
         } else {
             "C_ep [kWh/m2.an]"
         };
-    let RenNren { ren, nren } = balance_m2.B;
+    let RenNrenCo2 { ren, nren, co2 } = balance_m2.B;
     let tot = balance_m2.B.tot();
     let rer = balance_m2.B.rer();
 
@@ -74,7 +75,7 @@ pub fn balance_to_plain(balance: &Balance) -> String {
     format!(
         "Area_ref = {:.2} [m2]
 k_exp = {:.2}
-{}: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
+{}: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}, co2 = {:.2}
 
 ** Energía final (todos los vectores) [kWh/m2.an]:
 {}
@@ -89,6 +90,7 @@ k_exp = {:.2}
         nren,
         tot,
         rer,
+        co2,
         use_byuse.join("\n"),
         indicator_and_units,
         b_byuse.join("\n")
@@ -112,7 +114,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         } else {
             "C_ep [kWh/m2.an]"
         };
-    let RenNren { ren, nren } = balance_m2.B;
+    let RenNrenCo2 { ren, nren, co2 } = balance_m2.B;
     let cmeta = &components.cmeta;
     let cdata = &components.cdata;
     let wmeta = &wfactors.wmeta;
@@ -137,10 +139,11 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 step,
                 ren,
                 nren,
+                co2,
                 comment,
             } = f;
-            format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><Comentario>{}</Comentario></Dato>",
-            carrier, source, dest, step, ren, nren, escape_xml(comment))
+            format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><CO2>{:.3}</CO2><Comentario>{}</Comentario></Dato>",
+            carrier, source, dest, step, ren, nren, co2, escape_xml(comment))
         })
         .join("\n");
     let cmetastring = cmeta

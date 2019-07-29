@@ -37,10 +37,10 @@ extern crate strum_macros;
 
 pub mod cte;
 pub mod epbd;
-pub mod rennren;
+pub mod rennrenco2;
 pub mod types;
 pub mod vecops;
 
 pub use epbd::*;
-pub use rennren::*;
+pub use rennrenco2::*;
 pub use types::*;

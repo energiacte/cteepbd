@@ -28,7 +28,7 @@ use std::str::FromStr;
 
 use failure::Error;
 
-use crate::rennren::RenNren;
+use crate::rennrenco2::RenNrenCo2;
 
 // == Common properties (carriers + weighting factors) ==
 
@@ -341,6 +341,8 @@ pub struct Factor {
     pub ren: f32,
     /// Non renewable primary energy for each end use unit of this carrier
     pub nren: f32,
+    /// CO2 emissions for each end use unit of this carrier
+    pub co2: f32,
     /// Descriptive comment string for the weighting factor
     pub comment: String,
 }
@@ -354,6 +356,7 @@ impl Factor {
         step: Step,
         ren: f32,
         nren: f32,
+        co2: f32,
         comment: String,
     ) -> Factor {
         Factor {
@@ -363,15 +366,17 @@ impl Factor {
             step,
             ren,
             nren,
+            co2,
             comment,
         }
     }
 
-    /// Get factors as RenNren struct
-    pub fn factors(&self) -> RenNren {
-        RenNren {
+    /// Get factors as RenNrenCo2 struct
+    pub fn factors(&self) -> RenNrenCo2 {
+        RenNrenCo2 {
             ren: self.ren,
             nren: self.nren,
+            co2: self.co2
         }
     }
 }
@@ -385,8 +390,8 @@ impl fmt::Display for Factor {
         };
         write!(
             f,
-            "{}, {}, {}, {}, {:.3}, {:.3}{}",
-            self.carrier, self.source, self.dest, self.step, self.ren, self.nren, comment
+            "{}, {}, {}, {}, {:.3}, {:.3}, {:.3}{}",
+            self.carrier, self.source, self.dest, self.step, self.ren, self.nren, self.co2, comment
         )
     }
 }
@@ -398,7 +403,7 @@ impl str::FromStr for Factor {
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
-        if items.len() < 6 {
+        if items.len() < 7 {
             return Err(format_err!(
                 "Couldn't parse Weighting Factor (Factor) from string"
             ));
@@ -409,6 +414,7 @@ impl str::FromStr for Factor {
         let step: Step = items[3].parse()?;
         let ren: f32 = items[4].parse()?;
         let nren: f32 = items[5].parse()?;
+        let co2: f32 = items[6].parse()?;
         Ok(Factor {
             carrier,
             source,
@@ -416,6 +422,7 @@ impl str::FromStr for Factor {
             step,
             ren,
             nren,
+            co2,
             comment,
         })
     }
@@ -456,8 +463,8 @@ pub trait MetaVec {
             .and_then(|v| f32::from_str(v.value.trim()).ok())
     }
 
-    /// Get (optional) metadata value (f32, f32) by key as RenNren struct
-    fn get_meta_rennren(&self, key: &str) -> Option<RenNren> {
+    /// Get (optional) metadata value (f32, f32) by key as RenNrenCo2 struct
+    fn get_meta_rennren(&self, key: &str) -> Option<RenNrenCo2> {
         self.get_metavec()
             .iter()
             .find(|m| m.key == key)
@@ -468,14 +475,15 @@ pub trait MetaVec {
                     .map(|s| f32::from_str(s.trim()).ok())
                     .collect::<Option<Vec<f32>>>()
                     .unwrap_or_else(|| {
-                        panic!("No se puede transformar el metadato a RenNren: {:?}", v)
+                        panic!("No se puede transformar el metadato a RenNrenCo2: {:?}", v)
                     });
-                if vals.len() != 2 {
+                if vals.len() != 3 {
                     None
                 } else {
-                    Some(RenNren {
+                    Some(RenNrenCo2 {
                         ren: vals[0],
                         nren: vals[1],
+                        co2: vals[2],
                     })
                 }
             })
@@ -676,29 +684,29 @@ pub struct BalanceForCarrier {
     /// Delivered energy by the grid
     pub delivered_grid_an: f32,
     /// Weighted delivered energy by the grid
-    pub we_delivered_grid_an: RenNren,
+    pub we_delivered_grid_an: RenNrenCo2,
     /// Weighted delivered energy by any energy production sources
-    pub we_delivered_prod_an: RenNren,
+    pub we_delivered_prod_an: RenNrenCo2,
     /// Weighted delivered energy by the grid and any energy production sources
-    pub we_delivered_an: RenNren,
+    pub we_delivered_an: RenNrenCo2,
     /// Weighted exported energy for calculation step A
-    pub we_exported_an_A: RenNren,
+    pub we_exported_an_A: RenNrenCo2,
     /// Weighted exported energy for non EPB uses and calculation step AB
-    pub we_exported_nEPB_an_AB: RenNren,
+    pub we_exported_nEPB_an_AB: RenNrenCo2,
     /// Weighted exported energy to the grid and calculation step AB
-    pub we_exported_grid_an_AB: RenNren,
+    pub we_exported_grid_an_AB: RenNrenCo2,
     /// Weighted exported energy and calculation step AB
-    pub we_exported_an_AB: RenNren,
+    pub we_exported_an_AB: RenNrenCo2,
     /// Weighted exported energy for calculation step A+B
-    pub we_exported_an: RenNren,
+    pub we_exported_an: RenNrenCo2,
     /// Weighted energy for calculation step A
-    pub we_an_A: RenNren,
+    pub we_an_A: RenNrenCo2,
     /// Weighted energy for calculation step A, by use (for EPB services)
-    pub we_an_A_byuse: HashMap<Service, RenNren>,
+    pub we_an_A_byuse: HashMap<Service, RenNrenCo2>,
     /// Weighted energy
-    pub we_an: RenNren,
+    pub we_an: RenNrenCo2,
     /// Weighted energy, by use (for EPB services)
-    pub we_an_byuse: HashMap<Service, RenNren>,
+    pub we_an_byuse: HashMap<Service, RenNrenCo2>,
 }
 
 /// Global balance results (all carriers), either in absolute value or by m2.
@@ -708,19 +716,19 @@ pub struct BalanceTotal {
     /// Global energy use for EPB uses, by use
     pub used_EPB_byuse: HashMap<Service, f32>,
     /// Balance result for calculation step A
-    pub A: RenNren,
+    pub A: RenNrenCo2,
     /// Weighted energy for calculation step A, by use (for EPB services)
-    pub A_byuse: HashMap<Service, RenNren>,
+    pub A_byuse: HashMap<Service, RenNrenCo2>,
     /// Balance result for calculation step A+B
-    pub B: RenNren,
+    pub B: RenNrenCo2,
     /// Weighted energy, by use (for EPB services)
-    pub B_byuse: HashMap<Service, RenNren>,
+    pub B_byuse: HashMap<Service, RenNrenCo2>,
     /// Weighted delivered energy
-    pub we_del: RenNren,
+    pub we_del: RenNrenCo2,
     /// Weighted exported energy for calculation step A
-    pub we_exp_A: RenNren,
+    pub we_exp_A: RenNrenCo2,
     /// Weighted exported energy for calculation step A+B
-    pub we_exp: RenNren,
+    pub we_exp: RenNrenCo2,
 }
 
 /// Data and results of an energy performance computation
@@ -811,10 +819,11 @@ mod tests {
             step: "A".parse().unwrap(),
             ren: 0.414,
             nren: 1.954,
+            co2: 0.331,
             comment: "Electricidad de red paso A".into(),
         };
         let factor1str =
-            "ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Electricidad de red paso A";
+            "ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Electricidad de red paso A";
         let factor2str = "ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
 
         // consumer component
@@ -844,8 +853,8 @@ ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28
     fn tfactors() {
         let tfactors1 = "#META CTE_FUENTE: CTE2013
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Recursos usados para suministrar electricidad (peninsular) desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ";
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ";
 
         // roundtrip building from/to string
         assert_eq!(

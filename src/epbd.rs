@@ -40,7 +40,7 @@ use std::collections::HashMap;
 use failure::Error;
 use itertools::Itertools;
 
-use crate::rennren::RenNren;
+use crate::rennrenco2::RenNrenCo2;
 use crate::types::{
     Balance, BalanceForCarrier, BalanceTotal, CSubtype, CType, Carrier, Component, Components,
     Dest, Factor, Factors, Service, Source, Step, SERVICES,
@@ -254,7 +254,7 @@ fn balance_for_carrier(
             let fpA_pr_cr_i = fp_src(fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)?;
             E_pr_cr_i * fpA_pr_cr_i.factors()
         }
-        None => RenNren::default(),
+        None => RenNrenCo2::default(),
     };
 
     // 3) Total delivered energy: grid + all onsite (but non cogeneration)
@@ -262,11 +262,11 @@ fn balance_for_carrier(
 
     // // * Weighted energy for exported energy: depends on step A or B
 
-    let mut E_we_exp_cr_an_A = RenNren::new();
-    let mut E_we_exp_cr_an_AB = RenNren::new();
-    let mut E_we_exp_cr_an = RenNren::new();
-    let mut E_we_exp_cr_used_nEPus_an_AB = RenNren::new();
-    let mut E_we_exp_cr_grid_an_AB = RenNren::new();
+    let mut E_we_exp_cr_an_A = RenNrenCo2::new();
+    let mut E_we_exp_cr_an_AB = RenNrenCo2::new();
+    let mut E_we_exp_cr_an = RenNrenCo2::new();
+    let mut E_we_exp_cr_used_nEPus_an_AB = RenNrenCo2::new();
+    let mut E_we_exp_cr_grid_an_AB = RenNrenCo2::new();
 
     let E_exp_cr_an = E_exp_cr_used_nEPus_an + E_exp_cr_grid_an;
 
@@ -290,13 +290,13 @@ fn balance_for_carrier(
         let exp_generators: Vec<_> = f_pr_cr_i.keys().collect();
 
         // Weighting factors for energy exported to nEP uses (step A) (~formula 24)
-        let f_we_exp_cr_stepA_nEPus: RenNren = if E_exp_cr_used_nEPus_an == 0.0 {
+        let f_we_exp_cr_stepA_nEPus: RenNrenCo2 = if E_exp_cr_used_nEPus_an == 0.0 {
             // No exported energy to nEP uses
-            RenNren::new() // ren: 0.0, nren: 0.0
+            RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
             exp_generators.iter().fold(
-                Ok(RenNren::new()),
-                |acc: Result<RenNren, Error>, &gen| {
+                Ok(RenNrenCo2::new()),
+                |acc: Result<RenNrenCo2, Error>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * f_pr_cr_i[gen]))
                 },
@@ -304,13 +304,13 @@ fn balance_for_carrier(
         };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
-        let f_we_exp_cr_stepA_grid: RenNren = if E_exp_cr_grid_an == 0.0 {
+        let f_we_exp_cr_stepA_grid: RenNrenCo2 = if E_exp_cr_grid_an == 0.0 {
             // No energy exported to grid
-            RenNren::new() // ren: 0.0, nren: 0.0
+            RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
             exp_generators.iter().fold(
-                Ok(RenNren::new()),
-                |acc: Result<RenNren, Error>, &gen| {
+                Ok(RenNrenCo2::new()),
+                |acc: Result<RenNrenCo2, Error>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * f_pr_cr_i[gen]))
                 },
@@ -326,11 +326,11 @@ fn balance_for_carrier(
         // Factors of contribution for energy exported to nEP uses (step B)
         let f_we_exp_cr_used_nEPus = if E_exp_cr_used_nEPus_an == 0.0 {
             // No energy exported to nEP uses
-            RenNren::new() // ren: 0.0, nren: 0.0
+            RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
             exp_generators.iter().fold(
-                Ok(RenNren::new()),
-                |acc: Result<RenNren, Error>, &gen| {
+                Ok(RenNrenCo2::new()),
+                |acc: Result<RenNrenCo2, Error>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * f_pr_cr_i[gen]))
                 },
@@ -340,11 +340,11 @@ fn balance_for_carrier(
         // Weighting factors for energy exported to the grid (step B)
         let f_we_exp_cr_grid = if E_exp_cr_grid_an == 0.0 {
             // No energy exported to grid
-            RenNren::new() // ren: 0.0, nren: 0.0
+            RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
             exp_generators.iter().fold(
-                Ok(RenNren::new()),
-                |acc: Result<RenNren, Error>, &gen| {
+                Ok(RenNrenCo2::new()),
+                |acc: Result<RenNrenCo2, Error>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * f_pr_cr_i[gen]))
                 },
@@ -365,11 +365,11 @@ fn balance_for_carrier(
 
     // * Total result for step A
     // Partial result for carrier (formula 2)
-    let E_we_cr_an_A: RenNren = E_we_del_cr_an - E_we_exp_cr_an_A;
+    let E_we_cr_an_A: RenNrenCo2 = E_we_del_cr_an - E_we_exp_cr_an_A;
 
     // * Total result for step B
     // Partial result for carrier (formula 2)
-    let E_we_cr_an: RenNren = E_we_del_cr_an - E_we_exp_cr_an;
+    let E_we_cr_an: RenNrenCo2 = E_we_del_cr_an - E_we_exp_cr_an;
 
     // ================ Compute values by use ===============
     // Compute fraction of used energy by use (for EPB services):
@@ -380,8 +380,8 @@ fn balance_for_carrier(
 
     // Used (final) and Weighted energy for each use item (for EPB services)
     let mut E_Epus_cr_an_byuse: HashMap<Service, f32> = HashMap::new();
-    let mut E_we_cr_an_A_byuse: HashMap<Service, RenNren> = HashMap::new();
-    let mut E_we_cr_an_byuse: HashMap<Service, RenNren> = HashMap::new();
+    let mut E_we_cr_an_A_byuse: HashMap<Service, RenNrenCo2> = HashMap::new();
+    let mut E_we_cr_an_byuse: HashMap<Service, RenNrenCo2> = HashMap::new();
     for service in &SERVICES {
         let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {

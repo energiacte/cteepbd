@@ -32,7 +32,7 @@ use failure::Error;
 use itertools::Itertools;
 use std::f32::EPSILON;
 
-use crate::rennren::RenNren;
+use crate::rennrenco2::RenNrenCo2;
 use crate::types::{CSubtype, Carrier, Dest, Source, Step};
 use crate::types::{Components, Factor, Factors, Meta, MetaVec};
 
@@ -97,7 +97,7 @@ pub struct CteUserWF<T> {
 pub struct CteDefaultsWF {
     /// Tipo de factores de conversión usados (p.e., a energía primaria o a emisiones)
     pub mode: WFactorsMode,
-    pub user: CteUserWF<RenNren>,
+    pub user: CteUserWF<RenNrenCo2>,
     pub loc_peninsula: &'static str,
     /// Factores de paso reglamentarios (RITE 20/07/2014) para Baleares.
     pub loc_baleares: &'static str,
@@ -111,189 +111,94 @@ pub struct CteDefaultsWF {
 pub const CTE_DEFAULTS_WF_EP: CteDefaultsWF = CteDefaultsWF {
     mode: WFactorsMode::EP,
     user: CteUserWF {
-        red1: RenNren {
+        red1: RenNrenCo2 {
             ren: 0.0,
             nren: 1.3,
+            co2: 0.3,
         },
-        red2: RenNren {
+        red2: RenNrenCo2 {
             ren: 0.0,
             nren: 1.3,
+            co2: 0.3,
         },
-        cogen_to_grid: RenNren {
+        cogen_to_grid: RenNrenCo2 {
             ren: 0.0,
             nren: 2.5,
+            co2: 0.3,
         },
-        cogen_to_nepb: RenNren {
+        cogen_to_nepb: RenNrenCo2 {
             ren: 0.0,
             nren: 2.5,
+            co2: 0.3,
         }
     },
     loc_peninsula: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: PENINSULA
-#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
-#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Recursos usados para suministrar electricidad (PENINSULA) desde la red
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082, 0.472 # Recursos usados para suministrar el vector desde la red
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190, 0.252 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179, 0.311 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201, 0.254 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (PENINSULA) desde la red
 ",
     loc_baleares: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: BALEARES
-#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
-#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.082, 2.968 # Recursos usados para suministrar electricidad (BALEARES) desde la red
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082, 0.472 # Recursos usados para suministrar el vector desde la red
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190, 0.252 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179, 0.311 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201, 0.254 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.082, 2.968, 0.932 # Recursos usados para suministrar electricidad (BALEARES) desde la red
 ",
     loc_canarias: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: CANARIAS
-#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
-#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.070, 2.924 # Recursos usados para suministrar electricidad (CANARIAS) desde la red
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082, 0.472 # Recursos usados para suministrar el vector desde la red
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190, 0.252 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179, 0.311 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201, 0.254 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.070, 2.924, 0.776 # Recursos usados para suministrar electricidad (CANARIAS) desde la red
 ",
     loc_ceutamelilla: "
 #META CTE_FUENTE: CTE2013
 #META CTE_LOCALIZACION: CEUTAMELILLA
-#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
-#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.003, 1.201 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.072, 2.718 # Recursos usados para suministrar electricidad (CEUTA Y MELILLA) desde la red
-",
-};
-
-/// Valores por defecto para emisiones de CO2. El valor final se lee en la fracción no renovable
-pub const CTE_DEFAULTS_WF_CO2: CteDefaultsWF = CteDefaultsWF {
-    mode: WFactorsMode::CO2,
-    user: CteUserWF {
-        red1: RenNren {
-            ren: 0.0,
-            nren: 0.300,
-        },
-        red2: RenNren {
-            ren: 0.0,
-            nren: 0.300,
-        },
-        cogen_to_grid: RenNren {
-            ren: 0.0,
-            nren: 0.300,
-        },
-        cogen_to_nepb: RenNren {
-            ren: 0.0,
-            nren: 0.300,
-        }
-    },
-    loc_peninsula: "
-#META CTE_FUENTE: CTE2013
-#META CTE_LOCALIZACION: PENINSULA
-#META CTE_FACTORES_TIPO: FINAL_A_CO2
-#META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.331 # Recursos usados para suministrar electricidad (PENINSULA) desde la red
-",
-    loc_baleares: "
-#META CTE_FUENTE: CTE2013
-#META CTE_LOCALIZACION: BALEARES
-#META CTE_FACTORES_TIPO: FINAL_A_CO2
-#META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.932 # Recursos usados para suministrar electricidad (BALEARES) desde la red
-",
-    loc_canarias: "
-#META CTE_FUENTE: CTE2013
-#META CTE_LOCALIZACION: CANARIAS
-#META CTE_FACTORES_TIPO: FINAL_A_CO2
-#META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.776 # Recursos usados para suministrar electricidad (CANARIAS) desde la red
-",
-    loc_ceutamelilla: "
-#META CTE_FUENTE: CTE2013
-#META CTE_LOCALIZACION: CEUTAMELILLA
-#META CTE_FACTORES_TIPO: FINAL_A_CO2
-#META CTE_FUENTE_COMENTARIO: Factores de paso de emisiones (kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 0.0, 0.018 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.0, 0.472 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.0, 0.252 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.0, 0.311 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.0, 0.254 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.0, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.721 # Recursos usados para suministrar electricidad (CEUTA Y MELILLA) desde la red
+#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082, 0.472 # Recursos usados para suministrar el vector desde la red
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190, 0.252 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179, 0.311 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.003, 1.201, 0.254 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.072, 2.718, 0.721 # Recursos usados para suministrar electricidad (CEUTA Y MELILLA) desde la red
 ",
 };
 
@@ -302,7 +207,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.0, 0.721 # Recursos usados para suministrar 
 /// Lee factores de paso desde cadena y sanea los resultados.
 pub fn wfactors_from_str(
     wfactorsstring: &str,
-    user: &CteUserWF<Option<RenNren>>,
+    user: &CteUserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
     strip_nepb: bool,
 ) -> Result<Factors, Error> {
@@ -327,7 +232,7 @@ pub fn wfactors_from_str(
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
 pub fn wfactors_from_loc(
     loc: &str,
-    user: &CteUserWF<Option<RenNren>>,
+    user: &CteUserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
     strip_nepb: bool,
 ) -> Result<Factors, Error> {
@@ -359,7 +264,7 @@ pub fn wfactors_from_loc(
 ///
 pub fn set_user_wfactors_and_mode(
     wfactors: &mut Factors,
-    user: &CteUserWF<Option<RenNren>>,
+    user: &CteUserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
 ) {
     let cogen_to_grid = user.cogen_to_grid
@@ -462,6 +367,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
             Step::A,
             1.0,
             0.0,
+            0.0,
             "Recursos usados para obtener energía térmica del medioambiente".to_string(),
         ));
     }
@@ -481,6 +387,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
             Step::A,
             1.0,
             0.0,
+            0.0,
             "Recursos usados para obtener energía térmica del medioambiente (red ficticia)"
                 .to_string(),
         ));
@@ -499,6 +406,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
             Dest::SUMINISTRO,
             Step::A,
             1.0,
+            0.0,
             0.0,
             "Recursos usados para generar electricidad in situ".to_string(),
         ));
@@ -522,7 +430,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
         .any(|f| f.source == Source::COGENERACION && f.dest == Dest::SUMINISTRO);
     if !has_cogen_input {
         wfactors.wdata.push(Factor::new(
-            Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::SUMINISTRO, Step::A, 0.0, 0.0,
+            Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::SUMINISTRO, Step::A, 0.0, 0.0, 0.0,
             "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)".to_string()));
     }
     // Asegura que todos los vectores con exportación tienen factores de paso a la red y a usos no EPB
@@ -574,7 +482,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
                     "(Valor de usuario)"
                 };
                 wfactors.wdata.push(Factor::new(
-                    Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_RED, Step::A, cogen.ren, cogen.nren,
+                    Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_RED, Step::A, cogen.ren, cogen.nren, cogen.co2,
                     format!("Recursos usados para producir la electricidad cogenerada y exportada a la red (ver EN ISO 52000-1 9.6.6.2.3) {}", value_origin)));
             }
         }
@@ -612,7 +520,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
                 } else {
                     "(Valor de usuario)"
                 };
-                wfactors.wdata.push(Factor::new(Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_NEPB, Step::A, cogennepb.ren, cogennepb.nren,
+                wfactors.wdata.push(Factor::new(Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_NEPB, Step::A, cogennepb.ren, cogennepb.nren, cogennepb.co2,
                     format!("Recursos usados para producir la electricidad cogenerada y exportada a usos no EPB (ver EN ISO 52000-1 9.6.6.2.3) {}", value_origin)
                     ));
             }
@@ -635,7 +543,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
             // VECTOR, SRC, A_RED, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
             if fp_a_red_input.is_some() {
                 let f = fp_a_red_input.as_ref().unwrap();
-                wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren,
+                wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a la red".to_string()));
             } else {
                 bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso B", c);
@@ -648,7 +556,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
             // VECTOR, SRC, A_NEPB, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
             if fp_a_red_input.is_some() {
                 let f = fp_a_red_input.as_ref().unwrap();
-                wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren,
+                wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB".to_string()));
             } else {
                 bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso B", c);
@@ -664,7 +572,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
             .get_meta_rennren("CTE_RED1")
             .unwrap_or(CTE_DEFAULTS_WF_EP.user.red1);
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
-          red1.ren, red1.nren, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
+          red1.ren, red1.nren, red1.co2, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
     }
     let has_red2_red_input = wfactors.wdata.iter().any(|f| {
         f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
@@ -674,7 +582,7 @@ pub fn fix_wfactors(mut wfactors: Factors, strip_nepb: bool) -> Result<Factors, 
             .get_meta_rennren("CTE_RED2")
             .unwrap_or(CTE_DEFAULTS_WF_EP.user.red2);
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
-          red2.ren, red2.nren, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
+          red2.ren, red2.nren, red2.co2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
     }
 
     // Elimina destino nEPB si strip_nepb es true
@@ -746,6 +654,7 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
                 f.step,
                 0.0,
                 f.ren + f.nren,
+                f.co2, // ¿Esto es lo que tiene más sentido?
                 format!("Perímetro nearby: {}", f.comment),
             ))
         }

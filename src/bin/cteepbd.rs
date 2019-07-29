@@ -41,7 +41,7 @@ use failure::Error;
 use failure::Fail;
 use failure::ResultExt;
 
-use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNren, Service};
+use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNrenCo2, Service};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
@@ -118,17 +118,13 @@ fn validate_arearef(matches: &clap::ArgMatches<'_>, verbosity: u64) {
 }
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> None.
-///
-/// En modo de cálculo de emisiones solamente se usan datos de los metadatos
-/// si está definido el metadato CTE_FACTORES_TIPO y tiene valor FINAL_A_CO2
 fn get_factor(
     matches_values: Option<clap::Values<'_>>,
     components: &mut Components,
-    mode: &cte::WFactorsMode,
     meta: &str,
     descr: &str,
     verbosity: u64,
-) -> Option<RenNren> {
+) -> Option<RenNrenCo2> {
 
     // Origen del dato
     let mut orig = "";
@@ -145,24 +141,16 @@ fn get_factor(
                     })
                 })
                 .collect();
-            let userval = RenNren {
+            let userval = RenNrenCo2 {
                 ren: vv[0],
                 nren: vv[1],
+                co2: vv[2],
             };
             // Dato desde línea de comandos
             orig = "usuario";
             Some(userval)
         })
         .or_else(|| {
-            // Dato de metadatos de componentes
-            // En modo CO2 solamente se usan los valores de metadatos
-            // cuando se defina ese modo en CTE_FACTORES_TIPO
-            if mode == &cte::WFactorsMode::CO2
-                && !components
-                    .has_meta_value("CTE_FACTORES_TIPO", cte::WFactorsMode::CO2.as_meta_value())
-            {
-                return None;
-            }
             if let Some(metaval) = components.get_meta_rennren(meta) {
                 orig = "metadatos de componentes";
                 Some(metaval)
@@ -174,7 +162,7 @@ fn get_factor(
         if verbosity > 2 {
             println!("Factores de paso para {} ({}): {}", descr, orig, factor)
         };
-        components.update_meta(meta, &format!("{:.3}, {:.3}", factor.ren, factor.nren));
+        components.update_meta(meta, &format!("{:.3}, {:.3}, {:.3}", factor.ren, factor.nren, factor.co2));
     };
     factor
 }
@@ -307,15 +295,6 @@ Licencia: Publicado bajo licencia MIT.
             .help("Factor de exportación (k_exp)")
             .takes_value(true)
             .display_order(2))
-        .arg(Arg::with_name("modo")
-            .short("m")
-            .long("modo")
-            .default_value("EP")
-            .value_name("INDICADOR")
-            .possible_values(&["EP", "CO2"])
-            .help("Modo de cálculo: energía primaria (EP) o emisiones (CO2)")
-            .takes_value(true)
-            .display_order(3))
         .arg(Arg::with_name("archivo_componentes")
             .short("c")
             .long("archivo_componentes")
@@ -371,20 +350,20 @@ Licencia: Publicado bajo licencia MIT.
         // Factores definidos por el usuario
         .arg(Arg::with_name("cogen")
             .long("cogen")
-            .value_names(&["COGEN_ren", "COGEN_nren"])
-            .help("Factores de exportación a red (ren, nren) de electricidad cogenerada.\nP.e.: --cogen 0 2.5")
+            .value_names(&["COGEN_ren", "COGEN_nren", "COGEN_co2"])
+            .help("Factores de exportación a red (ren, nren, co2) de electricidad cogenerada.\nP.e.: --cogen 0 2.5 0.3")
             .takes_value(true)
-            .number_of_values(2))
+            .number_of_values(3))
         .arg(Arg::with_name("red1")
             .long("red1")
-            .value_names(&["RED1_ren", "RED1_nren"])
-            .help("Factores de paso (ren, nren) de la producción del vector RED1.\nP.e.: --red1 0 1.3")
+            .value_names(&["RED1_ren", "RED1_nren", "RED1_co2"])
+            .help("Factores de paso (ren, nren, co2) de la producción del vector RED1.\nP.e.: --red1 0 1.3 0.3")
             .takes_value(true)
-            .number_of_values(2))
+            .number_of_values(3))
         .arg(Arg::with_name("red2")
             .long("red2")
-            .value_names(&["RED2_ren", "RED2_nren"])
-            .help("Factores de paso (ren, nren) de la producción del vector RED2.\nP.e.: --red2 0 1.3")
+            .value_names(&["RED2_ren", "RED2_nren", "RED2_co2"])
+            .help("Factores de paso (ren, nren, co2) de la producción del vector RED2.\nP.e.: --red2 0 1.3 0.3")
             .takes_value(true)
             .number_of_values(2))
         // Cálculo para servicio de ACS y factores en perímetro nearby
@@ -412,8 +391,8 @@ Licencia: Publicado bajo licencia MIT.
     if matches.is_present("showlicense") {
         println!(
             "
-Copyright (c) 2018 Ministerio de Fomento
-                   Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+Copyright (c) 2018-2019 Ministerio de Fomento
+              Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -452,15 +431,6 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     println!("** Datos de entrada");
 
-    // Modo de cálculo -----------------------------------------------------------------------------
-
-    // Cálculo de energía primaria o de emisiones de CO2
-    let mode = match matches.value_of("modo") {
-        Some("CO2") => cte::WFactorsMode::CO2,
-        _ => cte::WFactorsMode::EP,
-    };
-    println!("Indicador: {}", mode);
-
     // Componentes energéticos ---------------------------------------------------------------------
     let mut components = get_components(matches.value_of("archivo_componentes"));
 
@@ -485,17 +455,13 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Factores de paso ---------------------------------------------------------------------------
 
     // 0. Factores por defecto, según modo
-    let default_wf = match mode {
-        cte::WFactorsMode::CO2 => cte::CTE_DEFAULTS_WF_CO2,
-        _ => cte::CTE_DEFAULTS_WF_EP,
-    };
+    let default_wf = cte::CTE_DEFAULTS_WF_EP;
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
     let user_wf = cte::CteUserWF {
         red1: get_factor(
             matches.values_of("red1"),
             &mut components,
-            &mode,
             "CTE_RED1",
             "RED1",
             verbosity,
@@ -503,7 +469,6 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         red2: get_factor(
             matches.values_of("red2"),
             &mut components,
-            &mode,
             "CTE_RED2",
             "RED2",
             verbosity,
@@ -511,7 +476,6 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         cogen_to_grid: get_factor(
             matches.values_of("cogen"),
             &mut components,
-            &mode,
             "CTE_COGEN",
             "COGENERACION a la red",
             verbosity,
@@ -519,7 +483,6 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         cogen_to_nepb: get_factor(
             matches.values_of("cogennepb"),
             &mut components,
-            &mode,
             "CTE_COGENNEPB",
             "COGENERACION a usos no EPB",
             verbosity,
