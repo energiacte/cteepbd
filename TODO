@@ -1,6 +1,15 @@
 TODO
 ----
 
+- cte:
+    - do not store in wfactors wmeta, values for CTE_COGEN, CTE_RED1 or CTE_RED2,
+      which are only reserved to cmeta in components.
+      Now they are saved in metadata in set_mode_and_default_wfactors to be used later in
+      fix_wfactors.
+      Ideally, we would send user_wfactors to fix_wfactors and no metadata would be written
+      Only components would have this metadata to be able to generate, along with location,
+      all wfactors when they are not defined.
+
 - epbd:
     - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
       Have a look to the proposed value from the TR.
