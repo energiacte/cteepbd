@@ -1,28 +1,24 @@
 #META CTE_FUENTE: RITE2014
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del RITE de 20/07/2014
 #META CTE_LOCALIZACION: PENINSULA
-#META CTE_FACTORES_TIPO: FINAL_A_PRIMARIA
-#META CTE_COGEN: 0.000, 2.500
-#META CTE_COGENNEPB: 0.000, 2.500
-#META CTE_RED1: 0.000, 1.300
-#META CTE_RED2: 0.000, 1.300
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.002, 1.082 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.030, 1.201 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954 # Recursos usados para suministrar electricidad (PENINSULA) desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000 # Recursos usados para producir la energía exportada a la red
-ELECTRICIDAD, INSITU, A_RED, B, 0.414, 1.954 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
-ELECTRICIDAD, COGENERACION, A_RED, A, 0.000, 2.500 # Recursos usados para producir la electricidad cogenerada y exportada a la red (ver EN ISO 52000-1 9.6.6.2.3)(Valor predefinido)
-ELECTRICIDAD, COGENERACION, A_RED, B, 0.414, 1.954 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
-MEDIOAMBIENTE, INSITU, A_RED, A, 1.000, 0.000 # Recursos usados para producir la energía exportada a la red
-MEDIOAMBIENTE, INSITU, A_RED, B, 1.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
-RED1, RED, SUMINISTRO, A, 0.000, 1.300 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
-RED2, RED, SUMINISTRO, A, 0.000, 1.300 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)
+MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+MEDIOAMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
+MEDIOAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018 # Recursos usados para suministrar el vector desde la red
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red
+CARBON, RED, SUMINISTRO, A, 0.002, 1.082, 0.472 # Recursos usados para suministrar el vector desde la red
+GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190, 0.252 # Recursos usados para suministrar el vector desde la red
+GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179, 0.311 # Recursos usados para suministrar el vector desde la red
+GLP, RED, SUMINISTRO, A, 0.030, 1.201, 0.254 # Recursos usados para suministrar el vector desde la red
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (PENINSULA) desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
+ELECTRICIDAD, INSITU, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+# Factores no normativos
+ELECTRICIDAD, COGENERACION, A_RED, A, 0.000, 2.500, 0.3 # Recursos usados para producir la electricidad cogenerada y exportada a la red (ver EN ISO 52000-1 9.6.6.2.3)(Valor predefinido)
+ELECTRICIDAD, COGENERACION, A_RED, B, 0.414, 1.954, 0.3 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+RED1, RED, SUMINISTRO, A, 0.000, 1.300, 0.3 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
+RED2, RED, SUMINISTRO, A, 0.000, 1.300, 0.3 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)
