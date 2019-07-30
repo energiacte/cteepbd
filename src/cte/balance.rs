@@ -41,17 +41,9 @@ pub fn balance_to_plain(balance: &Balance) -> String {
         k_exp,
         arearef,
         balance_m2,
-        wfactors,
         ..
     } = balance;
 
-    // XXX: TODO: Corregir
-    let indicator_and_units =
-        if wfactors.has_meta_value("CTE_FACTORES_TIPO", WFactorsMode::CO2.as_meta_value()) {
-            "CO2_eq [kg_CO2e/m2.an]"
-        } else {
-            "C_ep [kWh/m2.an]"
-        };
     let RenNrenCo2 { ren, nren, co2 } = balance_m2.B;
     let tot = balance_m2.B.tot();
     let rer = balance_m2.B.rer();
@@ -68,31 +60,30 @@ pub fn balance_to_plain(balance: &Balance) -> String {
     let mut b_byuse = balance_m2
         .B_byuse
         .iter()
-        .map(|(k, v)| format!("{}: ren {:.2}, nren {:.2}", k, v.ren, v.nren))
+        .map(|(k, v)| format!("{}: ren {:.2}, nren {:.2}, co2: {:.2}", k, v.ren, v.nren, v.co2))
         .collect::<Vec<String>>();
     b_byuse.sort();
 
     format!(
         "Area_ref = {:.2} [m2]
 k_exp = {:.2}
-{}: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}, co2 = {:.2}
+C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
+E_CO2 [kg_CO2e/m2.an]: {:.2}
 
 ** Energía final (todos los vectores) [kWh/m2.an]:
 {}
 
-** {} por servicios:
+** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
 {}
 ",
         arearef,
         k_exp,
-        indicator_and_units,
         ren,
         nren,
         tot,
         rer,
         co2,
         use_byuse.join("\n"),
-        indicator_and_units,
         b_byuse.join("\n")
     )
 }
