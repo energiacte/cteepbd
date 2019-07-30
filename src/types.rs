@@ -589,6 +589,13 @@ pub struct Factors {
     pub wdata: Vec<Factor>,
 }
 
+impl Factors {
+    // Remove nEPB weighting factors
+    pub fn strip_nepb(&mut self) {
+        self.wdata.retain(|e| e.dest != Dest::A_NEPB);
+    }
+}
+
 impl MetaVec for Factors {
     fn get_metavec(&self) -> &Vec<Meta> {
         &self.wmeta
@@ -759,9 +766,9 @@ mod tests {
     fn tmeta() {
         let meta = Meta {
             key: "CTE_FUENTE".to_string(),
-            value: "CTE2013".to_string(),
+            value: "RITE2014".to_string(),
         };
-        let metastr = "#META CTE_FUENTE: CTE2013";
+        let metastr = "#META CTE_FUENTE: RITE2014";
         assert_eq!(format!("{}", meta), metastr);
         assert_eq!(format!("{}", metastr.parse::<Meta>().unwrap()), metastr);
     }
@@ -851,7 +858,7 @@ ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28
 
     #[test]
     fn tfactors() {
-        let tfactors1 = "#META CTE_FUENTE: CTE2013
+        let tfactors1 = "#META CTE_FUENTE: RITE2014
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ";

@@ -455,7 +455,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Factores de paso ---------------------------------------------------------------------------
 
     // 0. Factores por defecto, según modo
-    let default_wf = cte::CTE_DEFAULTS_WF2013;
+    let default_wf = cte::WF_RITE2014;
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
     let user_wf = cte::CteUserWF {
@@ -506,7 +506,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     );
                     exit(exitcode::IOERR);
                 });
-            cte::wfactors_from_str(&fpstring, &user_wf, &default_wf, false)
+            cte::wfactors_from_str(&fpstring, &user_wf, &default_wf)
                 .unwrap_or_else(|error| {
                     eprintln!(
                         "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
@@ -537,7 +537,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     eprintln!("ERROR: Sin datos suficientes para determinar los factores de paso");
                     exit(exitcode::USAGE);
                 }).unwrap();
-            cte::wfactors_from_loc(&localizacion, &user_wf, &default_wf, false)
+            cte::wfactors_from_loc(&localizacion, &user_wf, &default_wf)
                 .unwrap_or_else(|error| {
                     println!("ERROR: No se han podido generar los factores de paso");
                     if verbosity > 2 { println!("{}, {}", error.as_fail(), error.backtrace()) };
