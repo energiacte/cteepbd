@@ -114,7 +114,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         } else {
             "C_ep [kWh/m2.an]"
         };
-    let RenNrenCo2 { ren, nren, co2 } = balance_m2.B;
+    let RenNrenCo2 { ren, nren, co2: _ } = balance_m2.B;
     let cmeta = &components.cmeta;
     let cdata = &components.cdata;
     let wmeta = &wfactors.wmeta;
