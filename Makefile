@@ -14,6 +14,14 @@ test:
 	#cargo test -- nocapture
 	cargo test
 
+mintest:
+	$(info [INFO]: Ejemplos de prueba mínimos)
+	${BUILDDIR}/${SCRIPT} --help
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 0.331 --red1 0 1.3 0.252 --red2 0 1.3 0.252
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA
+	${BUILDDIR}/${SCRIPT} -c ${TESTCARRIERS} -l PENINSULA --acs_nearby
+
 run:
 	$(info [INFO]: Ejecutando versión de depuración)
 	cargo run
@@ -47,13 +55,7 @@ bloat:
 	cargo bloat --release -n 10
 	cargo bloat --release --crates -n 10
 
-cteepbd: build
-	$(info [INFO]: Ejemplos de prueba mínimos)
-	${BUILDDIR}/${SCRIPT} --help
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 --red1 0 1.3 --red2 0 1.3
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA
-	${BUILDDIR}/${SCRIPT} -c ${TESTCARRIERS} -l PENINSULA --acs_nearby
+cteepbd: build mintest
 
 FPTEST=test_data/factores_paso_test.csv
 docexamples: linux
