@@ -33,7 +33,7 @@ use itertools::Itertools;
 
 use crate::rennrenco2::RenNrenCo2;
 use crate::types::{CSubtype, Carrier, Dest, Source, Step};
-use crate::types::{Components, Factor, Factors, Meta};
+use crate::types::{Components, Factor, Factors, Meta, MetaVec};
 
 // Localizaciones válidas para CTE
 // const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELILLA"];
@@ -185,6 +185,35 @@ pub fn wfactors_from_loc(
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
+    fix_wfactors(wfactors, defaults)
+}
+
+/// Genera factores de paso a partir de metadatos de componentes.
+///
+/// Usa localización (CTE_LOC), y factores de usuario (CTE_COGEN, CTE_COGENNEPB, CTE_RED1, CTE_RED2)
+pub fn wfactors_from_meta(
+    components: &Components,
+    defaults: &CteDefaultsWF,
+) -> Result<Factors, Error> {
+    let loc = components.get_meta("CTE_LOCALIZACION").unwrap_or("".to_string());
+    let user = CteUserWF {
+        red1: components.get_meta_rennren("CTE_RED1"),
+        red2: components.get_meta_rennren("CTE_RED2"),
+        cogen_to_grid: components.get_meta_rennren("CTE_COGEN"),
+        cogen_to_nepb: components.get_meta_rennren("CTE_COGENNEPB"),
+    };
+    let wfactorsstring = match loc.as_str() {
+        "PENINSULA" => defaults.loc_peninsula,
+        "BALEARES" => defaults.loc_baleares,
+        "CANARIAS" => defaults.loc_canarias,
+        "CEUTAMELILLA" => defaults.loc_ceutamelilla,
+        _ => bail!(
+            "Localización \"{}\" desconocida al generar factores de paso",
+            loc
+        ),
+    };
+    let mut wfactors: Factors = wfactorsstring.parse()?;
+    set_user_wfactors(&mut wfactors, &user);
     fix_wfactors(wfactors, defaults)
 }
 
