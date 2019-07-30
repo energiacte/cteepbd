@@ -30,23 +30,16 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 
 use failure::Error;
 use itertools::Itertools;
-use std::f32::EPSILON;
 
 use crate::rennrenco2::RenNrenCo2;
 use crate::types::{CSubtype, Carrier, Dest, Source, Step};
-use crate::types::{Components, Factor, Factors, Meta, MetaVec};
+use crate::types::{Components, Factor, Factors, Meta};
 
 // Localizaciones válidas para CTE
 // const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELILLA"];
 
 // Valores bien conocidos de metadatos:
-// CTE_AREAREF -> num
-// CTE_KEXP -> num
 // CTE_LOCALIZACION -> str
-// CTE_FACTORES_TIPO: FINAL_A_PRIMARIA | FINAL_A_CO2
-// CTE_COGEN -> num, num
-// CTE_RED1 -> num, num
-// CTE_RED2 -> num, num
 
 /// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
 pub const CTE_NRBY: [Carrier; 5] = [
@@ -167,8 +160,8 @@ pub fn wfactors_from_str(
     defaults: &CteDefaultsWF,
 ) -> Result<Factors, Error> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, user, defaults);
-    fix_wfactors(wfactors)
+    set_user_wfactors(&mut wfactors, user);
+    fix_wfactors(wfactors, defaults)
 }
 
 /// Genera factores de paso a partir de localización.
@@ -191,89 +184,106 @@ pub fn wfactors_from_loc(
         ),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, user, defaults);
-    fix_wfactors(wfactors)
+    set_user_wfactors(&mut wfactors, user);
+    fix_wfactors(wfactors, defaults)
 }
 
-/// Actualiza factores definidos por el usuario en los metadatos (cogen_to_grid, cogen_to_nepb, red1 y red2)
-///
-/// Utiliza:
-/// 1. el factor si está definido en los argumentos (es Some)
-/// 2. el factor de wfactors en los metadatos
-/// 3. el factor por defecto
-///
+/// Actualiza los factores definibles por el usuario (cogen_to_grid, cogen_to_nepb, red1 y red2)
 pub fn set_user_wfactors(
     wfactors: &mut Factors,
-    user: &CteUserWF<Option<RenNrenCo2>>,
-    defaults: &CteDefaultsWF,
+    user: &CteUserWF<Option<RenNrenCo2>>
 ) {
-    let cogen_to_grid = user
-        .cogen_to_grid
-        .or_else(|| wfactors.get_meta_rennren("CTE_COGEN"))
-        .or_else(|| {
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_RED
-                })
-                .and_then(|f| Some(f.factors()))
-        })
-        .unwrap_or(defaults.user.cogen_to_grid);
+    // ------ Cogeneración a red ----------
+    if let Some(ucog) = user.cogen_to_grid {
+        if let Some(factor) = wfactors.wdata.iter_mut().find(|f| {
+            f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_RED
+        }) {
+            factor.ren = ucog.ren;
+            factor.nren = ucog.nren;
+            factor.co2 = ucog.co2;
+        } else {
+            wfactors.wdata.push(Factor::new(
+                Carrier::ELECTRICIDAD,
+                Source::COGENERACION,
+                Dest::A_RED,
+                Step::A,
+                ucog.ren,
+                ucog.nren,
+                ucog.co2,
+                "Factor de usuario".to_string(),
+            ));
+        };
+    };
 
-    let cogen_to_nepb = user
-        .cogen_to_nepb
-        .or_else(|| wfactors.get_meta_rennren("CTE_COGENNEPB"))
-        .or_else(|| {
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_NEPB
-                })
-                .and_then(|f| Some(f.factors()))
-        })
-        .unwrap_or(defaults.user.cogen_to_nepb);
+    // ------ Cogeneración a usos no EPB ----------
+    if let Some(ucog) = user.cogen_to_nepb {
+        if let Some(factor) = wfactors.wdata.iter_mut().find(|f| {
+            f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_NEPB
+        }) {
+            factor.ren = ucog.ren;
+            factor.nren = ucog.nren;
+            factor.co2 = ucog.co2;
+        } else {
+            wfactors.wdata.push(Factor::new(
+                Carrier::ELECTRICIDAD,
+                Source::COGENERACION,
+                Dest::A_NEPB,
+                Step::A,
+                ucog.ren,
+                ucog.nren,
+                ucog.co2,
+                "Factor de usuario".to_string(),
+            ));
+        };
+    };
 
-    let red1 = user
-        .red1
-        .or_else(|| wfactors.get_meta_rennren("CTE_RED1"))
-        .or_else(|| {
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::SUMINISTRO
-                })
-                .and_then(|f| Some(f.factors()))
-        })
-        .unwrap_or(defaults.user.red1);
+    // ------ Red1 ----------
+    if let Some(ured1) = user.red1 {
+        if let Some(factor) = wfactors
+            .wdata
+            .iter_mut()
+            .find(|f| f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::SUMINISTRO)
+        {
+            factor.ren = ured1.ren;
+            factor.nren = ured1.nren;
+            factor.co2 = ured1.co2;
+        } else {
+            wfactors.wdata.push(Factor::new(
+                Carrier::RED1,
+                Source::RED,
+                Dest::SUMINISTRO,
+                Step::A,
+                ured1.ren,
+                ured1.nren,
+                ured1.co2,
+                "Factor de usuario".to_string(),
+            ));
+        };
+    };
 
-    let red2 = user
-        .red2
-        .or_else(|| wfactors.get_meta_rennren("CTE_RED2"))
-        .or_else(|| {
-            wfactors
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::SUMINISTRO
-                })
-                .and_then(|f| Some(f.factors()))
-        })
-        .unwrap_or(defaults.user.red2);
-
-    // Actualiza factores de usuario en metadatos
-    wfactors.update_meta(
-        "CTE_COGEN",
-        &format!("{:.3}, {:.3}", cogen_to_grid.ren, cogen_to_grid.nren),
-    );
-    wfactors.update_meta(
-        "CTE_COGENNEPB",
-        &format!("{:.3}, {:.3}", cogen_to_nepb.ren, cogen_to_nepb.nren),
-    );
-    wfactors.update_meta("CTE_RED1", &format!("{:.3}, {:.3}", red1.ren, red1.nren));
-    wfactors.update_meta("CTE_RED2", &format!("{:.3}, {:.3}", red2.ren, red2.nren));
+    // ------ Red2 ----------
+    if let Some(ured2) = user.red2 {
+        if let Some(factor) = wfactors
+            .wdata
+            .iter_mut()
+            .find(|f| f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::SUMINISTRO)
+        {
+            factor.ren = ured2.ren;
+            factor.nren = ured2.nren;
+            factor.co2 = ured2.co2;
+        } else {
+            wfactors.wdata.push(Factor::new(
+                Carrier::RED2,
+                Source::RED,
+                Dest::SUMINISTRO,
+                Step::A,
+                ured2.ren,
+                ured2.nren,
+                ured2.co2,
+                "Factor de usuario".to_string(),
+            ));
+        };
+    };
 }
 
 /// Asegura consistencia de factores de paso definidos y deduce algunos de los que falten.
@@ -284,12 +294,9 @@ pub fn set_user_wfactors(
 /// - asegura que factor paso A para suministro de cogeneración es 0.0 (se considera en vector original)
 /// - asegura definición de factores a la red para vectores con exportación
 /// - asegura que existe RED1 | RED2 en suministro
-/// - elimina factores con destino nEPB si strip_nepb es true
-///
-/// Los factores destinados a exportación A_NEPB se eliminan por defecto (pueden dejarse con opción a false)
 ///
 /// TODO: se deberían separar algunos de estos pasos como métodos de CteFactorsExt
-pub fn fix_wfactors(mut wfactors: Factors) -> Result<Factors, Error> {
+pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<Factors, Error> {
     // Vectores existentes
     let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
 
@@ -409,21 +416,20 @@ pub fn fix_wfactors(mut wfactors: Factors) -> Result<Factors, Error> {
                     bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso A", c);
                 }
             } else {
-                // Valores por defecto para ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren - ver 9.6.6.2.3
-                let cogen = wfactors
-                    .get_meta_rennren("CTE_COGEN")
-                    .unwrap_or(WF_RITE2014.user.cogen_to_grid);
-                let value_origin = if ((cogen.ren - WF_RITE2014.user.cogen_to_grid.ren).abs()
-                    < EPSILON)
-                    && ((cogen.nren - WF_RITE2014.user.cogen_to_grid.nren).abs() < EPSILON)
-                {
-                    "(Valor predefinido)"
-                } else {
-                    "(Valor de usuario)"
-                };
-                wfactors.wdata.push(Factor::new(
+                // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
+                // Asegura que existe ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren - ver 9.6.6.2.3
+                let has_cogen_to_grid = wfactors.wdata.iter().any(|f| {
+                    f.carrier == Carrier::ELECTRICIDAD
+                        && f.source == Source::COGENERACION
+                        && f.dest == Dest::A_RED
+                        && f.step == Step::A
+                });
+                if !has_cogen_to_grid {
+                    let cogen = defaults.user.cogen_to_grid;
+                    wfactors.wdata.push(Factor::new(
                     Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_RED, Step::A, cogen.ren, cogen.nren, cogen.co2,
-                    format!("Recursos usados para producir la electricidad cogenerada y exportada a la red (ver EN ISO 52000-1 9.6.6.2.3) {}", value_origin)));
+                    "Recursos usados para producir electricidad cogenerada y vertida a la red. Valor predefinido".to_string()));
+                }
             }
         }
         let has_to_nepb = wfactors.wdata.iter().any(|f| {
@@ -445,22 +451,28 @@ pub fn fix_wfactors(mut wfactors: Factors) -> Result<Factors, Error> {
                     bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso A", c);
                 }
             } else {
+                // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
                 // TODO: Si está definido para A_RED (no por defecto) y no para A_NEPB, qué hacemos? usamos por defecto? usamos igual a A_RED?
-                // Valores por defecto para ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
-                let cogennepb = wfactors
-                    .get_meta_rennren("CTE_COGENNEPB")
-                    .unwrap_or(WF_RITE2014.user.cogen_to_nepb);
-                let value_origin = if ((cogennepb.ren - WF_RITE2014.user.cogen_to_nepb.ren).abs()
-                    < EPSILON)
-                    && ((cogennepb.nren - WF_RITE2014.user.cogen_to_nepb.nren).abs() < EPSILON)
-                {
-                    "(Valor predefinido)"
-                } else {
-                    "(Valor de usuario)"
-                };
-                wfactors.wdata.push(Factor::new(Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_NEPB, Step::A, cogennepb.ren, cogennepb.nren, cogennepb.co2,
-                    format!("Recursos usados para producir la electricidad cogenerada y exportada a usos no EPB (ver EN ISO 52000-1 9.6.6.2.3) {}", value_origin)
+                // Asegura que existe ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
+                let has_cogen_to_nepb = wfactors.wdata.iter().any(|f| {
+                    f.carrier == Carrier::ELECTRICIDAD
+                        && f.source == Source::COGENERACION
+                        && f.dest == Dest::A_NEPB
+                        && f.step == Step::A
+                });
+                if !has_cogen_to_nepb {
+                    let cogen = defaults.user.cogen_to_nepb;
+                    wfactors.wdata.push(Factor::new(
+                        Carrier::ELECTRICIDAD,
+                        Source::COGENERACION,
+                        Dest::A_NEPB,
+                        Step::A,
+                        cogen.ren,
+                        cogen.nren,
+                        cogen.co2,
+                        "Valor predefinido".to_string(),
                     ));
+                }
             }
         }
         // Asegura que existe VECTOR, SRC, A_RED | A_NEPB, B, ren, nren
@@ -501,14 +513,13 @@ pub fn fix_wfactors(mut wfactors: Factors) -> Result<Factors, Error> {
             }
         }
     }
+
     // Asegura que existe RED1 | RED2, RED, SUMINISTRO, A, ren, nren
     let has_red1_red_input = wfactors.wdata.iter().any(|f| {
         f.carrier == Carrier::RED1 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
     });
     if !has_red1_red_input {
-        let red1 = wfactors
-            .get_meta_rennren("CTE_RED1")
-            .unwrap_or(WF_RITE2014.user.red1);
+        let red1 = defaults.user.red1;
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
           red1.ren, red1.nren, red1.co2, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
     }
@@ -516,9 +527,7 @@ pub fn fix_wfactors(mut wfactors: Factors) -> Result<Factors, Error> {
         f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
     });
     if !has_red2_red_input {
-        let red2 = wfactors
-            .get_meta_rennren("CTE_RED2")
-            .unwrap_or(WF_RITE2014.user.red2);
+        let red2 = defaults.user.red2;
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
           red2.ren, red2.nren, red2.co2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
     }
