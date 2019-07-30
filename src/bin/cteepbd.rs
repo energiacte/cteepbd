@@ -1,5 +1,5 @@
-// Copyright (c) 2018 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019 Ministerio de Fomento
+//               Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -267,8 +267,8 @@ fn main() {
         .bin_name("cteepbd")
         .version(env!("CARGO_PKG_VERSION"))
         .author("
-Copyright (c) 2018 Ministerio de Fomento,
-                   Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
+Copyright (c) 2018-2019 Ministerio de Fomento,
+              Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
          Daniel Jiménez González <danielj@ietcc.csic.es>
