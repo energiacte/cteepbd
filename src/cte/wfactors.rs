@@ -150,7 +150,7 @@ pub const WF_RITE2014: CteDefaultsWF = CteDefaultsWF {
             ren: 0.0,
             nren: 2.5,
             co2: 0.3,
-        }
+        },
     },
     loc_peninsula: build_wf_2013!("PENINSULA", 0.414, 1.954, 0.331),
     loc_baleares: build_wf_2013!("BALEARES", 0.082, 2.968, 0.932),
@@ -413,8 +413,7 @@ pub fn fix_wfactors(mut wfactors: Factors) -> Result<Factors, Error> {
                 let cogen = wfactors
                     .get_meta_rennren("CTE_COGEN")
                     .unwrap_or(WF_RITE2014.user.cogen_to_grid);
-                let value_origin = if ((cogen.ren - WF_RITE2014.user.cogen_to_grid.ren)
-                    .abs()
+                let value_origin = if ((cogen.ren - WF_RITE2014.user.cogen_to_grid.ren).abs()
                     < EPSILON)
                     && ((cogen.nren - WF_RITE2014.user.cogen_to_grid.nren).abs() < EPSILON)
                 {
@@ -451,11 +450,9 @@ pub fn fix_wfactors(mut wfactors: Factors) -> Result<Factors, Error> {
                 let cogennepb = wfactors
                     .get_meta_rennren("CTE_COGENNEPB")
                     .unwrap_or(WF_RITE2014.user.cogen_to_nepb);
-                let value_origin = if ((cogennepb.ren - WF_RITE2014.user.cogen_to_nepb.ren)
-                    .abs()
+                let value_origin = if ((cogennepb.ren - WF_RITE2014.user.cogen_to_nepb.ren).abs()
                     < EPSILON)
-                    && ((cogennepb.nren - WF_RITE2014.user.cogen_to_nepb.nren).abs()
-                        < EPSILON)
+                    && ((cogennepb.nren - WF_RITE2014.user.cogen_to_nepb.nren).abs() < EPSILON)
                 {
                     "(Valor predefinido)"
                 } else {
