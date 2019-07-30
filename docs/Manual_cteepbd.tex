@@ -204,7 +204,7 @@ Este manual documenta el programa \texttt{cteepbd}, elaborado por el \textit{Ins
 
 El objetivo del programa es facilitar la aplicación de la metodología al \textit{Documento Básico de Ahorro de Energía} del \textit{Código Técnico de la Edificación} (\textit{CTE DB-HE}) y la adaptación de las herramientas de evaluación de la eficiencia energética.
 
-El manual describe la interfaz de usuario del programa \textit{cteepbd} y el formato de los archivos de datos de entrada y salida. Los datos de entrada incluyen los valores de producción y consumo energético del edificio, así como los factores de paso empleados para el cálculo, y los de salida, el consumo de energía primaria no renovable y consumo de energía primaria total, entre otros.
+El manual describe la interfaz de usuario del programa \textit{cteepbd} y el formato de los archivos de datos de entrada y salida. Los datos de entrada incluyen los valores de producción y consumo energético del edificio, así como los factores de paso empleados para el cálculo, y los de salida, el consumo de energía primaria no renovable, consumo de energía primaria total, emisiones de CO2, entre otros.
 
 El programa calcula la energía suministrada al edificio (desde redes de abastecimiento o producida \textit{in situ}) y la energía exportada (a la red y a usos no EPB) para obtener diversos indicadores de la eficiencia energética del edificio, expresada como energía ponderada, tomando en consideración los factores de paso de los distintos vectores energéticos y el factor de exportación ($k_{exp}$).
 
@@ -233,7 +233,7 @@ La interacción con el programa (\texttt{cteepbd}, o \texttt{cteepbd.exe} en sis
 %$
 
 La ejecución del programa procesa el archivo de componentes energéticos
-(\texttt{cte\_test\_carriers.csv} en el ejemplo) y emite los resultados por pantalla (balance de energía primaria (paso B) en el ejemplo):
+(\texttt{cte\_test\_carriers.csv} en el ejemplo) y emite los resultados por pantalla (balance de energía primaria y emisiones (paso B) en el ejemplo):
 
 \VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers.out}
 
@@ -279,10 +279,6 @@ Este argumento indica el área de referencia para el cálculo de ratios por supe
 
 Este argumento indica el factor de exportación $k_{exp}$ usado para calcular la eficiencia energética. En condiciones \textit{CTE DB-HE} toma el valor $0.0$.
 
-\textbf{\texttt{-m, --modo <INDICADOR>}}
-
-Este argumento indica el indicador de cálculo, que determina el uso de factores de paso apropiados. Puede tomar los valores \texttt{EP} o \texttt{CO2} para el cálculo de energía primaria o emisiones de $CO_2$\footnote{En el caso del cálculo de emisiones, los valores de emisión se muestran como parte no renovable.}, y toma por defecto el valor \texttt{EP}.
-
 \textbf{\texttt{-c, --archivo\_componentes <ARCHIVO\_COMPONENTES>}}
 
 Este argumento indica la ruta del archivo que define los componentes energéticos sobre los que se realiza el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatocomponentes} e incluye metadatos que pueden definir también algunos parámetros de cálculo, aunque con menor prioridad que las opciones definidas explícitamente a través de la interfaz del programa.
@@ -300,23 +296,23 @@ Este argumento indica los factores de paso para el cálculo de la eficiencia ene
 
 Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}). Este cálculo está orientado a la obtención de la fracción de energía renovable para uso de ACS para el perímetro próximo (\textit{RER}).
 
-\textbf{\texttt{-{}-cogengrid COGENGRID COGENGRID}}
+\textbf{\texttt{-{}-cogen COGEN\_ren COGEN\_nren COGEN\_co2}}
 
-Este argumento indica los 2 factores de exportación a la red (parte renovable y parte no renovable) de la electricidad cogenerada. Estos factores no se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario.
+Este argumento indica los 3 factores de exportación a la red (parte renovable, parte no renovable y emisiones) de la electricidad cogenerada. Estos factores no se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
-El ejemplo \texttt{-{}-cogengrid 0 2.5} indica que el factor de paso de exportación a la red es de 0 para la parte renovable y de 2.5 para la no renovable.
+El ejemplo \texttt{-{}-cogen 0 2.5 0.3} indica que el factor de paso de exportación a la red es de 0 para la parte renovable, de 2.5 para la no renovable y de 0.3 para las emisiones.
 
-\textbf{\texttt{-{}-red1 RED1 RED1}}
+\textbf{\texttt{-{}-red1 RED1\_ren RED1\_nren RED1\_co2}}
 
-Este argumento indica los 2 factores de paso del vectores energético \texttt{RED1} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red.
+Este argumento indica los 3 factores de paso del vectores energético \texttt{RED1} (paso a energía renovable, paso a energía renovable y emisiones). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
-El ejemplo \texttt{-{}-red1 0 1.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED1} son 0 (parte renovable) y 1.3 (parte no renovable).
+El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED1} son 0 (parte renovable), 1.3 (parte no renovable) y 0.3 (emisiones).
 
-\textbf{\texttt{-{}-red2 RED2 RED2}}
+\textbf{\texttt{-{}-red2 RED2\_ren RED2\_nren RED2\_co2}}
 
-Este argumento indica los 2 factores de paso del vectores energético \texttt{RED2} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red.
+Este argumento indica los 3 factores de paso del vectores energético \texttt{RED2} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
-El ejemplo \texttt{-{}-red1 0 1.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED2} son 0 (parte renovable) y 1.3 (parte no renovable).
+El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED2} son 0 (parte renovable), 1.3 (parte no renovable) y 0.3 (emisiones).
 
 \subsubsection{Argumentos de salida de valores de entrada modificados}
 
@@ -382,12 +378,12 @@ Para el archivo de definición de los componentes energéticos se establecen las
 \item \texttt{CTE\_AREAREF}: valor numérico que indica el área de referencia (superficie útil);
 \item \texttt{CTE\_KEXP}; valor numérico que indica el factor de exportación;
 \item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
-\item \texttt{CTE\_COGEN}: dos valores numéricos separados por una coma, que indican los factores de paso (energía primaria) para exportación a la red de electricidad cogenerada, y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED1}: dos valores numéricos separados por una coma, que definen los factores de paso (energía primaria) de la red de distrito 1 (vector energético \texttt{RED1}), y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED2}: dos valores numéricos separados por una coma, que definen los factores de paso (energía primaria) de la red de distrito 2 (vector energético \texttt{RED2}), y se refieren a la parte renovable y a la parte no renovable;
+\item \texttt{CTE\_COGEN}: tres valores numéricos separados por una coma, que indican los factores de paso (energía primaria renovable, no renovable y emisiones) para exportación a la red de electricidad cogenerada;
+\item \texttt{CTE\_RED1}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 1 (vector energético \texttt{RED1});
+\item \texttt{CTE\_RED2}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 2 (vector energético \texttt{RED2});
 \end{itemize}
 
-Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
+Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos del archivo de componentes tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
 
 \subsubsection{Componentes energéticos}\label{sec:componentesenergeticos}
 
@@ -530,12 +526,12 @@ Este campo, con valor descriptivo, no está delimitado por un signo de coma prev
 \newpage
 \subsection{Archivo de definición de factores de paso}\label{sec:formatofactorespaso}
 
-El archivo de definición de factores de paso detalla los coeficientes de conversión de energía final a energía primaria, en función del paso de cálculo y el destino de la energía, así como un conjunto de metadatos asociados a dicha información.
+El archivo de definición de factores de paso detalla los coeficientes de conversión de energía final a energía primaria (parte renovable  y parte no renovable) y de energía final a emisiones, en función del paso de cálculo y el destino de la energía, así como un conjunto de metadatos asociados a dicha información.
 
-Cada línea del archivo define un metadato o un par de factores de paso (parte renovable y parte no renovable) usando una variante del formato de \textit{valores separados por comas}\footnote{El formato está documentado en el estándar RFC 4180 (\url{https://tools.ietf.org/html/rfc4180}).}. El archivo puede incluir también líneas en blanco y comentarios (líneas que empiezan por \texttt{\#} y que no son metadatos), que se ingnoran al ser procesadas.
+Cada línea del archivo define un metadato o un tres de factores de paso (parte renovable, parte no renovable y emisiones) usando una variante del formato de \textit{valores separados por comas}\footnote{El formato está documentado en el estándar RFC 4180 (\url{https://tools.ietf.org/html/rfc4180}).}. El archivo puede incluir también líneas en blanco y comentarios (líneas que empiezan por \texttt{\#} y que no son metadatos), que se ingnoran al ser procesadas.
 
 \begin{myquote}\small
-\textbf{NOTA:} El programa \texttt{cteepbd} está preparado para funcionar con cualquier conjunto de factores de paso que pueda definir el usuario, pero está orientado a su uso, mediante opciones, con los definidos en el \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016.
+\textbf{NOTA:} El programa \texttt{cteepbd} está preparado para funcionar con cualquier conjunto de factores de paso que pueda definir el usuario, pero está orientado a su uso, mediante opciones, con los definidos en el \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016. Estos factores son los utilizados también en el DB-HE 2013.
 \end{myquote}
 
 A continuación se muestra el archivo que correspondería a la definición de los factores de paso peninsulares:
@@ -558,10 +554,6 @@ Para el archivo de definición de factores de paso se establecen las siguientes 
 \item \texttt{CTE\_FUENTE}: cadena de texto que define el origen de los datos de factores de paso (actualmente puede tomar el valor \texttt{RITE2014});
 \item \texttt{CTE\_FUENTE\_COMENTARIO}; cadena de texto que incluye información adicional sobre la fuente de datos;
 \item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
-\item \texttt{CTE\_FACTORES\_TIPO}: cadena de texto que indica la conversión realizada mediante los factores de paso y puede adoptar los valores: \texttt{FINAL\_A\_PRIMARIA} o \texttt{FINAL\_A\_CO2};
-\item \texttt{CTE\_COGEN}: dos valores numéricos separados por una coma, que recogen los factores de paso usados (energía primaria) para exportación a la red de electricidad cogenerada, y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED1}: dos valores numéricos separados por una coma, que recogen los factores de paso usados (energía primaria) de la red de distrito 1 (vector energético \texttt{RED1}), y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED2}: dos valores numéricos separados por una coma, que definen los factores de paso usados (energía primaria) de la red de distrito 2 (vector energético \texttt{RED2}), y se refieren a la parte renovable y a la parte no renovable;
 \end{itemize}
 
 \subsubsection{Factores de paso}
@@ -575,14 +567,15 @@ Los factores de paso tienen la siguiente estructura de columnas (valores separad
 \item campo \texttt{paso}, que identifica los recursos evaluados: los recursos empleados para obtener una unidad del vector energético (paso \texttt{A}), o el impacto en la red al emplear el vector energético en lugar de usar el vector energético desde la red de suministro (paso \texttt{B});
 \item campos \texttt{parte renovable}, el factor de paso desde energía final a la parte renovable de la energía primaria utilizada;
 \item campos \texttt{parte no renovable}, el factor de paso desde energía final a la parte no renovable de la energía primaria utilizada;
+\item campos \texttt{emisiones}, el factor de paso desde energía final a emisiones de CO2;
 \item un campo opcional \texttt{comentario}, que puede contener cualquier texto y no está separado del contenido precedente por una coma sino por una almohadilla \texttt{\#}.
 \end{itemize}
 
-Las dos siguientes líneas definen los factores de paso para la energía eléctrica obtenida desde la red de suministro y los de la energía eléctrica generada in situ, ambos en paso A:
+Las siguiente línea define, por ejemplo,  los factores de paso para la energía eléctrica obtenida desde la red de suministro, en el paso A:
 
-\lstinputlisting[firstline=18, lastline=19,numbers=none]{../test_data/factores_paso_PENINSULA_20140203.csv}
+\lstinputlisting[firstline=18, lastline=18,numbers=none]{../test_data/factores_paso_PENINSULA_20140203.csv}
 
-Así, el suministro de 1kWh de electricidad procedente de la red supone el consumo 0,414~kWh de energía primiaria renovable y 1.954~kWh de energía primaria no renovable.
+Así, el suministro de 1kWh de electricidad procedente de la red supone el consumo 0,414~kWh de energía primiaria renovable, de 1.954~kWh de energía primaria no renovable y la emisión de 0,331~kg de CO2.
 
 \clearpage
 \newpage
@@ -592,7 +585,7 @@ Así, el suministro de 1kWh de electricidad procedente de la red supone el consu
 
 La norma \textit{EN ISO 52000-1} establece, entre otros, los indicadores de eficiencia energética de los edificios: \textit{consumo total de energía primaria} (\texttt{$C_{ep,tot}$}), \textit{porcentaje de energía primaria renovable del consumo total de energía} (\texttt{$RER$}) y las \textit{emisiones de $CO_{2e}$} (\texttt{$CO_{2e}$}).
 
-El programa ofrece, además de dichos indicadores (para los pasos A y A+B), la descomposición consumo total de energía primaria en su parte renovable (\texttt{$C_{ep,ren}$}) y no renovable (\texttt{$C_{ep,nren}$}), como se muestra en la \autoref{tab:indicadoresFinales}.
+El programa ofrece, además de dichos indicadores (para los pasos A y A+B), la descomposición consumo total de energía primaria en su parte renovable (\texttt{$C_{ep,ren}$}) y no renovable (\texttt{$C_{ep,nren}$}) y las emisiones de CO2 (\texttt{$E_{CO2}$}), como se muestra en la \autoref{tab:indicadoresFinales}.
 
 \begin{table}[H]
 \centering
@@ -606,21 +599,20 @@ El programa ofrece, además de dichos indicadores (para los pasos A y A+B), la d
     $C_{ep,nren}$& Parte no renovable del consumo de energía primaria total\\
     $C_{ep,tot}$ & Consumo total de energía primaria\\
     $RER$      & Fracción de energía primaria renovable en el consumo total\\
+    $E_{CO2e}$ & Emisiones de $CO_{2e}$\\
     \bottomrule
 \end{tabular}
 \end{table}
 
-En el caso de las emisiones de gases de efecto invernadero (medidas como $CO_{2e}$) el valor de la masa de emisiones se muestra en la parte renovable de los resultados, obteniéndose siempre un valor igual a cero para la parte renovable.
-
-Además de estos resultados, la salida del programa muestra datos de la entrada con la que han sido obtenido los resultados y otros datos intermedios (balances por vectores energéticos, energía usada en servicios EPB, energía exportada a servicios no EPB o a la red, energía total producida, etc).
+Además de estos resultados, la salida del programa muestra datos de la entrada con la que han sido obtenido los resultados y otros datos intermedios (balances por vectores energéticos, balances por servicios, energía usada en servicios EPB, energía exportada a servicios no EPB o a la red, energía total producida, etc).
 
 \subsection{Salida simple}
 
 Esta salida se emite siempre a través de la salida estándar y se puede redirigir a un archivo, tal como se describe en la \autoref{sec:usoprograma}, de \nameref{sec:usoprograma}.
 
-La salida muestra los datos de entrada, con un nivel de detalle dependiente de las opciones de llamada al programa pero sin datos intermedios y los resultados básicos de consumo en el paso B, en términos del indicador seleccionado (sea energía primaria o emisiones), tanto en valor absoluto como en valor repercutido por superficie.
+La salida muestra los datos de entrada, con un nivel de detalle dependiente de las opciones de llamada al programa pero sin datos intermedios y los resultados básicos de consumo en el paso B (energía primaria y emisiones), tanto en valor absoluto como en valor repercutido por superficie.
 
-Además, se muestran los valores repercutidos por superficie y desglosados por servicios del consumo de energía final (solo para usos EPB) y del indicador seleccionado (consumo de energía primaria o emisiones).
+Además, se muestran los valores repercutidos por superficie y desglosados por servicios del consumo de energía final (solo para usos EPB) y del consumo de energía primaria y las emisiones.
 
 A continuación se muestra un ejemplo de la salida simple que genera el ejemplo \texttt{cte\_test\_carriers.csv}:
 
@@ -876,28 +868,19 @@ En general, se recomienda utilizar la salida en formato \textit{JSON} (\autoref{
 
 El aprovechamiento de los datos generados por \texttt{cteepbd} para la verificación reglamentaria exige ejecutar el programa en varias ocasiones, variando las opciones elegidas y guardando los resultados de salida en archivos diferentes.
 
-Para la obtención de datos generales relativos al consumo de energía final y energía primaria se realizaría la llamada:
+Para la obtención de datos generales relativos al consumo de energía final, energía primaria y emisiones se realizaría la llamada:
 
 \begin{Verbatim}[fontsize=\small]
     $ cteepbd -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_EP.json --xml resultados_cteepbd_EP.xml
 \end{Verbatim}
 %$
 
-Para el cálculo de la fracción renovable de ACS:
+Y, para el cálculo de la fracción renovable de ACS:
 
 \begin{Verbatim}[fontsize=\small]
     $ cteepbd -N -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_ACS_nrb_EP.json
 \end{Verbatim}
 %$
-
-Y para obtener datos de emisiones de CO2:
-
-\begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c componentes.cteepbd -l PENINSULA -m CO2 --json resultados_cteepbd_CO2.json
-\end{Verbatim}
-%$
-
-Con estas tres llamadas
 
 En los siguientes subapartados se muestra cómo obtener información sobre los indicadores del \textit{CTE DB-HE} o la certificación energética utilizando esta salida en formato \textit{JSON}. Se hará referencia a los valores del objeto generado usando notación de punto (p.e., \texttt{balance.B.ren} se correponde al valor localizado con la clave \texttt{ren} en el objeto con clave \texttt{B} en el objeto con clave \texttt{balance}, perteneciente al objeto global).
 
@@ -969,20 +952,13 @@ Dicha clave contiene los valores para cada paso de cálculo de la energía eléc
 
 \subsection{Obtención de las emisiones de CO2 y de las emisiones por servicio}
 
-Los cálculos usando factores de emisión en lugar de factores de energía primaria se obtienen modificando el modo de funcionamiento del programa a \texttt{CO2}:
+Los datos relativos a emisiones totales se obtienen en las entradas:
 
-\begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c componentes.cteepbd -l PENINSULA -m CO2 --json resultados_cteepbd_CO2.json
-\end{Verbatim}
-%$
+$E_{CO2e} [kg_{CO2}] = \texttt{balance.B.co2}$
 
-El valor total de emisiones se encuentra en la fracción no renovable del balance (paso B):
+y las repercutidas por la superficie de referencia en:
 
-$E_{CO2e} [kg_{CO2}] = \texttt{balance.B.nren}$
-
-y las emisiones repercutidas por la superficie de referencia en:
-
-$E_{CO2e} [kg_{CO2_e}/m^2] = \texttt{balance\_m2.B.nren}$
+$E_{CO2e} [kg_{CO2_e}/m^2] = \texttt{balance\_m2.B.co2}$
 
 Al igual que en el caso del consumo, es posible obtener los valores desagregados por servicios EPB en los objetos:
 
