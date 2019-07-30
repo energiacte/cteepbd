@@ -1,5 +1,7 @@
 TODO
 ----
+- maybe bug: see why emissions for ACS for the example in the manual change
+  depending on whether nearby factors are used or not.
 
 - cte:
     - do not store in wfactors wmeta, values for CTE_COGEN, CTE_RED1 or CTE_RED2,
