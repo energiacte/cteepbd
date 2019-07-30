@@ -81,6 +81,7 @@ docs: docexamples docs/Manual_cteepbd.tex
 ifndef PDFLATEX
 	$(error "Es necesario tener instalado pdflatex para generar la documentación")
 endif
+	mkdir -p docs/build
 	cd docs && pdflatex --output-directory=build Manual_cteepbd.tex && pdflatex --output-directory=build Manual_cteepbd.tex
 	cp docs/build/Manual_cteepbd.pdf ./dist
 
