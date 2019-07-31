@@ -1,6 +1,6 @@
 [package]
 name = "cteepbd"
-version = "0.13.1"
+version = "0.13.2"
 authors = ["Rafael Villar Burke <pachi@ietcc.csic.es>"]
 edition = "2018"
 description = "Computation of energy balance of buildings according to UNE-EN ISO 52000-1:2017 to comply with CTE DB-HE 2018"
