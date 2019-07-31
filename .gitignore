@@ -5,3 +5,7 @@ Cargo.lock
 test_data/output/**
 docs/auto/**
 *.tmp
+
+balance.json
+balance.txt
+balance.xml
