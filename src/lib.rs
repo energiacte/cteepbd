@@ -44,3 +44,5 @@ pub mod vecops;
 pub use epbd::*;
 pub use rennrenco2::*;
 pub use types::*;
+
+pub static VERSION: &'static str = env!("CARGO_PKG_VERSION");
