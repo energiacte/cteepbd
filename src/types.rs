@@ -170,7 +170,7 @@ pub enum Source {
 
 /// Destination of energy for a weighting factor.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Display, Serialize, Deserialize)]
 pub enum Dest {
     /// Building delivery destination
     SUMINISTRO,
@@ -178,6 +178,23 @@ pub enum Dest {
     A_RED,
     /// Non EPB uses destination
     A_NEPB,
+}
+
+impl str::FromStr for Dest {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Dest, Self::Err> {
+        match s {
+            "SUMINISTRO" => Ok(Dest::SUMINISTRO),
+            "A_RED" => Ok(Dest::A_RED),
+            "A_NEPB" => Ok(Dest::A_NEPB),
+            // Legacy
+            "to_grid" => Ok(Dest::A_RED),
+            "to_nEPB" => Ok(Dest::A_NEPB),
+            "input" => Ok(Dest::SUMINISTRO),
+            _ => Err(format_err!("Service not found")),
+        }
+    }
 }
 
 /// Calculation step for a weighting factor.
