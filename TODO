@@ -3,15 +3,6 @@ TODO
 - maybe bug: see why emissions for ACS for the example in the manual change
   depending on whether nearby factors are used or not.
 
-- cte:
-    - do not store in wfactors wmeta, values for CTE_COGEN, CTE_RED1 or CTE_RED2,
-      which are only reserved to cmeta in components.
-      Now they are saved in metadata in set_mode_and_default_wfactors to be used later in
-      fix_wfactors.
-      Ideally, we would send user_wfactors to fix_wfactors and no metadata would be written
-      Only components would have this metadata to be able to generate, along with location,
-      all wfactors when they are not defined.
-
 - epbd:
     - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
       Have a look to the proposed value from the TR.
@@ -38,3 +29,40 @@ Wishlist
     - strip_nepb(&mut self)
     * It could work with the Builder pattern
       working with a CteFactorsBuilder that builds a Factors object with its build() method.
+
+- When const fns get more powerful, try building Factors directly and replace macro solution:
+
+  ``Rust
+    /// Genera factores de paso reglamentarios para energía primaria y emisiones
+    pub(crate) fn build_wf_2013(loc: &str, ren: f32, nren: f32, co2: f32) -> Factors {
+        use crate::types::{Carrier::*, Dest::*, Source::*, Step::*};
+      Factors {
+            wmeta: vec![
+                Meta::new("CTE_FUENTE", "RITE2014"),
+                Meta::new("CTE_LOCALIZACION", loc),
+                Meta::new("CTE_FUENTE_COMENTARIO", "Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014")
+            ],
+            wdata: vec![
+                Factor::new(MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000, "Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)"),
+                Factor::new(MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000, "Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)"),
+                Factor::new(BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018, "Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))"),
+                Factor::new(BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018, "Recursos usados para suministrar el vector desde la red"),
+                Factor::new(BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018, "Recursos usados para suministrar el vector desde la red"),
+                Factor::new(CARBON, RED, SUMINISTRO, A, 0.002, 1.082, 0.472, "Recursos usados para suministrar el vector desde la red"),
+                Factor::new(GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190, 0.252, "Recursos usados para suministrar el vector desde la red"),
+                Factor::new(GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179, 0.311, "Recursos usados para suministrar el vector desde la red"),
+                Factor::new(GLP, RED, SUMINISTRO, A, 0.003, 1.201, 0.254, "Recursos usados para suministrar el vector desde la red"),
+                Factor::new(ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000, "Recursos usados para producir electricidad in situ"),
+                Factor::new(ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000, "Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)"),
+                Factor::new(ELECTRICIDAD, RED, SUMINISTRO, A, ren, nren, co2, "Recursos usados para el suministro desde la red")
+            ]}
+    }
+    #[test]
+    fn cte_peninsula_gen_wfactors() {
+        let FP = get_ctefp_peninsula();
+        let mut wf = build_wf_2013("PENINSULA", 0.414, 1.954, 0.331);
+        wf = fix_wfactors(wf, &WF_RITE2014).unwrap();
+        println!("{}", FP.to_string());
+        assert!(FP.to_string() == wf.to_string());
+    }
+  ```
