@@ -219,7 +219,7 @@ pub fn set_user_wfactors(
                 ucog.ren,
                 ucog.nren,
                 ucog.co2,
-                "Factor de usuario".to_string(),
+                "Factor de usuario",
             ));
         };
     };
@@ -241,7 +241,7 @@ pub fn set_user_wfactors(
                 ucog.ren,
                 ucog.nren,
                 ucog.co2,
-                "Factor de usuario".to_string(),
+                "Factor de usuario",
             ));
         };
     };
@@ -265,7 +265,7 @@ pub fn set_user_wfactors(
                 ured1.ren,
                 ured1.nren,
                 ured1.co2,
-                "Factor de usuario".to_string(),
+                "Factor de usuario",
             ));
         };
     };
@@ -289,7 +289,7 @@ pub fn set_user_wfactors(
                 ured2.ren,
                 ured2.nren,
                 ured2.co2,
-                "Factor de usuario".to_string(),
+                "Factor de usuario",
             ));
         };
     };
@@ -325,7 +325,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
             1.0,
             0.0,
             0.0,
-            "Recursos usados para obtener energía térmica del medioambiente".to_string(),
+            "Recursos usados para obtener energía térmica del medioambiente",
         ));
     }
     // Asegura que existe MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.0, 0.0
@@ -345,8 +345,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
             1.0,
             0.0,
             0.0,
-            "Recursos usados para obtener energía térmica del medioambiente (red ficticia)"
-                .to_string(),
+            "Recursos usados para obtener energía térmica del medioambiente (red ficticia)",
         ));
     }
     // Asegura que existe ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.0, 0.0 si hay ELECTRICIDAD
@@ -365,7 +364,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
             1.0,
             0.0,
             0.0,
-            "Recursos usados para generar electricidad in situ".to_string(),
+            "Recursos usados para generar electricidad in situ",
         ));
     }
     // Asegura definición de factores de red para todos los vectores energéticos
@@ -388,7 +387,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
     if !has_cogen_input {
         wfactors.wdata.push(Factor::new(
             Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::SUMINISTRO, Step::A, 0.0, 0.0, 0.0,
-            "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)".to_string()));
+            "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)"));
     }
     // Asegura que todos los vectores con exportación tienen factores de paso a la red y a usos no EPB
     let exp_carriers = [
@@ -437,7 +436,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                     let cogen = defaults.user.cogen_to_grid;
                     wfactors.wdata.push(Factor::new(
                     Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_RED, Step::A, cogen.ren, cogen.nren, cogen.co2,
-                    "Recursos usados para producir electricidad cogenerada y vertida a la red. Valor predefinido".to_string()));
+                    "Recursos usados para producir electricidad cogenerada y vertida a la red. Valor predefinido"));
                 }
             }
         }
@@ -479,7 +478,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                         cogen.ren,
                         cogen.nren,
                         cogen.co2,
-                        "Valor predefinido".to_string(),
+                        "Valor predefinido",
                     ));
                 }
             }
@@ -503,7 +502,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
             if fp_a_red_input.is_some() {
                 let f = fp_a_red_input.as_ref().unwrap();
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
-                "Recursos ahorrados a la red por la energía producida in situ y exportada a la red".to_string()));
+                "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
             } else {
                 bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso B", c);
             }
@@ -516,7 +515,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
             if fp_a_red_input.is_some() {
                 let f = fp_a_red_input.as_ref().unwrap();
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
-                "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB".to_string()));
+                "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
             } else {
                 bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso B", c);
             }
@@ -530,7 +529,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
     if !has_red1_red_input {
         let red1 = defaults.user.red1;
         wfactors.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
-          red1.ren, red1.nren, red1.co2, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)".to_string()));
+          red1.ren, red1.nren, red1.co2, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)"));
     }
     let has_red2_red_input = wfactors.wdata.iter().any(|f| {
         f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
@@ -538,7 +537,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
     if !has_red2_red_input {
         let red2 = defaults.user.red2;
         wfactors.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
-          red2.ren, red2.nren, red2.co2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)".to_string()));
+          red2.ren, red2.nren, red2.co2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)"));
     }
 
     Ok(wfactors)

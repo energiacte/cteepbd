@@ -379,7 +379,7 @@ pub struct Factor {
 
 impl Factor {
     /// Constructor
-    pub fn new(
+    pub fn new<T: Into<String>>(
         carrier: Carrier,
         source: Source,
         dest: Dest,
@@ -387,9 +387,9 @@ impl Factor {
         ren: f32,
         nren: f32,
         co2: f32,
-        comment: String,
-    ) -> Factor {
-        Factor {
+        comment: T,
+    ) -> Self {
+        Self {
             carrier,
             source,
             dest,
@@ -397,7 +397,7 @@ impl Factor {
             ren,
             nren,
             co2,
-            comment,
+            comment: comment.into(),
         }
     }
 
