@@ -35,7 +35,18 @@ use crate::rennrenco2::RenNrenCo2;
 /// Energy carrier.
 #[allow(non_camel_case_types)]
 #[derive(
-    Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Display, EnumString, Serialize, Deserialize
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Display,
+    EnumString,
+    Serialize,
+    Deserialize,
 )]
 pub enum Carrier {
     /// Electricity
@@ -150,7 +161,7 @@ impl str::FromStr for Service {
 
 impl Default for Service {
     fn default() -> Service {
-            Service::NDEF
+        Service::NDEF
     }
 }
 
@@ -406,7 +417,7 @@ impl Factor {
         RenNrenCo2 {
             ren: self.ren,
             nren: self.nren,
-            co2: self.co2
+            co2: self.co2,
         }
     }
 }
@@ -472,9 +483,7 @@ pub trait MetaVec {
     }
 
     fn has_meta_value(&self, key: &str, value: &str) -> bool {
-        self.get_meta(key)
-            .map(|v| v == value)
-            .unwrap_or(false)
+        self.get_meta(key).map(|v| v == value).unwrap_or(false)
     }
 
     /// Get (optional) metadata value by key
