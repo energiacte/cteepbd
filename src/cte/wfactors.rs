@@ -610,9 +610,6 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
             ))
         }
     }
-    wmeta.push(Meta {
-        key: "CTE_PERIMETRO".to_string(),
-        value: "NEARBY".to_string(),
-    });
+    wmeta.push(Meta::new("CTE_PERIMETRO", "NEARBY"));
     Factors { wmeta, wdata }
 }

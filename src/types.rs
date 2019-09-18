@@ -218,6 +218,19 @@ pub struct Meta {
     pub value: String,
 }
 
+impl Meta {
+    pub fn new<T, U>(key: T, value: U) -> Self
+    where
+        T: Into<String>,
+        U: Into<String>,
+    {
+        Self {
+            key: key.into(),
+            value: value.into(),
+        }
+    }
+}
+
 impl fmt::Display for Meta {
     /// Textual representation of metadata.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
