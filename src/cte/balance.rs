@@ -30,8 +30,7 @@ Utilidades para la gestión de balances energéticos para el CTE
 
 use itertools::Itertools; // join
 
-use super::WFactorsMode;
-use crate::types::{Balance, Component, Factor, MetaVec};
+use crate::types::{Balance, Component, Factor};
 use crate::RenNrenCo2;
 
 
@@ -99,12 +98,6 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         ..
     } = balanceobj;
 
-    let indicator_and_units =
-        if wfactors.has_meta_value("CTE_FACTORES_TIPO", WFactorsMode::CO2.as_meta_value()) {
-            "CO2_eq [kg_CO2e/m2.an]"
-        } else {
-            "C_ep [kWh/m2.an]"
-        };
     let RenNrenCo2 { ren, nren, co2: _ } = balance_m2.B;
     let cmeta = &components.cmeta;
     let cdata = &components.cdata;
@@ -195,7 +188,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
     </Componentes>
     <kexp>{:.2}</kexp>
     <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
-    <Epm2><!-- {} -->
+    <Epm2><!-- C_ep [kWh/m2.an] -->
         <tot>{:.1}</tot>
         <nren>{:.1}</nren>
     </Epm2>
@@ -206,7 +199,6 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         cdatastring,
         k_exp,
         arearef,
-        indicator_and_units,
         ren + nren,
         nren
     )

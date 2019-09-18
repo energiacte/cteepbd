@@ -50,26 +50,6 @@ pub const CTE_NRBY: [Carrier; 5] = [
     Carrier::MEDIOAMBIENTE,
 ]; // Ver B.23. Solo biomasa sólida
 
-/// Tipo de factores de conversión de energía final empleados:
-/// - a energía primaria
-/// - a emisiones de CO2
-#[derive(Clone, Copy, Debug, Display, PartialEq)]
-pub enum WFactorsMode {
-    /// Cálculo de energía primaria
-    EP,
-    /// Cálculo de emisiones de CO2
-    CO2,
-}
-
-impl WFactorsMode {
-    pub fn as_meta_value(&self) -> &'static str {
-        match self {
-            WFactorsMode::CO2 => "FINAL_A_EMISIONES",
-            _ => "FINAL_A_PRIMARIA",
-        }
-    }
-}
-
 // ---------------- Valores por defecto y definibles por el usuario -----------------------
 pub struct CteUserWF<T> {
     /// Factores de paso de redes de distrito 1.
