@@ -247,13 +247,13 @@ impl str::FromStr for Meta {
         if items.len() == 2 {
             let key = match items[0].trim() {
                 // Fix legacy values
-                "Localizacion" => "CTE_LOCALIZACION".to_string(),
-                "Area_ref" => "CTE_AREAREF".to_string(),
-                "kexp" => "CTE_KEXP".to_string(),
-                x => x.to_string(),
+                "Localizacion" => "CTE_LOCALIZACION",
+                "Area_ref" => "CTE_AREAREF",
+                "kexp" => "CTE_KEXP",
+                x => x,
             };
-            let value = items[1].trim().to_string();
-            Ok(Meta { key, value })
+            let value = items[1].trim();
+            Ok(Meta::new(key, value))
         } else {
             Err(format_err!("Couldn't parse Metadata from string"))
         }
@@ -521,16 +521,12 @@ pub trait MetaVec {
 
     /// Update metadata value for key or insert new metadata.
     fn update_meta(&mut self, key: &str, value: &str) {
-        let val = value.to_string();
         let wmeta = self.get_mut_metavec();
         let metapos = wmeta.iter().position(|m| m.key == key);
         if let Some(pos) = metapos {
-            wmeta[pos].value = val;
+            wmeta[pos].value = value.to_string();
         } else {
-            wmeta.push(Meta {
-                key: key.to_string(),
-                value: val,
-            });
+            wmeta.push(Meta::new(key, value));
         };
     }
 }
@@ -798,8 +794,10 @@ mod tests {
             key: "CTE_FUENTE".to_string(),
             value: "RITE2014".to_string(),
         };
+        let meta2 = Meta::new("CTE_FUENTE", "RITE2014");
         let metastr = "#META CTE_FUENTE: RITE2014";
         assert_eq!(format!("{}", meta), metastr);
+        assert_eq!(format!("{}", meta2), metastr);
         assert_eq!(format!("{}", metastr.parse::<Meta>().unwrap()), metastr);
     }
 
