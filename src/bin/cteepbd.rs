@@ -643,7 +643,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 println!("Resultados en formato JSON: {}", path.display());
             }
             let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|e| {
-                eprintln!("ERROR: conversión incorrecta del balance energético a JSON: {}", e);
+                eprintln!(
+                    "ERROR: conversión incorrecta del balance energético a JSON: {}",
+                    e
+                );
                 exit(exitcode::DATAERR);
             });
             writefile(&path, json.as_bytes());
