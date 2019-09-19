@@ -98,7 +98,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         ..
     } = balanceobj;
 
-    let RenNrenCo2 { ren, nren, co2: _ } = balance_m2.B;
+    let RenNrenCo2 { ren, nren, .. } = balance_m2.B;
     let cmeta = &components.cmeta;
     let cdata = &components.cdata;
     let wmeta = &wfactors.wmeta;
