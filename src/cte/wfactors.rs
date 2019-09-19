@@ -28,12 +28,13 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 
 */
 
-use failure::Error;
 use itertools::Itertools;
 
 use crate::rennrenco2::RenNrenCo2;
 use crate::types::{CSubtype, Carrier, Dest, Source, Step};
 use crate::types::{Components, Factor, Factors, Meta, MetaVec};
+
+type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
 
 // Localizaciones válidas para CTE
 // const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELILLA"];
@@ -138,7 +139,7 @@ pub fn wfactors_from_str(
     wfactorsstring: &str,
     user: &CteUserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
-) -> Result<Factors, Error> {
+) -> Result<Factors> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
     fix_wfactors(wfactors, defaults)
@@ -152,16 +153,15 @@ pub fn wfactors_from_loc(
     loc: &str,
     user: &CteUserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
-) -> Result<Factors, Error> {
+) -> Result<Factors> {
     let wfactorsstring = match &*loc {
         "PENINSULA" => defaults.loc_peninsula,
         "BALEARES" => defaults.loc_baleares,
         "CANARIAS" => defaults.loc_canarias,
         "CEUTAMELILLA" => defaults.loc_ceutamelilla,
-        _ => bail!(
-            "Localización \"{}\" desconocida al generar factores de paso",
+        _ => Err(format!("Localización \"{}\" desconocida al generar factores de paso",
             loc
-        ),
+        ))?,
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
@@ -174,8 +174,8 @@ pub fn wfactors_from_loc(
 pub fn wfactors_from_meta(
     components: &Components,
     defaults: &CteDefaultsWF,
-) -> Result<Factors, Error> {
-    let loc = components.get_meta("CTE_LOCALIZACION").unwrap_or("".to_string());
+) -> Result<Factors> {
+    let loc = components.get_meta("CTE_LOCALIZACION").unwrap_or_default();
     let user = CteUserWF {
         red1: components.get_meta_rennren("CTE_RED1"),
         red2: components.get_meta_rennren("CTE_RED2"),
@@ -187,10 +187,10 @@ pub fn wfactors_from_meta(
         "BALEARES" => defaults.loc_baleares,
         "CANARIAS" => defaults.loc_canarias,
         "CEUTAMELILLA" => defaults.loc_ceutamelilla,
-        _ => bail!(
+        _ => Err(format!(
             "Localización \"{}\" desconocida al generar factores de paso",
             loc
-        ),
+        ))?,
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, &user);
@@ -305,7 +305,7 @@ pub fn set_user_wfactors(
 /// - asegura que existe RED1 | RED2 en suministro
 ///
 /// TODO: se deberían separar algunos de estos pasos como métodos de CteFactorsExt
-pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<Factors, Error> {
+pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<Factors> {
     // Vectores existentes
     let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
 
@@ -377,7 +377,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
         })
     });
     if !has_grid_factors_for_all_carriers {
-        bail!("No se han definido los factores de paso de red de algún vector \"VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?\"");
+        Err("No se han definido los factores de paso de red de algún vector \"VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?\"")?;
     }
     // En paso A, el factor SUMINISTRO de cogeneración es 0.0, 0.0 ya que el impacto se tiene en cuenta en el suministro del vector de generación
     let has_cogen_input = wfactors
@@ -421,7 +421,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                         ..*f
                     });
                 } else {
-                    bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso A", c);
+                    Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso A", c))?;
                 }
             } else {
                 // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -456,7 +456,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                         ..*f
                     });
                 } else {
-                    bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso A", c);
+                    Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso A", c))?;
                 }
             } else {
                 // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -504,7 +504,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
             } else {
-                bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso B", c);
+                Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso B", c))?;
             }
         }
         let has_to_nepb_b = wfactors.wdata.iter().any(|f| {
@@ -517,7 +517,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
             } else {
-                bail!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso B", c);
+                Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso B", c))?;
             }
         }
     }

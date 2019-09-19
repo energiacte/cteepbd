@@ -26,7 +26,7 @@ use std::fmt;
 use std::str;
 use std::str::FromStr;
 
-use failure::Error;
+use failure::{Error, format_err};
 
 use crate::rennrenco2::RenNrenCo2;
 

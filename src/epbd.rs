@@ -37,7 +37,6 @@
 ///   - allow other values of the load matching factor (or usign functions) f_match_t (formula 32, B.32)
 use std::collections::HashMap;
 
-use failure::Error;
 use itertools::Itertools;
 
 use crate::rennrenco2::RenNrenCo2;
@@ -47,6 +46,8 @@ use crate::types::{
 };
 
 use crate::vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
+
+type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
 
 // --------------------------------------------------------------------
 // Energy calculation functions
@@ -66,23 +67,21 @@ use crate::vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum}
 /// * the weighting factor list is empty
 /// * no match is found for the given criteria
 ///
-fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor, Error> {
-    fp_cr
+fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor> {
+    if fp_cr.is_empty() {
+        Err("No weighting factors found for carrier".to_string())?
+    };
+
+    match fp_cr
         .iter()
         .find(|fp| fp.dest == dest && fp.step == step && fp.source == source)
-        .ok_or_else(|| {
-            if fp_cr.is_empty() {
-                format_err!("No weighting factors found for carrier")
-            } else {
-                format_err!(
-                    "No weighting factor found for: '{}, {}, {}, {}'",
-                    fp_cr[0].carrier,
-                    source,
-                    dest,
-                    step
-                )
-            }
-        })
+    {
+        Some(v) => Ok(v),
+        None => Err(format!(
+            "No weighting factor found for: '{}, {}, {}, {}'",
+            fp_cr[0].carrier, source, dest, step
+        ))?,
+    }
 }
 
 /// Find weighting factor for 'step' of energy to 'dest' uses from the 'gen' type.
@@ -98,11 +97,11 @@ fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&F
 /// * no match is found
 /// * the `gen` type doesn't match an energy source type (i.e. `INSITU` or `COGENERACION`)
 ///
-fn fp_gen(fp_cr: &[Factor], gen: CSubtype, dest: Dest, step: Step) -> Result<&Factor, Error> {
+fn fp_gen(fp_cr: &[Factor], gen: CSubtype, dest: Dest, step: Step) -> Result<&Factor> {
     match gen {
         CSubtype::INSITU => fp_src(fp_cr, Source::INSITU, dest, step),
         CSubtype::COGENERACION => fp_src(fp_cr, Source::COGENERACION, dest, step),
-        _ => bail!("Unexpected generator {}", gen),
+        _ => Err(format!("Unexpected generator {}", gen))?,
     }
 }
 
@@ -127,7 +126,7 @@ fn balance_for_carrier(
     cr_list: &[Component],
     fp_cr: &[Factor],
     k_exp: f32,
-) -> Result<BalanceForCarrier, Error> {
+) -> Result<BalanceForCarrier> {
     // All carriers have the same timesteps (see FromStr for Components)
     let num_steps = cr_list[0].values.len();
 
@@ -294,13 +293,12 @@ fn balance_for_carrier(
             // No exported energy to nEP uses
             RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::new()),
-                |acc: Result<RenNrenCo2, Error>, &gen| {
+            exp_generators
+                .iter()
+                .fold(Ok(RenNrenCo2::new()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * f_pr_cr_i[gen]))
-                },
-            )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
+                })? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
         };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
@@ -308,13 +306,12 @@ fn balance_for_carrier(
             // No energy exported to grid
             RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::new()),
-                |acc: Result<RenNrenCo2, Error>, &gen| {
+            exp_generators
+                .iter()
+                .fold(Ok(RenNrenCo2::new()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * f_pr_cr_i[gen]))
-                },
-            )? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
+                })? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
         };
 
         // Weighted exported energy according to resources used to generate that energy (formula 23)
@@ -328,13 +325,12 @@ fn balance_for_carrier(
             // No energy exported to nEP uses
             RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::new()),
-                |acc: Result<RenNrenCo2, Error>, &gen| {
+            exp_generators
+                .iter()
+                .fold(Ok(RenNrenCo2::new()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * f_pr_cr_i[gen]))
-                },
-            )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
+                })? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
         };
 
         // Weighting factors for energy exported to the grid (step B)
@@ -342,13 +338,12 @@ fn balance_for_carrier(
             // No energy exported to grid
             RenNrenCo2::new() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::new()),
-                |acc: Result<RenNrenCo2, Error>, &gen| {
+            exp_generators
+                .iter()
+                .fold(Ok(RenNrenCo2::new()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
                         + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * f_pr_cr_i[gen]))
-                },
-            )? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
+                })? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
         };
 
         // Effect of exported energy on weighted energy performance (step B) (formula 26)
@@ -483,12 +478,13 @@ pub fn energy_performance(
     wfactors: &Factors,
     k_exp: f32,
     arearef: f32,
-) -> Result<Balance, Error> {
-    ensure!(
-        arearef > 1e-3,
-        "Reference area can't be zero or almost zero and found {}",
-        arearef
-    );
+) -> Result<Balance> {
+    if arearef < 1e-3 {
+        Err(format!(
+            "Reference area can't be zero or almost zero and found {}",
+            arearef
+        ))?
+    };
 
     let carriers: Vec<Carrier> = components
         .cdata

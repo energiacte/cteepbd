@@ -31,15 +31,16 @@ Hipótesis:
 - No se permite la producción de electricidad a usos concretos (se asume NDEF)
 */
 
-use failure::Error;
 use itertools::Itertools;
 
 use crate::types::{CSubtype, CType, Carrier, MetaVec, Service};
 use crate::types::{Component, Components};
 use crate::vecops::{veckmul, veclistsum, vecvecdif};
 
+type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
+
 /// Devuelve objetos CARRIER y META a partir de cadena, intentando asegurar los tipos.
-pub fn parse_components(datastring: &str) -> Result<Components, Error> {
+pub fn parse_components(datastring: &str) -> Result<Components> {
     let mut components: Components = datastring.parse()?;
     fix_components(&mut components);
     Ok(components)

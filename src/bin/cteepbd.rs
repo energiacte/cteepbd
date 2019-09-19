@@ -37,36 +37,37 @@ use std::process::exit;
 use std::str::FromStr;
 
 use clap::{App, AppSettings, Arg};
-use failure::Error;
-use failure::Fail;
-use failure::ResultExt;
 
 use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNrenCo2, Service};
 
+type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
+
 // Funciones auxiliares -----------------------------------------------------------------------
 
-fn readfile(path: &Path) -> Result<String, Error> {
-    let mut f = File::open(path).context(format!("Archivo {} no encontrado", path.display()))?;
+fn readfile(path: &Path) -> Result<String> {
+    let mut f = File::open(path)
+        .map_err(|_e| format!("ERROR: archivo \"{}\" no encontrado", path.display()))?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)
-        .context("Error al leer el archivo")?;
+        .map_err(|_e| "ERROR: no se ha podido leer el archivo")?;
     Ok(contents)
 }
 
 fn writefile(path: &Path, content: &[u8]) {
-    let mut file = match File::create(&path) {
-        Err(err) => panic!(
-            "ERROR: no se ha podido escribir en \"{}\": {:?}",
-            path.display(),
-            err.cause()
-        ),
-        Ok(file) => file,
-    };
-    if let Err(err) = file.write_all(content) {
+    let mut file = File::create(&path)
+        .map_err(|e| {
+            panic!(
+                "ERROR: no se ha podido escribir en \"{}\": {}",
+                path.display(),
+                e
+            )
+        })
+        .unwrap();
+    if let Err(e) = file.write_all(content) {
         panic!(
-            "No se ha podido escribir en {}: {:?}",
+            "ERROR: no se ha podido escribir en \"{}\": {}",
             path.display(),
-            err.cause()
+            e
         )
     }
 }
@@ -125,7 +126,6 @@ fn get_factor(
     descr: &str,
     verbosity: u64,
 ) -> Option<RenNrenCo2> {
-
     // Origen del dato
     let mut orig = "";
     let factor = matches_values
@@ -134,7 +134,7 @@ fn get_factor(
                 .map(|vv| {
                     f32::from_str(vv.trim()).unwrap_or_else(|_| {
                         eprintln!(
-                            "ERROR: Formato numérico incorrecto en el factor de paso {:?}",
+                            "ERROR: Formato incorrecto del factor de paso {:?}",
                             vv
                         );
                         exit(exitcode::DATAERR);
@@ -162,7 +162,10 @@ fn get_factor(
         if verbosity > 2 {
             println!("Factores de paso para {} ({}): {}", descr, orig, factor)
         };
-        components.update_meta(meta, &format!("{:.3}, {:.3}, {:.3}", factor.ren, factor.nren, factor.co2));
+        components.update_meta(
+            meta,
+            &format!("{:.3}, {:.3}, {:.3}", factor.ren, factor.nren, factor.co2),
+        );
     };
     factor
 }
@@ -171,26 +174,23 @@ fn get_factor(
 fn get_components(archivo: Option<&str>) -> Components {
     if let Some(archivo_componentes) = archivo {
         let path = Path::new(archivo_componentes);
-        if let Ok(componentsstring) = readfile(path) {
-            println!("Componentes energéticos: \"{}\"", path.display());
-            match cte::parse_components(&componentsstring) {
-                Ok(components) => components,
-                Err(err) => {
-                    eprintln!(
-                        "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
-                        archivo_componentes,
-                        err.as_fail()
-                    );
-                    exit(exitcode::DATAERR);
-                }
-            }
-        } else {
+        let componentsstring = readfile(path).unwrap_or_else(|e| {
             eprintln!(
-                "ERROR: No se ha podido leer el archivo de componentes energéticos {}",
-                path.display()
+                "ERROR: No se ha podido leer el archivo de componentes energéticos {}: {}",
+                path.display(),
+                e
             );
             exit(exitcode::IOERR);
-        }
+        });
+        println!("Componentes energéticos: \"{}\"", path.display());
+        cte::parse_components(&componentsstring).unwrap_or_else(|e| {
+            eprintln!(
+                "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
+                archivo_componentes,
+                e
+            );
+            exit(exitcode::DATAERR);
+        })
     } else {
         Default::default()
     }
@@ -499,20 +499,19 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     println!("Factores de paso (archivo): \"{}\"", path.display());
                     Ok(fpstring)
                 })
-                .unwrap_or_else(|err| {
+                .unwrap_or_else(|e| {
                     eprintln!(
                         "ERROR: No se ha podido leer el archivo de factores de paso \"{}\" -> {}",
-                        path.display(), err.as_fail()
+                        path.display(), e
                     );
                     exit(exitcode::IOERR);
                 });
             cte::wfactors_from_str(&fpstring, &user_wf, &default_wf)
-                .unwrap_or_else(|error| {
+                .unwrap_or_else(|e| {
                     eprintln!(
                         "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
-                        path.display(), error.as_fail()
+                        path.display(), e
                     );
-                    if verbosity > 2 { println!("{}", error.backtrace()) };
                     exit(exitcode::DATAERR);
                 })
         // Definición por localización
@@ -538,9 +537,8 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                     exit(exitcode::USAGE);
                 }).unwrap();
             cte::wfactors_from_loc(&localizacion, &user_wf, &default_wf)
-                .unwrap_or_else(|error| {
-                    println!("ERROR: No se han podido generar los factores de paso");
-                    if verbosity > 2 { println!("{}, {}", error.as_fail(), error.backtrace()) };
+                .unwrap_or_else(|e| {
+                    println!("ERROR: No se han podido generar los factores de paso: {}", e);
                     exit(exitcode::DATAERR);
                 })
         };
@@ -610,11 +608,8 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Cálculo del balance -------------------------------------------------------------------------
     let balance: Option<Balance> = if !components.cdata.is_empty() {
         Some(
-            energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|error| {
-                eprintln!("ERROR: No se ha podido calcular el balance energético");
-                if verbosity > 2 {
-                    println!("{}, {}", error.as_fail(), error.backtrace())
-                };
+            energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|e| {
+                eprintln!("ERROR: No se ha podido calcular el balance energético: {}", e);
                 exit(exitcode::DATAERR);
             }),
         )
@@ -640,7 +635,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|error| {
                 eprintln!("ERROR: No se ha podido convertir el balance al formato JSON");
                 if verbosity > 2 {
-                    println!("{:?}, {:?}", error.cause(), error.backtrace())
+                    println!("{}", error)
                 };
                 exit(exitcode::DATAERR);
             });
