@@ -40,6 +40,8 @@ use clap::{App, AppSettings, Arg};
 
 use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNrenCo2, Service};
 
+// Gestión de errores
+
 type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
 
 // Funciones auxiliares -----------------------------------------------------------------------
@@ -56,37 +58,39 @@ fn readfile(path: &Path) -> Result<String> {
 fn writefile(path: &Path, content: &[u8]) {
     let mut file = File::create(&path)
         .map_err(|e| {
-            panic!(
+            eprintln!(
                 "ERROR: no se ha podido escribir en \"{}\": {}",
                 path.display(),
                 e
-            )
+            );
+            exit(exitcode::CANTCREAT);
         })
         .unwrap();
     if let Err(e) = file.write_all(content) {
-        panic!(
+        eprintln!(
             "ERROR: no se ha podido escribir en \"{}\": {}",
             path.display(),
             e
-        )
+        );
+        exit(exitcode::IOERR);
     }
 }
 
 // Funciones auxiliares de validación y obtención de valores
 
 /// Comprueba validez del valor del factor de exportación de la CLI.
-fn validate_kexp(matches: &clap::ArgMatches<'_>, verbosity: u64) {
+fn validate_kexp(matches: &clap::ArgMatches<'_>) {
     if matches.is_present("kexp") {
-        let kexp = value_t!(matches, "kexp", f32).unwrap_or_else(|error| {
-            eprintln!("ERROR: El área de referencia indicado no es un valor numérico válido");
-            if verbosity > 2 {
-                println!("{}", error)
-            };
+        let kexp = value_t!(matches, "kexp", f32).unwrap_or_else(|_| {
+            eprintln!(
+                "ERROR: factor de exportación k_exp incorrecto \"{}\"",
+                matches.value_of("kexp").unwrap()
+            );
             exit(exitcode::DATAERR);
         });
         if kexp < 0.0 || kexp > 1.0 {
             eprintln!(
-                "ERROR: el factor de exportación debe estar entre 0.00 y 1.00 y vale {:.2}",
+                "ERROR: factor de exportación k_exp fuera de rango [0.00 - 1.00]: {:.2}",
                 kexp
             );
             exit(exitcode::DATAERR);
@@ -102,17 +106,20 @@ fn validate_kexp(matches: &clap::ArgMatches<'_>, verbosity: u64) {
 }
 
 /// Comprueba validez del dato de area en la CLI.
-fn validate_arearef(matches: &clap::ArgMatches<'_>, verbosity: u64) {
+fn validate_arearef(matches: &clap::ArgMatches<'_>) {
     if matches.is_present("arearef") {
-        let arearef = value_t!(matches, "arearef", f32).unwrap_or_else(|error| {
-            println!("El área de referencia indicado no es un valor numérico válido");
-            if verbosity > 2 {
-                println!("{}", error)
-            };
+        let arearef = value_t!(matches, "arearef", f32).unwrap_or_else(|_| {
+            eprintln!(
+                "ERROR: área de referencia A_ref incorrecta \"{}\"",
+                matches.value_of("arearef").unwrap()
+            );
             exit(exitcode::DATAERR);
         });
         if arearef <= 1e-3 {
-            eprintln!("ERROR: el área de referencia definida por el usuario debe ser mayor que 0.00 y vale {:.2}", arearef);
+            eprintln!(
+                "ERROR: área de referencia A_ref fuera de rango [0.001-]: {:.2}",
+                arearef
+            );
             exit(exitcode::DATAERR);
         }
     }
@@ -133,10 +140,7 @@ fn get_factor(
             let vv: Vec<f32> = v
                 .map(|vv| {
                     f32::from_str(vv.trim()).unwrap_or_else(|_| {
-                        eprintln!(
-                            "ERROR: Formato incorrecto del factor de paso {:?}",
-                            vv
-                        );
+                        eprintln!("ERROR: factor de paso incorrecto: \"{}\"", vv);
                         exit(exitcode::DATAERR);
                     })
                 })
@@ -176,18 +180,17 @@ fn get_components(archivo: Option<&str>) -> Components {
         let path = Path::new(archivo_componentes);
         let componentsstring = readfile(path).unwrap_or_else(|e| {
             eprintln!(
-                "ERROR: No se ha podido leer el archivo de componentes energéticos {}: {}",
+                "ERROR: lectura incorrecta del archivo de componentes energéticos \"{}\": {}",
                 path.display(),
                 e
             );
-            exit(exitcode::IOERR);
+            exit(exitcode::OSFILE);
         });
         println!("Componentes energéticos: \"{}\"", path.display());
         cte::parse_components(&componentsstring).unwrap_or_else(|e| {
             eprintln!(
-                "ERROR: Formato incorrecto del archivo de componentes \"{}\" ({})",
-                archivo_componentes,
-                e
+                "ERROR: formato incorrecto del archivo de componentes \"{}\": {}",
+                archivo_componentes, e
             );
             exit(exitcode::DATAERR);
         })
@@ -203,7 +206,10 @@ fn get_arearef(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
     // Se define CTE_AREAREF en metadatos de componentes energéticos
     if components.has_meta("CTE_AREAREF") {
         arearef = components.get_meta_f32("CTE_AREAREF").unwrap_or_else(|| {
-            println!("El área de referencia de los metadatos no es un valor numérico válido");
+            eprintln!(
+                "ERROR: área de referencia A_ref en metadatos incorrecta \"{}\"",
+                components.get_meta("CTE_AREAREF").unwrap()
+            );
             exit(exitcode::DATAERR);
         });
         if matches.occurrences_of("arearef") == 0 {
@@ -235,7 +241,7 @@ fn get_kexp(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
     // Se define CTE_KEXP en metadatos de componentes energéticos
     if components.has_meta("CTE_KEXP") {
         kexp = components.get_meta_f32("CTE_KEXP").unwrap_or_else(|| {
-            println!("El factor de exportación de los metadatos no es un valor numérico válido");
+            eprintln!("ERROR: factor de exportación en metadatos incorrecto");
             exit(exitcode::DATAERR);
         });
         if matches.occurrences_of("kexp") == 0 {
@@ -243,7 +249,7 @@ fn get_kexp(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
         } else {
             let m_kexp = value_t!(matches, "kexp", f32).unwrap();
             if (kexp - m_kexp).abs() > 1e-3 {
-                println!("AVISO: El valor del factor de exportación del archivo de componentes energéticos ({:.1}) no coincide con el valor definido por el usuario ({:.1})", kexp, m_kexp);
+                println!("AVISO: factor de exportación del archivo de componentes energéticos ({:.1}) no coincidente con el valor definido por el usuario ({:.1})", kexp, m_kexp);
             }
             kexp = m_kexp;
             println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
@@ -447,10 +453,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Comprobación del parámetro de factor de exportación kexp ----------------------------------------
-    validate_kexp(&matches, verbosity);
+    validate_kexp(&matches);
 
     // Comprobación del parámetro de área de referencia -------------------------------------------------------------------------
-    validate_arearef(&matches, verbosity);
+    validate_arearef(&matches);
 
     // Factores de paso ---------------------------------------------------------------------------
 
@@ -501,15 +507,15 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 })
                 .unwrap_or_else(|e| {
                     eprintln!(
-                        "ERROR: No se ha podido leer el archivo de factores de paso \"{}\" -> {}",
+                        "ERROR: lectura incorrecta del archivo de factores de paso \"{}\": {}",
                         path.display(), e
                     );
-                    exit(exitcode::IOERR);
+                    exit(exitcode::OSFILE);
                 });
             cte::wfactors_from_str(&fpstring, &user_wf, &default_wf)
                 .unwrap_or_else(|e| {
                     eprintln!(
-                        "ERROR: No se ha podido interpretar el archivo de factores de paso \"{}\" -> {}",
+                        "ERROR: formato incorrecto del archivo de factores de paso \"{}\": {}",
                         path.display(), e
                     );
                     exit(exitcode::DATAERR);
@@ -533,12 +539,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
                 )
                 // Error
                 .or_else(|| {
-                    eprintln!("ERROR: Sin datos suficientes para determinar los factores de paso");
+                    eprintln!("ERROR: datos insuficientes para determinar los factores de paso");
                     exit(exitcode::USAGE);
                 }).unwrap();
             cte::wfactors_from_loc(&localizacion, &user_wf, &default_wf)
                 .unwrap_or_else(|e| {
-                    println!("ERROR: No se han podido generar los factores de paso: {}", e);
+                    eprintln!("ERROR: parámetros incorrectos para generar los factores de paso: {}", e);
                     exit(exitcode::DATAERR);
                 })
         };
@@ -595,11 +601,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Guardado de factores de paso corregidos ------------------------------------------------------
     if matches.is_present("gen_archivo_factores") {
         let path = Path::new(matches.value_of_os("gen_archivo_factores").unwrap());
-        let fpstring = format!("{}", fpdata);
         if verbosity > 2 {
-            println!("Factores de paso:\n{}", fpstring);
+            println!("Factores de paso:\n{}", fpdata);
         }
-        writefile(&path, fpstring.as_bytes());
+        writefile(&path, fpdata.to_string().as_bytes());
         if verbosity > 0 {
             println!("Guardado archivo de factores de paso: {}", path.display());
         }
@@ -609,7 +614,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     let balance: Option<Balance> = if !components.cdata.is_empty() {
         Some(
             energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|e| {
-                eprintln!("ERROR: No se ha podido calcular el balance energético: {}", e);
+                eprintln!(
+                    "ERROR: no se ha podido calcular el balance energético: {}",
+                    e
+                );
                 exit(exitcode::DATAERR);
             }),
         )
@@ -630,13 +638,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         if matches.is_present("archivo_salida_json") {
             let path = Path::new(matches.value_of_os("archivo_salida_json").unwrap());
             if verbosity > 0 {
-                println!("Resultados en formato JSON: {:?}", path.display());
+                println!("Resultados en formato JSON: {}", path.display());
             }
-            let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|error| {
-                eprintln!("ERROR: No se ha podido convertir el balance al formato JSON");
-                if verbosity > 2 {
-                    println!("{}", error)
-                };
+            let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|e| {
+                eprintln!("ERROR: conversión incorrecta del balance energético a JSON: {}", e);
                 exit(exitcode::DATAERR);
             });
             writefile(&path, json.as_bytes());
@@ -645,7 +650,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         if matches.is_present("archivo_salida_xml") {
             let path = Path::new(matches.value_of_os("archivo_salida_xml").unwrap());
             if verbosity > 0 {
-                println!("Resultados en formato XML: {:?}", path.display());
+                println!("Resultados en formato XML: {}", path.display());
             }
             let xml = cte::balance_to_xml(&balance);
             writefile(&path, xml.as_bytes());
@@ -663,7 +668,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         if matches.is_present("archivo_salida_txt") {
             let path = Path::new(matches.value_of_os("archivo_salida_txt").unwrap());
             if verbosity > 0 {
-                println!("Resultados en formato XML: {:?}", path.display());
+                println!("Resultados en formato XML: {}", path.display());
             }
             writefile(&path, plain.as_bytes());
         }
