@@ -79,12 +79,11 @@ fn writefile(path: &Path, content: &[u8]) {
 // Funciones auxiliares de validación y obtención de valores
 
 /// Comprueba validez del valor del factor de exportación de la CLI.
-fn validate_kexp(matches: &clap::ArgMatches<'_>) {
-    if matches.is_present("kexp") {
-        let kexp = value_t!(matches, "kexp", f32).unwrap_or_else(|_| {
+fn validate_kexp(kexpstr: &str) {
+    let kexp = kexpstr.parse::<f32>().unwrap_or_else(|_| {
             eprintln!(
                 "ERROR: factor de exportación k_exp incorrecto \"{}\"",
-                matches.value_of("kexp").unwrap()
+            kexpstr
             );
             exit(exitcode::DATAERR);
         });
@@ -103,15 +102,13 @@ fn validate_kexp(matches: &clap::ArgMatches<'_>) {
             );
         };
     }
-}
 
 /// Comprueba validez del dato de area en la CLI.
-fn validate_arearef(matches: &clap::ArgMatches<'_>) {
-    if matches.is_present("arearef") {
-        let arearef = value_t!(matches, "arearef", f32).unwrap_or_else(|_| {
+fn validate_arearef(arearefstr: &str) {
+    let arearef = arearefstr.parse::<f32>().unwrap_or_else(|_| {
             eprintln!(
                 "ERROR: área de referencia A_ref incorrecta \"{}\"",
-                matches.value_of("arearef").unwrap()
+            arearefstr
             );
             exit(exitcode::DATAERR);
         });
@@ -123,7 +120,6 @@ fn validate_arearef(matches: &clap::ArgMatches<'_>) {
             exit(exitcode::DATAERR);
         }
     }
-}
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> None.
 fn get_factor(
@@ -219,6 +215,7 @@ fn get_arearef(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
             if (arearef - m_arearef).abs() > 1e-3 {
                 println!("AVISO: El valor del área de referencia del archivo de componentes energéticos ({:.2}) no coincide con el valor definido por el usuario ({:.2})", arearef, m_arearef);
             }
+            // TODO: no se hace la validación como en los valores de interfaz (>0)
             arearef = m_arearef;
             println!("Área de referencia (usuario) [m2]: {:.2}", arearef);
         }
@@ -251,6 +248,7 @@ fn get_kexp(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
             if (kexp - m_kexp).abs() > 1e-3 {
                 println!("AVISO: factor de exportación del archivo de componentes energéticos ({:.1}) no coincidente con el valor definido por el usuario ({:.1})", kexp, m_kexp);
             }
+            // TODO: no se hace validación como en la interfaz...
             kexp = m_kexp;
             println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
         }
@@ -453,10 +451,14 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Comprobación del parámetro de factor de exportación kexp ----------------------------------------
-    validate_kexp(&matches);
+    if let Some(kexpstr) = matches.value_of("kexp") {
+        validate_kexp(&kexpstr);
+    }
 
     // Comprobación del parámetro de área de referencia -------------------------------------------------------------------------
-    validate_arearef(&matches);
+    if let Some(arearefstr) = matches.value_of("arearef") {
+        validate_arearef(&arearefstr);
+    }
 
     // Factores de paso ---------------------------------------------------------------------------
 
