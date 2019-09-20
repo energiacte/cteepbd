@@ -126,13 +126,10 @@ fn get_factor(
     matches_values: Option<clap::Values<'_>>,
     components: &mut Components,
     meta: &str,
-    descr: &str,
-    verbosity: u64,
 ) -> Option<RenNrenCo2> {
-    // Origen del dato
-    let mut orig = "";
     let factor = matches_values
         .and_then(|v| {
+            // Datos desde línea de comandos
             let vv: Vec<f32> = v
                 .map(|vv| {
                     f32::from_str(vv.trim()).unwrap_or_else(|_| {
@@ -141,27 +138,14 @@ fn get_factor(
                     })
                 })
                 .collect();
-            let userval = RenNrenCo2 {
+            Some(RenNrenCo2 {
                 ren: vv[0],
                 nren: vv[1],
                 co2: vv[2],
-            };
-            // Dato desde línea de comandos
-            orig = "usuario";
-            Some(userval)
+            })
         })
-        .or_else(|| {
-            if let Some(metaval) = components.get_meta_rennren(meta) {
-                orig = "metadatos";
-                Some(metaval)
-            } else {
-                None
-            }
-        });
+        .or_else(|| components.get_meta_rennren(meta));
     if let Some(factor) = factor {
-        if verbosity > 2 {
-            println!("Factores de paso para {} ({}): {}", descr, orig, factor)
-        };
         components.update_meta(
             meta,
             &format!("{:.3}, {:.3}, {:.3}", factor.ren, factor.nren, factor.co2),
@@ -389,33 +373,13 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
     let user_wf = cte::CteUserWF {
-        red1: get_factor(
-            matches.values_of("red1"),
-            &mut components,
-            "CTE_RED1",
-            "RED1",
-            verbosity,
-        ),
-        red2: get_factor(
-            matches.values_of("red2"),
-            &mut components,
-            "CTE_RED2",
-            "RED2",
-            verbosity,
-        ),
-        cogen_to_grid: get_factor(
-            matches.values_of("cogen"),
-            &mut components,
-            "CTE_COGEN",
-            "COGENERACION a la red",
-            verbosity,
-        ),
+        red1: get_factor(matches.values_of("red1"), &mut components, "CTE_RED1"),
+        red2: get_factor(matches.values_of("red2"), &mut components, "CTE_RED2"),
+        cogen_to_grid: get_factor(matches.values_of("cogen"), &mut components, "CTE_COGEN"),
         cogen_to_nepb: get_factor(
             matches.values_of("cogennepb"),
             &mut components,
             "CTE_COGENNEPB",
-            "COGENERACION a usos no EPB",
-            verbosity,
         ),
     };
 
