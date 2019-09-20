@@ -52,12 +52,12 @@ fn readfile<P: AsRef<Path>>(path: P) -> String {
     })
 }
 
-fn writefile(path: &Path, content: &[u8]) {
+fn writefile<P: AsRef<Path>>(path: P, content: &[u8]) {
     let mut file = File::create(&path)
         .map_err(|e| {
             eprintln!(
                 "ERROR: no se ha podido crear el archivo \"{}\": {}",
-                path.display(),
+                path.as_ref().display(),
                 e
             );
             exit(exitcode::CANTCREAT);
@@ -66,7 +66,7 @@ fn writefile(path: &Path, content: &[u8]) {
     if let Err(e) = file.write_all(content) {
         eprintln!(
             "ERROR: no se ha podido escribir en el archivo \"{}\": {}",
-            path.display(),
+            path.as_ref().display(),
             e
         );
         exit(exitcode::IOERR);
@@ -531,28 +531,25 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // Guardado de componentes energéticos --------------------------------------------------------
     if matches.is_present("gen_archivo_componentes") {
-        let path = Path::new(matches.value_of_os("gen_archivo_componentes").unwrap());
+        let path = matches.value_of_os("gen_archivo_componentes").unwrap();
         if verbosity > 2 {
             println!("Componentes energéticos:\n{}", components);
         }
         writefile(&path, components.to_string().as_bytes());
         if verbosity > 0 {
-            println!(
-                "Guardado archivo de componentes energéticos: {}",
-                path.display()
-            );
+            println!("Guardado archivo de componentes energéticos: {:?}", path);
         }
     }
 
     // Guardado de factores de paso corregidos ----------------------------------------------------
     if matches.is_present("gen_archivo_factores") {
-        let path = Path::new(matches.value_of_os("gen_archivo_factores").unwrap());
+        let path = matches.value_of_os("gen_archivo_factores").unwrap();
         if verbosity > 2 {
             println!("Factores de paso:\n{}", fpdata);
         }
         writefile(&path, fpdata.to_string().as_bytes());
         if verbosity > 0 {
-            println!("Guardado archivo de factores de paso: {}", path.display());
+            println!("Guardado archivo de factores de paso: {:?}", path);
         }
     }
 
@@ -569,8 +566,8 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         )
     } else if matches.is_present("gen_archivos_factores") {
         println!(
-            "No se calcula el balance pero se ha generado el archivo de factores de paso {}",
-            matches.value_of("gen_archivo_factores").unwrap()
+            "No se calcula el balance pero se ha generado el archivo de factores de paso {:?}",
+            matches.value_of_os("gen_archivo_factores").unwrap()
         );
         None
     } else {
@@ -582,9 +579,9 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     if let Some(balance) = balance {
         // Guardar balance en formato json
         if matches.is_present("archivo_salida_json") {
-            let path = Path::new(matches.value_of_os("archivo_salida_json").unwrap());
+            let path = matches.value_of_os("archivo_salida_json").unwrap();
             if verbosity > 0 {
-                println!("Resultados en formato JSON: {}", path.display());
+                println!("Resultados en formato JSON: {:?}", path);
             }
             let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|e| {
                 eprintln!(
@@ -597,9 +594,9 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         }
         // Guardar balance en formato XML
         if matches.is_present("archivo_salida_xml") {
-            let path = Path::new(matches.value_of_os("archivo_salida_xml").unwrap());
+            let path = matches.value_of_os("archivo_salida_xml").unwrap();
             if verbosity > 0 {
-                println!("Resultados en formato XML: {}", path.display());
+                println!("Resultados en formato XML: {:?}", path);
             }
             let xml = cte::balance_to_xml(&balance);
             writefile(&path, xml.as_bytes());
@@ -615,9 +612,9 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
         // Guardar balance en formato de texto plano
         if matches.is_present("archivo_salida_txt") {
-            let path = Path::new(matches.value_of_os("archivo_salida_txt").unwrap());
+            let path = matches.value_of_os("archivo_salida_txt").unwrap();
             if verbosity > 0 {
-                println!("Resultados en formato XML: {}", path.display());
+                println!("Resultados en formato XML: {:?}", path);
             }
             writefile(&path, plain.as_bytes());
         }
