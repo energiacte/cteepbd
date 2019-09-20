@@ -23,14 +23,13 @@
 //            Daniel Jiménez González <danielj@ietcc.csic.es>
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-#[macro_use]
 extern crate clap;
 
 use exitcode;
 
 use serde_json;
 
-use std::fs::File;
+use std::fs::{read_to_string, File};
 use std::io::prelude::*;
 use std::path::Path;
 use std::process::exit;
@@ -40,26 +39,24 @@ use clap::{App, AppSettings, Arg};
 
 use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNrenCo2, Service};
 
-// Gestión de errores
-
-type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
-
 // Funciones auxiliares -----------------------------------------------------------------------
 
-fn readfile(path: &Path) -> Result<String> {
-    let mut f = File::open(path)
-        .map_err(|_e| format!("ERROR: archivo \"{}\" no encontrado", path.display()))?;
-    let mut contents = String::new();
-    f.read_to_string(&mut contents)
-        .map_err(|_e| "ERROR: no se ha podido leer el archivo")?;
-    Ok(contents)
+fn readfile<P: AsRef<Path>>(path: P) -> String {
+    read_to_string(&path).unwrap_or_else(|e| {
+        eprintln!(
+            "ERROR: lectura incorrecta del archivo \"{}\": {}",
+            path.as_ref().display(),
+            e
+        );
+        exit(exitcode::IOERR);
+    })
 }
 
 fn writefile(path: &Path, content: &[u8]) {
     let mut file = File::create(&path)
         .map_err(|e| {
             eprintln!(
-                "ERROR: no se ha podido escribir en \"{}\": {}",
+                "ERROR: no se ha podido crear el archivo \"{}\": {}",
                 path.display(),
                 e
             );
@@ -68,7 +65,7 @@ fn writefile(path: &Path, content: &[u8]) {
         .unwrap();
     if let Err(e) = file.write_all(content) {
         eprintln!(
-            "ERROR: no se ha podido escribir en \"{}\": {}",
+            "ERROR: no se ha podido escribir en el archivo \"{}\": {}",
             path.display(),
             e
         );
@@ -81,48 +78,48 @@ fn writefile(path: &Path, content: &[u8]) {
 /// Comprueba validez del valor del factor de exportación
 fn validate_kexp(kexpstr: &str, orig: &str) -> Option<f32> {
     let kexp = kexpstr.parse::<f32>().unwrap_or_else(|_| {
-            eprintln!(
+        eprintln!(
             "ERROR: factor de exportación k_exp incorrecto \"{}\" ({})",
             kexpstr, orig
-            );
-            exit(exitcode::DATAERR);
-        });
-        if kexp < 0.0 || kexp > 1.0 {
-            eprintln!(
+        );
+        exit(exitcode::DATAERR);
+    });
+    if kexp < 0.0 || kexp > 1.0 {
+        eprintln!(
             "ERROR: factor de exportación k_exp fuera de rango [0.00 - 1.00]: {:.2} ({})",
             kexp, orig
-            );
-            exit(exitcode::DATAERR);
-        };
-        if kexp != cte::KEXP_DEFAULT {
-            println!(
+        );
+        exit(exitcode::DATAERR);
+    };
+    if kexp != cte::KEXP_DEFAULT {
+        println!(
             "AVISO: factor de exportación k_exp distinto al reglamentario ({:.2}): {:.2} ({})",
             cte::KEXP_DEFAULT,
-                kexp,
+            kexp,
             orig
-            );
-        };
+        );
+    };
     Some(kexp)
-    }
+}
 
 /// Comprueba validez del dato de area
 fn validate_arearef(arearefstr: &str, orig: &str) -> Option<f32> {
     let arearef = arearefstr.parse::<f32>().unwrap_or_else(|_| {
-            eprintln!(
+        eprintln!(
             "ERROR: área de referencia A_ref incorrecta \"{}\" ({})",
             arearefstr, orig
-            );
-            exit(exitcode::DATAERR);
-        });
-        if arearef <= 1e-3 {
-            eprintln!(
+        );
+        exit(exitcode::DATAERR);
+    });
+    if arearef <= 1e-3 {
+        eprintln!(
             "ERROR: área de referencia A_ref fuera de rango [0.001-]: {:.2} ({})",
             arearef, orig
-            );
-            exit(exitcode::DATAERR);
-        }
-    Some(arearef)
+        );
+        exit(exitcode::DATAERR);
     }
+    Some(arearef)
+}
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> None.
 fn get_factor(
@@ -155,7 +152,7 @@ fn get_factor(
         })
         .or_else(|| {
             if let Some(metaval) = components.get_meta_rennren(meta) {
-                orig = "metadatos de componentes";
+                orig = "metadatos";
                 Some(metaval)
             } else {
                 None
@@ -176,17 +173,8 @@ fn get_factor(
 /// Carga componentes desde archivo o devuelve componentes por defecto
 fn get_components(archivo: Option<&str>) -> Components {
     if let Some(archivo_componentes) = archivo {
-        let path = Path::new(archivo_componentes);
-        let componentsstring = readfile(path).unwrap_or_else(|e| {
-            eprintln!(
-                "ERROR: lectura incorrecta del archivo de componentes energéticos \"{}\": {}",
-                path.display(),
-                e
-            );
-            exit(exitcode::OSFILE);
-        });
-        println!("Componentes energéticos: \"{}\"", path.display());
-        cte::parse_components(&componentsstring).unwrap_or_else(|e| {
+        println!("Componentes energéticos: \"{}\"", archivo_componentes);
+        cte::parse_components(&readfile(archivo_componentes)).unwrap_or_else(|e| {
             eprintln!(
                 "ERROR: formato incorrecto del archivo de componentes \"{}\": {}",
                 archivo_componentes, e
@@ -384,12 +372,12 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         }
     }
 
-    // Comprobación del parámetro de factor de exportación kexp ----------------------------------------
+    // Comprobación del parámetro de factor de exportación kexp -----------------------------------
     let kexp_cli = matches
         .value_of("kexp")
         .and_then(|kexpstr| validate_kexp(kexpstr, "usuario"));
 
-    // Comprobación del parámetro de área de referencia -------------------------------------------------------------------------
+    // Comprobación del parámetro de área de referencia -------------------------------------------
     let arearef_cli = matches
         .value_of("arearef")
         .and_then(|arearefstr| validate_arearef(arearefstr, "usuario"));
@@ -436,60 +424,42 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     };
 
     // 2. Definición de los factores de paso principales
-    let mut fpdata =
-        // Definición desde archivo
-        if let Some(archivo_factores) = matches.value_of("archivo_factores") {
-            let path = Path::new(archivo_factores);
-            let fpstring = readfile(path)
-                .and_then(|fpstring| {
-                    println!("Factores de paso (archivo): \"{}\"", path.display());
-                    Ok(fpstring)
-                })
-                .unwrap_or_else(|e| {
-                    eprintln!(
-                        "ERROR: lectura incorrecta del archivo de factores de paso \"{}\": {}",
-                        path.display(), e
-                    );
-                    exit(exitcode::OSFILE);
-                });
-            cte::wfactors_from_str(&fpstring, &user_wf, &default_wf)
-                .unwrap_or_else(|e| {
-                    eprintln!(
-                        "ERROR: formato incorrecto del archivo de factores de paso \"{}\": {}",
-                        path.display(), e
-                    );
-                    exit(exitcode::DATAERR);
-                })
-        // Definición por localización
-        } else {
-            let localizacion = matches
-                // 1/2 Desde opción de CLI
-                .value_of("fps_loc")
-                .and_then(|v| {
-                    println!("Factores de paso (usuario): {}", v);
-                    components.update_meta("CTE_LOCALIZACION", v);
-                    Some(v.to_string())
-                })
-                // 2/2 desde metadatos de componentes
-                .or_else(|| components.get_meta("CTE_LOCALIZACION")
-                    .and_then(|loc| {
-                        println!("Factores de paso (metadatos): {}", loc);
-                        Some(loc)
-                    })
-                )
-                // Error
-                .or_else(|| {
-                    eprintln!("ERROR: datos insuficientes para determinar los factores de paso");
-                    exit(exitcode::USAGE);
-                }).unwrap();
-            cte::wfactors_from_loc(&localizacion, &user_wf, &default_wf)
-                .unwrap_or_else(|e| {
-                    eprintln!("ERROR: parámetros incorrectos para generar los factores de paso: {}", e);
-                    exit(exitcode::DATAERR);
-                })
-        };
 
-    // Simplificación de los factores de paso -----------------------------------------------------------------
+    let fp_path_cli = matches.value_of("archivo_factores");
+    let loc_cli = matches.value_of("fps_loc");
+    let loc_meta = components.get_meta("CTE_LOCALIZACION");
+
+    // CLI path > CLI loc > Meta loc > error
+    let (orig_fp, param_fp, fp_opt) = match (fp_path_cli, loc_cli, loc_meta) {
+        (Some(fp_cli), _, _) => {
+            let fp = cte::wfactors_from_str(&readfile(fp_cli), &user_wf, &default_wf);
+            ("archivo", fp_cli.to_string(), fp)
+        }
+        (None, Some(l_cli), _) => {
+            let fp = cte::wfactors_from_loc(&l_cli, &user_wf, &default_wf);
+            ("usuario", l_cli.to_string(), fp)
+        }
+        (None, None, Some(l_meta)) => {
+            let fp = cte::wfactors_from_loc(&l_meta, &user_wf, &default_wf);
+            ("metadatos", l_meta, fp)
+        }
+        _ => {
+            eprintln!("ERROR: datos insuficientes para determinar los factores de paso");
+            exit(exitcode::USAGE);
+        }
+    };
+
+    let mut fpdata = fp_opt.unwrap_or_else(|e| {
+        eprintln!(
+            "ERROR: parámetros incorrectos para generar los factores de paso: {}",
+            e
+        );
+        exit(exitcode::DATAERR);
+    });
+
+    println!("Factores de paso ({}): {}", orig_fp, param_fp);
+
+    // Simplificación de los factores de paso -----------------------------------------------------
     if !matches.is_present("nosimplificafps") && !components.cdata.is_empty() {
         let oldfplen = fpdata.wdata.len();
         cte::strip_wfactors(&mut fpdata, &components);
@@ -535,7 +505,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         orig_arearef, arearef
     );
 
-    // kexp ------------------------------------------------------------------------------------------
+    // kexp ---------------------------------------------------------------------------------------
     // CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
     let kexp_meta = components
         .get_meta("CTE_KEXP")
@@ -559,7 +529,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     println!("Factor de exportación ({}) [-]: {:.1}", orig_kexp, kexp);
 
-    // Guardado de componentes energéticos -----------------------------------------------------------
+    // Guardado de componentes energéticos --------------------------------------------------------
     if matches.is_present("gen_archivo_componentes") {
         let path = Path::new(matches.value_of_os("gen_archivo_componentes").unwrap());
         if verbosity > 2 {
@@ -574,7 +544,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         }
     }
 
-    // Guardado de factores de paso corregidos ------------------------------------------------------
+    // Guardado de factores de paso corregidos ----------------------------------------------------
     if matches.is_present("gen_archivo_factores") {
         let path = Path::new(matches.value_of_os("gen_archivo_factores").unwrap());
         if verbosity > 2 {
@@ -586,7 +556,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         }
     }
 
-    // Cálculo del balance -------------------------------------------------------------------------
+    // Cálculo del balance ------------------------------------------------------------------------
     let balance: Option<Balance> = if !components.cdata.is_empty() {
         Some(
             energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|e| {
@@ -608,7 +578,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
         None
     };
 
-    // Salida de resultados ------------------------------------------------------------------------
+    // Salida de resultados -----------------------------------------------------------------------
     if let Some(balance) = balance {
         // Guardar balance en formato json
         if matches.is_present("archivo_salida_json") {
