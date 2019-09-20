@@ -52,6 +52,7 @@ pub const CTE_NRBY: [Carrier; 5] = [
 ]; // Ver B.23. Solo biomasa sólida
 
 // ---------------- Valores por defecto y definibles por el usuario -----------------------
+#[derive(Debug)]
 pub struct CteUserWF<T> {
     /// Factores de paso de redes de distrito 1.
     /// RED1, RED, SUMINISTRO, A, ren, nren

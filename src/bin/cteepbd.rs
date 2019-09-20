@@ -78,47 +78,50 @@ fn writefile(path: &Path, content: &[u8]) {
 
 // Funciones auxiliares de validación y obtención de valores
 
-/// Comprueba validez del valor del factor de exportación de la CLI.
-fn validate_kexp(kexpstr: &str) {
+/// Comprueba validez del valor del factor de exportación
+fn validate_kexp(kexpstr: &str, orig: &str) -> Option<f32> {
     let kexp = kexpstr.parse::<f32>().unwrap_or_else(|_| {
             eprintln!(
-                "ERROR: factor de exportación k_exp incorrecto \"{}\"",
-            kexpstr
+            "ERROR: factor de exportación k_exp incorrecto \"{}\" ({})",
+            kexpstr, orig
             );
             exit(exitcode::DATAERR);
         });
         if kexp < 0.0 || kexp > 1.0 {
             eprintln!(
-                "ERROR: factor de exportación k_exp fuera de rango [0.00 - 1.00]: {:.2}",
-                kexp
+            "ERROR: factor de exportación k_exp fuera de rango [0.00 - 1.00]: {:.2} ({})",
+            kexp, orig
             );
             exit(exitcode::DATAERR);
         };
         if kexp != cte::KEXP_DEFAULT {
             println!(
-                "AVISO: factor de exportación k_exp ({:.2}) distinto al reglamentario ({:.2})",
+            "AVISO: factor de exportación k_exp distinto al reglamentario ({:.2}): {:.2} ({})",
+            cte::KEXP_DEFAULT,
                 kexp,
-                cte::KEXP_DEFAULT
+            orig
             );
         };
+    Some(kexp)
     }
 
-/// Comprueba validez del dato de area en la CLI.
-fn validate_arearef(arearefstr: &str) {
+/// Comprueba validez del dato de area
+fn validate_arearef(arearefstr: &str, orig: &str) -> Option<f32> {
     let arearef = arearefstr.parse::<f32>().unwrap_or_else(|_| {
             eprintln!(
-                "ERROR: área de referencia A_ref incorrecta \"{}\"",
-            arearefstr
+            "ERROR: área de referencia A_ref incorrecta \"{}\" ({})",
+            arearefstr, orig
             );
             exit(exitcode::DATAERR);
         });
         if arearef <= 1e-3 {
             eprintln!(
-                "ERROR: área de referencia A_ref fuera de rango [0.001-]: {:.2}",
-                arearef
+            "ERROR: área de referencia A_ref fuera de rango [0.001-]: {:.2} ({})",
+            arearef, orig
             );
             exit(exitcode::DATAERR);
         }
+    Some(arearef)
     }
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> None.
@@ -193,75 +196,6 @@ fn get_components(archivo: Option<&str>) -> Components {
     } else {
         Default::default()
     }
-}
-
-/// Obtén área de referencia, arearef
-/// Argumentos de CLI > Metadatos de componentes > Valor por defecto (AREAREF_DEFAULT = 1.0)
-fn get_arearef(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
-    let mut arearef;
-    // Se define CTE_AREAREF en metadatos de componentes energéticos
-    if components.has_meta("CTE_AREAREF") {
-        arearef = components.get_meta_f32("CTE_AREAREF").unwrap_or_else(|| {
-            eprintln!(
-                "ERROR: área de referencia A_ref en metadatos incorrecta \"{}\"",
-                components.get_meta("CTE_AREAREF").unwrap()
-            );
-            exit(exitcode::DATAERR);
-        });
-        if matches.occurrences_of("arearef") == 0 {
-            println!("Área de referencia (metadatos) [m2]: {:.2}", arearef);
-        } else {
-            let m_arearef = value_t!(matches, "arearef", f32).unwrap();
-            if (arearef - m_arearef).abs() > 1e-3 {
-                println!("AVISO: El valor del área de referencia del archivo de componentes energéticos ({:.2}) no coincide con el valor definido por el usuario ({:.2})", arearef, m_arearef);
-            }
-            // TODO: no se hace la validación como en los valores de interfaz (>0)
-            arearef = m_arearef;
-            println!("Área de referencia (usuario) [m2]: {:.2}", arearef);
-        }
-    // Área de referencia en la interfaz
-    } else if matches.occurrences_of("arearef") != 0 {
-        arearef = value_t!(matches, "arearef", f32).unwrap();
-        println!("Área de referencia (usuario) [m2]: {:.2}", arearef);
-    // Valor por defecto
-    } else {
-        arearef = cte::AREAREF_DEFAULT;
-        println!("Área de referencia (predefinida) [m2]: {:.2}", arearef);
-    }
-    arearef
-}
-
-/// Obtén factor de exportación, kexp
-/// Argumentos de CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
-fn get_kexp(components: &Components, matches: &clap::ArgMatches<'_>) -> f32 {
-    let mut kexp;
-    // Se define CTE_KEXP en metadatos de componentes energéticos
-    if components.has_meta("CTE_KEXP") {
-        kexp = components.get_meta_f32("CTE_KEXP").unwrap_or_else(|| {
-            eprintln!("ERROR: factor de exportación en metadatos incorrecto");
-            exit(exitcode::DATAERR);
-        });
-        if matches.occurrences_of("kexp") == 0 {
-            println!("Factor de exportación (metadatos) [-]: {:.1}", kexp);
-        } else {
-            let m_kexp = value_t!(matches, "kexp", f32).unwrap();
-            if (kexp - m_kexp).abs() > 1e-3 {
-                println!("AVISO: factor de exportación del archivo de componentes energéticos ({:.1}) no coincidente con el valor definido por el usuario ({:.1})", kexp, m_kexp);
-            }
-            // TODO: no se hace validación como en la interfaz...
-            kexp = m_kexp;
-            println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
-        }
-    // kexp definido en la interfaz
-    } else if matches.occurrences_of("kexp") != 0 {
-        kexp = value_t!(matches, "kexp", f32).unwrap();
-        println!("Factor de exportación (usuario) [-]: {:.1}", kexp);
-    // Valor por defecto
-    } else {
-        kexp = cte::KEXP_DEFAULT;
-        println!("Factor de exportación (predefinido) [-]: {:.1}", kexp);
-    }
-    kexp
 }
 
 // Función principal ------------------------------------------------------------------------------
@@ -451,14 +385,14 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Comprobación del parámetro de factor de exportación kexp ----------------------------------------
-    if let Some(kexpstr) = matches.value_of("kexp") {
-        validate_kexp(&kexpstr);
-    }
+    let kexp_cli = matches
+        .value_of("kexp")
+        .and_then(|kexpstr| validate_kexp(kexpstr, "usuario"));
 
     // Comprobación del parámetro de área de referencia -------------------------------------------------------------------------
-    if let Some(arearefstr) = matches.value_of("arearef") {
-        validate_arearef(&arearefstr);
-    }
+    let arearef_cli = matches
+        .value_of("arearef")
+        .and_then(|arearefstr| validate_arearef(arearefstr, "usuario"));
 
     // Factores de paso ---------------------------------------------------------------------------
 
@@ -495,6 +429,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
             "COGENERACION a usos no EPB",
             verbosity,
         ),
+    };
+
+    if verbosity > 2 {
+        println!("Factores de paso de usuario:\n{:?}", user_wf)
     };
 
     // 2. Definición de los factores de paso principales
@@ -571,27 +509,63 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     }
 
     // Área de referencia -------------------------------------------------------------------------
-    // Argumentos de CLI > Metadatos de componentes > Valor por defecto (AREA_REF = 1)
-    let arearef = get_arearef(&components, &matches);
+    // CLI > Metadatos de componentes > Valor por defecto (AREA_REF = 1)
+    let arearef_meta = components
+        .get_meta("CTE_AREAREF")
+        .and_then(|ref arearefstr| validate_arearef(arearefstr, "metadatos"));
+
+    if let (Some(a_meta), Some(a_cli)) = (arearef_meta, arearef_cli) {
+        if (a_meta - a_cli).abs() > 1e-3 {
+            println!("AVISO: área de referencia A_ref en componentes ({:.1}) y de usuario ({:.1}) distintos", a_meta, a_cli);
+        };
+    }
+
+    // CLI > Meta > default
+    let (orig_arearef, arearef) = match (arearef_meta, arearef_cli) {
+        (_, Some(a_cli)) => ("usuario", a_cli),
+        (Some(a_meta), None) => ("metadatos", a_meta),
+        _ => ("predefinido", cte::AREAREF_DEFAULT),
+    };
 
     // Actualiza metadato CTE_AREAREF al valor seleccionado
     components.update_meta("CTE_AREAREF", &format!("{:.2}", arearef));
 
+    println!(
+        "Área de referencia ({}) [m2]: {:.2}",
+        orig_arearef, arearef
+    );
+
     // kexp ------------------------------------------------------------------------------------------
-    // Argumentos de CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
-    let kexp = get_kexp(&components, &matches);
+    // CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
+    let kexp_meta = components
+        .get_meta("CTE_KEXP")
+        .and_then(|ref kexpstr| validate_kexp(kexpstr, "metadatos"));
+
+    if let (Some(k_meta), Some(k_cli)) = (kexp_meta, kexp_cli) {
+        if (k_meta - k_cli).abs() > 1e-3 {
+            println!("AVISO: factor de exportación k_exp en componentes ({:.1}) y de usuario ({:.1}) distintos", k_meta, k_cli);
+        };
+    }
+
+    // CLI > Meta > default
+    let (orig_kexp, kexp) = match (kexp_meta, kexp_cli) {
+        (_, Some(k_cli)) => ("usuario", k_cli),
+        (Some(k_meta), None) => ("metadatos", k_meta),
+        _ => ("predefinido", cte::KEXP_DEFAULT),
+    };
 
     // Actualiza metadato CTE_KEXP al valor seleccionado
     components.update_meta("CTE_KEXP", &format!("{:.1}", kexp));
 
+    println!("Factor de exportación ({}) [-]: {:.1}", orig_kexp, kexp);
+
     // Guardado de componentes energéticos -----------------------------------------------------------
     if matches.is_present("gen_archivo_componentes") {
         let path = Path::new(matches.value_of_os("gen_archivo_componentes").unwrap());
-        let components_string = format!("{}", components);
         if verbosity > 2 {
-            println!("Componentes energéticos:\n{}", components_string);
+            println!("Componentes energéticos:\n{}", components);
         }
-        writefile(&path, components_string.as_bytes());
+        writefile(&path, components.to_string().as_bytes());
         if verbosity > 0 {
             println!(
                 "Guardado archivo de componentes energéticos: {}",
