@@ -166,7 +166,7 @@ fn get_components(archivo: Option<&str>) -> Components {
             exit(exitcode::DATAERR);
         })
     } else {
-        Default::default()
+        Components::default()
     }
 }
 
@@ -455,7 +455,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // CLI > Meta > default
     let (orig_arearef, arearef) = match (arearef_meta, arearef_cli) {
         (_, Some(a_cli)) => ("usuario", a_cli),
-        (Some(a_meta), None) => ("metadatos", a_meta),
+        (Some(a_meta), _) => ("metadatos", a_meta),
         _ => ("predefinido", cte::AREAREF_DEFAULT),
     };
 

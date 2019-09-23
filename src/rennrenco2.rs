@@ -48,7 +48,7 @@ where
 impl RenNrenCo2 {
     /// Default constructor -> { ren: 0.0, nren: 0.0 }
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 
     /// Total renewable + non renewable energy
