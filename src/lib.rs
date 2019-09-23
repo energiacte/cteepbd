@@ -42,4 +42,7 @@ pub use epbd::*;
 pub use rennrenco2::*;
 pub use types::*;
 
+mod error;
+pub use error::{EpbdError};
+
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");

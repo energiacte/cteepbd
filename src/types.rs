@@ -26,8 +26,7 @@ use std::fmt;
 use std::str;
 use std::str::FromStr;
 
-use failure::{Error, format_err};
-
+use crate::error::EpbdError;
 use crate::rennrenco2::RenNrenCo2;
 
 // == Common properties (carriers + weighting factors) ==
@@ -136,7 +135,7 @@ pub const SERVICES: [Service; 9] = [
 ];
 
 impl str::FromStr for Service {
-    type Err = Error;
+    type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Service, Self::Err> {
         match s {
@@ -154,7 +153,11 @@ impl str::FromStr for Service {
             "BAC" => Ok(Service::BAC),
             "NDEF" => Ok(Service::NDEF),
             "" => Ok(Service::default()),
-            _ => Err(format_err!("Service not found")),
+            _ => Err(EpbdError::Parse {
+                from: s.into(),
+                into: "Service (Service)".into(),
+                desc: "unknown value",
+            }),
         }
     }
 }
@@ -192,7 +195,7 @@ pub enum Dest {
 }
 
 impl str::FromStr for Dest {
-    type Err = Error;
+    type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Dest, Self::Err> {
         match s {
@@ -203,7 +206,11 @@ impl str::FromStr for Dest {
             "to_grid" => Ok(Dest::A_RED),
             "to_nEPB" => Ok(Dest::A_NEPB),
             "input" => Ok(Dest::SUMINISTRO),
-            _ => Err(format_err!("Service not found")),
+            _ => Err(EpbdError::Parse {
+                from: s.into(),
+                into: "Destination or origin (Dest)".into(),
+                desc: "unknown value",
+            }),
         }
     }
 }
@@ -250,7 +257,7 @@ impl fmt::Display for Meta {
 }
 
 impl str::FromStr for Meta {
-    type Err = Error;
+    type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Meta, Self::Err> {
         // Remove start of line with #META or #CTE_
@@ -266,7 +273,11 @@ impl str::FromStr for Meta {
             let value = items[1].trim();
             Ok(Meta::new(key, value))
         } else {
-            Err(format_err!("Couldn't parse Metadata from string"))
+            Err(EpbdError::Parse {
+                from: s.into(),
+                into: "Metadata (Meta)".into(),
+                desc: "wrong number of items",
+            })
         }
     }
 }
@@ -310,7 +321,7 @@ impl fmt::Display for Component {
 }
 
 impl str::FromStr for Component {
-    type Err = Error;
+    type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Component, Self::Err> {
         use self::CSubtype::*;
@@ -321,14 +332,27 @@ impl str::FromStr for Component {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 4 {
-            return Err(format_err!(
-                "Couldn't parse Component (Component) from string: {}",
-                s
-            ));
+            return Err(EpbdError::Parse {
+                from: s.into(),
+                into: "Component (Component)".into(),
+                desc: "wrong format",
+            });
         };
-        let carrier: Carrier = items[0].parse()?;
-        let ctype: CType = items[1].parse()?;
-        let csubtype: CSubtype = items[2].parse()?;
+        let carrier: Carrier = items[0].parse().map_err(|_| EpbdError::Parse {
+            from: items[0].into(),
+            into: "Carrier (Carrier)".into(),
+            desc: "wrong format",
+        })?;
+        let ctype: CType = items[1].parse().map_err(|_| EpbdError::Parse {
+            from: items[1].into(),
+            into: "Component type (CType)".into(),
+            desc: "wrong format",
+        })?;
+        let csubtype: CSubtype = items[2].parse().map_err(|_| EpbdError::Parse {
+            from: items[2].into(),
+            into: "Component subtype (CSubtype)".into(),
+            desc: "wrong format",
+        })?;
         let carrier_ok = match ctype {
             CONSUMO => match csubtype {
                 EPB | NEPB => true,
@@ -341,7 +365,11 @@ impl str::FromStr for Component {
             },
         };
         if !carrier_ok {
-            return Err(format_err!("Wrong Component definition in string: {}", s));
+            return Err(EpbdError::Parse {
+                from: s.into(),
+                into: "Component (Component)".into(),
+                desc: "wrong subtype for given type",
+            });
         }
         //This accounts for the legacy version, which may not have a service type
         let maybeservice: Result<Service, _> = items[3].parse();
@@ -438,21 +466,39 @@ impl fmt::Display for Factor {
 }
 
 impl str::FromStr for Factor {
-    type Err = Error;
+    type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Factor, Self::Err> {
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 7 {
-            return Err(format_err!(
-                "Couldn't parse Weighting Factor (Factor) from string"
-            ));
+            return Err(EpbdError::Parse {
+                from: s.into(),
+                into: "Weighting Factor (Factor)".into(),
+                desc: "wrong number of items",
+            });
         };
-        let carrier: Carrier = items[0].parse()?;
-        let source: Source = items[1].parse()?;
-        let dest: Dest = items[2].parse()?;
-        let step: Step = items[3].parse()?;
+        let carrier: Carrier = items[0].parse().map_err(|_| EpbdError::Parse {
+            from: items[0].into(),
+            into: "Carrier (Carrier)".into(),
+            desc: "wrong format",
+        })?;
+        let source: Source = items[1].parse().map_err(|_| EpbdError::Parse {
+            from: items[1].into(),
+            into: "Source (Source)".into(),
+            desc: "wrong format",
+        })?;
+        let dest: Dest = items[2].parse().map_err(|_| EpbdError::Parse {
+            from: items[2].into(),
+            into: "Dest (Dest)".into(),
+            desc: "wrong format",
+        })?;
+        let step: Step = items[3].parse().map_err(|_| EpbdError::Parse {
+            from: items[3].into(),
+            into: "Step (Step)".into(),
+            desc: "wrong format",
+        })?;
         let ren: f32 = items[4].parse()?;
         let nren: f32 = items[5].parse()?;
         let co2: f32 = items[6].parse()?;
@@ -508,6 +554,7 @@ pub trait MetaVec {
             .iter()
             .find(|m| m.key == key)
             .and_then(|v| {
+                // TODO: this should be implemented as FromStr (parse) in RenNrenCo2
                 let vals = v
                     .value
                     .split(',')
@@ -581,7 +628,7 @@ impl fmt::Display for Components {
 }
 
 impl str::FromStr for Components {
-    type Err = Error;
+    type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Components, Self::Err> {
         let s_nobom = if s.starts_with("\u{feff}") {
@@ -605,10 +652,11 @@ impl str::FromStr for Components {
         {
             let cdata_lens: Vec<_> = cdata.iter().map(|e| e.values.len()).collect();
             if cdata_lens.iter().max().unwrap() != cdata_lens.iter().min().unwrap() {
-                return Err(format_err!(
-                    "Energy components have different number of values: {:?}",
-                    cdata_lens
-                ));
+                return Err(EpbdError::Parse {
+                    from: s.into(),
+                    into: "Components (Components)".into(),
+                    desc: "varying number of values",
+                });
             }
         }
         Ok(Components { cmeta, cdata })
@@ -659,7 +707,7 @@ impl fmt::Display for Factors {
 }
 
 impl str::FromStr for Factors {
-    type Err = Error;
+    type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Factors, Self::Err> {
         let lines: Vec<&str> = s.lines().map(str::trim).collect();

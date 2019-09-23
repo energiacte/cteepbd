@@ -13,7 +13,6 @@ license = "MIT"
 [dependencies]
 clap = "2.33.0"
 exitcode = "1.1.2"
-failure = "0.1.5"
 itertools = "0.8.0"
 num= "0.2.0"
 serde = "1.0.94"
