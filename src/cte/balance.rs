@@ -30,9 +30,7 @@ Utilidades para la gestión de balances energéticos para el CTE
 
 use itertools::Itertools; // join
 
-use crate::types::{Balance, Component, Factor};
-use crate::RenNrenCo2;
-
+use crate::{Balance, Component, Factor, RenNrenCo2};
 
 /// Muestra balance, paso B, de forma simplificada.
 pub fn balance_to_plain(balance: &Balance) -> String {
@@ -59,7 +57,12 @@ pub fn balance_to_plain(balance: &Balance) -> String {
     let mut b_byuse = balance_m2
         .B_byuse
         .iter()
-        .map(|(k, v)| format!("{}: ren {:.2}, nren {:.2}, co2: {:.2}", k, v.ren, v.nren, v.co2))
+        .map(|(k, v)| {
+            format!(
+                "{}: ren {:.2}, nren {:.2}, co2: {:.2}",
+                k, v.ren, v.nren, v.co2
+            )
+        })
         .collect::<Vec<String>>();
     b_byuse.sort();
 

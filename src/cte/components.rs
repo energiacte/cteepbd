@@ -33,14 +33,11 @@ Hipótesis:
 
 use itertools::Itertools;
 
-use crate::types::{CSubtype, CType, Carrier, MetaVec, Service};
-use crate::types::{Component, Components};
 use crate::vecops::{veckmul, veclistsum, vecvecdif};
-
-type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
+use crate::{CSubtype, CType, Carrier, Component, Components, EpbdError, MetaVec, Service};
 
 /// Devuelve objetos CARRIER y META a partir de cadena, intentando asegurar los tipos.
-pub fn parse_components(datastring: &str) -> Result<Components> {
+pub fn parse_components(datastring: &str) -> Result<Components, EpbdError> {
     let mut components: Components = datastring.parse()?;
     fix_components(&mut components);
     Ok(components)
@@ -70,7 +67,6 @@ pub fn force_ndef_use_for_electricity_production(components: &mut Components) {
         }
     }
 }
-
 
 /// Asegura que la energía MEDIOAMBIENTE consumida está equilibrada por una producción in situ
 ///
@@ -142,9 +138,7 @@ pub fn compensate_env_use(components: &mut Components) {
                 csubtype: CSubtype::INSITU,
                 service,
                 values: unbalanced_values,
-                comment:
-                    "Equilibrado de consumo sin producción declarada"
-                        .into(),
+                comment: "Equilibrado de consumo sin producción declarada".into(),
             })
         })
         .filter(std::option::Option::is_some)

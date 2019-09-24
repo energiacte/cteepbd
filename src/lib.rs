@@ -34,15 +34,14 @@ extern crate strum_macros;
 
 pub mod cte;
 pub mod epbd;
+pub mod error;
 pub mod rennrenco2;
 pub mod types;
 pub mod vecops;
 
 pub use epbd::*;
+pub use error::{EpbdError, Result};
 pub use rennrenco2::*;
 pub use types::*;
-
-mod error;
-pub use error::{EpbdError};
 
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");

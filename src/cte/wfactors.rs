@@ -30,11 +30,10 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 
 use itertools::Itertools;
 
-use crate::rennrenco2::RenNrenCo2;
-use crate::types::{CSubtype, Carrier, Dest, Source, Step};
-use crate::types::{Components, Factor, Factors, Meta, MetaVec};
-
-type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
+use crate::{
+    CSubtype, Carrier, Components, Dest, EpbdError, Factor, Factors, Meta, MetaVec, RenNrenCo2,
+    Result, Source, Step,
+};
 
 // Localizaciones válidas para CTE
 // const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELILLA"];
@@ -160,9 +159,7 @@ pub fn wfactors_from_loc(
         "BALEARES" => defaults.loc_baleares,
         "CANARIAS" => defaults.loc_canarias,
         "CEUTAMELILLA" => defaults.loc_ceutamelilla,
-        _ => Err(format!("Localización \"{}\" desconocida al generar factores de paso",
-            loc
-        ))?,
+        _ => Err(EpbdError::Location(loc.to_string()))?,
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
@@ -172,10 +169,7 @@ pub fn wfactors_from_loc(
 /// Genera factores de paso a partir de metadatos de componentes.
 ///
 /// Usa localización (CTE_LOC), y factores de usuario (CTE_COGEN, CTE_COGENNEPB, CTE_RED1, CTE_RED2)
-pub fn wfactors_from_meta(
-    components: &Components,
-    defaults: &CteDefaultsWF,
-) -> Result<Factors> {
+pub fn wfactors_from_meta(components: &Components, defaults: &CteDefaultsWF) -> Result<Factors> {
     let loc = components.get_meta("CTE_LOCALIZACION").unwrap_or_default();
     let user = CteUserWF {
         red1: components.get_meta_rennren("CTE_RED1"),
@@ -188,10 +182,7 @@ pub fn wfactors_from_meta(
         "BALEARES" => defaults.loc_baleares,
         "CANARIAS" => defaults.loc_canarias,
         "CEUTAMELILLA" => defaults.loc_ceutamelilla,
-        _ => Err(format!(
-            "Localización \"{}\" desconocida al generar factores de paso",
-            loc
-        ))?,
+        _ => Err(EpbdError::Location(loc.to_string()))?,
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, &user);
@@ -199,10 +190,7 @@ pub fn wfactors_from_meta(
 }
 
 /// Actualiza los factores definibles por el usuario (cogen_to_grid, cogen_to_nepb, red1 y red2)
-pub fn set_user_wfactors(
-    wfactors: &mut Factors,
-    user: &CteUserWF<Option<RenNrenCo2>>
-) {
+pub fn set_user_wfactors(wfactors: &mut Factors, user: &CteUserWF<Option<RenNrenCo2>>) {
     // ------ Cogeneración a red ----------
     if let Some(ucog) = user.cogen_to_grid {
         if let Some(factor) = wfactors.wdata.iter_mut().find(|f| {
@@ -378,7 +366,9 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
         })
     });
     if !has_grid_factors_for_all_carriers {
-        Err("No se han definido los factores de paso de red de algún vector \"VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?\"")?;
+        Err(EpbdError::FactorNotFound(
+            "factores de red VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?".into(),
+        ))?;
     }
     // En paso A, el factor SUMINISTRO de cogeneración es 0.0, 0.0 ya que el impacto se tiene en cuenta en el suministro del vector de generación
     let has_cogen_input = wfactors
@@ -422,7 +412,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                         ..*f
                     });
                 } else {
-                    Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso A", c))?;
+                    Err(EpbdError::FactorNotFound(format!(
+                        "suministro del vector {} para definir exportación a la red en paso A",
+                        c
+                    )))?;
                 }
             } else {
                 // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -457,7 +450,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                         ..*f
                     });
                 } else {
-                    Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso A", c))?;
+                    Err(EpbdError::FactorNotFound(format!(
+                        "suministro del vector {} para definir exportación a usos no EPB en paso A",
+                        c
+                    )))?;
                 }
             } else {
                 // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -505,7 +501,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
             } else {
-                Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a la red en paso B", c))?;
+                Err(EpbdError::FactorNotFound(format!(
+                    "suministro del vector {} para exportación a la red en paso B",
+                    c
+                )))?;
             }
         }
         let has_to_nepb_b = wfactors.wdata.iter().any(|f| {
@@ -518,7 +517,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
             } else {
-                Err(format!("No se ha definido el factor de paso de suministro del vector {} y es necesario para definir el factor de exportación a usos no EPB en paso B", c))?;
+                Err(EpbdError::FactorNotFound(format!(
+                    "suministro del vector {} para exportación a usos no EPB en paso B",
+                    c
+                )))?;
             }
         }
     }

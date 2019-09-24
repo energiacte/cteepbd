@@ -26,8 +26,7 @@ use std::fmt;
 use std::str;
 use std::str::FromStr;
 
-use crate::error::EpbdError;
-use crate::rennrenco2::RenNrenCo2;
+use crate::{EpbdError, RenNrenCo2};
 
 // == Common properties (carriers + weighting factors) ==
 

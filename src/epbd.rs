@@ -39,15 +39,12 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 
-use crate::rennrenco2::RenNrenCo2;
-use crate::types::{
+use crate::{
     Balance, BalanceForCarrier, BalanceTotal, CSubtype, CType, Carrier, Component, Components,
-    Dest, Factor, Factors, Service, Source, Step, SERVICES,
+    Dest, EpbdError, Factor, Factors, RenNrenCo2, Result, Service, Source, Step, SERVICES,
 };
 
 use crate::vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
-
-type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Result<T, E>;
 
 // --------------------------------------------------------------------
 // Energy calculation functions
@@ -69,7 +66,9 @@ type Result<T, E = Box<dyn std::error::Error + Sync + Send>> = std::result::Resu
 ///
 fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor> {
     if fp_cr.is_empty() {
-        Err("No weighting factors found for carrier".to_string())?
+        Err(EpbdError::FactorNotFound(
+            "No weighting factors found for carrier".to_string(),
+        ))?
     };
 
     match fp_cr
@@ -77,10 +76,10 @@ fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&F
         .find(|fp| fp.dest == dest && fp.step == step && fp.source == source)
     {
         Some(v) => Ok(v),
-        None => Err(format!(
+        None => Err(EpbdError::FactorNotFound(format!(
             "No weighting factor found for: '{}, {}, {}, {}'",
             fp_cr[0].carrier, source, dest, step
-        ))?,
+        )))?,
     }
 }
 
@@ -101,7 +100,10 @@ fn fp_gen(fp_cr: &[Factor], gen: CSubtype, dest: Dest, step: Step) -> Result<&Fa
     match gen {
         CSubtype::INSITU => fp_src(fp_cr, Source::INSITU, dest, step),
         CSubtype::COGENERACION => fp_src(fp_cr, Source::COGENERACION, dest, step),
-        _ => Err(format!("Unexpected generator {}", gen))?,
+        _ => Err(EpbdError::FactorNotFound(format!(
+            "Unexpected generator {} to deduce subtype",
+            gen
+        )))?,
     }
 }
 
@@ -480,10 +482,10 @@ pub fn energy_performance(
     arearef: f32,
 ) -> Result<Balance> {
     if arearef < 1e-3 {
-        Err(format!(
+        Err(EpbdError::Area(format!(
             "Reference area can't be zero or almost zero and found {}",
             arearef
-        ))?
+        )))?
     };
 
     let carriers: Vec<Carrier> = components
