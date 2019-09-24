@@ -152,11 +152,7 @@ impl str::FromStr for Service {
             "BAC" => Ok(Service::BAC),
             "NDEF" => Ok(Service::NDEF),
             "" => Ok(Service::default()),
-            _ => Err(EpbdError::Parse {
-                from: s.into(),
-                into: "Service (Service)".into(),
-                desc: "unknown value",
-            }),
+            _ => Err(EpbdError::ServiceUnknown(s.into())),
         }
     }
 }
@@ -205,11 +201,7 @@ impl str::FromStr for Dest {
             "to_grid" => Ok(Dest::A_RED),
             "to_nEPB" => Ok(Dest::A_NEPB),
             "input" => Ok(Dest::SUMINISTRO),
-            _ => Err(EpbdError::Parse {
-                from: s.into(),
-                into: "Destination or origin (Dest)".into(),
-                desc: "unknown value",
-            }),
+            _ => Err(EpbdError::DestUnknown(s.into())),
         }
     }
 }
@@ -272,11 +264,7 @@ impl str::FromStr for Meta {
             let value = items[1].trim();
             Ok(Meta::new(key, value))
         } else {
-            Err(EpbdError::Parse {
-                from: s.into(),
-                into: "Metadata (Meta)".into(),
-                desc: "wrong number of items",
-            })
+            Err(EpbdError::MetaParseError(s.into()))
         }
     }
 }
@@ -331,27 +319,19 @@ impl str::FromStr for Component {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 4 {
-            return Err(EpbdError::Parse {
-                from: s.into(),
-                into: "Component (Component)".into(),
-                desc: "wrong format",
-            });
+            return Err(EpbdError::ComponentParseError(s.into()));
         };
-        let carrier: Carrier = items[0].parse().map_err(|_| EpbdError::Parse {
-            from: items[0].into(),
-            into: "Carrier (Carrier)".into(),
-            desc: "wrong format",
-        })?;
-        let ctype: CType = items[1].parse().map_err(|_| EpbdError::Parse {
-            from: items[1].into(),
-            into: "Component type (CType)".into(),
-            desc: "wrong format",
-        })?;
-        let csubtype: CSubtype = items[2].parse().map_err(|_| EpbdError::Parse {
-            from: items[2].into(),
-            into: "Component subtype (CSubtype)".into(),
-            desc: "wrong format",
-        })?;
+        // TODO: implement Display and FromStr traits for Carrier, CType, CSubtype
+        // TODO: and avoid mapping error here
+        let carrier: Carrier = items[0]
+            .parse()
+            .map_err(|_| EpbdError::CarrierUnknown(items[0].into()))?;
+        let ctype: CType = items[1]
+            .parse()
+            .map_err(|_| EpbdError::CTypeUnkwown(items[1].into()))?;
+        let csubtype: CSubtype = items[2]
+            .parse()
+            .map_err(|_| EpbdError::CSubtypeUnknown(items[2].into()))?;
         let carrier_ok = match ctype {
             CONSUMO => match csubtype {
                 EPB | NEPB => true,
@@ -364,11 +344,7 @@ impl str::FromStr for Component {
             },
         };
         if !carrier_ok {
-            return Err(EpbdError::Parse {
-                from: s.into(),
-                into: "Component (Component)".into(),
-                desc: "wrong subtype for given type",
-            });
+            return Err(EpbdError::ComponentParseError(s.into()));
         }
         //This accounts for the legacy version, which may not have a service type
         let maybeservice: Result<Service, _> = items[3].parse();
@@ -472,32 +448,12 @@ impl str::FromStr for Factor {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 7 {
-            return Err(EpbdError::Parse {
-                from: s.into(),
-                into: "Weighting Factor (Factor)".into(),
-                desc: "wrong number of items",
-            });
+            return Err(EpbdError::WFactorParseError(s.into()));
         };
-        let carrier: Carrier = items[0].parse().map_err(|_| EpbdError::Parse {
-            from: items[0].into(),
-            into: "Carrier (Carrier)".into(),
-            desc: "wrong format",
-        })?;
-        let source: Source = items[1].parse().map_err(|_| EpbdError::Parse {
-            from: items[1].into(),
-            into: "Source (Source)".into(),
-            desc: "wrong format",
-        })?;
-        let dest: Dest = items[2].parse().map_err(|_| EpbdError::Parse {
-            from: items[2].into(),
-            into: "Dest (Dest)".into(),
-            desc: "wrong format",
-        })?;
-        let step: Step = items[3].parse().map_err(|_| EpbdError::Parse {
-            from: items[3].into(),
-            into: "Step (Step)".into(),
-            desc: "wrong format",
-        })?;
+        let carrier: Carrier = items[0].parse().map_err(|_| EpbdError::CarrierUnknown(items[0].into()))?;
+        let source: Source = items[1].parse().map_err(|_| EpbdError::SourceUnknown(items[1].into()))?;
+        let dest: Dest = items[2].parse().map_err(|_| EpbdError::DestUnknown(items[2].into()))?;
+        let step: Step = items[3].parse().map_err(|_| EpbdError::StepUnknown(items[3].into()))?;
         let ren: f32 = items[4].parse()?;
         let nren: f32 = items[5].parse()?;
         let co2: f32 = items[6].parse()?;
@@ -560,6 +516,7 @@ pub trait MetaVec {
                     .map(|s| f32::from_str(s.trim()).ok())
                     .collect::<Option<Vec<f32>>>()
                     .unwrap_or_else(|| {
+                        // TODO: usar Err(RenNrenCo2ParseError(s.into()))
                         panic!("No se puede transformar el metadato a RenNrenCo2: {:?}", v)
                     });
                 if vals.len() != 3 {
@@ -651,11 +608,7 @@ impl str::FromStr for Components {
         {
             let cdata_lens: Vec<_> = cdata.iter().map(|e| e.values.len()).collect();
             if cdata_lens.iter().max().unwrap() != cdata_lens.iter().min().unwrap() {
-                return Err(EpbdError::Parse {
-                    from: s.into(),
-                    into: "Components (Components)".into(),
-                    desc: "varying number of values",
-                });
+                return Err(EpbdError::ComponentsParseError(s.into()));
             }
         }
         Ok(Components { cmeta, cdata })
