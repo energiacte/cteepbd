@@ -21,6 +21,7 @@
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
+use crate::EpbdError;
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
@@ -42,7 +43,7 @@ fn round_serialize_3<S>(x: &f32, s: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
 {
-    s.serialize_f32( (x * 1000.0).round() / 1000.0)
+    s.serialize_f32((x * 1000.0).round() / 1000.0)
 }
 
 impl RenNrenCo2 {
@@ -69,7 +70,55 @@ impl RenNrenCo2 {
 
 impl fmt::Display for RenNrenCo2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{{ ren: {:.3}, nren: {:.3}, co2: {:.3} }}", self.ren, self.nren, self.co2)
+        write!(
+            f,
+            "{{ ren: {:.3}, nren: {:.3}, co2: {:.3} }}",
+            self.ren, self.nren, self.co2
+        )
+    }
+}
+
+impl std::str::FromStr for RenNrenCo2 {
+    type Err = EpbdError;
+    /// Get RenNrenCo2 from
+    ///     (number, number, number)
+    ///     number, number, number
+    ///     { ren: number, nren: number, co2: number }
+    fn from_str(s: &str) -> Result<RenNrenCo2, Self::Err> {
+        let s = s.trim().trim_matches(|c| c == '(' || c == ')');
+        if s.starts_with('{') {
+            let mut res = RenNrenCo2::default();
+            s.trim_matches(|c| c == '{' || c == '}')
+                .split(',')
+                .map(|s| s.splitn(2, ':').map(str::trim).collect::<Vec<&str>>())
+                .for_each(|v| {
+                    let mut it = v.iter();
+                    let (key, val) = match (it.next(), it.next()) {
+                        (Some(k), Some(v)) => (*k, *v),
+                        _ => ("Error", "0.0"),
+                    };
+                    //let haskey = ["ren", "nren", "co2"].contains(&key);
+                    match (key, f32::from_str(val)) {
+                        ("ren", Ok(v)) => res.ren = v,
+                        ("nren", Ok(v)) => res.nren = v,
+                        ("co2", Ok(v)) => res.co2 = v,
+                        _ => println!("Algo malo pasa con {}", key),
+                    }
+                });
+            Ok(res)
+        } else {
+            let vals = s
+                .split(',')
+                .map(str::trim)
+                .map(f32::from_str)
+                .collect::<Result<Vec<f32>, _>>()
+                .map_err(|_| EpbdError::RenNrenCo2ParseError(s.into()))?;
+
+            match vals.as_slice() {
+                &[ren, nren, co2] => Ok(RenNrenCo2 { ren, nren, co2 }),
+                _ => Err(EpbdError::RenNrenCo2ParseError(s.into())),
+            }
+        }
     }
 }
 
@@ -276,12 +325,12 @@ mod tests {
                 let mut a = RenNrenCo2 {
                     ren: 1.0,
                     nren: 0.0,
-                    co2: 2.0
+                    co2: 2.0,
                 };
                 a += RenNrenCo2 {
                     ren: 2.0,
                     nren: 3.0,
-                    co2: 1.0
+                    co2: 1.0,
                 };
                 a
             }
@@ -315,12 +364,12 @@ mod tests {
                 let mut a = RenNrenCo2 {
                     ren: 1.0,
                     nren: 0.0,
-                    co2: 2.0
+                    co2: 2.0,
                 };
                 a -= RenNrenCo2 {
                     ren: 2.0,
                     nren: 3.0,
-                    co2: 1.0
+                    co2: 1.0,
                 };
                 a
             }
@@ -340,6 +389,31 @@ mod tests {
             "{ ren: 1.000, nren: 0.000, co2: 2.000 }"
         );
     }
+
+    #[test]
+    fn parse() {
+        let val = RenNrenCo2 {
+            ren: 1.0,
+            nren: 0.0,
+            co2: 2.0,
+        };
+
+        assert_eq!("1.000, 0.000, 2.000".parse::<RenNrenCo2>().unwrap(), val);
+        assert_eq!("(1.000, 0.000, 2.000)".parse::<RenNrenCo2>().unwrap(), val);
+        assert_eq!(
+            "{ ren: 1.000, nren: 0.000, co2: 2.000 }"
+                .parse::<RenNrenCo2>()
+                .unwrap(),
+            val
+        );
+        assert_eq!(
+            "{ co2: 2.000, nren: 0.000, ren: 1.000 }"
+                .parse::<RenNrenCo2>()
+                .unwrap(),
+            val
+        );
+    }
+
     #[test]
     fn mul() {
         assert_eq!(
@@ -364,7 +438,7 @@ mod tests {
                 let mut a = RenNrenCo2 {
                     ren: 1.1,
                     nren: 2.2,
-                    co2: 1.0
+                    co2: 1.0,
                 };
                 a *= 2.0;
                 a

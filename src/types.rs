@@ -509,25 +509,10 @@ pub trait MetaVec {
             .iter()
             .find(|m| m.key == key)
             .and_then(|v| {
-                // TODO: this should be implemented as FromStr (parse) in RenNrenCo2
-                let vals = v
-                    .value
-                    .split(',')
-                    .map(|s| f32::from_str(s.trim()).ok())
-                    .collect::<Option<Vec<f32>>>()
-                    .unwrap_or_else(|| {
-                        // TODO: usar Err(RenNrenCo2ParseError(s.into()))
-                        panic!("No se puede transformar el metadato a RenNrenCo2: {:?}", v)
+                let res = v.value.parse::<RenNrenCo2>().unwrap_or_else(|_| {
+                    panic!("No se puede transformar el metadato a RenNrenCo2: {:?}", v);
                     });
-                if vals.len() != 3 {
-                    None
-                } else {
-                    Some(RenNrenCo2 {
-                        ren: vals[0],
-                        nren: vals[1],
-                        co2: vals[2],
-                    })
-                }
+                Some(res)
             })
     }
 
