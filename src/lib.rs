@@ -28,10 +28,6 @@ extern crate pretty_assertions;
 #[macro_use]
 extern crate serde_derive;
 
-use strum;
-#[macro_use]
-extern crate strum_macros;
-
 pub mod cte;
 pub mod epbd;
 pub mod error;

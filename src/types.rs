@@ -41,8 +41,6 @@ use crate::{EpbdError, RenNrenCo2};
     PartialOrd,
     Ord,
     Hash,
-    Display,
-    EnumString,
     Serialize,
     Deserialize,
 )]
@@ -71,11 +69,38 @@ pub enum Carrier {
     RED2,
 }
 
+impl str::FromStr for Carrier {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<Carrier, Self::Err> {
+        match s {
+            "ELECTRICIDAD" => Ok(Carrier::ELECTRICIDAD),
+            "MEDIOAMBIENTE" => Ok(Carrier::MEDIOAMBIENTE),
+            "BIOCARBURANTE" => Ok(Carrier::BIOCARBURANTE),
+            "BIOMASA" => Ok(Carrier::BIOMASA),
+            "BIOMASADENSIFICADA" => Ok(Carrier::BIOMASADENSIFICADA),
+            "CARBON" => Ok(Carrier::CARBON),
+            "GASNATURAL" => Ok(Carrier::GASNATURAL),
+            "GASOLEO" => Ok(Carrier::GASOLEO),
+            "GLP" => Ok(Carrier::GLP),
+            "RED1" => Ok(Carrier::RED1),
+            "RED2" => Ok(Carrier::RED2),
+            _ => Err(EpbdError::CarrierUnknown(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for Carrier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 // == Energy Components ==
 
 /// Produced or consumed energy type of an energy component.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CType {
     /// Produced energy
     PRODUCCION,
@@ -83,9 +108,27 @@ pub enum CType {
     CONSUMO,
 }
 
+impl str::FromStr for CType {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<CType, Self::Err> {
+        match s {
+            "PRODUCCION" => Ok(CType::PRODUCCION),
+            "CONSUMO" => Ok(CType::CONSUMO),
+            _ => Err(EpbdError::CTypeUnknown(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for CType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 /// Production origin or use destination subtype of an energy component.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Display, EnumString, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CSubtype {
     /// on site energy source
     INSITU,
@@ -97,9 +140,29 @@ pub enum CSubtype {
     NEPB,
 }
 
+impl str::FromStr for CSubtype {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<CSubtype, Self::Err> {
+        match s {
+            "INSITU" => Ok(CSubtype::INSITU),
+            "COGENERACION" => Ok(CSubtype::COGENERACION),
+            "EPB" => Ok(CSubtype::EPB),
+            "NEPB" => Ok(CSubtype::NEPB),
+            _ => Err(EpbdError::CSubtypeUnknown(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for CSubtype {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 /// Destination Service or use of an energy component.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Display, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Service {
     /// DHW
     ACS,
@@ -157,6 +220,12 @@ impl str::FromStr for Service {
     }
 }
 
+impl std::fmt::Display for Service {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl Default for Service {
     fn default() -> Service {
         Service::NDEF
@@ -167,7 +236,7 @@ impl Default for Service {
 
 /// Source of energy for a weighting factor.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Source {
     /// Grid source
     RED,
@@ -177,9 +246,28 @@ pub enum Source {
     COGENERACION,
 }
 
+impl str::FromStr for Source {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<Source, Self::Err> {
+        match s {
+            "RED" => Ok(Source::RED),
+            "INSITU" => Ok(Source::INSITU),
+            "COGENERACION" => Ok(Source::COGENERACION),
+            _ => Err(EpbdError::SourceUnknown(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for Source {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 /// Destination of energy for a weighting factor.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Dest {
     /// Building delivery destination
     SUMINISTRO,
@@ -206,15 +294,40 @@ impl str::FromStr for Dest {
     }
 }
 
+impl std::fmt::Display for Dest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 /// Calculation step for a weighting factor.
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Display, EnumString, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Step {
     /// Calculation step A
     A,
     /// Calculation step B
     B,
 }
+
+impl str::FromStr for Step {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<Step, Self::Err> {
+        match s {
+            "A" => Ok(Step::A),
+            "B" => Ok(Step::B),
+            _ => Err(EpbdError::StepUnknown(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for Step {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 
 // == General types ==
 
