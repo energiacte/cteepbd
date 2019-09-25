@@ -517,10 +517,13 @@ pub trait MetaVec {
             .iter()
             .find(|m| m.key == key)
             .and_then(|v| {
-                let res = v.value.parse::<RenNrenCo2>().unwrap_or_else(|_| {
-                    panic!("No se puede transformar el metadato a RenNrenCo2: {:?}", v);
-                });
-                Some(res)
+                v.value
+                    .parse::<RenNrenCo2>()
+                    .map_err(|e| {
+                        eprintln!("No se puede transformar el metadato a RenNrenCo2: {:?}", v);
+                        e
+                    })
+                    .ok()
             })
     }
 
