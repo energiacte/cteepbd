@@ -328,7 +328,7 @@ impl str::FromStr for Component {
             .map_err(|_| EpbdError::CarrierUnknown(items[0].into()))?;
         let ctype: CType = items[1]
             .parse()
-            .map_err(|_| EpbdError::CTypeUnkwown(items[1].into()))?;
+            .map_err(|_| EpbdError::CTypeUnknown(items[1].into()))?;
         let csubtype: CSubtype = items[2]
             .parse()
             .map_err(|_| EpbdError::CSubtypeUnknown(items[2].into()))?;
