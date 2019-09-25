@@ -114,8 +114,8 @@ impl std::str::FromStr for RenNrenCo2 {
                 .collect::<Result<Vec<f32>, _>>()
                 .map_err(|_| EpbdError::RenNrenCo2ParseError(s.into()))?;
 
-            match vals.as_slice() {
-                &[ren, nren, co2] => Ok(RenNrenCo2 { ren, nren, co2 }),
+            match *vals.as_slice() {
+                [ren, nren, co2] => Ok(RenNrenCo2 { ren, nren, co2 }),
                 _ => Err(EpbdError::RenNrenCo2ParseError(s.into())),
             }
         }
