@@ -450,10 +450,18 @@ impl str::FromStr for Factor {
         if items.len() < 7 {
             return Err(EpbdError::WFactorParseError(s.into()));
         };
-        let carrier: Carrier = items[0].parse().map_err(|_| EpbdError::CarrierUnknown(items[0].into()))?;
-        let source: Source = items[1].parse().map_err(|_| EpbdError::SourceUnknown(items[1].into()))?;
-        let dest: Dest = items[2].parse().map_err(|_| EpbdError::DestUnknown(items[2].into()))?;
-        let step: Step = items[3].parse().map_err(|_| EpbdError::StepUnknown(items[3].into()))?;
+        let carrier: Carrier = items[0]
+            .parse()
+            .map_err(|_| EpbdError::CarrierUnknown(items[0].into()))?;
+        let source: Source = items[1]
+            .parse()
+            .map_err(|_| EpbdError::SourceUnknown(items[1].into()))?;
+        let dest: Dest = items[2]
+            .parse()
+            .map_err(|_| EpbdError::DestUnknown(items[2].into()))?;
+        let step: Step = items[3]
+            .parse()
+            .map_err(|_| EpbdError::StepUnknown(items[3].into()))?;
         let ren: f32 = items[4].parse()?;
         let nren: f32 = items[5].parse()?;
         let co2: f32 = items[6].parse()?;
@@ -511,7 +519,7 @@ pub trait MetaVec {
             .and_then(|v| {
                 let res = v.value.parse::<RenNrenCo2>().unwrap_or_else(|_| {
                     panic!("No se puede transformar el metadato a RenNrenCo2: {:?}", v);
-                    });
+                });
                 Some(res)
             })
     }
