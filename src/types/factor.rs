@@ -1,5 +1,5 @@
-// Copyright (c) 2018 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,15 +19,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
+// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
+
+/*!
+Weighting factor types
+======================
+
+Define Factor and Factors (Factor list + Metadata) types.
+
+*/
 
 use std::fmt;
 use std::str;
 
 use crate::types::{basic::*, meta::*, rennrenco2::*};
 use crate::{EpbdError};
-
-/// Define Factor and Factors (Factor list + Metadata) types
 
 /// Weighting Factor Struct
 ///
@@ -152,7 +160,7 @@ pub struct Factors {
 }
 
 impl Factors {
-    // Remove nEPB weighting factors
+    /// Remove non EPB weighting factors from the factor list
     pub fn strip_nepb(&mut self) {
         self.wdata.retain(|e| e.dest != Dest::A_NEPB);
     }

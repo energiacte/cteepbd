@@ -20,9 +20,14 @@
 // SOFTWARE.
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
-//            Daniel Jiménez González <dani@ietcc.csic.es>
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-/*! # Manejo de componentes energéticos (consumos o producciones de energía) para el CTE
+/*! 
+Energy Components (CTE)
+=======================
+
+Manejo de componentes energéticos (consumos o producciones de energía) para el CTE
 
 Utilidades para la gestión de componentes energéticos para el CTE
 

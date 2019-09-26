@@ -1,5 +1,5 @@
-// Copyright (c) 2018 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,7 +19,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
+// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
+
+/*!
+CteEPBD, the library
+====================
+
+This library is intended to provide access to cteepbd's features
+*/
+
+#![deny(missing_docs)]
 
 #[cfg(test)] // <-- not needed in examples + integration tests
 #[macro_use]
@@ -38,4 +49,5 @@ pub use epbd::*;
 pub use error::{EpbdError, Result};
 pub use types::*;
 
+/// Version number
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");

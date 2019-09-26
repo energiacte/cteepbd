@@ -1,5 +1,5 @@
-// Copyright (c) 2016-2017 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,12 +20,15 @@
 // SOFTWARE.
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
-//            Daniel Jiménez González <dani@ietcc.csic.es>
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-/*! # Manejo de balances energéticos para el CTE
+/*!
+Energy balance
+==============
 
-Utilidades para la gestión de balances energéticos para el CTE
-
+Utilities to handle energy balances for use in building regulations
+(code compliance and energy certification).
 */
 
 use itertools::Itertools; // join

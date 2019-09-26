@@ -1,3 +1,13 @@
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 
@@ -9,14 +19,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
+// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
+
+/*!
+Energy balance types
+====================
+
+Basic types to create more complex Component and (weighting) Factor types.
+
+*/
 
 use std::fmt;
 use std::str;
 
 use crate::EpbdError;
-
-/// Basic types to create more complex Component and (weighting) Factor types
 
 // == Common properties (carriers + weighting factors) ==
 
@@ -174,6 +192,7 @@ pub enum Service {
     NDEF,
 }
 
+/// List of available Service types
 pub const SERVICES: [Service; 9] = [
     Service::ACS,
     Service::CAL,

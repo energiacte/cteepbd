@@ -1,5 +1,5 @@
-// Copyright (c) 2018 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,14 +19,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
+// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
+
+/*!
+Metadata
+========
+
+Define Metadata type and MetaVec trait.
+
+*/
 
 use std::fmt;
 use std::str::FromStr;
 
 use crate::{EpbdError, RenNrenCo2};
-
-/// Define Metadata type and MetaVec trait
 
 /// Metadata of components or weighting factors
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,6 +46,7 @@ pub struct Meta {
 }
 
 impl Meta {
+    /// Metadata constructor
     pub fn new<T, U>(key: T, value: U) -> Self
     where
         T: Into<String>,
@@ -84,7 +93,10 @@ impl std::str::FromStr for Meta {
 /// Common trait for handling metadata
 
 pub trait MetaVec {
+    /// Get vector of metadata
     fn get_metavec(&self) -> &Vec<Meta>;
+
+    /// Get mutable vector of metadata
     fn get_mut_metavec(&mut self) -> &mut Vec<Meta>;
 
     /// Check if key is included in metadata
@@ -92,6 +104,7 @@ pub trait MetaVec {
         self.get_metavec().iter().any(|m| m.key == key)
     }
 
+    /// Check if key has the given value
     fn has_meta_value(&self, key: &str, value: &str) -> bool {
         self.get_meta(key).map(|v| v == value).unwrap_or(false)
     }

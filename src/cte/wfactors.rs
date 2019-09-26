@@ -1,5 +1,5 @@
-// Copyright (c) 2016-2017 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,15 @@
 // SOFTWARE.
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
-//            Daniel Jiménez González <dani@ietcc.csic.es>
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-/*! # Manejo de factores de paso para el CTE
+/*!
+Weighting factors (CTE)
+=======================
+
+Manejo de factores de paso para el CTE
+--------------------------------------
 
 Factores de paso y utilidades para la gestión de factores de paso para el CTE
 
@@ -51,6 +57,8 @@ pub const CTE_NRBY: [Carrier; 5] = [
 ]; // Ver B.23. Solo biomasa sólida
 
 // ---------------- Valores por defecto y definibles por el usuario -----------------------
+
+/// Estructura para definir valores por defecto y valores de usuario 
 #[derive(Debug)]
 pub struct CteUserWF<T> {
     /// Factores de paso de redes de distrito 1.

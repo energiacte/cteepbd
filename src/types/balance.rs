@@ -1,5 +1,5 @@
-// Copyright (c) 2018 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,13 +19,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
+// Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
+
+/*!
+Energy balance types
+====================
+
+Definition of Balance, BalanceForCarrier and BalanceTotal types.
+
+*/
 
 use std::collections::HashMap;
 
 use crate::types::*;
-
-/// Definition of Balance, BalanceForCarrier and BalanceTotal types
 
 /// Detailed results of the energy balance computation for a given carrier
 #[allow(non_snake_case)]
