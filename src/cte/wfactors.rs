@@ -37,7 +37,7 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 use itertools::Itertools;
 
 use crate::{
-    CSubtype, Carrier, Components, Dest, EpbdError, Factor, Factors, Meta, MetaVec, RenNrenCo2,
+    CSubtype, Carrier, Components, Dest, EpbdError, Factor, Factors, Meta, RenNrenCo2,
     Result, Source, Step,
 };
 
@@ -171,29 +171,6 @@ pub fn wfactors_from_loc(
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
-    fix_wfactors(wfactors, defaults)
-}
-
-/// Genera factores de paso a partir de metadatos de componentes.
-///
-/// Usa localización (CTE_LOC), y factores de usuario (CTE_COGEN, CTE_COGENNEPB, CTE_RED1, CTE_RED2)
-pub fn wfactors_from_meta(components: &Components, defaults: &CteDefaultsWF) -> Result<Factors> {
-    let loc = components.get_meta("CTE_LOCALIZACION").unwrap_or_default();
-    let user = CteUserWF {
-        red1: components.get_meta_rennren("CTE_RED1"),
-        red2: components.get_meta_rennren("CTE_RED2"),
-        cogen_to_grid: components.get_meta_rennren("CTE_COGEN"),
-        cogen_to_nepb: components.get_meta_rennren("CTE_COGENNEPB"),
-    };
-    let wfactorsstring = match loc.as_str() {
-        "PENINSULA" => defaults.loc_peninsula,
-        "BALEARES" => defaults.loc_baleares,
-        "CANARIAS" => defaults.loc_canarias,
-        "CEUTAMELILLA" => defaults.loc_ceutamelilla,
-        _ => Err(EpbdError::Location(loc.to_string()))?,
-    };
-    let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, &user);
     fix_wfactors(wfactors, defaults)
 }
 

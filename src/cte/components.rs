@@ -63,7 +63,7 @@ pub fn fix_components(components: &mut Components) {
 ///
 /// Esta restricción es propia de la implementación y de cómo hace el reparto de la producción,
 /// solamente en base al consumo de cada servicio y sin tener en cuenta si se define un destino
-//XXX: Esta restricción debería eliminarse
+///XXX: *Esta restricción debería eliminarse*
 pub fn force_ndef_use_for_electricity_production(components: &mut Components) {
     // Localiza componentes de energía procedente del medioambiente
     for component in &mut components.cdata {
