@@ -31,16 +31,14 @@ Definition of needed types for energy efficiency computation.
 
 */
 
-mod basic;
-mod meta;
-mod component;
-mod factor;
+mod base;
+mod components;
+mod factors;
 mod balance;
 mod rennrenco2;
 
-pub use basic::*;
-pub use crate::types::meta::*;
-pub use component::*;
-pub use factor::*;
+pub use base::*;
+pub use components::*;
+pub use factors::*;
 pub use balance::*;
 pub use rennrenco2::*;

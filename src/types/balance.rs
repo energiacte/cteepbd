@@ -33,7 +33,7 @@ Definition of Balance, BalanceForCarrier and BalanceTotal types.
 
 use std::collections::HashMap;
 
-use crate::types::*;
+use crate::types::{CSubtype, Carrier, Components, Factors, RenNrenCo2, Service};
 
 /// Detailed results of the energy balance computation for a given carrier
 #[allow(non_snake_case)]
