@@ -37,8 +37,8 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 use itertools::Itertools;
 
 use crate::{
-    CSubtype, Carrier, Components, Dest, EpbdError, Factor, Factors, Meta, RenNrenCo2,
-    Result, Source, Step,
+    CSubtype, Carrier, Components, Dest, EpbdError, Factor, Factors, Meta, RenNrenCo2, Result,
+    Source, Step,
 };
 
 // Localizaciones válidas para CTE

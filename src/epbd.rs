@@ -501,18 +501,18 @@ pub fn energy_performance(
             acc.we_exp_A += balance_cr[cr].we_exported_an_A;
             acc.we_exp += balance_cr[cr].we_exported_an;
             // Weighted energy for each use item (EPB services)
-            for service in &SERVICES {
+            for &service in &SERVICES {
                 // Energy use
-                if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(service) {
-                    *acc.used_EPB_byuse.entry(service.clone()).or_default() += *value
+                if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(&service) {
+                    *acc.used_EPB_byuse.entry(service).or_default() += *value
                 }
                 // Step A
-                if let Some(value) = balance_cr[cr].we_an_A_byuse.get(service) {
-                    *acc.A_byuse.entry(service.clone()).or_default() += *value
+                if let Some(value) = balance_cr[cr].we_an_A_byuse.get(&service) {
+                    *acc.A_byuse.entry(service).or_default() += *value
                 }
                 // Step B
-                if let Some(value) = balance_cr[cr].we_an_byuse.get(service) {
-                    *acc.B_byuse.entry(service.clone()).or_default() += *value;
+                if let Some(value) = balance_cr[cr].we_an_byuse.get(&service) {
+                    *acc.B_byuse.entry(service).or_default() += *value;
                 }
             }
             acc
@@ -521,17 +521,13 @@ pub fn energy_performance(
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
     let mut used_EPB_byuse = balance.used_EPB_byuse.clone();
-    for (_, val) in used_EPB_byuse.iter_mut() {
-        *val *= k_area
-    }
+    used_EPB_byuse.values_mut().for_each(|v| *v *= k_area);
+
     let mut A_byuse = balance.A_byuse.clone();
-    for (_, val) in A_byuse.iter_mut() {
-        *val *= k_area
-    }
+    A_byuse.values_mut().for_each(|v| *v *= k_area);
+
     let mut B_byuse = balance.B_byuse.clone();
-    for (_, val) in B_byuse.iter_mut() {
-        *val *= k_area
-    }
+    B_byuse.values_mut().for_each(|v| *v *= k_area);
 
     let balance_m2 = BalanceTotal {
         used_EPB_byuse,
