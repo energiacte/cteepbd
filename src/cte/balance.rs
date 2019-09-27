@@ -102,11 +102,24 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         ..
     } = balanceobj;
 
+    // Data
     let RenNrenCo2 { ren, nren, .. } = balance_m2.B;
     let cmeta = &components.cmeta;
     let cdata = &components.cdata;
     let wmeta = &wfactors.wmeta;
     let wdata = &wfactors.wdata;
+
+    /// Helper function -> XML escape symbols
+    fn escape_xml(unescaped: &str) -> String {
+        unescaped
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('\\', "&apos;")
+            .replace('"', "&quot;")
+    }
+
+    // Formatting
     let wmetastring = wmeta
         .iter()
         .map(|m| {
@@ -180,6 +193,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         .collect::<Vec<String>>()
         .join("\n");
 
+    // Final assembly
     format!(
         "<BalanceEPB>
     <FactoresDePaso>
@@ -214,14 +228,4 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         ren + nren,
         nren
     )
-}
-
-/// Sustituye símbolos reservados en XML.
-fn escape_xml(unescaped: &str) -> String {
-    unescaped
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('\\', "&apos;")
-        .replace('"', "&quot;")
 }
