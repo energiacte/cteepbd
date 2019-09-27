@@ -43,6 +43,7 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
 */
 
 use std::collections::HashMap;
+use std::convert::TryInto;
 
 use itertools::Itertools;
 
@@ -71,6 +72,8 @@ use crate::vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum}
 /// * the weighting factor list is empty
 /// * no match is found for the given criteria
 ///
+/// TODO: Ver si es posible eliminar la comprobación de is_empty, porque igual ya vale con el match
+/// TODO: convertir a combinators .then... en lugar de match
 fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor> {
     if fp_cr.is_empty() {
         Err(EpbdError::FactorNotFound(
@@ -86,30 +89,6 @@ fn fp_src(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&F
         None => Err(EpbdError::FactorNotFound(format!(
             "No weighting factor found for: '{}, {}, {}, {}'",
             fp_cr[0].carrier, source, dest, step
-        )))?,
-    }
-}
-
-/// Find weighting factor for 'step' of energy to 'dest' uses from the 'gen' type.
-///
-/// * `fp_cr` - weighting factor list for a given energy carrier where search is done
-/// * `gen` - match generator (carrier subtype / origin) (i.e. `INSITU` or `COGENERACION`)
-/// * `dest` - match this energy destination (`A_NEPB`, `A_RED`, `SUMINISTRO`)
-/// * `step` - match this calculation step (`A`, `B`)
-///
-/// # Errors
-///
-/// * the weighting factor list is empty
-/// * no match is found
-/// * the `gen` type doesn't match an energy source type (i.e. `INSITU` or `COGENERACION`)
-///
-fn fp_gen(fp_cr: &[Factor], gen: CSubtype, dest: Dest, step: Step) -> Result<&Factor> {
-    match gen {
-        CSubtype::INSITU => fp_src(fp_cr, Source::INSITU, dest, step),
-        CSubtype::COGENERACION => fp_src(fp_cr, Source::COGENERACION, dest, step),
-        _ => Err(EpbdError::FactorNotFound(format!(
-            "Unexpected generator {} to deduce subtype",
-            gen
         )))?,
     }
 }
@@ -306,7 +285,7 @@ fn balance_for_carrier(
                 .iter()
                 .fold(Ok(RenNrenCo2::default()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::A)?.factors() * f_pr_cr_i[gen]))
+                        + (fp_src(fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?.factors() * f_pr_cr_i[gen]))
                 })? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
         };
 
@@ -319,7 +298,7 @@ fn balance_for_carrier(
                 .iter()
                 .fold(Ok(RenNrenCo2::default()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::A)?.factors() * f_pr_cr_i[gen]))
+                        + (fp_src(fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?.factors() * f_pr_cr_i[gen]))
                 })? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
         };
 
@@ -338,7 +317,7 @@ fn balance_for_carrier(
                 .iter()
                 .fold(Ok(RenNrenCo2::default()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_NEPB, Step::B)?.factors() * f_pr_cr_i[gen]))
+                        + (fp_src(fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?.factors() * f_pr_cr_i[gen]))
                 })? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
         };
 
@@ -351,7 +330,7 @@ fn balance_for_carrier(
                 .iter()
                 .fold(Ok(RenNrenCo2::default()), |acc: Result<RenNrenCo2>, &gen| {
                     Ok(acc?
-                        + (fp_gen(fp_cr, *gen, Dest::A_RED, Step::B)?.factors() * f_pr_cr_i[gen]))
+                        + (fp_src(fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?.factors() * f_pr_cr_i[gen]))
                 })? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
         };
 

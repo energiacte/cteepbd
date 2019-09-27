@@ -34,6 +34,7 @@ Energy balance types
 use std::fmt;
 use std::str;
 use std::str::FromStr;
+use std::convert::TryFrom;
 
 use crate::types::RenNrenCo2;
 use crate::EpbdError;
@@ -375,6 +376,17 @@ impl str::FromStr for Source {
 impl std::fmt::Display for Source {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl TryFrom<CSubtype> for Source {
+    type Error = EpbdError;
+    fn try_from(subtype: CSubtype) -> Result<Self, Self::Error> {
+        match subtype {
+            CSubtype::INSITU => Ok(Self::INSITU),
+            CSubtype::COGENERACION => Ok(Self::COGENERACION),
+            _ => Err(EpbdError::SourceConversionError(subtype.to_string()))
+        }
     }
 }
 

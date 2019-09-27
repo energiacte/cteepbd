@@ -61,6 +61,8 @@ pub enum EpbdError {
     DestUnknown(String),
     /// Error when a Step is not known
     StepUnknown(String),
+    /// Error when converting from CSubtype to Source
+    SourceConversionError(String),
     /// Error for an invalid Area (wrong format or out of range)
     Area(String),
     /// Error forn an invalid Location (not known)
@@ -86,6 +88,7 @@ impl fmt::Display for EpbdError {
             SourceUnknown(input) => write!(f, "Unknown Source: \"{}\"", input),
             DestUnknown(input) => write!(f, "Unknown Dest: \"{}\"", input),
             StepUnknown(input) => write!(f, "Unknown Step: \"{}\"", input),
+            SourceConversionError(input) => write!(f, "Could not convert to Source from CSubtype: {}", input),
             Area(area) => write!(f, "Unexpected reference area value: {}", area),
             Location(loc) => write!(f, "Unknown location; \"{}\"", loc),
             FactorNotFound(desc) => write!(f, "Conversion factor not found: {}", desc),
