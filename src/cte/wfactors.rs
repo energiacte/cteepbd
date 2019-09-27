@@ -167,7 +167,7 @@ pub fn wfactors_from_loc(
         "BALEARES" => defaults.loc_baleares,
         "CANARIAS" => defaults.loc_canarias,
         "CEUTAMELILLA" => defaults.loc_ceutamelilla,
-        _ => Err(EpbdError::Location(loc.to_string()))?,
+        _ => return Err(EpbdError::Location(loc.to_string())),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
@@ -351,9 +351,9 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
         })
     });
     if !has_grid_factors_for_all_carriers {
-        Err(EpbdError::FactorNotFound(
+        return Err(EpbdError::FactorNotFound(
             "factores de red VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?".into(),
-        ))?;
+        ));
     }
     // En paso A, el factor SUMINISTRO de cogeneración es 0.0, 0.0 ya que el impacto se tiene en cuenta en el suministro del vector de generación
     let has_cogen_input = wfactors
@@ -397,10 +397,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                         ..*f
                     });
                 } else {
-                    Err(EpbdError::FactorNotFound(format!(
+                    return Err(EpbdError::FactorNotFound(format!(
                         "suministro del vector {} para definir exportación a la red en paso A",
                         c
-                    )))?;
+                    )));
                 }
             } else {
                 // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -435,10 +435,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                         ..*f
                     });
                 } else {
-                    Err(EpbdError::FactorNotFound(format!(
+                    return Err(EpbdError::FactorNotFound(format!(
                         "suministro del vector {} para definir exportación a usos no EPB en paso A",
                         c
-                    )))?;
+                    )));
                 }
             } else {
                 // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -486,10 +486,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
             } else {
-                Err(EpbdError::FactorNotFound(format!(
+                return Err(EpbdError::FactorNotFound(format!(
                     "suministro del vector {} para exportación a la red en paso B",
                     c
-                )))?;
+                )));
             }
         }
         let has_to_nepb_b = wfactors.wdata.iter().any(|f| {
@@ -502,10 +502,10 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
                 wfactors.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
                 "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
             } else {
-                Err(EpbdError::FactorNotFound(format!(
+                return Err(EpbdError::FactorNotFound(format!(
                     "suministro del vector {} para exportación a usos no EPB en paso B",
                     c
-                )))?;
+                )));
             }
         }
     }

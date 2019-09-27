@@ -456,10 +456,10 @@ pub fn energy_performance(
     arearef: f32,
 ) -> Result<Balance> {
     if arearef < 1e-3 {
-        Err(EpbdError::Area(format!(
+        return Err(EpbdError::Area(format!(
             "Reference area can't be zero or almost zero and found {}",
             arearef
-        )))?
+        )))
     };
 
     let carriers: Vec<Carrier> = components
