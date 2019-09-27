@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -750,4 +751,23 @@ ELECTRICIDAD,PRODUCCION,INSITU,CAL,40";
     // parse_components hace un parse y fix
     let comps = parse_components(compstr).unwrap();
     assert!(comps.cdata[1].service == Service::NDEF);
+}
+
+#[test]
+fn cte_balance_byuse() {
+    let ENERGYDATALIST = get_energydatalist();
+    let FP = get_ctefp_peninsula();
+    let bal = energy_performance(&ENERGYDATALIST, &FP, TESTKEXP, 1.0).unwrap();
+
+    let mut result: HashMap<Service, RenNrenCo2> = HashMap::new();
+    result.insert(
+        Service::NDEF,
+        RenNrenCo2 {
+            ren: 178.88016,
+            nren: 37.14554,
+            co2: 6.2923098,
+        },
+    );
+
+    assert!(result == bal.balance_m2.B_byuse);
 }
