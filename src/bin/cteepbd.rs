@@ -189,10 +189,8 @@ fn get_components(archivo: Option<&str>) -> Components {
     }
 }
 
-// Función principal ------------------------------------------------------------------------------
-
-fn main() {
-    let matches = App::new("CteEPBD")
+fn app() -> App<'static, 'static> {
+    let app = App::new("CteEPBD")
         .bin_name("cteepbd")
         .version(env!("CARGO_PKG_VERSION"))
         .author("
@@ -312,8 +310,14 @@ Licencia: Publicado bajo licencia MIT.
         .arg(Arg::with_name("v")
             .short("v")
             .multiple(true)
-            .help("Sets the level of verbosity"))
-        .get_matches();
+            .help("Sets the level of verbosity"));
+    app
+}
+
+// Función principal ------------------------------------------------------------------------------
+
+fn main() {
+    let matches = app().get_matches();
 
     if matches.is_present("showlicense") {
         println!(
