@@ -34,7 +34,7 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 
 */
 
-use itertools::Itertools;
+use std::collections::HashSet;
 
 use crate::{
     CSubtype, Carrier, Components, Dest, EpbdError, Factor, Factors, Meta, RenNrenCo2, Result,
@@ -58,7 +58,7 @@ pub const CTE_NRBY: [Carrier; 5] = [
 
 // ---------------- Valores por defecto y definibles por el usuario -----------------------
 
-/// Estructura para definir valores por defecto y valores de usuario 
+/// Estructura para definir valores por defecto y valores de usuario
 #[derive(Debug)]
 pub struct CteUserWF<T> {
     /// Factores de paso de redes de distrito 1.
@@ -281,7 +281,7 @@ pub fn set_user_wfactors(wfactors: &mut Factors, user: &CteUserWF<Option<RenNren
 /// TODO: se deberían separar algunos de estos pasos como métodos de CteFactorsExt
 pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<Factors> {
     // Vectores existentes
-    let wf_carriers: Vec<_> = wfactors.wdata.iter().map(|f| f.carrier).unique().collect();
+    let wf_carriers: HashSet<_> = wfactors.wdata.iter().map(|f| f.carrier).collect();
 
     // Asegura que existe MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.0, 0.0
     let has_ma_insitu_input_a = wfactors.wdata.iter().any(|f| {
@@ -539,12 +539,7 @@ pub fn fix_wfactors(mut wfactors: Factors, defaults: &CteDefaultsWF) -> Result<F
 ///  - para exportación a usos no EPB si no se aparecen en los datos
 ///  - de electricidad in situ si no aparece una producción de ese tipo
 pub fn strip_wfactors(wfactors: &mut Factors, components: &Components) {
-    let wf_carriers: Vec<_> = components
-        .cdata
-        .iter()
-        .map(|c| c.carrier)
-        .unique()
-        .collect();
+    let wf_carriers: HashSet<_> = components.cdata.iter().map(|c| c.carrier).collect();
     let has_cogen = components
         .cdata
         .iter()

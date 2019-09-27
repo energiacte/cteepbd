@@ -23,7 +23,7 @@
 //            Daniel Jiménez González <dani@ietcc.csic.es>,
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-/*! 
+/*!
 Energy Components (CTE)
 =======================
 
@@ -36,7 +36,7 @@ Hipótesis:
 - No se permite la producción de electricidad a usos concretos (se asume NDEF)
 */
 
-use itertools::Itertools;
+use std::collections::HashSet;
 
 use crate::vecops::{veckmul, veclistsum, vecvecdif};
 use crate::{CSubtype, CType, Carrier, Component, Components, EpbdError, MetaVec, Service};
@@ -87,7 +87,7 @@ pub fn compensate_env_use(components: &mut Components) {
         .filter(|c| c.carrier == Carrier::MEDIOAMBIENTE)
         .collect();
     // Identifica servicios
-    let services: Vec<_> = envcomps.iter().map(|c| c.service).unique().collect();
+    let services: HashSet<_> = envcomps.iter().map(|c| c.service).collect();
 
     // Asegura que la producción eléctrica no tiene un uso definido (es NDEF)
 

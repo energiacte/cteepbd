@@ -42,10 +42,8 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
 
 */
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::convert::TryInto;
-
-use itertools::Itertools;
 
 use crate::{
     Balance, BalanceForCarrier, BalanceTotal, CSubtype, CType, Carrier, Component, Components,
@@ -459,14 +457,13 @@ pub fn energy_performance(
         return Err(EpbdError::Area(format!(
             "Reference area can't be zero or almost zero and found {}",
             arearef
-        )))
+        )));
     };
 
-    let carriers: Vec<Carrier> = components
+    let carriers: HashSet<_> = components
         .cdata
         .iter()
         .map(|e| e.carrier)
-        .unique()
         .collect();
 
     // Compute balance for each carrier

@@ -31,8 +31,6 @@ Utilities to handle energy balances for use in building regulations
 (code compliance and energy certification).
 */
 
-use itertools::Itertools; // join
-
 use crate::{Balance, Component, Factor, RenNrenCo2};
 
 /// Muestra balance, paso B, de forma simplificada.
@@ -118,6 +116,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 escape_xml(&m.value)
             )
         })
+        .collect::<Vec<String>>()
         .join("\n");
     let wdatastring = wdata
         .iter()
@@ -135,6 +134,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
             format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><CO2>{:.3}</CO2><Comentario>{}</Comentario></Dato>",
             carrier, source, dest, step, ren, nren, co2, escape_xml(comment))
         })
+        .collect::<Vec<String>>()
         .join("\n");
     let cmetastring = cmeta
         .iter()
@@ -145,6 +145,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 escape_xml(&m.value)
             )
         })
+        .collect::<Vec<String>>()
         .join("\n");
     let cdatastring = cdata
         .iter()
@@ -157,7 +158,11 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 values,
                 comment,
             } = c;
-            let vals = values.iter().map(|v| format!("{:.2}", v)).join(",");
+            let vals = values
+                .iter()
+                .map(|v| format!("{:.2}", v))
+                .collect::<Vec<String>>()
+                .join(",");
             format!(
                 "      <Dato>
             <Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
@@ -172,6 +177,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 escape_xml(comment)
             )
         })
+        .collect::<Vec<String>>()
         .join("\n");
 
     format!(
