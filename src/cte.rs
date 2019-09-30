@@ -24,25 +24,38 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-Weighting factors (CTE)
-=======================
+CTE compliance
+==============
 
-Manejo de factores de paso para el CTE
---------------------------------------
+Utilidades para el manejo de balances energéticos para el CTE:
 
-Factores de paso y utilidades para la gestión de factores de paso para el CTE
-
+- valores reglamentarios
+- generación y transformación de factores de paso
+    - wfactors_from_str
+    - wfactors_from_loc
+    - wfactors_to_nearby
+- salida/visualización de balances
+    - balance_to_plain
+    - balance_to_XML
 */
 
 use crate::{
-    error::{EpbdError, Result},
+    error::{EpbdError},
     fix_wfactors, set_user_wfactors,
-    types::{Carrier, Factor, Meta, RenNrenCo2, Source},
-    Factors, UserWF,
+    types::*,
+    Balance, Factors, UserWF,
 };
 
-// Localizaciones válidas para CTE
-// const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELILLA"];
+/**
+Constantes y valores generales
+*/
+
+/// Valor por defecto del área de referencia.
+pub const AREAREF_DEFAULT: f32 = 1.0;
+/// Valor predefinido del factor de exportación. Valor reglamentario.
+pub const KEXP_DEFAULT: f32 = 0.0;
+/// Localizaciones válidas para CTE
+pub const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELILLA"];
 
 // Valores bien conocidos de metadatos:
 // CTE_LOCALIZACION -> str
@@ -55,8 +68,6 @@ pub const CTE_NRBY: [Carrier; 5] = [
     Carrier::RED2,
     Carrier::MEDIOAMBIENTE,
 ]; // Ver B.23. Solo biomasa sólida
-
-// ---------------- Valores por defecto y definibles por el usuario -----------------------
 
 /// Valores por defecto para factores de paso
 pub struct CteDefaultsWF {
@@ -123,14 +134,19 @@ pub const WF_RITE2014: CteDefaultsWF = CteDefaultsWF {
     loc_ceutamelilla: build_wf_2013!("CEUTAMELILLA", 0.072, 2.718, 0.721),
 };
 
-// --------------------- Utilidades E/S ------------------------
+/**
+Manejo de factores de paso para el CTE
+--------------------------------------
+
+Factores de paso y utilidades para la gestión de factores de paso para el CTE
+*/
 
 /// Lee factores de paso desde cadena y sanea los resultados.
 pub fn wfactors_from_str(
     wfactorsstring: &str,
     user: &UserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
-) -> Result<Factors> {
+) -> Result<Factors, EpbdError> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
     fix_wfactors(wfactors, &defaults.user)
@@ -144,7 +160,7 @@ pub fn wfactors_from_loc(
     loc: &str,
     user: &UserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
-) -> Result<Factors> {
+) -> Result<Factors, EpbdError> {
     let wfactorsstring = match &*loc {
         "PENINSULA" => defaults.loc_peninsula,
         "BALEARES" => defaults.loc_baleares,
@@ -187,4 +203,206 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
     }
     wmeta.push(Meta::new("CTE_PERIMETRO", "NEARBY"));
     Factors { wmeta, wdata }
+}
+
+/**
+Utilidades para visualización del balance
+-----------------------------------------
+*/
+
+/// Muestra balance, paso B, de forma simplificada.
+pub fn balance_to_plain(balance: &Balance) -> String {
+    let Balance {
+        k_exp,
+        arearef,
+        balance_m2,
+        ..
+    } = balance;
+
+    let RenNrenCo2 { ren, nren, co2 } = balance_m2.B;
+    let tot = balance_m2.B.tot();
+    let rer = balance_m2.B.rer();
+
+    // Final
+    let mut use_byuse = balance_m2
+        .used_EPB_byuse
+        .iter()
+        .map(|(k, v)| format!("{}: {:.2}", k, v))
+        .collect::<Vec<String>>();
+    use_byuse.sort();
+
+    // Ponderada por m2 (por uso)
+    let mut b_byuse = balance_m2
+        .B_byuse
+        .iter()
+        .map(|(k, v)| {
+            format!(
+                "{}: ren {:.2}, nren {:.2}, co2: {:.2}",
+                k, v.ren, v.nren, v.co2
+            )
+        })
+        .collect::<Vec<String>>();
+    b_byuse.sort();
+
+    format!(
+        "Area_ref = {:.2} [m2]
+k_exp = {:.2}
+C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
+E_CO2 [kg_CO2e/m2.an]: {:.2}
+
+** Energía final (todos los vectores) [kWh/m2.an]:
+{}
+
+** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
+{}
+",
+        arearef,
+        k_exp,
+        ren,
+        nren,
+        tot,
+        rer,
+        co2,
+        use_byuse.join("\n"),
+        b_byuse.join("\n")
+    )
+}
+
+/// Muestra balance en formato XML.
+pub fn balance_to_xml(balanceobj: &Balance) -> String {
+    let Balance {
+        components,
+        wfactors,
+        k_exp,
+        arearef,
+        balance_m2,
+        ..
+    } = balanceobj;
+
+    // Data
+    let RenNrenCo2 { ren, nren, .. } = balance_m2.B;
+    let cmeta = &components.cmeta;
+    let cdata = &components.cdata;
+    let wmeta = &wfactors.wmeta;
+    let wdata = &wfactors.wdata;
+
+    /// Helper function -> XML escape symbols
+    fn escape_xml(unescaped: &str) -> String {
+        unescaped
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('\\', "&apos;")
+            .replace('"', "&quot;")
+    }
+
+    // Formatting
+    let wmetastring = wmeta
+        .iter()
+        .map(|m| {
+            format!(
+                "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
+                escape_xml(&m.key),
+                escape_xml(&m.value)
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    let wdatastring = wdata
+        .iter()
+        .map(|f| {
+            let Factor {
+                carrier,
+                source,
+                dest,
+                step,
+                ren,
+                nren,
+                co2,
+                comment,
+            } = f;
+            format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><CO2>{:.3}</CO2><Comentario>{}</Comentario></Dato>",
+            carrier, source, dest, step, ren, nren, co2, escape_xml(comment))
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    let cmetastring = cmeta
+        .iter()
+        .map(|m| {
+            format!(
+                "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
+                escape_xml(&m.key),
+                escape_xml(&m.value)
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    let cdatastring = cdata
+        .iter()
+        .map(|c| {
+            let Component {
+                carrier,
+                ctype,
+                csubtype,
+                service,
+                values,
+                comment,
+            } = c;
+            let vals = values
+                .iter()
+                .map(|v| format!("{:.2}", v))
+                .collect::<Vec<String>>()
+                .join(",");
+            format!(
+                "      <Dato>
+            <Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
+            <Valores>{}</Valores>
+            <Comentario>{}</Comentario>
+        </Dato>",
+                carrier,
+                ctype,
+                csubtype,
+                service,
+                vals,
+                escape_xml(comment)
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    // Final assembly
+    format!(
+        "<BalanceEPB>
+    <FactoresDePaso>
+        <Metadatos>
+    {}
+        </Metadatos>
+        <Datos>
+    {}
+        </Datos>
+    </FactoresDePaso>
+    <Componentes>
+        <Metadatos>
+    {}
+        </Metadatos>
+        <Datos>
+    {}
+        </Datos>
+    </Componentes>
+    <kexp>{:.2}</kexp>
+    <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
+    <Epm2><!-- C_ep [kWh/m2.an] -->
+        <tot>{:.1}</tot>
+        <nren>{:.1}</nren>
+    </Epm2>
+</BalanceEPB>",
+        wmetastring,
+        wdatastring,
+        cmetastring,
+        cdatastring,
+        k_exp,
+        arearef,
+        ren + nren,
+        nren
+    )
 }
