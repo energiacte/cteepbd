@@ -1,5 +1,8 @@
 TODO
 ----
+
+- remove dependency on failure
+
 - maybe bug: see why emissions for ACS for the example in the manual change
   depending on whether nearby factors are used or not.
 
@@ -12,8 +15,8 @@ TODO
 
 - tests:
     - cte: check non matching computation modes in component metadata and weighting factors metadata
-    - cte: check results by use items
-    - cte: check results using emission factors
+
+  
 
 Wishlist
 --------
@@ -23,12 +26,6 @@ Wishlist
 - Create Trait CteFactorsExt with methods from wfactors.rs
     - new_from_str(&str) -> Factors
     - new_from_loc(&loc) -> Factors
-    - set_mode_and_default_wfactors(&mut self, &default_wf) -> Self
-    - set_user_wfactors(&mut self, &user_wf) -> Self
-    - fix(&mut self)
-    - strip_nepb(&mut self)
-    * It could work with the Builder pattern
-      working with a CteFactorsBuilder that builds a Factors object with its build() method.
 
 - When const fns get more powerful, try building Factors directly and replace macro solution:
 
@@ -61,7 +58,7 @@ Wishlist
     fn cte_peninsula_gen_wfactors() {
         let FP = get_ctefp_peninsula();
         let mut wf = build_wf_2013("PENINSULA", 0.414, 1.954, 0.331);
-        wf = fix_wfactors(wf, &WF_RITE2014).unwrap();
+        wf = normalize(wf, &CTE_LOCWF_RITE2014).unwrap();
         println!("{}", FP.to_string());
         assert!(FP.to_string() == wf.to_string());
     }
