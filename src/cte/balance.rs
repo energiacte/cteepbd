@@ -31,7 +31,7 @@ Utilities to handle energy balances for use in building regulations
 (code compliance and energy certification).
 */
 
-use crate::{Balance, Component, Factor, RenNrenCo2};
+use crate::{Balance, types::{Component, Factor, RenNrenCo2}};
 
 /// Muestra balance, paso B, de forma simplificada.
 pub fn balance_to_plain(balance: &Balance) -> String {

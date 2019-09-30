@@ -30,9 +30,10 @@ Energy performance
 Energy performance type as a tuple to represent energy or emission values.
 */
 
-use crate::EpbdError;
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
+
+use crate::error::EpbdError;
 
 /// Energy pairs representing renewable and non renewable energy quantities or factors.
 #[derive(Debug, Copy, Clone, PartialEq, Default, Serialize, Deserialize)]

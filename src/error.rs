@@ -32,6 +32,9 @@ Error handling types and helpers
 
 use std::fmt;
 
+/// Custom Result
+pub type Result<T> = std::result::Result<T, EpbdError>;
+
 /// Errors defined for the cteepbd library and application
 #[derive(Debug)]
 pub enum EpbdError {
@@ -97,9 +100,6 @@ impl fmt::Display for EpbdError {
 }
 
 impl std::error::Error for EpbdError {}
-
-/// Custom Result
-pub type Result<T> = std::result::Result<T, EpbdError>;
 
 impl From<std::num::ParseFloatError> for EpbdError {
     fn from(err: std::num::ParseFloatError) -> Self {

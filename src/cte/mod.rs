@@ -36,11 +36,9 @@ Utilidades para el manejo de balances energéticos para el CTE:
 */
 
 mod balance;
-mod components;
 mod wfactors;
 
 pub use balance::*;
-pub use components::*;
 pub use wfactors::*;
 
 /// Valor por defecto del área de referencia.

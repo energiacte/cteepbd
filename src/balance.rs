@@ -24,21 +24,11 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-CteEPBD
-=======
+Energy balance types
+====================
 
-cteepbd - Implementation of the ISO EN 52000-1 standard
--------------------------------------------------------
-
-  Energy performance of buildings - Overarching EPB assessment - General framework and procedures
-  This implementation has used the following assumptions:
-  - weighting factors are constant for all timesteps
-  - no priority is set for energy production (average step A weighting factor f_we_el_stepA)
-  - all on-site produced energy from non cogeneration sources is considered as delivered
-  - on-site produced energy is not compensated on a service by service basis, but on a by carrier basis
-  - the load matching factor is constant and equal to 1.0
-  TODO:
-  - allow other values of the load matching factor (or usign functions) f_match_t (formula 32, B.32)
+Definition of Balance, BalanceForCarrier and BalanceTotal types
+and methods implementing energy performance computation according to ISO EN 52000-1.
 
 */
 
@@ -46,11 +36,245 @@ use std::collections::{HashMap, HashSet};
 use std::convert::TryInto;
 
 use crate::{
-    Balance, BalanceForCarrier, BalanceTotal, CSubtype, CType, Carrier, Component, Components,
-    Dest, EpbdError, Factor, Factors, RenNrenCo2, Result, Service, Source, Step, SERVICES,
+    error::{EpbdError, Result},
+    types::{
+        CSubtype, CType, Carrier, Component, Dest, Factor, RenNrenCo2, Service, Source, Step,
+        SERVICES,
+    },
+    vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
+    Components, Factors,
 };
 
-use crate::vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum};
+/// Overall energy performance
+/// --------------------------
+
+/// Data and results of an energy performance computation
+#[allow(dead_code)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Balance {
+    /// Energy components (produced and consumed energy data + metadata)
+    pub components: Components,
+    /// Weighting factors (weighting factors + metadata)
+    pub wfactors: Factors,
+    /// Exported energy factor [0, 1]
+    pub k_exp: f32,
+    /// Reference area used for energy performance ratios (>1e-3)
+    pub arearef: f32,
+    /// Energy balance results by carrier
+    pub balance_cr: HashMap<Carrier, BalanceForCarrier>,
+    /// Global energy balance results
+    pub balance: BalanceTotal,
+    /// Global energy balance results expressed as area ratios
+    pub balance_m2: BalanceTotal,
+}
+
+/// Global balance results (all carriers), either in absolute value or by m2.
+#[allow(non_snake_case)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct BalanceTotal {
+    /// Global energy use for EPB uses, by use
+    pub used_EPB_byuse: HashMap<Service, f32>,
+    /// Balance result for calculation step A
+    pub A: RenNrenCo2,
+    /// Weighted energy for calculation step A, by use (for EPB services)
+    pub A_byuse: HashMap<Service, RenNrenCo2>,
+    /// Balance result for calculation step A+B
+    pub B: RenNrenCo2,
+    /// Weighted energy, by use (for EPB services)
+    pub B_byuse: HashMap<Service, RenNrenCo2>,
+    /// Weighted delivered energy
+    pub we_del: RenNrenCo2,
+    /// Weighted exported energy for calculation step A
+    pub we_exp_A: RenNrenCo2,
+    /// Weighted exported energy for calculation step A+B
+    pub we_exp: RenNrenCo2,
+}
+
+/// Compute overall energy performance by aggregating results from all energy carriers.
+///
+/// * `components` - energy components
+/// * `wfactors` - weighting factors
+/// * `k_exp` - exported energy factor [0, 1]
+/// * `arearef` - reference area used for computing energy performance ratios
+///
+/// # Errors
+///
+/// * Use of an `arearef` less than 1e-3 raises an error
+/// * Missing weighting factors needed for balance computation
+///
+#[allow(non_snake_case)]
+pub fn energy_performance(
+    components: &Components,
+    wfactors: &Factors,
+    k_exp: f32,
+    arearef: f32,
+) -> Result<Balance> {
+    if arearef < 1e-3 {
+        return Err(EpbdError::Area(format!(
+            "Reference area can't be zero or almost zero and found {}",
+            arearef
+        )));
+    };
+
+    let carriers: HashSet<_> = components.cdata.iter().map(|e| e.carrier).collect();
+
+    // Compute balance for each carrier
+    let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
+    for &carrier in &carriers {
+        let components_cr: Vec<Component> = components
+            .cdata
+            .iter()
+            .filter(|e| e.carrier == carrier)
+            .cloned()
+            .collect();
+        let fp_cr: Vec<Factor> = wfactors
+            .wdata
+            .iter()
+            .filter(|e| e.carrier == carrier)
+            .cloned()
+            .collect();
+        let bal = balance_for_carrier(carrier, &components_cr, &fp_cr, k_exp)?;
+        balance_cr.insert(carrier, bal);
+    }
+
+    // Accumulate partial balance values for total balance
+    let balance: BalanceTotal = carriers
+        .iter()
+        .fold(BalanceTotal::default(), |mut acc, cr| {
+            // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
+            acc.A += balance_cr[cr].we_an_A;
+            // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
+            acc.B += balance_cr[cr].we_an;
+            // Weighted energy partials
+            acc.we_del += balance_cr[cr].we_delivered_an;
+            acc.we_exp_A += balance_cr[cr].we_exported_an_A;
+            acc.we_exp += balance_cr[cr].we_exported_an;
+            // Weighted energy for each use item (EPB services)
+            for &service in &SERVICES {
+                // Energy use
+                if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(&service) {
+                    *acc.used_EPB_byuse.entry(service).or_default() += *value
+                }
+                // Step A
+                if let Some(value) = balance_cr[cr].we_an_A_byuse.get(&service) {
+                    *acc.A_byuse.entry(service).or_default() += *value
+                }
+                // Step B
+                if let Some(value) = balance_cr[cr].we_an_byuse.get(&service) {
+                    *acc.B_byuse.entry(service).or_default() += *value;
+                }
+            }
+            acc
+        });
+
+    // Compute area weighted total balance
+    let k_area = 1.0 / arearef;
+    let mut used_EPB_byuse = balance.used_EPB_byuse.clone();
+    used_EPB_byuse.values_mut().for_each(|v| *v *= k_area);
+
+    let mut A_byuse = balance.A_byuse.clone();
+    A_byuse.values_mut().for_each(|v| *v *= k_area);
+
+    let mut B_byuse = balance.B_byuse.clone();
+    B_byuse.values_mut().for_each(|v| *v *= k_area);
+
+    let balance_m2 = BalanceTotal {
+        used_EPB_byuse,
+        A: k_area * balance.A,
+        A_byuse,
+        B: k_area * balance.B,
+        B_byuse,
+        we_del: k_area * balance.we_del,
+        we_exp_A: k_area * balance.we_exp_A,
+        we_exp: k_area * balance.we_exp,
+    };
+
+    // Global data and results
+    Ok(Balance {
+        components: components.clone(),
+        wfactors: wfactors.clone(),
+        k_exp,
+        arearef,
+        balance_cr,
+        balance,
+        balance_m2,
+    })
+}
+
+/// Energy balance by carrier
+/// -------------------------
+
+/// Detailed results of the energy balance computation for a given carrier
+#[allow(non_snake_case)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BalanceForCarrier {
+    /// Energy carrier
+    pub carrier: Carrier,
+    /// Energy used for EPB uses in each timestep
+    pub used_EPB: Vec<f32>,
+    /// Energy used for EPB uses, by use
+    pub used_EPB_an_byuse: HashMap<Service, f32>,
+    /// Used energy for non EPB uses in each timestep
+    pub used_nEPB: Vec<f32>,
+    /// Produced energy in each timestep
+    pub produced: Vec<f32>,
+    /// Produced energy (from all sources)
+    pub produced_an: f32,
+    /// Produced energy in each timestep by non grid source (COGENERACION / INSITU)
+    pub produced_bygen: HashMap<CSubtype, Vec<f32>>,
+    /// Produced energy by non grid source (COGENERACION / INSITU)
+    pub produced_bygen_an: HashMap<CSubtype, f32>,
+    /// Produced energy from all origins and used for EPB services
+    pub produced_used_EPus: Vec<f32>,
+    /// Produced energy with origin in generator i and used for EPB services
+    pub produced_used_EPus_bygen: HashMap<CSubtype, Vec<f32>>,
+    /// Load matching factor
+    pub f_match: Vec<f32>,
+    /// Exported energy to the grid and non EPB uses in each timestep
+    pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
+    /// Exported energy to the grid and non EPB uses
+    pub exported_an: f32,
+    /// Exported energy to the grid and non EPB uses in each timestep, by generation source
+    pub exported_bygen: HashMap<CSubtype, Vec<f32>>, // cambiado origin -> gen
+    /// Exported energy to the grid and non EPB uses, by generation source
+    pub exported_bygen_an: HashMap<CSubtype, f32>, // cambiado origin -> gen
+    /// Exported energy to the grid in each timestep
+    pub exported_grid: Vec<f32>,
+    /// Exported energy to the grid
+    pub exported_grid_an: f32,
+    /// Exported energy to non EPB uses in each timestep
+    pub exported_nEPB: Vec<f32>,
+    /// Exported energy to non EPB uses
+    pub exported_nEPB_an: f32,
+    /// Delivered energy by the grid in each timestep
+    pub delivered_grid: Vec<f32>,
+    /// Delivered energy by the grid
+    pub delivered_grid_an: f32,
+    /// Weighted delivered energy by the grid
+    pub we_delivered_grid_an: RenNrenCo2,
+    /// Weighted delivered energy by any energy production sources
+    pub we_delivered_prod_an: RenNrenCo2,
+    /// Weighted delivered energy by the grid and any energy production sources
+    pub we_delivered_an: RenNrenCo2,
+    /// Weighted exported energy for calculation step A
+    pub we_exported_an_A: RenNrenCo2,
+    /// Weighted exported energy for non EPB uses and calculation step AB
+    pub we_exported_nEPB_an_AB: RenNrenCo2,
+    /// Weighted exported energy to the grid and calculation step AB
+    pub we_exported_grid_an_AB: RenNrenCo2,
+    /// Weighted exported energy and calculation step AB
+    pub we_exported_an_AB: RenNrenCo2,
+    /// Weighted exported energy for calculation step A+B
+    pub we_exported_an: RenNrenCo2,
+    /// Weighted energy for calculation step A
+    pub we_an_A: RenNrenCo2,
+    /// Weighted energy for calculation step A, by use (for EPB services)
+    pub we_an_A_byuse: HashMap<Service, RenNrenCo2>,
+    /// Weighted energy
+    pub we_an: RenNrenCo2,
+    /// Weighted energy, by use (for EPB services)
+    pub we_an_byuse: HashMap<Service, RenNrenCo2>,
+}
 
 // --------------------------------------------------------------------
 // Energy calculation functions
@@ -406,7 +630,7 @@ fn balance_for_carrier(
 /// It uses the reverse calculation method (E.3.6)
 /// * `cr_list` - components list for the selected carrier i
 ///
-pub fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
+fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
     let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
     // Energy use components (EPB uses) for current carrier i
     let cr_use_list = cr_list
@@ -432,119 +656,4 @@ pub fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32>
         }
     }
     factors_us_k
-}
-
-/// Compute overall energy performance by aggregating results from all energy carriers.
-///
-/// * `components` - energy components
-/// * `wfactors` - weighting factors
-/// * `k_exp` - exported energy factor [0, 1]
-/// * `arearef` - reference area used for computing energy performance ratios
-///
-/// # Errors
-///
-/// * Use of an `arearef` less than 1e-3 raises an error
-/// * Missing weighting factors needed for balance computation
-///
-#[allow(non_snake_case)]
-pub fn energy_performance(
-    components: &Components,
-    wfactors: &Factors,
-    k_exp: f32,
-    arearef: f32,
-) -> Result<Balance> {
-    if arearef < 1e-3 {
-        return Err(EpbdError::Area(format!(
-            "Reference area can't be zero or almost zero and found {}",
-            arearef
-        )));
-    };
-
-    let carriers: HashSet<_> = components
-        .cdata
-        .iter()
-        .map(|e| e.carrier)
-        .collect();
-
-    // Compute balance for each carrier
-    let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
-    for &carrier in &carriers {
-        let components_cr: Vec<Component> = components
-            .cdata
-            .iter()
-            .filter(|e| e.carrier == carrier)
-            .cloned()
-            .collect();
-        let fp_cr: Vec<Factor> = wfactors
-            .wdata
-            .iter()
-            .filter(|e| e.carrier == carrier)
-            .cloned()
-            .collect();
-        let bal = balance_for_carrier(carrier, &components_cr, &fp_cr, k_exp)?;
-        balance_cr.insert(carrier, bal);
-    }
-
-    // Accumulate partial balance values for total balance
-    let balance: BalanceTotal = carriers
-        .iter()
-        .fold(BalanceTotal::default(), |mut acc, cr| {
-            // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
-            acc.A += balance_cr[cr].we_an_A;
-            // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
-            acc.B += balance_cr[cr].we_an;
-            // Weighted energy partials
-            acc.we_del += balance_cr[cr].we_delivered_an;
-            acc.we_exp_A += balance_cr[cr].we_exported_an_A;
-            acc.we_exp += balance_cr[cr].we_exported_an;
-            // Weighted energy for each use item (EPB services)
-            for &service in &SERVICES {
-                // Energy use
-                if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(&service) {
-                    *acc.used_EPB_byuse.entry(service).or_default() += *value
-                }
-                // Step A
-                if let Some(value) = balance_cr[cr].we_an_A_byuse.get(&service) {
-                    *acc.A_byuse.entry(service).or_default() += *value
-                }
-                // Step B
-                if let Some(value) = balance_cr[cr].we_an_byuse.get(&service) {
-                    *acc.B_byuse.entry(service).or_default() += *value;
-                }
-            }
-            acc
-        });
-
-    // Compute area weighted total balance
-    let k_area = 1.0 / arearef;
-    let mut used_EPB_byuse = balance.used_EPB_byuse.clone();
-    used_EPB_byuse.values_mut().for_each(|v| *v *= k_area);
-
-    let mut A_byuse = balance.A_byuse.clone();
-    A_byuse.values_mut().for_each(|v| *v *= k_area);
-
-    let mut B_byuse = balance.B_byuse.clone();
-    B_byuse.values_mut().for_each(|v| *v *= k_area);
-
-    let balance_m2 = BalanceTotal {
-        used_EPB_byuse,
-        A: k_area * balance.A,
-        A_byuse,
-        B: k_area * balance.B,
-        B_byuse,
-        we_del: k_area * balance.we_del,
-        we_exp_A: k_area * balance.we_exp_A,
-        we_exp: k_area * balance.we_exp,
-    };
-
-    // Global data and results
-    Ok(Balance {
-        components: components.clone(),
-        wfactors: wfactors.clone(),
-        k_exp,
-        arearef,
-        balance_cr,
-        balance,
-        balance_m2,
-    })
 }

@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-use cteepbd::{cte::*, *};
+use cteepbd::{cte::*, types::*, *};
 
 const TESTFPJ: &'static str = "vector, fuente, uso, step, ren, nren, co2
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42

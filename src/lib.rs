@@ -24,10 +24,21 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-CteEPBD, the library
-====================
+CteEPBD
+=======
 
-This library is intended to provide access to cteepbd's features
+This library is an implementation of the ISO EN 52000-1 standard
+
+  Energy performance of buildings - Overarching EPB assessment - General framework and procedures
+  This implementation has used the following assumptions:
+  - weighting factors are constant for all timesteps
+  - no priority is set for energy production (average step A weighting factor f_we_el_stepA)
+  - all on-site produced energy from non cogeneration sources is considered as delivered
+  - on-site produced energy is not compensated on a service by service basis, but on a by carrier basis
+  - the load matching factor is constant and equal to 1.0
+  TODO:
+  - allow other values of the load matching factor (or usign functions) f_match_t (formula 32, B.32)
+
 */
 
 #![deny(missing_docs)]
@@ -39,15 +50,17 @@ extern crate pretty_assertions;
 #[macro_use]
 extern crate serde_derive;
 
+mod balance;
+mod components;
 pub mod cte;
-pub mod epbd;
 pub mod error;
 pub mod types;
-pub mod vecops;
+mod vecops;
+mod wfactors;
 
-pub use epbd::*;
-pub use error::{EpbdError, Result};
-pub use types::*;
+pub use balance::*;
+pub use components::*;
+pub use wfactors::*;
 
 /// Version number
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");

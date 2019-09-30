@@ -37,8 +37,9 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 use std::collections::HashSet;
 
 use crate::{
-    CSubtype, Carrier, Components, Dest, EpbdError, Factor, Factors, Meta, RenNrenCo2, Result,
-    Source, Step,
+    error::{EpbdError, Result},
+    types::{CSubtype, Carrier, Dest, Factor, Meta, RenNrenCo2, Source, Step},
+    Components, Factors,
 };
 
 // Localizaciones válidas para CTE

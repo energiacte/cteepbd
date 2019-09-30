@@ -56,7 +56,11 @@ use std::str::FromStr;
 
 use clap::{App, AppSettings, Arg};
 
-use cteepbd::{cte, energy_performance, Balance, Components, MetaVec, RenNrenCo2, Service};
+use cteepbd::{
+    components_by_service, cte, energy_performance, parse_components,
+    types::{MetaVec, RenNrenCo2, Service},
+    Balance, Components,
+};
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
@@ -177,7 +181,7 @@ fn get_factor(
 fn get_components(archivo: Option<&str>) -> Components {
     if let Some(archivo_componentes) = archivo {
         println!("Componentes energéticos: \"{}\"", archivo_componentes);
-        cte::parse_components(&readfile(archivo_componentes)).unwrap_or_else(|e| {
+        parse_components(&readfile(archivo_componentes)).unwrap_or_else(|e| {
             eprintln!(
                 "ERROR: formato incorrecto del archivo de componentes \"{}\": {}",
                 archivo_componentes, e
@@ -367,7 +371,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // Cálculo para servicio de ACS en nearby
     if matches.is_present("acsnrb") {
-        components = cte::components_by_service(&components, Service::ACS)
+        components = components_by_service(&components, Service::ACS)
     }
 
     if verbosity > 1 && !components.cmeta.is_empty() {
@@ -485,10 +489,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Actualiza metadato CTE_AREAREF al valor seleccionado
     components.update_meta("CTE_AREAREF", &format!("{:.2}", arearef));
 
-    println!(
-        "Área de referencia ({}) [m2]: {:.2}",
-        orig_arearef, arearef
-    );
+    println!("Área de referencia ({}) [m2]: {:.2}", orig_arearef, arearef);
 
     // kexp ---------------------------------------------------------------------------------------
     // CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
