@@ -295,8 +295,8 @@ pub fn components_by_service(components: &Components, service: Service) -> Compo
 
     let mut newcomponents = Components { cdata, cmeta };
 
-    // newcomponents.update_meta("CTE_PERIMETRO", "NEARBY");
-    newcomponents.update_meta("CTE_SERVICIO", &service.to_string());
+    // newcomponents.set_meta("CTE_PERIMETRO", "NEARBY");
+    newcomponents.set_meta("CTE_SERVICIO", &service.to_string());
 
     newcomponents
 }

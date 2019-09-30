@@ -145,7 +145,7 @@ pub trait MetaVec {
     }
 
     /// Update metadata value for key or insert new metadata.
-    fn update_meta(&mut self, key: &str, value: &str) {
+    fn set_meta(&mut self, key: &str, value: &str) {
         let wmeta = self.get_mut_metavec();
         let metapos = wmeta.iter().position(|m| m.key == key);
         if let Some(pos) = metapos {

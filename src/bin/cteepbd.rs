@@ -169,7 +169,7 @@ fn get_factor(
         })
         .or_else(|| components.get_meta_rennren(meta));
     if let Some(factor) = factor {
-        components.update_meta(
+        components.set_meta(
             meta,
             &format!("{:.3}, {:.3}, {:.3}", factor.ren, factor.nren, factor.co2),
         );
@@ -487,7 +487,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     };
 
     // Actualiza metadato CTE_AREAREF al valor seleccionado
-    components.update_meta("CTE_AREAREF", &format!("{:.2}", arearef));
+    components.set_meta("CTE_AREAREF", &format!("{:.2}", arearef));
 
     println!("Área de referencia ({}) [m2]: {:.2}", orig_arearef, arearef);
 
@@ -511,7 +511,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     };
 
     // Actualiza metadato CTE_KEXP al valor seleccionado
-    components.update_meta("CTE_KEXP", &format!("{:.1}", kexp));
+    components.set_meta("CTE_KEXP", &format!("{:.1}", kexp));
 
     println!("Factor de exportación ({}) [-]: {:.1}", orig_kexp, kexp);
 
