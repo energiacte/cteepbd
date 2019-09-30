@@ -715,7 +715,7 @@ fn cte_EPBD() {
 
 #[test]
 fn cte_new_services_format() {
-    // Igual que N_R09, y usamos valores por defecto en función de fix_wfactors
+    // Igual que N_R09, y usamos valores por defecto en función de normalize
     let comps = components_from_file("test_data/newServicesFormat.csv");
     let FP = get_ctefp_peninsula();
     let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
@@ -731,7 +731,7 @@ fn cte_new_services_format() {
 
 #[test]
 fn cte_new_services_format_ACS() {
-    // Igual que N_R09, y usamos valores por defecto en función de fix_wfactors
+    // Igual que N_R09, y usamos valores por defecto en función de normalize
     let mut comps = components_from_file("test_data/newServicesFormat.csv");
     comps = components_by_service(&comps, Service::ACS);
     let FP = get_ctefp_peninsula();

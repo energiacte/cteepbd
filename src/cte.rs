@@ -39,9 +39,7 @@ Utilidades para el manejo de balances energéticos para el CTE:
     - balance_to_XML
 */
 
-use crate::{
-    error::EpbdError, fix_wfactors, set_user_wfactors, types::*, Balance, Factors, UserWF,
-};
+use crate::{error::EpbdError, types::*, Balance, Factors, UserWF};
 
 /**
 Constantes y valores generales
@@ -147,9 +145,10 @@ pub fn wfactors_from_str(
     user: &UserWF<Option<RenNrenCo2>>,
     userdefaults: &UserWF<RenNrenCo2>,
 ) -> Result<Factors, EpbdError> {
-    let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, user);
-    fix_wfactors(wfactors, &userdefaults)
+    wfactorsstring
+        .parse::<Factors>()?
+        .set_user_wfactors(user)
+        .normalize(&userdefaults)
 }
 
 /// Genera factores de paso a partir de localización.
@@ -169,9 +168,10 @@ pub fn wfactors_from_loc(
         "CEUTAMELILLA" => locdefaults.loc_ceutamelilla,
         _ => return Err(EpbdError::Location(loc.to_string())),
     };
-    let mut wfactors: Factors = wfactorsstring.parse()?;
-    set_user_wfactors(&mut wfactors, user);
-    fix_wfactors(wfactors, &userdefaults)
+    wfactorsstring
+        .parse::<Factors>()?
+        .set_user_wfactors(user)
+        .normalize(&userdefaults)
 }
 
 /// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
@@ -180,7 +180,7 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
     // y no están en la lista CTE_NRBY cambian sus factores de paso
     // de forma que ren' = 0 y nren' = ren + nren.
     // ATENCIÓN: ¡¡La producción eléctrica de la cogeneración entra con (factores ren:0, nren:0)!!
-    let mut wmeta = wfactors.wmeta.clone();
+    let wmeta = wfactors.wmeta.clone();
     let mut wdata: Vec<Factor> = Vec::new();
 
     for f in wfactors.wdata.iter().cloned() {
