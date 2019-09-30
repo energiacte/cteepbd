@@ -5,7 +5,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
-use pretty_assertions::{assert_eq};
+use pretty_assertions::assert_eq;
 
 use cteepbd::{cte::*, types::*, *};
 
@@ -79,7 +79,7 @@ fn get_ctefp_peninsula() -> Factors {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    wfactors_from_loc("PENINSULA", &user_wf, &WF_RITE2014).unwrap()
+    wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, &user_wf, &CTE_USERWF).unwrap()
 }
 
 fn get_energydatalist() -> Components {
@@ -155,7 +155,7 @@ fn wfactors_from_file(path: &str) -> Factors {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    wfactors_from_str(&wfactors_string, &user_wf, &WF_RITE2014).unwrap()
+    wfactors_from_str(&wfactors_string, &user_wf, &CTE_USERWF).unwrap()
 }
 
 ///Approximate equality for RenNrenCo2 values
@@ -696,12 +696,12 @@ fn cte_test_carriers_kexp_0() {
 fn cte_EPBD() {
     let comps = components_from_file("test_data/cteEPBD-N_R09_unif-ET5-V048R070-C1_peninsula.csv");
     let user_wf = UserWF {
-        red1: Some(WF_RITE2014.user.red1),
-        red2: Some(WF_RITE2014.user.red2),
+        red1: Some(CTE_USERWF.red1),
+        red2: Some(CTE_USERWF.red2),
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    let FP = wfactors_from_loc("PENINSULA", &user_wf, &WF_RITE2014).unwrap();
+    let FP = wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, &user_wf, &CTE_USERWF).unwrap();
     let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {

@@ -40,10 +40,7 @@ Utilidades para el manejo de balances energéticos para el CTE:
 */
 
 use crate::{
-    error::{EpbdError},
-    fix_wfactors, set_user_wfactors,
-    types::*,
-    Balance, Factors, UserWF,
+    error::EpbdError, fix_wfactors, set_user_wfactors, types::*, Balance, Factors, UserWF,
 };
 
 /**
@@ -70,9 +67,7 @@ pub const CTE_NRBY: [Carrier; 5] = [
 ]; // Ver B.23. Solo biomasa sólida
 
 /// Valores por defecto para factores de paso
-pub struct CteDefaultsWF {
-    /// Factores de paso de usuario
-    pub user: UserWF<RenNrenCo2>,
+pub struct CteLocWF {
     /// Factores de paso reglamentarios para la Península
     pub loc_peninsula: &'static str,
     /// Factores de paso reglamentarios para Baleares.
@@ -104,30 +99,35 @@ ELECTRICIDAD, RED, SUMINISTRO, A, ", stringify!($ren), ", ", stringify!($nren), 
 ")};
 }
 
-/// Factores de paso reglamentarios (RITE 20/07/2014). Usados también en DB-HE 2013
-pub const WF_RITE2014: CteDefaultsWF = CteDefaultsWF {
-    user: UserWF {
-        red1: RenNrenCo2 {
-            ren: 0.0,
-            nren: 1.3,
-            co2: 0.3,
-        },
-        red2: RenNrenCo2 {
-            ren: 0.0,
-            nren: 1.3,
-            co2: 0.3,
-        },
-        cogen_to_grid: RenNrenCo2 {
-            ren: 0.0,
-            nren: 2.5,
-            co2: 0.3,
-        },
-        cogen_to_nepb: RenNrenCo2 {
-            ren: 0.0,
-            nren: 2.5,
-            co2: 0.3,
-        },
+/// Factores de paso de usuario por defecto
+pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
+    red1: RenNrenCo2 {
+        ren: 0.0,
+        nren: 1.3,
+        co2: 0.3,
     },
+    red2: RenNrenCo2 {
+        ren: 0.0,
+        nren: 1.3,
+        co2: 0.3,
+    },
+    cogen_to_grid: RenNrenCo2 {
+        ren: 0.0,
+        nren: 2.5,
+        co2: 0.3,
+    },
+    cogen_to_nepb: RenNrenCo2 {
+        ren: 0.0,
+        nren: 2.5,
+        co2: 0.3,
+    },
+};
+
+/// Factores de paso reglamentarios (RITE 20/07/2014)
+/// Usados en:
+/// - DB-HE 2013
+/// - DB-HE 2018
+pub const CTE_LOCWF_RITE2014: CteLocWF = CteLocWF {
     loc_peninsula: build_wf_2013!("PENINSULA", 0.414, 1.954, 0.331),
     loc_baleares: build_wf_2013!("BALEARES", 0.082, 2.968, 0.932),
     loc_canarias: build_wf_2013!("CANARIAS", 0.070, 2.924, 0.776),
@@ -145,11 +145,11 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 pub fn wfactors_from_str(
     wfactorsstring: &str,
     user: &UserWF<Option<RenNrenCo2>>,
-    defaults: &CteDefaultsWF,
+    userdefaults: &UserWF<RenNrenCo2>,
 ) -> Result<Factors, EpbdError> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
-    fix_wfactors(wfactors, &defaults.user)
+    fix_wfactors(wfactors, &userdefaults)
 }
 
 /// Genera factores de paso a partir de localización.
@@ -158,19 +158,20 @@ pub fn wfactors_from_str(
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
 pub fn wfactors_from_loc(
     loc: &str,
+    locdefaults: &CteLocWF,
     user: &UserWF<Option<RenNrenCo2>>,
-    defaults: &CteDefaultsWF,
+    userdefaults: &UserWF<RenNrenCo2>,
 ) -> Result<Factors, EpbdError> {
     let wfactorsstring = match &*loc {
-        "PENINSULA" => defaults.loc_peninsula,
-        "BALEARES" => defaults.loc_baleares,
-        "CANARIAS" => defaults.loc_canarias,
-        "CEUTAMELILLA" => defaults.loc_ceutamelilla,
+        "PENINSULA" => locdefaults.loc_peninsula,
+        "BALEARES" => locdefaults.loc_baleares,
+        "CANARIAS" => locdefaults.loc_canarias,
+        "CEUTAMELILLA" => locdefaults.loc_ceutamelilla,
         _ => return Err(EpbdError::Location(loc.to_string())),
     };
     let mut wfactors: Factors = wfactorsstring.parse()?;
     set_user_wfactors(&mut wfactors, user);
-    fix_wfactors(wfactors, &defaults.user)
+    fix_wfactors(wfactors, &userdefaults)
 }
 
 /// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
