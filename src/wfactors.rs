@@ -482,39 +482,37 @@ impl Factors {
 
         Ok(self)
     }
-}
 
-/// Elimina factores de paso no usados en los datos de vectores energéticos.
-///
-/// Elimina los factores:
-///  - de vectores que no aparecen en los datos
-///  - de cogeneración si no hay cogeneración
-///  - para exportación a usos no EPB si no se aparecen en los datos
-///  - de electricidad in situ si no aparece una producción de ese tipo
-pub fn strip_wfactors(wfactors: &mut Factors, components: &Components) {
-    let wf_carriers: HashSet<_> = components.cdata.iter().map(|c| c.carrier).collect();
-    let has_cogen = components
-        .cdata
-        .iter()
-        .any(|c| c.csubtype == CSubtype::COGENERACION);
-    let has_nepb = components
-        .cdata
-        .iter()
-        .any(|c| c.csubtype == CSubtype::NEPB);
-    let has_elec_insitu = components
-        .cdata
-        .iter()
-        .any(|c| c.carrier == Carrier::ELECTRICIDAD && c.csubtype == CSubtype::INSITU);
-    wfactors.wdata.retain(|f| wf_carriers.contains(&f.carrier));
-    wfactors
-        .wdata
-        .retain(|f| f.source != Source::COGENERACION || has_cogen);
-    wfactors
-        .wdata
-        .retain(|f| f.dest != Dest::A_NEPB || has_nepb);
-    wfactors.wdata.retain(|f| {
-        f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_insitu
-    });
+    /// Elimina factores de paso no usados en los datos de vectores energéticos.
+    ///
+    /// Elimina los factores:
+    ///  - de vectores que no aparecen en los datos
+    ///  - de cogeneración si no hay cogeneración
+    ///  - para exportación a usos no EPB si no se aparecen en los datos
+    ///  - de electricidad in situ si no aparece una producción de ese tipo
+    pub fn strip(mut self, components: &Components) -> Self {
+        let wf_carriers: HashSet<_> = components.cdata.iter().map(|c| c.carrier).collect();
+        let has_cogen = components
+            .cdata
+            .iter()
+            .any(|c| c.csubtype == CSubtype::COGENERACION);
+        let has_nepb = components
+            .cdata
+            .iter()
+            .any(|c| c.csubtype == CSubtype::NEPB);
+        let has_elec_insitu = components
+            .cdata
+            .iter()
+            .any(|c| c.carrier == Carrier::ELECTRICIDAD && c.csubtype == CSubtype::INSITU);
+        self.wdata.retain(|f| wf_carriers.contains(&f.carrier));
+        self.wdata
+            .retain(|f| f.source != Source::COGENERACION || has_cogen);
+        self.wdata.retain(|f| f.dest != Dest::A_NEPB || has_nepb);
+        self.wdata.retain(|f| {
+            f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_insitu
+        });
+        self
+    }
 }
 
 #[cfg(test)]
@@ -530,10 +528,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para sum
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ";
 
         // roundtrip building from/to string
-        assert_eq!(
-            format!("{}", tfactors1.parse::<Factors>().unwrap()),
-            tfactors1
-        );
+        assert_eq!(tfactors1.parse::<Factors>().unwrap().to_string(), tfactors1);
     }
 
     #[test]
@@ -565,13 +560,13 @@ RED2, RED, SUMINISTRO, A, 0.125, 0.100, 0.500 # Factor de usuario";
     }
 
     #[test]
-    fn normalize() {
-        let tfactors1 = "#META CTE_FUENTE: RITE2014
+    fn normalize_and_strip() {
+        let tfactors = "#META CTE_FUENTE: RITE2014
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
 ".parse::<Factors>().unwrap();
-        let tfactorsres = "#META CTE_FUENTE: RITE2014
+        let tfactors_normalized_str = "#META CTE_FUENTE: RITE2014
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
@@ -591,33 +586,39 @@ MEDIOAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la r
 MEDIOAMBIENTE, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
 RED1, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
 RED2, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)";
-        assert_eq!(
-            tfactors1
-                .normalize(&UserWF {
-                    red1: RenNrenCo2 {
-                        ren: 0.0,
-                        nren: 1.3,
-                        co2: 0.3,
-                    },
-                    red2: RenNrenCo2 {
-                        ren: 0.0,
-                        nren: 1.3,
-                        co2: 0.3,
-                    },
-                    cogen_to_grid: RenNrenCo2 {
-                        ren: 0.0,
-                        nren: 2.5,
-                        co2: 0.3,
-                    },
-                    cogen_to_nepb: RenNrenCo2 {
-                        ren: 0.0,
-                        nren: 2.5,
-                        co2: 0.3,
-                    },
-                })
-                .unwrap()
-                .to_string(),
-            tfactorsres
-        );
+        let tcomps = "ELECTRICIDAD, CONSUMO, EPB, NDEF, 1 # Solo consume electricidad de red".parse::<Components>().unwrap();
+        let tfactors_normalized_stripped_str = "#META CTE_FUENTE: RITE2014
+#META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red";
+
+        let tfactors_normalized = tfactors
+            .normalize(&UserWF {
+                red1: RenNrenCo2 {
+                    ren: 0.0,
+                    nren: 1.3,
+                    co2: 0.3,
+                },
+                red2: RenNrenCo2 {
+                    ren: 0.0,
+                    nren: 1.3,
+                    co2: 0.3,
+                },
+                cogen_to_grid: RenNrenCo2 {
+                    ren: 0.0,
+                    nren: 2.5,
+                    co2: 0.3,
+                },
+                cogen_to_nepb: RenNrenCo2 {
+                    ren: 0.0,
+                    nren: 2.5,
+                    co2: 0.3,
+                },
+            })
+            .unwrap();
+        let tfactors_normalized_stripped = tfactors_normalized.clone().strip(&tcomps);
+
+        assert_eq!(tfactors_normalized.to_string(), tfactors_normalized_str);
+        assert_eq!(tfactors_normalized_stripped.to_string(), tfactors_normalized_stripped_str);
+
     }
 }

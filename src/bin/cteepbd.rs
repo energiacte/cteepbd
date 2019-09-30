@@ -57,7 +57,7 @@ use std::str::FromStr;
 use clap::{App, AppSettings, Arg};
 
 use cteepbd::{
-    components_by_service, cte, energy_performance, parse_components, strip_wfactors,
+    components_by_service, cte, energy_performance, parse_components,
     types::{MetaVec, RenNrenCo2, Service},
     Balance, Components, UserWF,
 };
@@ -451,7 +451,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Simplificación de los factores de paso -----------------------------------------------------
     if !matches.is_present("nosimplificafps") && !components.cdata.is_empty() {
         let oldfplen = fpdata.wdata.len();
-        strip_wfactors(&mut fpdata, &components);
+        fpdata = fpdata.strip(&components);
         if verbosity > 1 {
             println!(
                 "Reducción de factores de paso: {} a {}",
