@@ -109,7 +109,7 @@ impl str::FromStr for Factors {
 
 /// Estructura para definir valores por defecto y valores de usuario
 #[derive(Debug)]
-pub struct UserWF<T=RenNrenCo2> {
+pub struct UserWF<T = RenNrenCo2> {
     /// Factores de paso de redes de distrito 1.
     /// RED1, RED, SUMINISTRO, A, ren, nren
     pub red1: T,
@@ -534,5 +534,32 @@ ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para 
             format!("{}", tfactors1.parse::<Factors>().unwrap()),
             tfactors1
         );
+    }
+
+    #[test]
+    fn set_user_factors() {
+        let mut tfactors1 = "#META CTE_FUENTE: RITE2014
+#META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
+".parse::<Factors>().unwrap();
+        let tfactorsres = "#META CTE_FUENTE: RITE2014
+#META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
+ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
+ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
+ELECTRICIDAD, COGENERACION, A_RED, A, 0.125, 0.500, 1.000 # Factor de usuario
+ELECTRICIDAD, COGENERACION, A_NEPB, A, 0.500, 0.125, 2.000 # Factor de usuario
+RED1, RED, SUMINISTRO, A, 0.100, 0.125, 0.500 # Factor de usuario
+RED2, RED, SUMINISTRO, A, 0.125, 0.100, 0.500 # Factor de usuario";
+        set_user_wfactors(
+            &mut tfactors1,
+            &UserWF {
+                red1: Some(RenNrenCo2::new(0.1, 0.125, 0.5)),
+                red2: Some(RenNrenCo2::new(0.125, 0.1, 0.5)),
+                cogen_to_grid: Some(RenNrenCo2::new(0.125, 0.5, 1.0)),
+                cogen_to_nepb: Some(RenNrenCo2::new(0.5, 0.125, 2.0)),
+            },
+        );
+        assert_eq!(tfactors1.to_string(), tfactorsres);
     }
 }
