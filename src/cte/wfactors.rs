@@ -61,7 +61,7 @@ pub const CTE_NRBY: [Carrier; 5] = [
 
 /// Estructura para definir valores por defecto y valores de usuario
 #[derive(Debug)]
-pub struct CteUserWF<T> {
+pub struct UserWF<T> {
     /// Factores de paso de redes de distrito 1.
     /// RED1, RED, SUMINISTRO, A, ren, nren
     pub red1: T,
@@ -79,7 +79,7 @@ pub struct CteUserWF<T> {
 /// Valores por defecto para factores de paso
 pub struct CteDefaultsWF {
     /// Factores de paso de usuario
-    pub user: CteUserWF<RenNrenCo2>,
+    pub user: UserWF<RenNrenCo2>,
     /// Factores de paso reglamentarios para la Península
     pub loc_peninsula: &'static str,
     /// Factores de paso reglamentarios para Baleares.
@@ -113,7 +113,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, ", stringify!($ren), ", ", stringify!($nren), 
 
 /// Factores de paso reglamentarios (RITE 20/07/2014). Usados también en DB-HE 2013
 pub const WF_RITE2014: CteDefaultsWF = CteDefaultsWF {
-    user: CteUserWF {
+    user: UserWF {
         red1: RenNrenCo2 {
             ren: 0.0,
             nren: 1.3,
@@ -146,7 +146,7 @@ pub const WF_RITE2014: CteDefaultsWF = CteDefaultsWF {
 /// Lee factores de paso desde cadena y sanea los resultados.
 pub fn wfactors_from_str(
     wfactorsstring: &str,
-    user: &CteUserWF<Option<RenNrenCo2>>,
+    user: &UserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
 ) -> Result<Factors> {
     let mut wfactors: Factors = wfactorsstring.parse()?;
@@ -160,7 +160,7 @@ pub fn wfactors_from_str(
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
 pub fn wfactors_from_loc(
     loc: &str,
-    user: &CteUserWF<Option<RenNrenCo2>>,
+    user: &UserWF<Option<RenNrenCo2>>,
     defaults: &CteDefaultsWF,
 ) -> Result<Factors> {
     let wfactorsstring = match &*loc {
@@ -176,7 +176,7 @@ pub fn wfactors_from_loc(
 }
 
 /// Actualiza los factores definibles por el usuario (cogen_to_grid, cogen_to_nepb, red1 y red2)
-pub fn set_user_wfactors(wfactors: &mut Factors, user: &CteUserWF<Option<RenNrenCo2>>) {
+pub fn set_user_wfactors(wfactors: &mut Factors, user: &UserWF<Option<RenNrenCo2>>) {
     // ------ Cogeneración a red ----------
     if let Some(ucog) = user.cogen_to_grid {
         if let Some(factor) = wfactors.wdata.iter_mut().find(|f| {

@@ -397,7 +397,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     let default_wf = cte::WF_RITE2014;
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
-    let user_wf = cte::CteUserWF {
+    let user_wf = cte::UserWF {
         red1: get_factor(matches.values_of("red1"), &mut components, "CTE_RED1"),
         red2: get_factor(matches.values_of("red2"), &mut components, "CTE_RED2"),
         cogen_to_grid: get_factor(matches.values_of("cogen"), &mut components, "CTE_COGEN"),
