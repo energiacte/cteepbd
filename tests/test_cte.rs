@@ -5,6 +5,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
+use pretty_assertions::{assert_eq};
+
 use cteepbd::{cte::*, types::*, *};
 
 const TESTFPJ: &'static str = "vector, fuente, uso, step, ren, nren, co2
@@ -71,7 +73,7 @@ ELECTRICIDAD, COGENERACION, A_NEPB, B, 0.5, 2.0, 0.42
 const TESTKEXP: f32 = 1.0;
 
 fn get_ctefp_peninsula() -> Factors {
-    let user_wf = CteUserWF {
+    let user_wf = UserWF {
         red1: None,
         red2: None,
         cogen_to_grid: None,
@@ -147,7 +149,7 @@ fn wfactors_from_file(path: &str) -> Factors {
     let mut f = File::open(path).unwrap();
     let mut wfactors_string = String::new();
     f.read_to_string(&mut wfactors_string).unwrap();
-    let user_wf = CteUserWF {
+    let user_wf = UserWF {
         red1: None,
         red2: None,
         cogen_to_grid: None,
@@ -693,7 +695,7 @@ fn cte_test_carriers_kexp_0() {
 #[test]
 fn cte_EPBD() {
     let comps = components_from_file("test_data/cteEPBD-N_R09_unif-ET5-V048R070-C1_peninsula.csv");
-    let user_wf = CteUserWF {
+    let user_wf = UserWF {
         red1: Some(WF_RITE2014.user.red1),
         red2: Some(WF_RITE2014.user.red2),
         cogen_to_grid: None,
@@ -750,7 +752,7 @@ fn cte_force_electricity_prod_to_NDEF() {
 ELECTRICIDAD,PRODUCCION,INSITU,CAL,40";
     // parse_components hace un parse y fix
     let comps = parse_components(compstr).unwrap();
-    assert!(comps.cdata[1].service == Service::NDEF);
+    assert_eq!(comps.cdata[1].service, Service::NDEF);
 }
 
 #[test]
@@ -769,5 +771,5 @@ fn cte_balance_byuse() {
         },
     );
 
-    assert!(result == bal.balance_m2.B_byuse);
+    assert_eq!(result, bal.balance_m2.B_byuse);
 }
