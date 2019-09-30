@@ -57,9 +57,9 @@ use std::str::FromStr;
 use clap::{App, AppSettings, Arg};
 
 use cteepbd::{
-    components_by_service, cte, energy_performance, parse_components,
+    components_by_service, cte, energy_performance, parse_components, strip_wfactors,
     types::{MetaVec, RenNrenCo2, Service},
-    Balance, Components,
+    Balance, Components, UserWF,
 };
 
 // Funciones auxiliares -----------------------------------------------------------------------
@@ -397,7 +397,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     let default_wf = cte::WF_RITE2014;
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
-    let user_wf = cte::UserWF {
+    let user_wf = UserWF {
         red1: get_factor(matches.values_of("red1"), &mut components, "CTE_RED1"),
         red2: get_factor(matches.values_of("red2"), &mut components, "CTE_RED2"),
         cogen_to_grid: get_factor(matches.values_of("cogen"), &mut components, "CTE_COGEN"),
@@ -451,7 +451,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Simplificación de los factores de paso -----------------------------------------------------
     if !matches.is_present("nosimplificafps") && !components.cdata.is_empty() {
         let oldfplen = fpdata.wdata.len();
-        cte::strip_wfactors(&mut fpdata, &components);
+        strip_wfactors(&mut fpdata, &components);
         if verbosity > 1 {
             println!(
                 "Reducción de factores de paso: {} a {}",
