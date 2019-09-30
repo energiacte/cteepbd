@@ -57,74 +57,7 @@ impl Factors {
     pub fn strip_nepb(&mut self) {
         self.wdata.retain(|e| e.dest != Dest::A_NEPB);
     }
-}
 
-impl MetaVec for Factors {
-    fn get_metavec(&self) -> &Vec<Meta> {
-        &self.wmeta
-    }
-    fn get_mut_metavec(&mut self) -> &mut Vec<Meta> {
-        &mut self.wmeta
-    }
-}
-
-impl fmt::Display for Factors {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let metalines = self
-            .wmeta
-            .iter()
-            .map(|v| format!("{}", v))
-            .collect::<Vec<_>>()
-            .join("\n");
-        let datalines = self
-            .wdata
-            .iter()
-            .map(|v| format!("{}", v))
-            .collect::<Vec<_>>()
-            .join("\n");
-        write!(f, "{}\n{}", metalines, datalines)
-    }
-}
-
-impl str::FromStr for Factors {
-    type Err = EpbdError;
-
-    fn from_str(s: &str) -> Result<Factors, Self::Err> {
-        let lines: Vec<&str> = s.lines().map(str::trim).collect();
-        let metalines = lines
-            .iter()
-            .filter(|l| l.starts_with("#META") || l.starts_with("#CTE_"));
-        let datalines = lines
-            .iter()
-            .filter(|l| !(l.starts_with('#') || l.starts_with("vector,") || l.is_empty()));
-        let wmeta = metalines
-            .map(|e| e.parse())
-            .collect::<Result<Vec<Meta>, _>>()?;
-        let wdata = datalines
-            .map(|e| e.parse())
-            .collect::<Result<Vec<Factor>, _>>()?;
-        Ok(Factors { wmeta, wdata })
-    }
-}
-
-/// Estructura para definir valores por defecto y valores de usuario
-#[derive(Debug)]
-pub struct UserWF<T = RenNrenCo2> {
-    /// Factores de paso de redes de distrito 1.
-    /// RED1, RED, SUMINISTRO, A, ren, nren
-    pub red1: T,
-    /// Factores de paso de redes de distrito 2.
-    /// RED2, RED, SUMINISTRO, A, ren, nren
-    pub red2: T,
-    /// Factores de paso para exportación a la red (paso A) de electricidad cogenerada.
-    /// ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren
-    pub cogen_to_grid: T,
-    /// Factores de paso para exportación a usos no EPB (paso A) de electricidad cogenerada.
-    /// ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren
-    pub cogen_to_nepb: T,
-}
-
-impl Factors {
     /// Actualiza los factores definibles por el usuario (cogen_to_grid, cogen_to_nepb, red1 y red2)
     pub fn set_user_wfactors(mut self, user: &UserWF<Option<RenNrenCo2>>) -> Self {
         // ------ Cogeneración a red ----------
@@ -514,6 +447,72 @@ impl Factors {
         self
     }
 }
+
+impl MetaVec for Factors {
+    fn get_metavec(&self) -> &Vec<Meta> {
+        &self.wmeta
+    }
+    fn get_mut_metavec(&mut self) -> &mut Vec<Meta> {
+        &mut self.wmeta
+    }
+}
+
+impl fmt::Display for Factors {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let metalines = self
+            .wmeta
+            .iter()
+            .map(|v| format!("{}", v))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let datalines = self
+            .wdata
+            .iter()
+            .map(|v| format!("{}", v))
+            .collect::<Vec<_>>()
+            .join("\n");
+        write!(f, "{}\n{}", metalines, datalines)
+    }
+}
+
+impl str::FromStr for Factors {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<Factors, Self::Err> {
+        let lines: Vec<&str> = s.lines().map(str::trim).collect();
+        let metalines = lines
+            .iter()
+            .filter(|l| l.starts_with("#META") || l.starts_with("#CTE_"));
+        let datalines = lines
+            .iter()
+            .filter(|l| !(l.starts_with('#') || l.starts_with("vector,") || l.is_empty()));
+        let wmeta = metalines
+            .map(|e| e.parse())
+            .collect::<Result<Vec<Meta>, _>>()?;
+        let wdata = datalines
+            .map(|e| e.parse())
+            .collect::<Result<Vec<Factor>, _>>()?;
+        Ok(Factors { wmeta, wdata })
+    }
+}
+
+/// Estructura para definir valores por defecto y valores de usuario
+#[derive(Debug)]
+pub struct UserWF<T = RenNrenCo2> {
+    /// Factores de paso de redes de distrito 1.
+    /// RED1, RED, SUMINISTRO, A, ren, nren
+    pub red1: T,
+    /// Factores de paso de redes de distrito 2.
+    /// RED2, RED, SUMINISTRO, A, ren, nren
+    pub red2: T,
+    /// Factores de paso para exportación a la red (paso A) de electricidad cogenerada.
+    /// ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren
+    pub cogen_to_grid: T,
+    /// Factores de paso para exportación a usos no EPB (paso A) de electricidad cogenerada.
+    /// ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren
+    pub cogen_to_nepb: T,
+}
+
 
 #[cfg(test)]
 mod tests {
