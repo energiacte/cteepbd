@@ -511,6 +511,13 @@ impl Factor {
             co2: self.co2,
         }
     }
+
+    /// Copy factors from RenNRenCo2 element
+    pub fn set_values(&mut self, &values: &RenNrenCo2) {
+        self.ren = values.ren;
+        self.nren = values.nren;
+        self.co2 = values.co2;
+    }
 }
 
 impl fmt::Display for Factor {

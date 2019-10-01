@@ -65,9 +65,7 @@ impl Factors {
             if let Some(factor) = self.wdata.iter_mut().find(|f| {
                 f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_RED
             }) {
-                factor.ren = ucog.ren;
-                factor.nren = ucog.nren;
-                factor.co2 = ucog.co2;
+                factor.set_values(&ucog);
             } else {
                 self.wdata.push(Factor::new(
                     Carrier::ELECTRICIDAD,
@@ -87,9 +85,7 @@ impl Factors {
             if let Some(factor) = self.wdata.iter_mut().find(|f| {
                 f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_NEPB
             }) {
-                factor.ren = ucog.ren;
-                factor.nren = ucog.nren;
-                factor.co2 = ucog.co2;
+                factor.set_values(&ucog);
             } else {
                 self.wdata.push(Factor::new(
                     Carrier::ELECTRICIDAD,
@@ -109,9 +105,7 @@ impl Factors {
             if let Some(factor) = self.wdata.iter_mut().find(|f| {
                 f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::SUMINISTRO
             }) {
-                factor.ren = ured1.ren;
-                factor.nren = ured1.nren;
-                factor.co2 = ured1.co2;
+                factor.set_values(&ured1);
             } else {
                 self.wdata.push(Factor::new(
                     Carrier::RED1,
@@ -131,9 +125,7 @@ impl Factors {
             if let Some(factor) = self.wdata.iter_mut().find(|f| {
                 f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::SUMINISTRO
             }) {
-                factor.ren = ured2.ren;
-                factor.nren = ured2.nren;
-                factor.co2 = ured2.co2;
+                factor.set_values(&ured2);
             } else {
                 self.wdata.push(Factor::new(
                     Carrier::RED2,
