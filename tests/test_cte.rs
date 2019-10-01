@@ -141,7 +141,7 @@ fn components_from_file(path: &str) -> Components {
     let mut f = File::open(path).unwrap();
     let mut componentsstring = String::new();
     f.read_to_string(&mut componentsstring).unwrap();
-    parse_components(&componentsstring).unwrap()
+    componentsstring.parse::<Components>().unwrap().normalize()
 }
 
 fn wfactors_from_file(path: &str) -> Factors {
@@ -732,8 +732,8 @@ fn cte_new_services_format() {
 #[test]
 fn cte_new_services_format_ACS() {
     // Igual que N_R09, y usamos valores por defecto en función de normalize
-    let mut comps = components_from_file("test_data/newServicesFormat.csv");
-    comps = components_by_service(&comps, Service::ACS);
+    let comps =
+        components_from_file("test_data/newServicesFormat.csv").filter_by_service(Service::ACS);
     let FP = get_ctefp_peninsula();
     let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
     assert!(approx_equal(
@@ -748,10 +748,11 @@ fn cte_new_services_format_ACS() {
 
 #[test]
 fn cte_force_electricity_prod_to_NDEF() {
-    let compstr = "ELECTRICIDAD,CONSUMO,EPB,CAL,20
-ELECTRICIDAD,PRODUCCION,INSITU,CAL,40";
-    // parse_components hace un parse y fix
-    let comps = parse_components(compstr).unwrap();
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,CAL,20
+ELECTRICIDAD,PRODUCCION,INSITU,CAL,40"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
     assert_eq!(comps.cdata[1].service, Service::NDEF);
 }
 

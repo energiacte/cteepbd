@@ -57,7 +57,7 @@ use std::str::FromStr;
 use clap::{App, AppSettings, Arg};
 
 use cteepbd::{
-    components_by_service, cte, energy_performance, parse_components,
+    cte, energy_performance,
     types::{MetaVec, RenNrenCo2, Service},
     Balance, Components, UserWF,
 };
@@ -181,13 +181,16 @@ fn get_factor(
 fn get_components(archivo: Option<&str>) -> Components {
     if let Some(archivo_componentes) = archivo {
         println!("Componentes energéticos: \"{}\"", archivo_componentes);
-        parse_components(&readfile(archivo_componentes)).unwrap_or_else(|e| {
-            eprintln!(
-                "ERROR: formato incorrecto del archivo de componentes \"{}\": {}",
-                archivo_componentes, e
-            );
-            exit(exitcode::DATAERR);
-        })
+        readfile(archivo_componentes)
+            .parse::<Components>()
+            .unwrap_or_else(|e| {
+                eprintln!(
+                    "ERROR: formato incorrecto del archivo de componentes \"{}\": {}",
+                    archivo_componentes, e
+                );
+                exit(exitcode::DATAERR);
+            })
+            .normalize()
     } else {
         Components::default()
     }
@@ -370,7 +373,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // Cálculo para servicio de ACS en nearby
     if matches.is_present("acsnrb") {
-        components = components_by_service(&components, Service::ACS)
+        components = components.filter_by_service(Service::ACS);
     }
 
     if verbosity > 1 && !components.cmeta.is_empty() {
