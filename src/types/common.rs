@@ -578,7 +578,7 @@ impl str::FromStr for Factor {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::{assert_eq};
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn tcomponent() {
@@ -607,19 +607,22 @@ mod tests {
         let component2strlegacy = "ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
 
         // consumer component
-        assert_eq!(format!("{}", component1), component1str);
+        assert_eq!(component1.to_string(), component1str);
 
         // producer component
-        assert_eq!(format!("{}", component2), component2str);
+        assert_eq!(component2.to_string(), component2str);
 
         // roundtrip building from/to string
         assert_eq!(
-            format!("{}", component2str.parse::<Component>().unwrap()),
+            component2str.parse::<Component>().unwrap().to_string(),
             component2str
         );
         // roundtrip building from/to string for legacy format
         assert_eq!(
-            format!("{}", component2strlegacy.parse::<Component>().unwrap()),
+            component2strlegacy
+                .parse::<Component>()
+                .unwrap()
+                .to_string(),
             component2str
         );
     }
@@ -641,11 +644,11 @@ mod tests {
         let factor2str = "ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
 
         // consumer component
-        assert_eq!(format!("{}", factor1), factor1str);
+        assert_eq!(factor1.to_string(), factor1str);
 
         // roundtrip building from/to string
         assert_eq!(
-            format!("{}", factor2str.parse::<Component>().unwrap()),
+            factor2str.parse::<Component>().unwrap().to_string(),
             factor2str
         );
     }
