@@ -72,9 +72,7 @@ impl Factors {
                     Source::COGENERACION,
                     Dest::A_RED,
                     Step::A,
-                    ucog.ren,
-                    ucog.nren,
-                    ucog.co2,
+                    ucog,
                     "Factor de usuario",
                 ));
             };
@@ -92,9 +90,7 @@ impl Factors {
                     Source::COGENERACION,
                     Dest::A_NEPB,
                     Step::A,
-                    ucog.ren,
-                    ucog.nren,
-                    ucog.co2,
+                    ucog,
                     "Factor de usuario",
                 ));
             };
@@ -112,9 +108,7 @@ impl Factors {
                     Source::RED,
                     Dest::SUMINISTRO,
                     Step::A,
-                    ured1.ren,
-                    ured1.nren,
-                    ured1.co2,
+                    ured1,
                     "Factor de usuario",
                 ));
             };
@@ -132,9 +126,7 @@ impl Factors {
                     Source::RED,
                     Dest::SUMINISTRO,
                     Step::A,
-                    ured2.ren,
-                    ured2.nren,
-                    ured2.co2,
+                    ured2,
                     "Factor de usuario",
                 ));
             };
@@ -169,9 +161,7 @@ impl Factors {
                 Source::INSITU,
                 Dest::SUMINISTRO,
                 Step::A,
-                1.0,
-                0.0,
-                0.0,
+                RenNrenCo2::new(1.0, 0.0, 0.0),
                 "Recursos usados para obtener energía térmica del medioambiente",
             ));
         }
@@ -189,9 +179,7 @@ impl Factors {
                 Source::RED,
                 Dest::SUMINISTRO,
                 Step::A,
-                1.0,
-                0.0,
-                0.0,
+                RenNrenCo2::new(1.0, 0.0, 0.0),
                 "Recursos usados para obtener energía térmica del medioambiente (red ficticia)",
             ));
         }
@@ -208,9 +196,7 @@ impl Factors {
                 Source::INSITU,
                 Dest::SUMINISTRO,
                 Step::A,
-                1.0,
-                0.0,
-                0.0,
+                RenNrenCo2::new(1.0, 0.0, 0.0),
                 "Recursos usados para generar electricidad in situ",
             ));
         }
@@ -235,7 +221,7 @@ impl Factors {
             .any(|f| f.source == Source::COGENERACION && f.dest == Dest::SUMINISTRO);
         if !has_cogen_input {
             self.wdata.push(Factor::new(
-                Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::SUMINISTRO, Step::A, 0.0, 0.0, 0.0,
+                Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::SUMINISTRO, Step::A, RenNrenCo2::new(0.0, 0.0, 0.0),
                 "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)"));
         }
         // Asegura que todos los vectores con exportación tienen factores de paso a la red y a usos no EPB
@@ -287,7 +273,7 @@ impl Factors {
                     if !has_cogen_to_grid {
                         let cogen = defaults.cogen_to_grid;
                         self.wdata.push(Factor::new(
-                        Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_RED, Step::A, cogen.ren, cogen.nren, cogen.co2,
+                        Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_RED, Step::A, cogen,
                         "Recursos usados para producir electricidad cogenerada y vertida a la red. Valor predefinido"));
                     }
                 }
@@ -328,9 +314,7 @@ impl Factors {
                             Source::COGENERACION,
                             Dest::A_NEPB,
                             Step::A,
-                            cogen.ren,
-                            cogen.nren,
-                            cogen.co2,
+                            cogen,
                             "Valor predefinido",
                         ));
                     }
@@ -354,7 +338,7 @@ impl Factors {
                 // VECTOR, SRC, A_RED, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
                 if fp_a_red_input.is_some() {
                     let f = fp_a_red_input.as_ref().unwrap();
-                    self.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
+                    self.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.factors(),
                     "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
                 } else {
                     return Err(EpbdError::MissingFactor(format!("{}, A_RED, B", c)));
@@ -367,7 +351,7 @@ impl Factors {
                 // VECTOR, SRC, A_NEPB, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
                 if fp_a_red_input.is_some() {
                     let f = fp_a_red_input.as_ref().unwrap();
-                    self.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
+                    self.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.factors(),
                     "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
                 } else {
                     return Err(EpbdError::MissingFactor(format!("{}, A_NEPB, B", c)));
@@ -382,7 +366,7 @@ impl Factors {
         if !has_red1_red_input {
             let red1 = defaults.red1;
             self.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
-            red1.ren, red1.nren, red1.co2, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)"));
+            red1, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)"));
         }
         let has_red2_red_input = self.wdata.iter().any(|f| {
             f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
@@ -390,7 +374,7 @@ impl Factors {
         if !has_red2_red_input {
             let red2 = defaults.red2;
             self.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
-            red2.ren, red2.nren, red2.co2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)"));
+            red2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)"));
         }
 
         Ok(self)

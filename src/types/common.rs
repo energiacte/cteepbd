@@ -481,9 +481,7 @@ impl Factor {
         source: Source,
         dest: Dest,
         step: Step,
-        ren: f32,
-        nren: f32,
-        co2: f32,
+        RenNrenCo2 { ren, nren, co2 }: RenNrenCo2,
         comment: T,
     ) -> Self {
         Self {

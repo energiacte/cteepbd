@@ -197,9 +197,7 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
                 f.source,
                 f.dest,
                 f.step,
-                0.0,
-                f.ren + f.nren,
-                f.co2, // ¿Esto es lo que tiene más sentido?
+                RenNrenCo2::new(0.0, f.ren + f.nren, f.co2), // ¿Esto es lo que tiene más sentido?
                 format!("Perímetro nearby: {}", f.comment),
             ))
         }

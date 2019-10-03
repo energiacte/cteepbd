@@ -78,6 +78,13 @@ impl RenNrenCo2 {
     }
 }
 
+// Conversión desde tupla a RenNrenCo2
+impl std::convert::From<(f32, f32, f32)> for RenNrenCo2 {
+    fn from((ren, nren, co2): (f32, f32, f32)) -> Self {
+        Self { ren, nren, co2 }
+    }
+}
+
 impl fmt::Display for RenNrenCo2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
