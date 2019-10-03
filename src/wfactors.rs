@@ -24,10 +24,10 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-Weighting factors
-=================
+Factores de paso (weighting factors)
+====================================
 
-Define Factors typr (Factor list + Metadata).
+Define el tipo Factors (lista de Factores + Metadatos).
 
 */
 
@@ -43,6 +43,8 @@ use crate::{
 
 // --------------------------- Factors
 
+/// Lista de factores de paso con sus metadatos
+/// 
 /// List of weighting factors bundled with its metadata
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Factors {
@@ -53,6 +55,8 @@ pub struct Factors {
 }
 
 impl Factors {
+    /// Elimina factores no EPB de la lista de factores
+    /// 
     /// Remove non EPB weighting factors from the factor list
     pub fn strip_nepb(&mut self) {
         self.wdata.retain(|e| e.dest != Dest::A_NEPB);

@@ -24,14 +24,14 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-Energy components
-=================
+Componentes energéticos
+=======================
 
-Define Components type (Compoment list + Metadata) and behaviour.
+Define el tipo Components (lista de componentes + metadatos) y sus traits.
 
-Components model energy use or production
+Los componentes modelizan el uso y producción de energía en el periodo de cálculo.
 
-Hypothesis:
+Hipótesis:
 
 - Se completa automáticamente el consumo de energía procedente del medioambiente con una producción
 - No se permite la producción de electricidad a usos concretos (se asume NDEF) (XXX: se podría eliminar)
@@ -47,6 +47,8 @@ use crate::{
     vecops::{veckmul, veclistsum, vecvecdif},
 };
 
+/// Lista de datos de componentes con sus metadatos
+/// 
 /// List of component data bundled with its metadata
 ///
 /// #META CTE_AREAREF: 100.5

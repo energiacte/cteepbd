@@ -94,5 +94,7 @@ pub use balance::*;
 pub use components::*;
 pub use wfactors::*;
 
+/// Número de versión de la librería
+/// 
 /// Version number
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -24,11 +24,10 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-Energy balance types
-====================
+Tipos para la definición de metadatos
+=====================================
 
-- Base types to compose Component and (weighting) Factor types
-- Meta type and traits
+- Tipo Meta y sus traits
 */
 
 use std::fmt;
@@ -39,6 +38,8 @@ use crate::{error::EpbdError, types::RenNrenCo2};
 
 // ==================== Metadata types
 
+/// Metadatos de los componentes o de los factores de paso
+/// 
 /// Metadata of components or weighting factors
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Meta {
@@ -93,8 +94,7 @@ impl std::str::FromStr for Meta {
 
 // == Data + Metadata Types ==
 
-/// Common trait for handling metadata
-
+/// Trait común para gestionar metadatos
 pub trait MetaVec {
     /// Get vector of metadata
     fn get_metavec(&self) -> &Vec<Meta>;

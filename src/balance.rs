@@ -24,11 +24,12 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-Energy balance types
-====================
+Tipos para el balance energético
+================================
 
-Definition of Balance, BalanceForCarrier and BalanceTotal types
-and methods implementing energy performance computation according to ISO EN 52000-1.
+Definición de los tipos Balance, BalanceForCarrier and BalanceTotal
+y de los métodos que implementan la evaluación de la eficiencia energética
+según la EN ISO 52000-1.
 
 */
 
@@ -45,10 +46,10 @@ use crate::{
     Components, Factors,
 };
 
-/// Overall energy performance
-/// --------------------------
+// Overall energy performance
+// --------------------------
 
-/// Data and results of an energy performance computation
+/// Datos y resultados de un cálculo de eficiencia energética
 #[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Balance {
@@ -68,7 +69,7 @@ pub struct Balance {
     pub balance_m2: BalanceTotal,
 }
 
-/// Global balance results (all carriers), either in absolute value or by m2.
+/// Resultados del balance global (todos los vectores), en valor absoluto o por m2.
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BalanceTotal {
@@ -90,6 +91,8 @@ pub struct BalanceTotal {
     pub we_exp: RenNrenCo2,
 }
 
+/// Calcula enficiencia energética agregando resultados por vector energético
+/// 
 /// Compute overall energy performance by aggregating results from all energy carriers.
 ///
 /// * `components` - energy components
@@ -201,9 +204,11 @@ pub fn energy_performance(
     })
 }
 
-/// Energy balance by carrier
-/// -------------------------
+// Energy balance by carrier
+// -------------------------
 
+/// Resultados detallados del balance energético para un vector energético
+/// 
 /// Detailed results of the energy balance computation for a given carrier
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -282,6 +287,8 @@ pub struct BalanceForCarrier {
 
 // ///////////// By Carrier timestep and annual computations ////////////
 
+/// Calcula balance energético para un vector energético
+/// 
 /// Calculate energy balance for carrier.
 ///
 /// This follows the ISO EN 52000-1 procedure for calculation of delivered,
@@ -625,6 +632,8 @@ fn balance_for_carrier(
     })
 }
 
+/// Calcula fracción de cada uso EPB para un vector energético i
+/// 
 /// Compute share of each EPB use for a given carrier i
 ///
 /// It uses the reverse calculation method (E.3.6)

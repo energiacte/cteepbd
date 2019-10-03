@@ -35,6 +35,8 @@ use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 use crate::error::EpbdError;
 
+/// Tupla que representa los factores de energía primaria renovable, no renovable y de emisión
+/// 
 /// Energy pairs representing renewable and non renewable energy quantities or factors.
 #[derive(Debug, Copy, Clone, PartialEq, Default, Serialize, Deserialize)]
 pub struct RenNrenCo2 {
