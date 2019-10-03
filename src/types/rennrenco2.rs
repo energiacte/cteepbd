@@ -122,11 +122,11 @@ impl std::str::FromStr for RenNrenCo2 {
                 .map(str::trim)
                 .map(f32::from_str)
                 .collect::<Result<Vec<f32>, _>>()
-                .map_err(|_| EpbdError::RenNrenCo2ParseError(s.into()))?;
+                .map_err(|_| EpbdError::ParseError(s.into()))?;
 
             match *vals.as_slice() {
                 [ren, nren, co2] => Ok(RenNrenCo2 { ren, nren, co2 }),
-                _ => Err(EpbdError::RenNrenCo2ParseError(s.into())),
+                _ => Err(EpbdError::ParseError(s.into())),
             }
         }
     }

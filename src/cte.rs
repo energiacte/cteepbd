@@ -166,7 +166,7 @@ pub fn wfactors_from_loc(
         "BALEARES" => locdefaults.loc_baleares,
         "CANARIAS" => locdefaults.loc_canarias,
         "CEUTAMELILLA" => locdefaults.loc_ceutamelilla,
-        _ => return Err(EpbdError::Location(loc.to_string())),
+        _ => return Err(EpbdError::ParseError(format!("Localizacion: {}", loc))),
     };
     wfactorsstring
         .parse::<Factors>()?

@@ -224,7 +224,7 @@ impl Factors {
             })
         });
         if !has_grid_factors_for_all_carriers {
-            return Err(EpbdError::FactorNotFound(
+            return Err(EpbdError::MissingFactor(
                 "factores de red VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?".into(),
             ));
         }
@@ -273,7 +273,7 @@ impl Factors {
                             ..*f
                         });
                     } else {
-                        return Err(EpbdError::FactorNotFound(format!(
+                        return Err(EpbdError::MissingFactor(format!(
                             "suministro del vector {} para definir exportación a la red en paso A",
                             c
                         )));
@@ -312,7 +312,7 @@ impl Factors {
                             ..*f
                         });
                     } else {
-                        return Err(EpbdError::FactorNotFound(format!(
+                        return Err(EpbdError::MissingFactor(format!(
                             "suministro del vector {} para definir exportación a usos no EPB en paso A",
                             c
                         )));
@@ -363,7 +363,7 @@ impl Factors {
                     self.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
                     "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
                 } else {
-                    return Err(EpbdError::FactorNotFound(format!(
+                    return Err(EpbdError::MissingFactor(format!(
                         "suministro del vector {} para exportación a la red en paso B",
                         c
                     )));
@@ -379,7 +379,7 @@ impl Factors {
                     self.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
                     "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
                 } else {
-                    return Err(EpbdError::FactorNotFound(format!(
+                    return Err(EpbdError::MissingFactor(format!(
                         "suministro del vector {} para exportación a usos no EPB en paso B",
                         c
                     )));

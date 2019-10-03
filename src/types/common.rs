@@ -84,7 +84,7 @@ impl str::FromStr for Carrier {
             "GLP" => Ok(Carrier::GLP),
             "RED1" => Ok(Carrier::RED1),
             "RED2" => Ok(Carrier::RED2),
-            _ => Err(EpbdError::CarrierUnknown(s.into())),
+            _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
@@ -116,7 +116,7 @@ impl str::FromStr for CType {
         match s {
             "PRODUCCION" => Ok(CType::PRODUCCION),
             "CONSUMO" => Ok(CType::CONSUMO),
-            _ => Err(EpbdError::CTypeUnknown(s.into())),
+            _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
@@ -152,7 +152,7 @@ impl str::FromStr for CSubtype {
             "COGENERACION" => Ok(CSubtype::COGENERACION),
             "EPB" => Ok(CSubtype::EPB),
             "NEPB" => Ok(CSubtype::NEPB),
-            _ => Err(EpbdError::CSubtypeUnknown(s.into())),
+            _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
@@ -221,7 +221,7 @@ impl str::FromStr for Service {
             "BAC" => Ok(Service::BAC),
             "NDEF" => Ok(Service::NDEF),
             "" => Ok(Service::default()),
-            _ => Err(EpbdError::ServiceUnknown(s.into())),
+            _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
@@ -292,19 +292,19 @@ impl str::FromStr for Component {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 4 {
-            return Err(EpbdError::ComponentParseError(s.into()));
+            return Err(EpbdError::ParseError(s.into()));
         };
         // TODO: implement Display and FromStr traits for Carrier, CType, CSubtype
         // TODO: and avoid mapping error here
         let carrier: Carrier = items[0]
             .parse()
-            .map_err(|_| EpbdError::CarrierUnknown(items[0].into()))?;
+            .map_err(|_| EpbdError::ParseError(items[0].into()))?;
         let ctype: CType = items[1]
             .parse()
-            .map_err(|_| EpbdError::CTypeUnknown(items[1].into()))?;
+            .map_err(|_| EpbdError::ParseError(items[1].into()))?;
         let csubtype: CSubtype = items[2]
             .parse()
-            .map_err(|_| EpbdError::CSubtypeUnknown(items[2].into()))?;
+            .map_err(|_| EpbdError::ParseError(items[2].into()))?;
         let carrier_ok = match ctype {
             CONSUMO => match csubtype {
                 EPB | NEPB => true,
@@ -317,7 +317,7 @@ impl str::FromStr for Component {
             },
         };
         if !carrier_ok {
-            return Err(EpbdError::ComponentParseError(s.into()));
+            return Err(EpbdError::ParseError(s.into()));
         }
         //This accounts for the legacy version, which may not have a service type
         let maybeservice: Result<Service, _> = items[3].parse();
@@ -364,7 +364,7 @@ impl str::FromStr for Source {
             "RED" => Ok(Source::RED),
             "INSITU" => Ok(Source::INSITU),
             "COGENERACION" => Ok(Source::COGENERACION),
-            _ => Err(EpbdError::SourceUnknown(s.into())),
+            _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
@@ -381,7 +381,7 @@ impl TryFrom<CSubtype> for Source {
         match subtype {
             CSubtype::INSITU => Ok(Self::INSITU),
             CSubtype::COGENERACION => Ok(Self::COGENERACION),
-            _ => Err(EpbdError::SourceConversionError(subtype.to_string())),
+            _ => Err(EpbdError::ParseError(format!("CSubtype as Source {}", subtype))),
         }
     }
 }
@@ -412,7 +412,7 @@ impl str::FromStr for Dest {
             "to_grid" => Ok(Dest::A_RED),
             "to_nEPB" => Ok(Dest::A_NEPB),
             "input" => Ok(Dest::SUMINISTRO),
-            _ => Err(EpbdError::DestUnknown(s.into())),
+            _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
@@ -442,7 +442,7 @@ impl str::FromStr for Step {
         match s {
             "A" => Ok(Step::A),
             "B" => Ok(Step::B),
-            _ => Err(EpbdError::StepUnknown(s.into())),
+            _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
@@ -543,20 +543,20 @@ impl str::FromStr for Factor {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
         if items.len() < 7 {
-            return Err(EpbdError::WFactorParseError(s.into()));
+            return Err(EpbdError::ParseError(s.into()));
         };
         let carrier: Carrier = items[0]
             .parse()
-            .map_err(|_| EpbdError::CarrierUnknown(items[0].into()))?;
+            .map_err(|_| EpbdError::ParseError(items[0].into()))?;
         let source: Source = items[1]
             .parse()
-            .map_err(|_| EpbdError::SourceUnknown(items[1].into()))?;
+            .map_err(|_| EpbdError::ParseError(items[1].into()))?;
         let dest: Dest = items[2]
             .parse()
-            .map_err(|_| EpbdError::DestUnknown(items[2].into()))?;
+            .map_err(|_| EpbdError::ParseError(items[2].into()))?;
         let step: Step = items[3]
             .parse()
-            .map_err(|_| EpbdError::StepUnknown(items[3].into()))?;
+            .map_err(|_| EpbdError::ParseError(items[3].into()))?;
         let ren: f32 = items[4].parse()?;
         let nren: f32 = items[5].parse()?;
         let co2: f32 = items[6].parse()?;

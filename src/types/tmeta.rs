@@ -86,7 +86,7 @@ impl std::str::FromStr for Meta {
             let value = items[1].trim();
             Ok(Meta::new(key, value))
         } else {
-            Err(EpbdError::MetaParseError(s.into()))
+            Err(EpbdError::ParseError(s.into()))
         }
     }
 }
