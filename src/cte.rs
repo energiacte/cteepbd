@@ -24,8 +24,8 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-CTE compliance
-==============
+Utilidades para el cumplimiento reglamentario (compliance utilities)
+====================================================================
 
 Utilidades para el manejo de balances energéticos para el CTE:
 
@@ -64,7 +64,7 @@ pub const CTE_NRBY: [Carrier; 5] = [
     Carrier::MEDIOAMBIENTE,
 ]; // Ver B.23. Solo biomasa sólida
 
-/// Valores por defecto para factores de paso
+/// Valores por defecto de los factores de paso para cada localización
 pub struct CteLocWF {
     /// Factores de paso reglamentarios para la Península
     pub loc_peninsula: &'static str,
@@ -76,7 +76,7 @@ pub struct CteLocWF {
     pub loc_ceutamelilla: &'static str,
 }
 
-/// Valores por defecto para energía primaria
+/// Macro para la definición de los factores de paso de una localización
 macro_rules! build_wf_2013 {
     ($loc:literal, $ren:literal, $nren:literal, $co2:literal) => {
         concat!("#META CTE_FUENTE: RITE2014", "\n",
@@ -97,7 +97,7 @@ ELECTRICIDAD, RED, SUMINISTRO, A, ", stringify!($ren), ", ", stringify!($nren), 
 ")};
 }
 
-/// Factores de paso de usuario por defecto
+/// Factores de paso definibles por el usuario usados por defecto
 pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
     red1: RenNrenCo2 {
         ren: 0.0,
@@ -121,8 +121,9 @@ pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
     },
 };
 
-/// Factores de paso reglamentarios (RITE 20/07/2014)
-/// Usados en:
+/// Factores de paso reglamentarios según el documento reconocido del RITE (20/07/2014)
+/// 
+/// Estos factores son los usados en:
 /// - DB-HE 2013
 /// - DB-HE 2018
 pub const CTE_LOCWF_RITE2014: CteLocWF = CteLocWF {
@@ -175,11 +176,12 @@ pub fn wfactors_from_loc(
 }
 
 /// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
+/// 
+/// Los elementos que tiene origen en la RED (!= INSITU, != COGENERACION)
+/// y no están en la lista CTE_NRBY cambian sus factores de paso
+/// de forma que ren' = 0 y nren' = ren + nren.
+/// **ATENCIÓN**: ¡¡La producción eléctrica de la cogeneración entra con (factores ren:0, nren:0)!!
 pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
-    // Los elementos que tiene origen en la RED (!= INSITU, != COGENERACION)
-    // y no están en la lista CTE_NRBY cambian sus factores de paso
-    // de forma que ren' = 0 y nren' = ren + nren.
-    // ATENCIÓN: ¡¡La producción eléctrica de la cogeneración entra con (factores ren:0, nren:0)!!
     let wmeta = wfactors.wmeta.clone();
     let mut wdata: Vec<Factor> = Vec::new();
 
@@ -207,12 +209,12 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
     factors
 }
 
-/**
+/*
 Utilidades para visualización del balance
 -----------------------------------------
 */
 
-/// Muestra balance, paso B, de forma simplificada.
+/// Muestra el balance (paso B) en formato de texto simple.
 pub fn balance_to_plain(balance: &Balance) -> String {
     let Balance {
         k_exp,
@@ -270,7 +272,11 @@ E_CO2 [kg_CO2e/m2.an]: {:.2}
     )
 }
 
-/// Muestra balance en formato XML.
+/// Muestra el balance (paso B) en formato XML
+/// 
+/// Esta función usa un formato compatible con el formato XML del certificado de eficiencia
+/// energética del edificio definido en el documento de apoyo de la certificación energética
+/// correspondiente.
 pub fn balance_to_xml(balanceobj: &Balance) -> String {
     let Balance {
         components,

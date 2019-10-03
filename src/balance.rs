@@ -111,7 +111,7 @@ pub fn energy_performance(
 ) -> Result<Balance> {
     if arearef < 1e-3 {
         return Err(EpbdError::WrongInput(format!(
-            "Reference area can't be zero or almost zero and found {}",
+            "El área de referencia no puede ser nula o casi nula y se encontró {}",
             arearef
         )));
     };
@@ -430,7 +430,7 @@ fn balance_for_carrier(
             .find(|fp| fp.source == source && fp.dest == dest && fp.step == step)
             .ok_or_else(|| {
                 EpbdError::MissingFactor(format!(
-                    "No weighting factor found for: '{}, {}, {}, {}'",
+                    "'{}, {}, {}, {}'",
                     fp_cr[0].carrier, source, dest, step
                 ))
             })

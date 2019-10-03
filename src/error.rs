@@ -24,25 +24,25 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-Error handling
-==============
+Gestión de errores (error handling)
+===================================
 
-Error handling types and helpers
+Tipos y funciones para la gestión de errores
 */
 
 use std::fmt;
 
-/// Custom Result
+/// Resultado que usa el tipo de error personalizado
 pub type Result<T> = std::result::Result<T, EpbdError>;
 
-/// Errors defined for the cteepbd library and application
+/// Errores definidos para la librería y aplicación cteepbd
 #[derive(Debug)]
 pub enum EpbdError {
-    /// Error when parsing a value
+    /// Error al interpretar un valor
     ParseError(String),
-    /// Error for an invalid input (wrong format or range)
+    /// Error para un valor de entrada incorrecto (formato o rango incorrecto)
     WrongInput(String),
-    /// Error when a Factor is needed but not available
+    /// Error cuando falta un factor de conversión
     MissingFactor(String),
 }
 
@@ -50,9 +50,9 @@ impl fmt::Display for EpbdError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use EpbdError::*;
         match self {
-            ParseError(v) => write!(f, "Could not parse {}", v),
-            WrongInput(v) => write!(f, "Wrong input value: {}", v),
-            MissingFactor(desc) => write!(f, "Conversion factor not found: {}", desc),
+            ParseError(v) => write!(f, "No se ha podido interpretar {}", v),
+            WrongInput(v) => write!(f, "Valor de entrada incorrecto: {}", v),
+            MissingFactor(v) => write!(f, "Factor de paso no encontrado: {}", v),
         }
     }
 }

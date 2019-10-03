@@ -273,10 +273,7 @@ impl Factors {
                             ..*f
                         });
                     } else {
-                        return Err(EpbdError::MissingFactor(format!(
-                            "suministro del vector {} para definir exportación a la red en paso A",
-                            c
-                        )));
+                        return Err(EpbdError::MissingFactor(format!("{}, A_RED, A", c)));
                     }
                 } else {
                     // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -312,10 +309,7 @@ impl Factors {
                             ..*f
                         });
                     } else {
-                        return Err(EpbdError::MissingFactor(format!(
-                            "suministro del vector {} para definir exportación a usos no EPB en paso A",
-                            c
-                        )));
+                        return Err(EpbdError::MissingFactor(format!("{}, A_NEPB, A", c)));
                     }
                 } else {
                     // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
@@ -363,10 +357,7 @@ impl Factors {
                     self.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.ren, f.nren, f.co2,
                     "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
                 } else {
-                    return Err(EpbdError::MissingFactor(format!(
-                        "suministro del vector {} para exportación a la red en paso B",
-                        c
-                    )));
+                    return Err(EpbdError::MissingFactor(format!("{}, A_RED, B", c)));
                 }
             }
             let has_to_nepb_b = self.wdata.iter().any(|f| {
@@ -379,10 +370,7 @@ impl Factors {
                     self.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.ren, f.nren, f.co2,
                     "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
                 } else {
-                    return Err(EpbdError::MissingFactor(format!(
-                        "suministro del vector {} para exportación a usos no EPB en paso B",
-                        c
-                    )));
+                    return Err(EpbdError::MissingFactor(format!("{}, A_NEPB, B", c)));
                 }
             }
         }
@@ -505,7 +493,6 @@ pub struct UserWF<T = RenNrenCo2> {
     pub cogen_to_nepb: T,
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -577,7 +564,9 @@ MEDIOAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la r
 MEDIOAMBIENTE, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
 RED1, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
 RED2, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)";
-        let tcomps = "ELECTRICIDAD, CONSUMO, EPB, NDEF, 1 # Solo consume electricidad de red".parse::<Components>().unwrap();
+        let tcomps = "ELECTRICIDAD, CONSUMO, EPB, NDEF, 1 # Solo consume electricidad de red"
+            .parse::<Components>()
+            .unwrap();
         let tfactors_normalized_stripped_str = "#META CTE_FUENTE: RITE2014
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red";
@@ -609,7 +598,9 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para sum
         let tfactors_normalized_stripped = tfactors_normalized.clone().strip(&tcomps);
 
         assert_eq!(tfactors_normalized.to_string(), tfactors_normalized_str);
-        assert_eq!(tfactors_normalized_stripped.to_string(), tfactors_normalized_stripped_str);
-
+        assert_eq!(
+            tfactors_normalized_stripped.to_string(),
+            tfactors_normalized_stripped_str
+        );
     }
 }

@@ -23,13 +23,6 @@
 //            Daniel Jiménez González <dani@ietcc.csic.es>,
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-/*!
-Common base types
-=================
-
-- Base types to compose Component and (weighting) Factor types
-*/
-
 use std::convert::TryFrom;
 use std::fmt;
 use std::str;
@@ -40,7 +33,7 @@ use crate::{error::EpbdError, types::RenNrenCo2};
 
 // -------------------- Carrier
 
-/// Energy carrier.
+/// Vector energético (energy carrier).
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum Carrier {
@@ -99,7 +92,7 @@ impl std::fmt::Display for Carrier {
 
 // -------------------- CType
 
-/// Produced or consumed energy type of an energy component.
+/// Tipo del componente (energía consumida o producida)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CType {
@@ -129,7 +122,7 @@ impl std::fmt::Display for CType {
 
 // -------------------- CSubtype
 
-/// Production origin or use destination subtype of an energy component.
+/// Subtipo del componente (origen o destino de la energía)
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CSubtype {
@@ -165,7 +158,7 @@ impl std::fmt::Display for CSubtype {
 
 // -------------------- Service
 
-/// Destination Service or use of an energy component.
+/// Uso al que está destinada la energía
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Service {
@@ -189,7 +182,7 @@ pub enum Service {
     NDEF,
 }
 
-/// List of available Service types
+/// Lista de usos disponibles
 pub const SERVICES: [Service; 9] = [
     Service::ACS,
     Service::CAL,
@@ -239,10 +232,12 @@ impl Default for Service {
 }
 
 // -------------------- Component
+// Define basic Component and Components (Compoment list + Metadata) types
 
-/// Define basic Component and Components (Compoment list + Metadata) types
-
-/// Energy Component Struct, representing an energy carrier component
+/// Componente de energía.
+/// 
+/// Representa la producción o consumo de energía para cada paso de cálculo
+/// y a lo largo del periodo de cálculo, para cada tipo, subtipo y uso de la energía.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Component {
     /// Carrier name
@@ -344,7 +339,7 @@ impl str::FromStr for Component {
 
 // -------------------- Source
 
-/// Source of energy for a weighting factor.
+/// Fuente de origen de la energía
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Source {
@@ -388,7 +383,7 @@ impl TryFrom<CSubtype> for Source {
 
 // -------------------- Dest
 
-/// Destination of energy for a weighting factor.
+/// Destino de la energía
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Dest {
@@ -425,7 +420,7 @@ impl std::fmt::Display for Dest {
 
 // -------------------- Step
 
-/// Calculation step for a weighting factor.
+/// Paso de cálculo para el que se define el factor de paso
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Step {
@@ -455,10 +450,10 @@ impl std::fmt::Display for Step {
 
 // ------------------ Weighting Factor
 
-/// Weighting Factor Struct
+/// Factor de paso
 ///
-/// It can represent the renewable and non renewable primary energy weighting factors,
-/// but can be used for CO2 or any other indicators depending on how the values are obtained.
+/// Representa la fracción renovable, no renovable y emisiones de una unidad de energía final,
+/// evaluados en el paso de cálculo y para un vector y una fuente determinados.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Factor {
     /// Energy carrier
@@ -503,7 +498,7 @@ impl Factor {
         }
     }
 
-    /// Get factors as RenNrenCo2 struct
+    /// Obtener los factores de paso como estructura RenNrenCo2
     pub fn factors(&self) -> RenNrenCo2 {
         RenNrenCo2 {
             ren: self.ren,
@@ -512,7 +507,7 @@ impl Factor {
         }
     }
 
-    /// Copy factors from RenNRenCo2 element
+    /// Copia los factores desde una estructura RenNRenCo2
     pub fn set_values(&mut self, &values: &RenNrenCo2) {
         self.ren = values.ren;
         self.nren = values.nren;

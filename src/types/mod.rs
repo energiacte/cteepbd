@@ -24,10 +24,10 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 /*!
-CteEPBD types
-=============
+Tipos de datos (types)
+======================
 
-Definition of needed types for energy efficiency computation.
+Definición de tipos básicos para el cálculo de la eficiencia energética.
 
 */
 
