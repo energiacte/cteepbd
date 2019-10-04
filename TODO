@@ -1,8 +1,6 @@
 TODO
 ----
 
-- remove dependency on failure
-
 - maybe bug: see why emissions for ACS for the example in the manual change
   depending on whether nearby factors are used or not.
 
@@ -22,10 +20,6 @@ Wishlist
 --------
 
 - use templates for output (plain, detailed, ...) depending on cli parameter
-
-- Create Trait CteFactorsExt with methods from wfactors.rs
-    - new_from_str(&str) -> Factors
-    - new_from_loc(&loc) -> Factors
 
 - When const fns get more powerful, try building Factors directly and replace macro solution:
 
