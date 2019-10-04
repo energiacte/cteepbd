@@ -62,7 +62,7 @@ where
 
 impl RenNrenCo2 {
     /// Default constructor -> { ren: 0.0, nren: 0.0 }
-    pub fn new(ren: f32, nren: f32, co2: f32) -> Self {
+    pub const fn new(ren: f32, nren: f32, co2: f32) -> Self {
         Self { ren, nren, co2 }
     }
 

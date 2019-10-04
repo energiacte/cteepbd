@@ -99,30 +99,14 @@ ELECTRICIDAD, RED, SUMINISTRO, A, ", stringify!($ren), ", ", stringify!($nren), 
 
 /// Factores de paso definibles por el usuario usados por defecto
 pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
-    red1: RenNrenCo2 {
-        ren: 0.0,
-        nren: 1.3,
-        co2: 0.3,
-    },
-    red2: RenNrenCo2 {
-        ren: 0.0,
-        nren: 1.3,
-        co2: 0.3,
-    },
-    cogen_to_grid: RenNrenCo2 {
-        ren: 0.0,
-        nren: 2.5,
-        co2: 0.3,
-    },
-    cogen_to_nepb: RenNrenCo2 {
-        ren: 0.0,
-        nren: 2.5,
-        co2: 0.3,
-    },
+    red1: RenNrenCo2::new(0.0, 1.3, 0.3),
+    red2: RenNrenCo2::new(0.0, 1.3, 0.3),
+    cogen_to_grid: RenNrenCo2::new(0.0, 2.5, 0.3),
+    cogen_to_nepb: RenNrenCo2::new(0.0, 2.5, 0.3),
 };
 
 /// Factores de paso reglamentarios según el documento reconocido del RITE (20/07/2014)
-/// 
+///
 /// Estos factores son los usados en:
 /// - DB-HE 2013
 /// - DB-HE 2018
@@ -176,7 +160,7 @@ pub fn wfactors_from_loc(
 }
 
 /// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
-/// 
+///
 /// Los elementos que tiene origen en la RED (!= INSITU, != COGENERACION)
 /// y no están en la lista CTE_NRBY cambian sus factores de paso
 /// de forma que ren' = 0 y nren' = ren + nren.
@@ -271,7 +255,7 @@ E_CO2 [kg_CO2e/m2.an]: {:.2}
 }
 
 /// Muestra el balance (paso B) en formato XML
-/// 
+///
 /// Esta función usa un formato compatible con el formato XML del certificado de eficiencia
 /// energética del edificio definido en el documento de apoyo de la certificación energética
 /// correspondiente.
