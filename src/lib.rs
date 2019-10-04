@@ -50,7 +50,7 @@ Some restrictions may be lifted in the future. Specifically:
 - allow setting priorities for energy production
 
 Este *crate* proporciona una biblioteca y un programa que **implementa una parte sustancial del
-estándar EN ISO 52000-1**: *Eficiencia energética de los edificios - Evaluación global de la EPB - 
+estándar EN ISO 52000-1**: *Eficiencia energética de los edificios - Evaluación global de la EPB -
 Parte 1: Marco general y procedimientos* (versión EN ISO 52000-1:2017).
 
 Este software está orientado a la evaluación de la eficiencia energética de los edificios dentro
@@ -70,6 +70,45 @@ Algunas restricciones pueden revisarse en el futuro, tales como:
 - implementación del factor de coincidencia de cargas según fórmula B.32 del apéndice B
 - imputación de energía generada a servicios específicos
 - fijación de prioridades para la producción de energía
+
+# Ejemplo
+
+```rust
+use std::fs::{read_to_string, File};
+use cteepbd::*;
+
+// lectura de un archivo de componentes energéticos
+let components = read_to_string("test_data/cte_test_carriers.csv")
+    .unwrap()
+    .parse::<Components>()
+    .unwrap();
+
+// Definición de los factores de usuario y sus valores por defecto
+let user_wf = UserWF {
+    red1: Some((1.0, 0.0, 0.0).into()),
+    red2: None,
+    cogen_to_grid: None,
+    cogen_to_nepb: None,
+}; // Factores definidos por el usuario
+let default_user_wf = cte::CTE_USERWF; // Valores por defecto de factores de paso del usuario
+
+// Factores de usuario reglamentarios según localización y factores de usuario
+let fp = cte::wfactors_from_loc("PENINSULA",
+    &cte::CTE_LOCWF_RITE2014,
+    &user_wf,
+    &default_user_wf
+).unwrap();
+
+// Factor de exportación y área de referencia
+let kexp = cte::KEXP_DEFAULT; // factor de exportación [-]
+let arearef = 200.0; // superficie de referencia [m2]
+
+// Cálculo del balance global según EN ISO 52000-1:2017
+let balance = energy_performance(&components, &fp, kexp, arearef).unwrap();
+
+// Visualización compacta
+println!("{}", cte::balance_to_plain(&balance));
+```
 
 */
 
@@ -92,6 +131,6 @@ pub use components::*;
 pub use wfactors::*;
 
 /// Número de versión de la librería
-/// 
+///
 /// Version number
 pub static VERSION: &str = env!("CARGO_PKG_VERSION");
