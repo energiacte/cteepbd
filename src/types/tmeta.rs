@@ -34,6 +34,8 @@ use std::fmt;
 use std::str;
 use std::str::FromStr;
 
+use serde::{Serialize, Deserialize};
+
 use crate::{error::EpbdError, types::RenNrenCo2};
 
 // ==================== Metadata types

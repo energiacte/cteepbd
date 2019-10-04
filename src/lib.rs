@@ -79,9 +79,6 @@ Algunas restricciones pueden revisarse en el futuro, tales como:
 #[macro_use]
 extern crate pretty_assertions;
 
-#[macro_use]
-extern crate serde_derive;
-
 mod balance;
 mod components;
 pub mod cte;

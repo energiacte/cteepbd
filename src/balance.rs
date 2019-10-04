@@ -36,6 +36,8 @@ según la EN ISO 52000-1.
 use std::collections::{HashMap, HashSet};
 use std::convert::TryInto;
 
+use serde::{Serialize, Deserialize};
+
 use crate::{
     error::{EpbdError, Result},
     types::{

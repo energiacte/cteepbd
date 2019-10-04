@@ -35,6 +35,8 @@ use std::collections::HashSet;
 use std::fmt;
 use std::str;
 
+use serde::{Serialize, Deserialize};
+
 use crate::{
     error::EpbdError,
     types::{CSubtype, Carrier, Dest, Factor, Meta, MetaVec, RenNrenCo2, Source, Step},

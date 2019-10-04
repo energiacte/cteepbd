@@ -27,6 +27,8 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::str;
 
+use serde::{Serialize, Deserialize};
+
 use crate::{error::EpbdError, types::RenNrenCo2};
 
 // ==================== Common types (components + weighting factors)

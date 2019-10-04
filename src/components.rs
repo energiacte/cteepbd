@@ -41,6 +41,8 @@ use std::collections::HashSet;
 use std::fmt;
 use std::str;
 
+use serde::{Serialize, Deserialize};
+
 use crate::{
     error::EpbdError,
     types::{CSubtype, CType, Carrier, Component, Meta, MetaVec, Service},

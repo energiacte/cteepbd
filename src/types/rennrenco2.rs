@@ -33,6 +33,8 @@ Energy performance type as a tuple to represent energy or emission values.
 use std::fmt;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
+use serde::{Serialize, Deserialize};
+
 use crate::error::EpbdError;
 
 /// Tupla que representa los factores de energía primaria renovable, no renovable y de emisión
