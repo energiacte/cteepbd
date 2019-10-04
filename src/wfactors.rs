@@ -44,7 +44,7 @@ use crate::{
 // --------------------------- Factors
 
 /// Lista de factores de paso con sus metadatos
-/// 
+///
 /// List of weighting factors bundled with its metadata
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Factors {
@@ -56,85 +56,86 @@ pub struct Factors {
 
 impl Factors {
     /// Elimina factores no EPB de la lista de factores
-    /// 
+    ///
     /// Remove non EPB weighting factors from the factor list
     pub fn strip_nepb(&mut self) {
         self.wdata.retain(|e| e.dest != Dest::A_NEPB);
     }
 
+    /// Actualiza o establece valores de un factor de paso
+    pub fn update_wfactor(
+        &mut self,
+        carrier: Carrier,
+        source: Source,
+        dest: Dest,
+        step: Step,
+        values: RenNrenCo2,
+        comment: &str,
+    ) {
+        if let Some(factor) = self.wdata.iter_mut().find(|f| {
+            f.carrier == carrier && f.source == source && f.step == step && f.dest == dest
+        }) {
+            factor.set_values(&values);
+        } else {
+            self.wdata
+                .push(Factor::new(carrier, source, dest, step, values, comment));
+        };
+    }
+
+    /// Asegura que existe un factor de paso. Si ya existe no se modifica
+    pub fn ensure_wfactor(
+        &mut self,
+        carrier: Carrier,
+        source: Source,
+        dest: Dest,
+        step: Step,
+        values: RenNrenCo2,
+        comment: &str,
+    ) {
+        if !self
+            .wdata
+            .iter()
+            .any(|f| f.carrier == carrier && f.source == source && f.step == step && f.dest == dest)
+        {
+            self.wdata
+                .push(Factor::new(carrier, source, dest, step, values, comment));
+        };
+    }
+
     /// Actualiza los factores definibles por el usuario (cogen_to_grid, cogen_to_nepb, red1 y red2)
     pub fn set_user_wfactors(mut self, user: &UserWF<Option<RenNrenCo2>>) -> Self {
-        // ------ Cogeneración a red ----------
-        if let Some(ucog) = user.cogen_to_grid {
-            if let Some(factor) = self.wdata.iter_mut().find(|f| {
-                f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_RED
-            }) {
-                factor.set_values(&ucog);
-            } else {
-                self.wdata.push(Factor::new(
-                    Carrier::ELECTRICIDAD,
-                    Source::COGENERACION,
-                    Dest::A_RED,
-                    Step::A,
-                    ucog,
-                    "Factor de usuario",
-                ));
-            };
-        };
+        use Carrier::{ELECTRICIDAD, RED1, RED2};
+        use Dest::{A_NEPB, A_RED, SUMINISTRO};
+        use Source::{COGENERACION, RED};
+        use Step::A;
 
-        // ------ Cogeneración a usos no EPB ----------
-        if let Some(ucog) = user.cogen_to_nepb {
-            if let Some(factor) = self.wdata.iter_mut().find(|f| {
-                f.source == Source::COGENERACION && f.step == Step::A && f.dest == Dest::A_NEPB
-            }) {
-                factor.set_values(&ucog);
-            } else {
-                self.wdata.push(Factor::new(
-                    Carrier::ELECTRICIDAD,
-                    Source::COGENERACION,
-                    Dest::A_NEPB,
-                    Step::A,
-                    ucog,
-                    "Factor de usuario",
-                ));
-            };
-        };
+        [
+            (
+                ELECTRICIDAD,
+                COGENERACION,
+                A_RED,
+                A,
+                user.cogen_to_grid,
+                "Factor de usuario",
+            ),
+            (
+                ELECTRICIDAD,
+                COGENERACION,
+                A_NEPB,
+                A,
+                user.cogen_to_nepb,
+                "Factor de usuario",
+            ),
+            (RED1, RED, SUMINISTRO, A, user.red1, "Factor de usuario"),
+            (RED2, RED, SUMINISTRO, A, user.red2, "Factor de usuario"),
+        ]
+        .iter()
+        .for_each(|(carrier, source, dest, step, uservalue, comment)| {
+            if let Some(value) = *uservalue {
+                self.update_wfactor(*carrier, *source, *dest, *step, value, comment)
+            }
+        });
 
-        // ------ Red1 ----------
-        if let Some(ured1) = user.red1 {
-            if let Some(factor) = self.wdata.iter_mut().find(|f| {
-                f.carrier == Carrier::RED1 && f.step == Step::A && f.dest == Dest::SUMINISTRO
-            }) {
-                factor.set_values(&ured1);
-            } else {
-                self.wdata.push(Factor::new(
-                    Carrier::RED1,
-                    Source::RED,
-                    Dest::SUMINISTRO,
-                    Step::A,
-                    ured1,
-                    "Factor de usuario",
-                ));
-            };
-        };
-
-        // ------ Red2 ----------
-        if let Some(ured2) = user.red2 {
-            if let Some(factor) = self.wdata.iter_mut().find(|f| {
-                f.carrier == Carrier::RED2 && f.step == Step::A && f.dest == Dest::SUMINISTRO
-            }) {
-                factor.set_values(&ured2);
-            } else {
-                self.wdata.push(Factor::new(
-                    Carrier::RED2,
-                    Source::RED,
-                    Dest::SUMINISTRO,
-                    Step::A,
-                    ured2,
-                    "Factor de usuario",
-                ));
-            };
-        };
         self
     }
 
@@ -149,61 +150,46 @@ impl Factors {
     ///
     /// TODO: se deberían separar algunos de estos pasos como métodos de CteFactorsExt
     pub fn normalize(mut self, defaults: &UserWF<RenNrenCo2>) -> Result<Self, EpbdError> {
+        use Carrier::*;
+        use Dest::*;
+        use Source::*;
+        use Step::*;
+
         // Vectores existentes
         let wf_carriers: HashSet<_> = self.wdata.iter().map(|f| f.carrier).collect();
 
         // Asegura que existe MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.0, 0.0
-        let has_ma_insitu_input_a = self.wdata.iter().any(|f| {
-            f.carrier == Carrier::MEDIOAMBIENTE
-                && f.source == Source::INSITU
-                && f.dest == Dest::SUMINISTRO
-                && f.step == Step::A
-        });
-        if !has_ma_insitu_input_a {
-            self.wdata.push(Factor::new(
-                Carrier::MEDIOAMBIENTE,
-                Source::INSITU,
-                Dest::SUMINISTRO,
-                Step::A,
-                RenNrenCo2::new(1.0, 0.0, 0.0),
-                "Recursos usados para obtener energía térmica del medioambiente",
-            ));
-        }
+        self.update_wfactor(
+            MEDIOAMBIENTE,
+            INSITU,
+            SUMINISTRO,
+            A,
+            RenNrenCo2::new(1.0, 0.0, 0.0),
+            "Recursos usados para obtener energía térmica del medioambiente",
+        );
+
         // Asegura que existe MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.0, 0.0
-        let has_ma_red_input_a = self.wdata.iter().any(|f| {
-            f.carrier == Carrier::MEDIOAMBIENTE
-                && f.source == Source::RED
-                && f.dest == Dest::SUMINISTRO
-                && f.step == Step::A
-        });
-        if !has_ma_red_input_a {
-            // MEDIOAMBIENTE, RED, SUMINISTRO, A, ren, nren === MEDIOAMBIENTE, INSITU, SUMINISTRO, A, ren, nren
-            self.wdata.push(Factor::new(
-                Carrier::MEDIOAMBIENTE,
-                Source::RED,
-                Dest::SUMINISTRO,
-                Step::A,
-                RenNrenCo2::new(1.0, 0.0, 0.0),
-                "Recursos usados para obtener energía térmica del medioambiente (red ficticia)",
-            ));
-        }
+        self.update_wfactor(
+            MEDIOAMBIENTE,
+            RED,
+            SUMINISTRO,
+            A,
+            RenNrenCo2::new(1.0, 0.0, 0.0),
+            "Recursos usados para obtener energía térmica del medioambiente (red ficticia)",
+        );
+
         // Asegura que existe ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.0, 0.0 si hay ELECTRICIDAD
-        let has_elec_and_elec_insitu_input_a = wf_carriers.contains(&Carrier::ELECTRICIDAD)
-            && !self.wdata.iter().any(|f| {
-                f.carrier == Carrier::ELECTRICIDAD
-                    && f.source == Source::INSITU
-                    && f.dest == Dest::SUMINISTRO
-            });
-        if has_elec_and_elec_insitu_input_a {
-            self.wdata.push(Factor::new(
-                Carrier::ELECTRICIDAD,
-                Source::INSITU,
-                Dest::SUMINISTRO,
-                Step::A,
+        if wf_carriers.contains(&ELECTRICIDAD) {
+            self.update_wfactor(
+                ELECTRICIDAD,
+                INSITU,
+                SUMINISTRO,
+                A,
                 RenNrenCo2::new(1.0, 0.0, 0.0),
                 "Recursos usados para generar electricidad in situ",
-            ));
+            );
         }
+
         // Asegura definición de factores de red para todos los vectores energéticos
         let has_grid_factors_for_all_carriers = wf_carriers.iter().all(|&c| {
             self.wdata.iter().any(|f| {
@@ -215,19 +201,20 @@ impl Factors {
         });
         if !has_grid_factors_for_all_carriers {
             return Err(EpbdError::MissingFactor(
-                "factores de red VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?".into(),
+                "Factores de red VECTOR, INSITU, SUMINISTRO, A, fren?, fnren?".into(),
             ));
         }
+
         // En paso A, el factor SUMINISTRO de cogeneración es 0.0, 0.0 ya que el impacto se tiene en cuenta en el suministro del vector de generación
-        let has_cogen_input = self
-            .wdata
-            .iter()
-            .any(|f| f.source == Source::COGENERACION && f.dest == Dest::SUMINISTRO);
-        if !has_cogen_input {
-            self.wdata.push(Factor::new(
-                Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::SUMINISTRO, Step::A, RenNrenCo2::new(0.0, 0.0, 0.0),
-                "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)"));
-        }
+        self.update_wfactor(
+            ELECTRICIDAD,
+            COGENERACION,
+            SUMINISTRO,
+            A,
+            RenNrenCo2::new(0.0, 0.0, 0.0),
+            "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)",
+        );
+
         // Asegura que todos los vectores con exportación tienen factores de paso a la red y a usos no EPB
         let exp_carriers = [
             (Carrier::ELECTRICIDAD, Source::INSITU),
@@ -235,95 +222,63 @@ impl Factors {
             (Carrier::MEDIOAMBIENTE, Source::INSITU),
         ];
         for (c, s) in &exp_carriers {
-            // Asegura que existe VECTOR, SRC, A_RED | A_NEPB, A, ren, nren
-            let fp_a_input = self
-                .wdata
-                .iter()
-                .find(|f| {
-                    f.carrier == *c
-                        && f.source == *s
-                        && f.step == Step::A
-                        && f.dest == Dest::SUMINISTRO
-                })
-                .and_then(|f| Some(f.clone()));
+            if *s != Source::COGENERACION {
+                // Asegura que existe VECTOR, SRC, A_RED | A_NEPB, A, ren, nren
+                let fp_a_input = self
+                    .wdata
+                    .iter()
+                    .find(|f| {
+                        f.carrier == *c
+                            && f.source == *s
+                            && f.step == Step::A
+                            && f.dest == Dest::SUMINISTRO
+                    })
+                    .and_then(|f| Some(f.factors()));
 
-            let has_to_grid = self.wdata.iter().any(|f| {
-                f.carrier == *c && f.source == *s && f.step == Step::A && f.dest == Dest::A_RED
-            });
-            if !has_to_grid {
-                if *s != Source::COGENERACION {
+                if let Some(factors) = fp_a_input {
                     // VECTOR, SRC, A_RED, A, ren, nren === VECTOR, SRC, SUMINISTRO, A, ren, nren
-                    if fp_a_input.is_some() {
-                        let f = fp_a_input.as_ref().unwrap();
-                        self.wdata.push(Factor {
-                            dest: Dest::A_RED,
-                            step: Step::A,
-                            comment: "Recursos usados para producir la energía exportada a la red"
-                                .to_string(),
-                            ..*f
-                        });
-                    } else {
-                        return Err(EpbdError::MissingFactor(format!("{}, A_RED, A", c)));
-                    }
-                } else {
-                    // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
-                    // Asegura que existe ELECTRICIDAD, COGENERACION, A_RED, A, ren, nren - ver 9.6.6.2.3
-                    let has_cogen_to_grid = self.wdata.iter().any(|f| {
-                        f.carrier == Carrier::ELECTRICIDAD
-                            && f.source == Source::COGENERACION
-                            && f.dest == Dest::A_RED
-                            && f.step == Step::A
-                    });
-                    if !has_cogen_to_grid {
-                        let cogen = defaults.cogen_to_grid;
-                        self.wdata.push(Factor::new(
-                        Carrier::ELECTRICIDAD, Source::COGENERACION, Dest::A_RED, Step::A, cogen,
-                        "Recursos usados para producir electricidad cogenerada y vertida a la red. Valor predefinido"));
-                    }
-                }
-            }
-            let has_to_nepb = self.wdata.iter().any(|f| {
-                f.carrier == *c && f.source == *s && f.step == Step::A && f.dest == Dest::A_NEPB
-            });
-            if !has_to_nepb {
-                if *s != Source::COGENERACION {
+                    self.ensure_wfactor(
+                        *c,
+                        *s,
+                        A_RED,
+                        A,
+                        factors,
+                        "Recursos usados para producir la energía exportada a la red",
+                    );
                     // VECTOR, SRC, A_NEPB, A, ren, nren == VECTOR, SRC, SUMINISTRO, A, ren, nren
-                    if fp_a_input.is_some() {
-                        let f = fp_a_input.as_ref().unwrap();
-                        self.wdata.push(Factor {
-                            dest: Dest::A_NEPB,
-                            step: Step::A,
-                            comment:
-                                "Recursos usados para producir la energía exportada a usos no EPB"
-                                    .to_string(),
-                            ..*f
-                        });
-                    } else {
-                        return Err(EpbdError::MissingFactor(format!("{}, A_NEPB, A", c)));
-                    }
-                } else {
-                    // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
-                    // TODO: Si está definido para A_RED (no por defecto) y no para A_NEPB, qué hacemos? usamos por defecto? usamos igual a A_RED?
-                    // Asegura que existe ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
-                    let has_cogen_to_nepb = self.wdata.iter().any(|f| {
-                        f.carrier == Carrier::ELECTRICIDAD
-                            && f.source == Source::COGENERACION
-                            && f.dest == Dest::A_NEPB
-                            && f.step == Step::A
-                    });
-                    if !has_cogen_to_nepb {
-                        let cogen = defaults.cogen_to_nepb;
-                        self.wdata.push(Factor::new(
-                            Carrier::ELECTRICIDAD,
-                            Source::COGENERACION,
-                            Dest::A_NEPB,
-                            Step::A,
-                            cogen,
-                            "Valor predefinido",
-                        ));
-                    }
+                    self.ensure_wfactor(
+                        *c,
+                        *s,
+                        A_NEPB,
+                        A,
+                        factors,
+                        "Recursos usados para producir la energía exportada a usos no EPB",
+                    );
                 }
+            } else {
+                // VECTOR, SRC, A_RED, A, ren, nren === VECTOR, SRC, SUMINISTRO, A, ren, nren
+                self.ensure_wfactor(
+                    ELECTRICIDAD,
+                    COGENERACION,
+                    A_RED,
+                    A,
+                    defaults.cogen_to_grid,
+                    "Recursos usados para producir la energía exportada a la red. Valor predefinido",
+                );
+                // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
+                // TODO: Si está definido para A_RED (no por defecto) y no para A_NEPB, qué hacemos? usamos por defecto? usamos igual a A_RED?
+                // Asegura que existe ELECTRICIDAD, COGENERACION, A_NEPB, A, ren, nren - ver 9.6.6.2.3
+                // VECTOR, SRC, A_RED, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
+                self.ensure_wfactor(
+                    ELECTRICIDAD,
+                    COGENERACION,
+                    A_NEPB,
+                    A,
+                    defaults.cogen_to_nepb,
+                    "Recursos usados para producir la energía exportada a usos no EPB. Valor predefinido",
+                );
             }
+
             // Asegura que existe VECTOR, SRC, A_RED | A_NEPB, B, ren, nren
             let fp_a_red_input = self
                 .wdata
@@ -334,52 +289,50 @@ impl Factors {
                         && f.dest == Dest::SUMINISTRO
                         && f.step == Step::A
                 })
-                .and_then(|f| Some(f.clone()));
-            let has_to_grid_b = self.wdata.iter().any(|f| {
-                f.carrier == *c && f.source == *s && f.step == Step::B && f.dest == Dest::A_RED
-            });
-            if !has_to_grid_b {
+                .and_then(|f| Some(f.factors()));
+
+            if let Some(factors) = fp_a_red_input {
                 // VECTOR, SRC, A_RED, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
-                if fp_a_red_input.is_some() {
-                    let f = fp_a_red_input.as_ref().unwrap();
-                    self.wdata.push(Factor::new(f.carrier, *s, Dest::A_RED, Step::B, f.factors(),
-                    "Recursos ahorrados a la red por la energía producida in situ y exportada a la red"));
-                } else {
-                    return Err(EpbdError::MissingFactor(format!("{}, A_RED, B", c)));
-                }
-            }
-            let has_to_nepb_b = self.wdata.iter().any(|f| {
-                f.carrier == *c && f.source == *s && f.step == Step::B && f.dest == Dest::A_NEPB
-            });
-            if !has_to_nepb_b {
+                self.ensure_wfactor(
+                    *c,
+                    *s,
+                    A_RED,
+                    B,
+                    factors,
+                    "Recursos ahorrados a la red por la energía producida in situ y exportada a la red",
+                );
                 // VECTOR, SRC, A_NEPB, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
-                if fp_a_red_input.is_some() {
-                    let f = fp_a_red_input.as_ref().unwrap();
-                    self.wdata.push(Factor::new(f.carrier, *s, Dest::A_NEPB, Step::B, f.factors(),
-                    "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB"));
-                } else {
-                    return Err(EpbdError::MissingFactor(format!("{}, A_NEPB, B", c)));
-                }
+                self.ensure_wfactor(
+                    *c,
+                    *s,
+                    A_NEPB,
+                    B,
+                    factors,
+                    "Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB",
+                );
+            } else {
+                return Err(EpbdError::MissingFactor(format!("{}, SUMINISTRO, A", c)));
             }
         }
 
         // Asegura que existe RED1 | RED2, RED, SUMINISTRO, A, ren, nren
-        let has_red1_red_input = self.wdata.iter().any(|f| {
-            f.carrier == Carrier::RED1 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
-        });
-        if !has_red1_red_input {
-            let red1 = defaults.red1;
-            self.wdata.push(Factor::new(Carrier::RED1, Source::RED, Dest::SUMINISTRO, Step::A,
-            red1, "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)"));
-        }
-        let has_red2_red_input = self.wdata.iter().any(|f| {
-            f.carrier == Carrier::RED2 && f.source == Source::RED && f.dest == Dest::SUMINISTRO
-        });
-        if !has_red2_red_input {
-            let red2 = defaults.red2;
-            self.wdata.push(Factor::new(Carrier::RED2, Source::RED, Dest::SUMINISTRO, Step::A,
-            red2, "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)"));
-        }
+        self.ensure_wfactor(
+            RED1,
+            RED,
+            SUMINISTRO,
+            A,
+            defaults.red1,
+            "Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)",
+        );
+
+        self.ensure_wfactor(
+            RED2,
+            RED,
+            SUMINISTRO,
+            A,
+            defaults.red2,
+            "Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)",
+        );
 
         Ok(self)
     }
@@ -393,22 +346,26 @@ impl Factors {
     ///  - de electricidad in situ si no aparece una producción de ese tipo
     pub fn strip(mut self, components: &Components) -> Self {
         let wf_carriers: HashSet<_> = components.cdata.iter().map(|c| c.carrier).collect();
+        // Mantenemos factores para todos los vectores usados
+        self.wdata.retain(|f| wf_carriers.contains(&f.carrier));
+        // Mantenemos factores para cogeneración sólo si hay cogeneración
         let has_cogen = components
             .cdata
             .iter()
             .any(|c| c.csubtype == CSubtype::COGENERACION);
+        self.wdata
+            .retain(|f| f.source != Source::COGENERACION || has_cogen);
+        // Mantenemos factores a usos no EPB si hay uso de no EPB
         let has_nepb = components
             .cdata
             .iter()
             .any(|c| c.csubtype == CSubtype::NEPB);
+        self.wdata.retain(|f| f.dest != Dest::A_NEPB || has_nepb);
+        // Mantenemos factores de electricidad in situ si no hay producción de ese tipo
         let has_elec_insitu = components
             .cdata
             .iter()
             .any(|c| c.carrier == Carrier::ELECTRICIDAD && c.csubtype == CSubtype::INSITU);
-        self.wdata.retain(|f| wf_carriers.contains(&f.carrier));
-        self.wdata
-            .retain(|f| f.source != Source::COGENERACION || has_cogen);
-        self.wdata.retain(|f| f.dest != Dest::A_NEPB || has_nepb);
         self.wdata.retain(|f| {
             f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_insitu
         });
@@ -542,8 +499,8 @@ ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Factor de paso 
 ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red\nELECTRICIDAD, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
 ELECTRICIDAD, INSITU, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
 ELECTRICIDAD, INSITU, A_NEPB, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
-ELECTRICIDAD, COGENERACION, A_RED, A, 0.000, 2.500, 0.300 # Recursos usados para producir electricidad cogenerada y vertida a la red. Valor predefinido
-ELECTRICIDAD, COGENERACION, A_NEPB, A, 0.000, 2.500, 0.300 # Valor predefinido
+ELECTRICIDAD, COGENERACION, A_RED, A, 0.000, 2.500, 0.300 # Recursos usados para producir la energía exportada a la red. Valor predefinido
+ELECTRICIDAD, COGENERACION, A_NEPB, A, 0.000, 2.500, 0.300 # Recursos usados para producir la energía exportada a usos no EPB. Valor predefinido
 ELECTRICIDAD, COGENERACION, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
 ELECTRICIDAD, COGENERACION, A_NEPB, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
 MEDIOAMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
