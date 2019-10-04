@@ -77,7 +77,7 @@ pub struct CteLocWF {
 }
 
 /// Macro para la definición de los factores de paso de una localización
-macro_rules! build_wf_2013 {
+macro_rules! build_wf_cte2013 {
     ($loc:literal, $ren:literal, $nren:literal, $co2:literal) => {
         concat!("#META CTE_FUENTE: RITE2014", "\n",
         "#META CTE_LOCALIZACION: ", $loc, "\n",
@@ -127,10 +127,10 @@ pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
 /// - DB-HE 2013
 /// - DB-HE 2018
 pub const CTE_LOCWF_RITE2014: CteLocWF = CteLocWF {
-    loc_peninsula: build_wf_2013!("PENINSULA", 0.414, 1.954, 0.331),
-    loc_baleares: build_wf_2013!("BALEARES", 0.082, 2.968, 0.932),
-    loc_canarias: build_wf_2013!("CANARIAS", 0.070, 2.924, 0.776),
-    loc_ceutamelilla: build_wf_2013!("CEUTAMELILLA", 0.072, 2.718, 0.721),
+    loc_peninsula: build_wf_cte2013!("PENINSULA", 0.414, 1.954, 0.331),
+    loc_baleares: build_wf_cte2013!("BALEARES", 0.082, 2.968, 0.932),
+    loc_canarias: build_wf_cte2013!("CANARIAS", 0.070, 2.924, 0.776),
+    loc_ceutamelilla: build_wf_cte2013!("CEUTAMELILLA", 0.072, 2.718, 0.721),
 };
 
 /**
