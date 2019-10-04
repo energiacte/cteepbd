@@ -39,6 +39,9 @@ Utilidades para el manejo de balances energéticos para el CTE:
     - balance_to_XML
 */
 
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+
 use crate::{error::EpbdError, types::*, Balance, Factors, UserWF};
 
 /**
@@ -64,39 +67,6 @@ pub const CTE_NRBY: [Carrier; 5] = [
     Carrier::MEDIOAMBIENTE,
 ]; // Ver B.23. Solo biomasa sólida
 
-/// Valores por defecto de los factores de paso para cada localización
-pub struct CteLocWF {
-    /// Factores de paso reglamentarios para la Península
-    pub loc_peninsula: &'static str,
-    /// Factores de paso reglamentarios para Baleares.
-    pub loc_baleares: &'static str,
-    /// Factores de paso reglamentarios para Canarias.
-    pub loc_canarias: &'static str,
-    /// Factores de paso reglamentarios para Ceuta y Melilla.
-    pub loc_ceutamelilla: &'static str,
-}
-
-/// Macro para la definición de los factores de paso de una localización
-macro_rules! build_wf_cte2013 {
-    ($loc:literal, $ren:literal, $nren:literal, $co2:literal) => {
-        concat!("#META CTE_FUENTE: RITE2014", "\n",
-        "#META CTE_LOCALIZACION: ", $loc, "\n",
-        "#META CTE_FUENTE_COMENTARIO: Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018 # Recursos usados para suministrar el vector desde la red
-BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red
-CARBON, RED, SUMINISTRO, A, 0.002, 1.082, 0.472 # Recursos usados para suministrar el vector desde la red
-GASNATURAL, RED, SUMINISTRO, A, 0.005, 1.190, 0.252 # Recursos usados para suministrar el vector desde la red
-GASOLEO, RED, SUMINISTRO, A, 0.003, 1.179, 0.311 # Recursos usados para suministrar el vector desde la red
-GLP, RED, SUMINISTRO, A, 0.003, 1.201, 0.254 # Recursos usados para suministrar el vector desde la red
-ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
-ELECTRICIDAD, RED, SUMINISTRO, A, ", stringify!($ren), ", ", stringify!($nren), ", ", stringify!($co2), " # Recursos usados para el suministro desde la red
-")};
-}
-
 /// Factores de paso definibles por el usuario usados por defecto
 pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
     red1: RenNrenCo2::new(0.0, 1.3, 0.3),
@@ -110,12 +80,82 @@ pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
 /// Estos factores son los usados en:
 /// - DB-HE 2013
 /// - DB-HE 2018
-pub const CTE_LOCWF_RITE2014: CteLocWF = CteLocWF {
-    loc_peninsula: build_wf_cte2013!("PENINSULA", 0.414, 1.954, 0.331),
-    loc_baleares: build_wf_cte2013!("BALEARES", 0.082, 2.968, 0.932),
-    loc_canarias: build_wf_cte2013!("CANARIAS", 0.070, 2.924, 0.776),
-    loc_ceutamelilla: build_wf_cte2013!("CEUTAMELILLA", 0.072, 2.718, 0.721),
-};
+pub static CTE_LOCWF_RITE2014: Lazy<HashMap<&'static str, Factors>> = Lazy::new(|| {
+    use Carrier::*;
+    use Dest::*;
+    use Source::*;
+    use Step::A;
+    let wf = Factors {
+        wmeta: vec![
+            Meta::new("CTE_FUENTE", "RITE2014"),
+            // Meta::new("CTE_LOCALIZACION", loc),
+            Meta::new("CTE_FUENTE_COMENTARIO", "Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014")
+        ],
+        wdata: vec![
+            Factor::new(MEDIOAMBIENTE, RED, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)"),
+            Factor::new(MEDIOAMBIENTE, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)"),
+            Factor::new(BIOCARBURANTE, RED, SUMINISTRO, A, (1.028, 0.085, 0.018).into(), "Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))"),
+            Factor::new(BIOMASA, RED, SUMINISTRO, A, (1.003, 0.034, 0.018).into(), "Recursos usados para suministrar el vector desde la red"),
+            Factor::new(BIOMASADENSIFICADA, RED, SUMINISTRO, A, (1.028, 0.085, 0.018).into(), "Recursos usados para suministrar el vector desde la red"),
+            Factor::new(CARBON, RED, SUMINISTRO, A, (0.002, 1.082, 0.472).into(), "Recursos usados para suministrar el vector desde la red"),
+            Factor::new(GASNATURAL, RED, SUMINISTRO, A, (0.005, 1.190, 0.252).into(), "Recursos usados para suministrar el vector desde la red"),
+            Factor::new(GASOLEO, RED, SUMINISTRO, A, (0.003, 1.179, 0.311).into(), "Recursos usados para suministrar el vector desde la red"),
+            Factor::new(GLP, RED, SUMINISTRO, A, (0.003, 1.201, 0.254).into(), "Recursos usados para suministrar el vector desde la red"),
+            Factor::new(ELECTRICIDAD, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para producir electricidad in situ"),
+            Factor::new(ELECTRICIDAD, COGENERACION, SUMINISTRO, A, (0.000, 0.000, 0.000).into(), "Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)"),
+            // Factor::new(ELECTRICIDAD, RED, SUMINISTRO, A, (ren, nren, co2), "Recursos usados para el suministro desde la red")
+        ]};
+    let mut wfpen = wf.clone();
+    wfpen.set_meta("CTE_LOCALIZACION", "PENINSULA");
+    wfpen.wdata.push(Factor::new(
+        ELECTRICIDAD,
+        RED,
+        SUMINISTRO,
+        A,
+        (0.414, 1.954, 0.331).into(),
+        "Recursos usados para el suministro desde la red",
+    ));
+
+    let mut wfbal = wf.clone();
+    wfbal.set_meta("CTE_LOCALIZACION", "BALEARES");
+    wfbal.wdata.push(Factor::new(
+        ELECTRICIDAD,
+        RED,
+        SUMINISTRO,
+        A,
+        (0.082, 2.968, 0.932).into(),
+        "Recursos usados para el suministro desde la red",
+    ));
+
+    let mut wfcan = wf.clone();
+    wfcan.set_meta("CTE_LOCALIZACION", "CANARIAS");
+    wfcan.wdata.push(Factor::new(
+        ELECTRICIDAD,
+        RED,
+        SUMINISTRO,
+        A,
+        (0.070, 2.924, 0.776).into(),
+        "Recursos usados para el suministro desde la red",
+    ));
+
+    let mut wfcym = wf.clone();
+    wfcym.set_meta("CTE_LOCALIZACION", "CEUTAMELILLA");
+    wfcym.wdata.push(Factor::new(
+        ELECTRICIDAD,
+        RED,
+        SUMINISTRO,
+        A,
+        (0.072, 2.718, 0.721).into(),
+        "Recursos usados para el suministro desde la red",
+    ));
+
+    let mut m = HashMap::new();
+    m.insert("PENINSULA", wfpen);
+    m.insert("BALEARES", wfbal);
+    m.insert("CANARIAS", wfcan);
+    m.insert("CEUTAMELILLA", wfcym);
+    m
+});
 
 /**
 Manejo de factores de paso para el CTE
@@ -142,19 +182,14 @@ pub fn wfactors_from_str(
 /// factores de paso de cogeneración, y factores de paso para RED1 y RED2
 pub fn wfactors_from_loc(
     loc: &str,
-    locdefaults: &CteLocWF,
+    locmap: &HashMap<&'static str, Factors>,
     user: &UserWF<Option<RenNrenCo2>>,
     userdefaults: &UserWF<RenNrenCo2>,
 ) -> Result<Factors, EpbdError> {
-    let wfactorsstring = match &*loc {
-        "PENINSULA" => locdefaults.loc_peninsula,
-        "BALEARES" => locdefaults.loc_baleares,
-        "CANARIAS" => locdefaults.loc_canarias,
-        "CEUTAMELILLA" => locdefaults.loc_ceutamelilla,
-        _ => return Err(EpbdError::ParseError(format!("Localizacion: {}", loc))),
-    };
-    wfactorsstring
-        .parse::<Factors>()?
+    locmap
+        .get(loc)
+        .ok_or_else(|| EpbdError::ParseError(format!("Localizacion: {}", loc)))?
+        .clone()
         .set_user_wfactors(user)
         .normalize(&userdefaults)
 }

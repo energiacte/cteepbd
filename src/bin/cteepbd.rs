@@ -396,7 +396,7 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // Factores de paso ---------------------------------------------------------------------------
 
     // 0. Factores por defecto, según modo
-    let default_locwf = cte::CTE_LOCWF_RITE2014;
+    let default_locwf = &cte::CTE_LOCWF_RITE2014;
     let default_userwf = cte::CTE_USERWF;
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
