@@ -424,15 +424,15 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
     // CLI path > CLI loc > Meta loc > error
     let (orig_fp, param_fp, fp_opt) = match (fp_path_cli, loc_cli, loc_meta) {
         (Some(fp_cli), _, _) => {
-            let fp = cte::wfactors_from_str(&readfile(fp_cli), &user_wf, &default_userwf);
+            let fp = cte::wfactors_from_str(&readfile(fp_cli), user_wf, default_userwf);
             ("archivo", fp_cli.to_string(), fp)
         }
         (None, Some(l_cli), _) => {
-            let fp = cte::wfactors_from_loc(&l_cli, &default_locwf, &user_wf, &default_userwf);
+            let fp = cte::wfactors_from_loc(&l_cli, &default_locwf, user_wf, default_userwf);
             ("usuario", l_cli.to_string(), fp)
         }
         (None, None, Some(l_meta)) => {
-            let fp = cte::wfactors_from_loc(&l_meta, &default_locwf, &user_wf, &default_userwf);
+            let fp = cte::wfactors_from_loc(&l_meta, &default_locwf, user_wf, default_userwf);
             ("metadatos", l_meta, fp)
         }
         _ => {

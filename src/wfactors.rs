@@ -105,7 +105,7 @@ impl Factors {
     }
 
     /// Actualiza los factores definibles por el usuario (cogen_to_grid, cogen_to_nepb, red1 y red2)
-    pub fn set_user_wfactors(mut self, user: &UserWF<Option<RenNrenCo2>>) -> Self {
+    pub fn set_user_wfactors(mut self, user: UserWF<Option<RenNrenCo2>>) -> Self {
         use Carrier::{ELECTRICIDAD, RED1, RED2};
         use Dest::{A_NEPB, A_RED, SUMINISTRO};
         use Source::{COGENERACION, RED};
@@ -473,7 +473,7 @@ RED1, RED, SUMINISTRO, A, 0.100, 0.125, 0.500 # Factor de usuario
 RED2, RED, SUMINISTRO, A, 0.125, 0.100, 0.500 # Factor de usuario";
         assert_eq!(
             tfactors1
-                .set_user_wfactors(&UserWF {
+                .set_user_wfactors(UserWF {
                     red1: Some(RenNrenCo2::new(0.1, 0.125, 0.5)),
                     red2: Some(RenNrenCo2::new(0.125, 0.1, 0.5)),
                     cogen_to_grid: Some(RenNrenCo2::new(0.125, 0.5, 1.0)),

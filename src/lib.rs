@@ -95,8 +95,8 @@ let default_user_wf = cte::CTE_USERWF; // Valores por defecto de factores de pas
 // Factores de usuario reglamentarios según localización y factores de usuario
 let fp = cte::wfactors_from_loc("PENINSULA",
     &cte::CTE_LOCWF_RITE2014,
-    &user_wf,
-    &default_user_wf
+    user_wf,
+    default_user_wf
 ).unwrap();
 
 // Factor de exportación y área de referencia

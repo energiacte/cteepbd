@@ -167,8 +167,8 @@ Factores de paso y utilidades para la gestión de factores de paso para el CTE
 /// Lee factores de paso desde cadena y sanea los resultados.
 pub fn wfactors_from_str(
     wfactorsstring: &str,
-    user: &UserWF<Option<RenNrenCo2>>,
-    userdefaults: &UserWF<RenNrenCo2>,
+    user: UserWF<Option<RenNrenCo2>>,
+    userdefaults: UserWF<RenNrenCo2>,
 ) -> Result<Factors, EpbdError> {
     wfactorsstring
         .parse::<Factors>()?
@@ -183,8 +183,8 @@ pub fn wfactors_from_str(
 pub fn wfactors_from_loc(
     loc: &str,
     locmap: &HashMap<&'static str, Factors>,
-    user: &UserWF<Option<RenNrenCo2>>,
-    userdefaults: &UserWF<RenNrenCo2>,
+    user: UserWF<Option<RenNrenCo2>>,
+    userdefaults: UserWF<RenNrenCo2>,
 ) -> Result<Factors, EpbdError> {
     locmap
         .get(loc)

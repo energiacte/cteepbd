@@ -79,7 +79,7 @@ fn get_ctefp_peninsula() -> Factors {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, &user_wf, &CTE_USERWF).unwrap()
+    wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, user_wf, CTE_USERWF).unwrap()
 }
 
 fn get_energydatalist() -> Components {
@@ -155,7 +155,7 @@ fn wfactors_from_file(path: &str) -> Factors {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    wfactors_from_str(&wfactors_string, &user_wf, &CTE_USERWF).unwrap()
+    wfactors_from_str(&wfactors_string, user_wf, CTE_USERWF).unwrap()
 }
 
 ///Approximate equality for RenNrenCo2 values
@@ -701,7 +701,7 @@ fn cte_EPBD() {
         cogen_to_grid: None,
         cogen_to_nepb: None,
     };
-    let FP = wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, &user_wf, &CTE_USERWF).unwrap();
+    let FP = wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, user_wf, CTE_USERWF).unwrap();
     let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
