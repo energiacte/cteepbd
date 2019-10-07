@@ -424,7 +424,7 @@ impl str::FromStr for Factors {
 }
 
 /// Estructura para definir valores por defecto y valores de usuario
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct UserWF<T = RenNrenCo2> {
     /// Factores de paso de redes de distrito 1.
     /// RED1, RED, SUMINISTRO, A, ren, nren
