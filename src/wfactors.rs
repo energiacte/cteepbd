@@ -35,7 +35,7 @@ use std::collections::HashSet;
 use std::fmt;
 use std::str;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
