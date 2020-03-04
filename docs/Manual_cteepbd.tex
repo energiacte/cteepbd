@@ -237,7 +237,7 @@ La ejecución del programa procesa el archivo de componentes energéticos
 
 \VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers.out}
 
-De forma análoga, se podrían obtener los resultados referidos únicamente al servicio de ACS y para factores de paso considerando el perímetro próximo (comprobación de fracción renovable para el servicio de ACS):
+De forma análoga, se podrían obtener los resultados referidos únicamente al servicio de ACS y para factores de paso considerando el perímetro próximo:
 
 \begin{Verbatim}[fontsize=\small]
 	$ cteepbd --acs_nearby -c test_data/cte_test_carriers.csv -l PENINSULA > balance.txt
@@ -294,7 +294,7 @@ Este argumento indica los factores de paso para el cálculo de la eficiencia ene
 
 \textbf{\texttt{-N, -{}-acs\_nearby}}
 
-Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}). Este cálculo está orientado a la obtención de la fracción de energía renovable para uso de ACS para el perímetro próximo (\textit{RER}).
+Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}).
 
 \textbf{\texttt{-{}-cogen COGEN\_ren COGEN\_nren COGEN\_co2}}
 
@@ -875,7 +875,7 @@ Para la obtención de datos generales relativos al consumo de energía final, en
 \end{Verbatim}
 %$
 
-Y, para el cálculo de la fracción renovable de ACS:
+Y, para el cálculo teniendo en cuenta solo el servicio de ACS y el perímetro próximo:
 
 \begin{Verbatim}[fontsize=\small]
     $ cteepbd -N -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_ACS_nrb_EP.json
@@ -900,19 +900,6 @@ $C_{ep,ren} [kWh/m^2] = \texttt{balance\_m2.B.ren}$
 Mientras que el consumo de energía primaria total se obtiene a partir de la suma del la parte renovable y no renovable del consumo:
 
 $C_{ep,tot} [kWh/m^2] = C_{ep,ren} + C_{ep,nren} = \texttt{balance\_m2.B.ren} + \texttt{balance\_m2.B.nren}$
-
-\subsection{Obtención de la fracción renovable de las necesidades de ACS}
-
-Para obtener la fracción renovable de ACS obtenida teniendo en cuenta la generación in situ o en las proximidades de la parcela se debe usar la opción \texttt{--acs\_nearby} o , \texttt{-N}:
-
-\begin{Verbatim}[fontsize=\small]
-    $ cteepbd -N -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_ACS_nrb_EP.json
-\end{Verbatim}
-%$
-
-La fracción renovable ($RER_{acs,nrb}$) se obtiene a partir de los resultados de las partes renovable y no renovable del consumo:
-
-$RER_{acs,nrb} = C_{ep,ren} / C_{ep,tot} = \texttt{balance.B.ren} / (\texttt{balance.B.ren} + \texttt{balance.B.nren})$
 
 \subsection{Obtención del consumo de energía final por servicios}
 
