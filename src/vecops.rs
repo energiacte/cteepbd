@@ -151,6 +151,6 @@ mod tests {
 
     #[test]
     fn vecops_vecsum() {
-        assert_eq!(9.0, vecsum(&[2.0, 3.0, 4.0]));
+        assert!(f32::abs(9.0 - vecsum(&[2.0, 3.0, 4.0])) < f32::EPSILON);
     }
 }
