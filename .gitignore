@@ -1,10 +1,12 @@
-/target
 **/*.rs.bk
-Cargo.lock
-
+/target
+/dist
 test_data/output/**
 docs/auto/**
+
+Cargo.lock
 *.tmp
+*.bak
 
 balance.json
 balance.txt
