@@ -138,7 +138,7 @@ pub static CTE_LOCWF_RITE2014: Lazy<HashMap<&'static str, Factors>> = Lazy::new(
         "Recursos usados para el suministro desde la red",
     ));
 
-    let mut wfcym = wf.clone();
+    let mut wfcym = wf;
     wfcym.set_meta("CTE_LOCALIZACION", "CEUTAMELILLA");
     wfcym.wdata.push(Factor::new(
         ELECTRICIDAD,
