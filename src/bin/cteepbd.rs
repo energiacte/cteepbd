@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019  Ministerio de Fomento
+// Copyright (c) 2018-2020  Ministerio de Fomento
 //                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -201,7 +201,7 @@ fn app() -> App<'static, 'static> {
         .bin_name("cteepbd")
         .version(env!("CARGO_PKG_VERSION"))
         .author("
-Copyright (c) 2018-2019 Ministerio de Fomento,
+Copyright (c) 2018-2020 Ministerio de Fomento,
               Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
@@ -328,7 +328,7 @@ fn main() {
     if matches.is_present("showlicense") {
         println!(
             "
-Copyright (c) 2018-2019 Ministerio de Fomento
+Copyright (c) 2018-2020 Ministerio de Fomento
               Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
