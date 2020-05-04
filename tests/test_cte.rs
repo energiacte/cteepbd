@@ -9,18 +9,20 @@ use pretty_assertions::assert_eq;
 
 use cteepbd::{cte::*, types::*, *};
 
-const TESTFPJ: &'static str = "vector, fuente, uso, step, ren, nren, co2
+const TESTFPJ: &str = "vector, fuente, uso, step, ren, nren, co2
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
 ELECTRICIDAD, INSITU, SUMINISTRO,   A, 1.0, 0.0, 0.0
 ELECTRICIDAD, INSITU, A_RED, A, 1.0, 0.0, 0.0
 ELECTRICIDAD, INSITU, A_RED, B, 0.5, 2.0, 0.42
+ELECTRICIDAD, INSITU, A_NEPB, A, 1.0, 0.0, 0.0
+ELECTRICIDAD, INSITU, A_NEPB, B, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
 MEDIOAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 MEDIOAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 ";
 
-const TESTFPJ7: &'static str = "vector, fuente, uso, step, ren, nren, co2
+const TESTFPJ7: &str = "vector, fuente, uso, step, ren, nren, co2
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.0, 0.0, 0.0
@@ -28,7 +30,7 @@ ELECTRICIDAD, COGENERACION, A_RED, A, 0.0, 2.5, 0.82
 ELECTRICIDAD, COGENERACION, A_RED, B, 0.5, 2.0, 0.42
 ";
 
-const TESTFPJ8: &'static str = "vector, fuente, uso, step, ren, nren, co2
+const TESTFPJ8: &str = "vector, fuente, uso, step, ren, nren, co2
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.0, 0.1, 0.07
@@ -37,16 +39,7 @@ ELECTRICIDAD, COGENERACION, A_RED, A, 2.27, 0.23, 0.07
 ELECTRICIDAD, COGENERACION, A_RED, B, 0.5, 2.0, 0.42
 ";
 
-const TESTFPJ9: &'static str = "vector, fuente, uso, step, ren, nren
-ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
-ELECTRICIDAD, INSITU, SUMINISTRO,   A, 1.0, 0.0, 0.0
-ELECTRICIDAD, INSITU, A_RED, A, 1.0, 0.0, 0.0
-ELECTRICIDAD, INSITU, A_NEPB, A, 1.0, 0.0, 0.0
-ELECTRICIDAD, INSITU, A_RED, B, 0.5, 2.0, 0.42
-ELECTRICIDAD, INSITU, A_NEPB, B, 0.5, 2.0, 0.42
-";
-
-const TESTFP: &'static str = "vector, fuente, uso, step, ren, nren
+const TESTFP: &str = "vector, fuente, uso, step, ren, nren
 
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
 
@@ -657,7 +650,7 @@ fn cte_J8_Co_generator_biogas_plus_gas_boiler_kexp_1() {
 #[test]
 fn cte_J9_electricity_monthly_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ9_electr.csv");
-    let FP: Factors = TESTFPJ9.parse().unwrap();
+    let FP: Factors = TESTFPJ.parse().unwrap();
     let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
@@ -768,7 +761,7 @@ fn cte_balance_byuse() {
         RenNrenCo2 {
             ren: 178.88016,
             nren: 37.14554,
-            co2: 6.2923098,
+            co2: 6.292_309_8,
         },
     );
 
