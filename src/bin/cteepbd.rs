@@ -44,10 +44,6 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
 
 extern crate clap;
 
-use exitcode;
-
-use serde_json;
-
 use std::fs::{read_to_string, File};
 use std::io::prelude::*;
 use std::path::Path;
