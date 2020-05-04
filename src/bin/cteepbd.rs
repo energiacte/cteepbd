@@ -42,21 +42,56 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
 
 */
 
-extern crate clap;
-
 use std::fs::{read_to_string, File};
 use std::io::prelude::*;
 use std::path::Path;
 use std::process::exit;
 use std::str::FromStr;
 
-use clap::{App, AppSettings, Arg};
-
 use cteepbd::{
     cte, energy_performance,
     types::{MetaVec, RenNrenCo2, Service},
     Balance, Components, UserWF,
 };
+
+const APP_TITLE: &str = r#"CteEPBD"#;
+const APP_DESCRIPTION: &str = r#"
+Copyright (c) 2018-2020 Ministerio de Fomento,
+              Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
+
+Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
+         Daniel Jiménez González <danielj@ietcc.csic.es>
+         Marta Sorribes Gil <msorribes@ietcc.csic.es>
+
+Licencia: Publicado bajo licencia MIT.
+
+"#;
+const APP_ABOUT: &str = r#"CteEpbd - Eficiencia energética de los edificios (CTE DB-HE)."#;
+const APP_LICENSE: &str = r#"
+Copyright (c) 2018-2020 Ministerio de Fomento
+              Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
+            Daniel Jiménez González <danielj@ietcc.csic.es>
+            Marta Sorribes Gil <msorribes@ietcc.csic.es>"#;
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
@@ -142,11 +177,12 @@ fn validate_arearef(arearefstr: &str, orig: &str) -> Option<f32> {
 
 /// Obtiene factor de paso priorizando CLI -> metadatos -> None.
 fn get_factor(
-    matches_values: Option<clap::Values<'_>>,
+    matches: &clap::ArgMatches<'_>,
     components: &mut Components,
     meta: &str,
 ) -> Option<RenNrenCo2> {
-    let factor = matches_values
+    let factor = matches
+        .values_of(meta)
         .and_then(|v| {
             // Datos desde línea de comandos
             let vv: Vec<f32> = v
@@ -192,23 +228,15 @@ fn get_components(archivo: Option<&str>) -> Components {
     }
 }
 
-fn app() -> App<'static, 'static> {
-    App::new("CteEPBD")
+/// Crea aplicación y detecta opciones seleccionadas
+fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
+    use clap::Arg;
+    clap::App::new(APP_TITLE)
         .bin_name("cteepbd")
         .version(env!("CARGO_PKG_VERSION"))
-        .author("
-Copyright (c) 2018-2020 Ministerio de Fomento,
-              Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
-
-Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
-         Daniel Jiménez González <danielj@ietcc.csic.es>
-         Marta Sorribes Gil <msorribes@ietcc.csic.es>
-
-Licencia: Publicado bajo licencia MIT.
-
-")
-        .about("CteEpbd - Eficiencia energética de los edificios (CTE DB-HE).")
-        .setting(AppSettings::NextLineHelp)
+        .author(APP_DESCRIPTION)
+        .about(APP_ABOUT)
+        .setting(clap::AppSettings::NextLineHelp)
         .arg(Arg::with_name("arearef")
             .short("a")
             .long("arearef")
@@ -276,24 +304,30 @@ Licencia: Publicado bajo licencia MIT.
             .help("Archivo de salida de resultados detallados en formato texto simple")
             .takes_value(true))
         // Factores definidos por el usuario
-        .arg(Arg::with_name("cogen")
-            .long("cogen")
-            .value_names(&["COGEN_ren", "COGEN_nren", "COGEN_co2"])
-            .help("Factores de exportación a red (ren, nren, co2) de electricidad cogenerada.\nP.e.: --cogen 0 2.5 0.3")
-            .takes_value(true)
-            .number_of_values(3))
-        .arg(Arg::with_name("red1")
+        .arg(Arg::with_name("CTE_RED1")
             .long("red1")
             .value_names(&["RED1_ren", "RED1_nren", "RED1_co2"])
             .help("Factores de paso (ren, nren, co2) de la producción del vector RED1.\nP.e.: --red1 0 1.3 0.3")
             .takes_value(true)
             .number_of_values(3))
-        .arg(Arg::with_name("red2")
+        .arg(Arg::with_name("CTE_RED2")
             .long("red2")
             .value_names(&["RED2_ren", "RED2_nren", "RED2_co2"])
             .help("Factores de paso (ren, nren, co2) de la producción del vector RED2.\nP.e.: --red2 0 1.3 0.3")
             .takes_value(true)
             .number_of_values(2))
+        .arg(Arg::with_name("CTE_COGEN")
+            .long("cogen")
+            .value_names(&["COGEN_ren", "COGEN_nren", "COGEN_co2"])
+            .help("Factores de exportación a red (ren, nren, co2) de electricidad cogenerada.\nP.e.: --cogen 0 2.5 0.3")
+            .takes_value(true)
+            .number_of_values(3))
+        // .arg(Arg::with_name("CTE_COGENNEPB")
+        //     .long("cogennepb")
+        //     .value_names(&["COGENNEPB_ren", "COGENNEPB_nren, "COGENNEBP_co2"])
+        //     .help("Factores de exportación a usos no EPB (ren, nren, co2) de electricidad cogenerada.\nP.e.: --cogennepb 0 2.5 0.3")
+        //     .takes_value(true)
+        //     .number_of_values(2))
         // Cálculo para servicio de ACS y factores en perímetro nearby
         .arg(Arg::with_name("acsnrb")
             .short("N")
@@ -314,41 +348,16 @@ Licencia: Publicado bajo licencia MIT.
             .short("v")
             .multiple(true)
             .help("Sets the level of verbosity"))
+        .get_matches()
 }
 
 // Función principal ------------------------------------------------------------------------------
 
 fn main() {
-    let matches = app().get_matches();
+    let matches = start_app_and_get_matches();
 
     if matches.is_present("showlicense") {
-        println!(
-            "
-Copyright (c) 2018-2020 Ministerio de Fomento
-              Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the 'Software'), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
-            Daniel Jiménez González <danielj@ietcc.csic.es>
-            Marta Sorribes Gil <msorribes@ietcc.csic.es>"
-        );
+        println!("{}", APP_LICENSE);
         exit(exitcode::OK);
     }
 
@@ -397,14 +406,10 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
     // 1. Factores de paso definibles por el usuario (a través de la CLI o de metadatos)
     let user_wf = UserWF {
-        red1: get_factor(matches.values_of("red1"), &mut components, "CTE_RED1"),
-        red2: get_factor(matches.values_of("red2"), &mut components, "CTE_RED2"),
-        cogen_to_grid: get_factor(matches.values_of("cogen"), &mut components, "CTE_COGEN"),
-        cogen_to_nepb: get_factor(
-            matches.values_of("cogennepb"),
-            &mut components,
-            "CTE_COGENNEPB",
-        ),
+        red1: get_factor(&matches, &mut components, "CTE_RED1"),
+        red2: get_factor(&matches, &mut components, "CTE_RED2"),
+        cogen_to_grid: get_factor(&matches, &mut components, "CTE_COGEN"),
+        cogen_to_nepb: get_factor(&matches, &mut components, "CTE_COGENNEPB"),
     };
 
     if verbosity > 2 {
