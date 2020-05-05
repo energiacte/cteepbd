@@ -41,7 +41,7 @@ use std::collections::HashSet;
 use std::fmt;
 use std::str;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
@@ -50,7 +50,7 @@ use crate::{
 };
 
 /// Lista de datos de componentes con sus metadatos
-/// 
+///
 /// List of component data bundled with its metadata
 ///
 /// #META CTE_AREAREF: 100.5
@@ -156,49 +156,49 @@ impl Components {
         // proporcionalmente al consumo de elec. del servicio respecto al de todos los servicios
         // TODO: habría que ver la interacción del reparto de electricidad por servicios con f_match_t, cuando se implemente
         for el_prod_origin in &[CSubtype::INSITU, CSubtype::COGENERACION] {
-        let pr_el_ndef: Vec<_> = self
-            .cdata
-            .iter()
-            .filter(|c| {
-                c.carrier == Carrier::ELECTRICIDAD
-                    && c.ctype == CType::PRODUCCION
-                        && c.csubtype == *el_prod_origin
-                    && c.service == Service::NDEF
-            })
-            .collect();
-
-        if !pr_el_ndef.is_empty() {
-            let c_el = self
+            let pr_el_ndef: Vec<_> = self
                 .cdata
                 .iter()
-                .filter(|c| c.carrier == Carrier::ELECTRICIDAD && c.ctype == CType::CONSUMO);
-            let c_el_tot = c_el
-                .clone()
-                .map(|c| c.values.iter().sum::<f32>())
-                .sum::<f32>();
-            let c_el_srv_tot = c_el
-                .clone()
-                .filter(|c| c.service == service)
-                .map(|c| c.values.iter().sum::<f32>())
-                .sum::<f32>();
+                .filter(|c| {
+                    c.carrier == Carrier::ELECTRICIDAD
+                        && c.ctype == CType::PRODUCCION
+                        && c.csubtype == *el_prod_origin
+                        && c.service == Service::NDEF
+                })
+                .collect();
 
-            if c_el_tot > 0.0 && c_el_srv_tot > 0.0 {
-                let fraction_pr_srv = c_el_srv_tot / c_el_tot;
-                for c in &pr_el_ndef {
-                    cdata.push(Component {
-                        carrier: Carrier::ELECTRICIDAD,
-                        ctype: CType::PRODUCCION,
+            if !pr_el_ndef.is_empty() {
+                let c_el = self
+                    .cdata
+                    .iter()
+                    .filter(|c| c.carrier == Carrier::ELECTRICIDAD && c.ctype == CType::CONSUMO);
+                let c_el_tot = c_el
+                    .clone()
+                    .map(|c| c.values.iter().sum::<f32>())
+                    .sum::<f32>();
+                let c_el_srv_tot = c_el
+                    .clone()
+                    .filter(|c| c.service == service)
+                    .map(|c| c.values.iter().sum::<f32>())
+                    .sum::<f32>();
+
+                if c_el_tot > 0.0 && c_el_srv_tot > 0.0 {
+                    let fraction_pr_srv = c_el_srv_tot / c_el_tot;
+                    for c in &pr_el_ndef {
+                        cdata.push(Component {
+                            carrier: Carrier::ELECTRICIDAD,
+                            ctype: CType::PRODUCCION,
                             csubtype: *el_prod_origin,
-                        service,
-                        values: veckmul(&c.values, fraction_pr_srv),
-                        comment: format!(
+                            service,
+                            values: veckmul(&c.values, fraction_pr_srv),
+                            comment: format!(
                                 "{} Producción eléctrica proporcionalmente reasignada al servicio.",
-                            c.comment
-                        ),
-                    })
+                                c.comment
+                            ),
+                        })
+                    }
                 }
             }
-        }
         }
 
         let cmeta = self.cmeta.clone();
@@ -308,20 +308,20 @@ mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
 
-    const TCOMPS1: &'static str = "#META CTE_AREAREF: 100.5
+    const TCOMPS1: &str = "#META CTE_AREAREF: 100.5
 ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
 ELECTRICIDAD, CONSUMO, EPB, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 ELECTRICIDAD, CONSUMO, EPB, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
 
-    const TCOMPSRES1: &'static str = "#META CTE_AREAREF: 100.5
+    const TCOMPSRES1: &str = "#META CTE_AREAREF: 100.5
 ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
 ELECTRICIDAD, CONSUMO, EPB, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 ELECTRICIDAD, CONSUMO, EPB, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
 MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
 
-    const TCOMPSRES2: &'static str = "#META CTE_AREAREF: 100.5
+    const TCOMPSRES2: &str = "#META CTE_AREAREF: 100.5
 #META CTE_SERVICIO: CAL
 ELECTRICIDAD, CONSUMO, EPB, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
