@@ -237,14 +237,14 @@ La ejecución del programa procesa el archivo de componentes energéticos
 
 \VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers.out}
 
-De forma análoga, se podrían obtener los resultados referidos únicamente al servicio de ACS y para factores de paso considerando el perímetro próximo:
+De forma análoga, el programa permite obtener los resultados anteriores, incrementados con la fracción renovable de la demanda de ACS, obtenida considerando el perímetro próximo, del siguiente modo:
 
 \begin{Verbatim}[fontsize=\small]
-	$ cteepbd --acs_nearby -c test_data/cte_test_carriers.csv -l PENINSULA > balance.txt
+	$ cteepbd -c test_data/cte_test_carriers.csv -l PENINSULA --demanda_total_acs 2800 > balance_acs.txt
 \end{Verbatim}
 %$
 
-\VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers_ACS.out}
+\VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers_dem_ACS.out}
 
 
 \clearpage
@@ -292,15 +292,21 @@ Alternativamente, estos factores de paso pueden definirse mediante una localizac
 
 Este argumento indica los factores de paso para el cálculo de la eficiencia energética a partir de una localización. Puede tomar los valores \texttt{PENINSULA}, \texttt{CANARIAS}, \texttt{BALEARES} o \texttt{CEUTAMELILLA} para generar los factores de paso reglamentarios correspondientes a dichas zonas \footnote{El \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016 contiene los valores aplicables en cada uno de los casos.}.
 
-\textbf{\texttt{-N, -{}-acs\_nearby}}
-
-Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}).
+%\textbf{\texttt{-N, -{}-acs\_nearby}}
+%
+%Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}).
 
 \textbf{\texttt{-{}-cogen COGEN\_ren COGEN\_nren COGEN\_co2}}
 
-Este argumento indica los 3 factores de exportación a la red (parte renovable, parte no renovable y emisiones) de la electricidad cogenerada. Estos factores no se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
+Este argumento indica los 3 factores de exportación a la red (parte renovable, parte no renovable y emisiones) de la electricidad cogenerada. Estos factores no necesariamente se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
 El ejemplo \texttt{-{}-cogen 0 2.5 0.3} indica que el factor de paso de exportación a la red es de 0 para la parte renovable, de 2.5 para la no renovable y de 0.3 para las emisiones.
+
+\textbf{\texttt{-{}-cogen COGENNEPB\_ren COGENNEPB\_nren COGENNEPB\_co2}}
+
+Este argumento indica los 3 factores de exportación a usos no EPB (parte renovable, parte no renovable y emisiones) de la electricidad cogenerada. Estos factores no necesariamente se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
+
+El ejemplo \texttt{-{}-cogennepb 0 2.5 0.3} indica que el factor de paso de exportación a la red es de 0 para la parte renovable, de 2.5 para la no renovable y de 0.3 para las emisiones.
 
 \textbf{\texttt{-{}-red1 RED1\_ren RED1\_nren RED1\_co2}}
 
@@ -313,6 +319,10 @@ El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable
 Este argumento indica los 3 factores de paso del vectores energético \texttt{RED2} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
 El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED2} son 0 (parte renovable), 1.3 (parte no renovable) y 0.3 (emisiones).
+
+\textbf{\texttt{-{}-demanda\_anual\_acs <DEM\_ACS>}}
+
+Este argumento indica la demanda total anual para el servicio de agua caliente sanitaria (ACS), en  $kWh$, usado para calcular el porcentaje de la demanda de ACS de origen renovable en el perímetro próximo. Permite el cálculo del indicador de la sección 4 del DB-HE. Este cálculo puede realizarse solo en aquellos casos en los que no se utiliza para producir ACS más de un vector con procedencia distinta a la de la parcela (in situ).
 
 \subsubsection{Argumentos de salida de valores de entrada modificados}
 
@@ -646,6 +656,7 @@ La \textbf{estructura de salida} incluye las siguientes claves, descritas en té
 \item \texttt{balance\_cr} - el balance energético para cada intervalo de cálculo y por vector energético;
 \item \texttt{balance} - el balance global;
 \item \texttt{balance\_m2} - el balance global repercutido por superficie.
+\item \texttt{misc} - indicadores adicionales
 \end{itemize}
 
 El \textbf{factor de exportación} y el \textbf{área de referencia} tienen una representación trivial en la salida JSON, mientras que los \textbf{componentes energéticos} y \textbf{factores de paso} tienen una representación que es una traducción directa del formato de entrada indicado en los apartados correspondientes de este manual.
@@ -716,7 +727,18 @@ El \textbf{balance global} (\texttt{balance}) y el \textbf{balance global reperc
 
 En los balances globales, los indicadores de energía ponderada se expresan separando la parte renovable (\texttt{ren}) de la no renovable (\texttt{nren}).
 
-A continuación se muestra la salida en el formato JSON para el mismo caso anterior:
+La clave de \textbf{indicadores adicionales} (\texttt{misc}) contiene datos organizados como un diccionario (hashmap) de longitud no determinada (puede ser \texttt{null}) con clave y valor de tipo texto.
+
+En la versión actual del programa se emiten los siguientes valores:
+
+\begin{itemize}
+\item \texttt{fraccion\_renovable\_demanda\_acs\_nrb} - Fracción de la demanda de ACS con origen renovable considerando el perímetro próximo. Se calcula únicamente cuando se usa la opción \texttt{-{}-demanda\_anual\_acs} y se cumplen las restricciones para su cálculo en cuanto al origen de la energía usada. Se almacena como un texto que contiene un número decimal y se expresa en tanto por uno.
+\item \texttt{demanda\_anual\_acs} - Demanda anual de ACS aportada con la opcion \texttt{-{}-demanda\_anual\_acs}. Se almacena como texto y se expresa en $kWh$.
+\end{itemize}
+
+\subsubsection{Ejemplo de salida en formato JSON}
+
+A continuación se muestra la salida en el formato JSON, para el caso anterior, incluyendo la información adicional (clave \texttt{misc} distinta a \texttt{null}):
 
 \lstset{
     string=[s]{"}{"},
@@ -724,7 +746,7 @@ A continuación se muestra la salida en el formato JSON para el mismo caso anter
     comment=[l]{:},
     commentstyle=\color{black},
 }
-\lstinputlisting{../test_data/output/balance.json}
+\lstinputlisting{../test_data/output/balance_dem_acs.json}
 
 \clearpage
 \newpage
@@ -866,8 +888,6 @@ En general, se recomienda utilizar la salida en formato \textit{JSON} (\autoref{
 
 \subsection{Proceso general}
 
-El aprovechamiento de los datos generados por \texttt{cteepbd} para la verificación reglamentaria exige ejecutar el programa en varias ocasiones, variando las opciones elegidas y guardando los resultados de salida en archivos diferentes.
-
 Para la obtención de datos generales relativos al consumo de energía final, energía primaria y emisiones se realizaría la llamada:
 
 \begin{Verbatim}[fontsize=\small]
@@ -875,23 +895,16 @@ Para la obtención de datos generales relativos al consumo de energía final, en
 \end{Verbatim}
 %$
 
-Y, para el cálculo teniendo en cuenta solo el servicio de ACS y el perímetro próximo:
+Cuando se quiera obtener, además el dato de la fracción de la demanda de origen renovable, obtenida para el permímetro próximo se añadiría la opción \texttt{-{}-demanda\_anual\_acs DEM\_ACS}:
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -N -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_ACS_nrb_EP.json
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --demanda_anual_acs 2800.0 --json resultados_cteepbd_ACS_nrb_EP.json
 \end{Verbatim}
 %$
 
 En los siguientes subapartados se muestra cómo obtener información sobre los indicadores del \textit{CTE DB-HE} o la certificación energética utilizando esta salida en formato \textit{JSON}. Se hará referencia a los valores del objeto generado usando notación de punto (p.e., \texttt{balance.B.ren} se correponde al valor localizado con la clave \texttt{ren} en el objeto con clave \texttt{B} en el objeto con clave \texttt{balance}, perteneciente al objeto global).
 
 \subsection{Obtención del consumo de energía primaria no renovable y total}
-
-Estos indicadores de consumo de energía primaria se calculan usando el modo de cálculo por defecto (\texttt{-{}-modo EP}):
-
-\begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_EP.json
-\end{Verbatim}
-%$
 
 El consumo de energía primaria no renovable, en $kWh/m^2$ se obtiene como resultado directo:
 
@@ -954,6 +967,15 @@ $\texttt{balance.B\_byuse}$
 o, para valores repercutidos por la superficie útil:
 
 $\texttt{balance\_m2.B\_byuse}$
+
+\subsection{Obtención del porcentaje de la demanda con origen renovable, calculada para el perímetro próximo}
+
+Este dato se obtiene siempre que se invoque la aplicación usando la opción \texttt{-{}-demanda\_anual\_acs DEM\_ACS} y se cumplan las limitaciones que actualmente tiene el programa para su obtención (consumo de un único vector para la generación de ACS con origen distinto al \textit{in situ}).
+
+El valor del porcentaje se obtiene multiplicando por 100 el dato dado como fracción:
+
+$\%_{dem,ACS,nrb} [\%] = 100 \cdot \texttt{misc.fraccion\_renovable\_demanda\_acs\_nrb}$
+
 
 \subsection{Obtención del fragmento XML para el Certificado energético}
 
