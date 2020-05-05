@@ -1,6 +1,7 @@
 **/*.rs.bk
 /target
 /dist
+.vscode/
 test_data/output/**
 docs/auto/**
 
