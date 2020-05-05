@@ -152,15 +152,17 @@ impl Components {
             .cloned()
             .collect();
 
-        // 2. Reparte la producción de electricidad INSITU asignada a NDEF
+        // 2. Reparte la producción de electricidad INSITU y COGENERACION asignada a NDEF
         // proporcionalmente al consumo de elec. del servicio respecto al de todos los servicios
+        // TODO: habría que ver la interacción del reparto de electricidad por servicios con f_match_t, cuando se implemente
+        for el_prod_origin in &[CSubtype::INSITU, CSubtype::COGENERACION] {
         let pr_el_ndef: Vec<_> = self
             .cdata
             .iter()
             .filter(|c| {
                 c.carrier == Carrier::ELECTRICIDAD
                     && c.ctype == CType::PRODUCCION
-                    && c.csubtype == CSubtype::INSITU
+                        && c.csubtype == *el_prod_origin
                     && c.service == Service::NDEF
             })
             .collect();
@@ -186,16 +188,17 @@ impl Components {
                     cdata.push(Component {
                         carrier: Carrier::ELECTRICIDAD,
                         ctype: CType::PRODUCCION,
-                        csubtype: CSubtype::INSITU,
+                            csubtype: *el_prod_origin,
                         service,
                         values: veckmul(&c.values, fraction_pr_srv),
                         comment: format!(
-                            "{} Producción insitu proporcionalmente reasignada al servicio.",
+                                "{} Producción eléctrica proporcionalmente reasignada al servicio.",
                             c.comment
                         ),
                     })
                 }
             }
+        }
         }
 
         let cmeta = self.cmeta.clone();
