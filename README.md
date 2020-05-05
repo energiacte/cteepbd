@@ -51,9 +51,11 @@ Donde se puede apreciar el resultado del cálculo del consumo de energía primar
 
 ## Hipótesis de cálculo
 
-Se han adoptado las siguientes hipótesis de cálculo:
+Se han adoptado las siguientes hipótesis de cálculo y simplificaciones:
 
 - los factores de paso son constantes a lo largo de los pasos de cálculo
 - no se definen prioridades para la generación energética (f_we_el_stepA promedio)
 - se considera como suministrada toda la energía producida por fuentes distintas a la cogeneración
-- el factor de coincidencia de cargas se fija igual a 1.0
+- el factor de coincidencia de cargas (f_match_t) se fija igual a 1.0
+- no se asignan los consumos y producciones de energía a sistemas concretos (no son identificables)
+- el reparto de energía eléctrica producida entre servicios es proporcional al consumo eléctrico del servicio respecto al total
