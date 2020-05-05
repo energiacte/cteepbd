@@ -326,7 +326,7 @@ MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.5
 ELECTRICIDAD, CONSUMO, EPB, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
 MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
-ELECTRICIDAD, PRODUCCION, INSITU, CAL, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción insitu proporcionalmente reasignada al servicio.";
+ELECTRICIDAD, PRODUCCION, INSITU, CAL, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción eléctrica proporcionalmente reasignada al servicio.";
 
     #[test]
     fn tcomponents_parse() {
