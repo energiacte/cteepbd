@@ -334,9 +334,10 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .long("demanda_anual_acs")
             .value_name("DEM_ACS")
             .help("Demanda anual de ACS [kWh]"))
-        .arg(Arg::with_name("acsnrb")
+        .arg(Arg::with_name("acsnrb") // Obsoleto
             .short("N")
             .long("acs_nearby")
+            .hidden(true)
             .requires("archivo_componentes")
             .help("Realiza el balance considerando solo el servicio de ACS y el perímetro nearby"))
         // Simplificación de factores

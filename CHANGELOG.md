@@ -23,6 +23,11 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - no se permite el uso de electricidad cogenerada
 - Posibilidad de introducir factores de paso de exportación de electricidad cogenerada a usos no EPB
 
+### Obsoleto
+
+- Se oculta en la ayuda la opción de cálculo del balance para el perímetro próximo y para el servicio de ACS
+  Esta opción sigue, de todos modos, disponible.
+
 ### Correcciones
 
 - Al calcular la asignación por servicios se reparte también la electricidad cogenerada, además de la producida in situ
