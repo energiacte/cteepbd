@@ -596,11 +596,11 @@ fn main() {
                 demanda_renovable_acs_nrb / demanda_anual_acs;
             map.insert(
                 "demanda_anual_acs".to_string(),
-                format!("{}", demanda_anual_acs),
+                format!("{:.1}", demanda_anual_acs),
             );
             map.insert(
                 "fraccion_renovable_demanda_acs_nrb".to_string(),
-                format!("{}", porcentaje_renovable_demanda_acs_nrb),
+                format!("{:.3}", porcentaje_renovable_demanda_acs_nrb),
             );
             balance.misc = Some(map);
         }
