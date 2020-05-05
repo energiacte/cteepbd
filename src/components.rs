@@ -154,7 +154,7 @@ impl Components {
 
         // 2. Reparte la producción de electricidad INSITU y COGENERACION asignada a NDEF
         // proporcionalmente al consumo de elec. del servicio respecto al de todos los servicios
-        // TODO: habría que ver la interacción del reparto de electricidad por servicios con f_match_t, cuando se implemente
+        // TODO: ver interacción con f_match_t, cuando se implemente
         for el_prod_origin in &[CSubtype::INSITU, CSubtype::COGENERACION] {
             let pr_el_ndef: Vec<_> = self
                 .cdata
