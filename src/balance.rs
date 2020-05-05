@@ -210,7 +210,7 @@ pub fn energy_performance(
 // -------------------------
 
 /// Resultados detallados del balance energético para un vector energético
-/// 
+///
 /// Detailed results of the energy balance computation for a given carrier
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -290,7 +290,7 @@ pub struct BalanceForCarrier {
 // ///////////// By Carrier timestep and annual computations ////////////
 
 /// Calcula balance energético para un vector energético
-/// 
+///
 /// Calculate energy balance for carrier.
 ///
 /// This follows the ISO EN 52000-1 procedure for calculation of delivered,
@@ -635,7 +635,7 @@ fn balance_for_carrier(
 }
 
 /// Calcula fracción de cada uso EPB para un vector energético i
-/// 
+///
 /// Compute share of each EPB use for a given carrier i
 ///
 /// It uses the reverse calculation method (E.3.6)
