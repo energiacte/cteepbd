@@ -42,7 +42,12 @@ Utilidades para el manejo de balances energéticos para el CTE:
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
-use crate::{error::EpbdError, types::*, Balance, Factors, UserWF};
+use crate::{
+    error::EpbdError,
+    types::*,
+    vecops::{vecvecmin, vecvecsum},
+    Balance, Components, Factors, UserWF,
+};
 
 /**
 Constantes y valores generales
@@ -140,6 +145,7 @@ pub static CTE_LOCWF_RITE2014: Lazy<HashMap<&'static str, Factors>> = Lazy::new(
 
     let mut wfcym = wf;
     wfcym.set_meta("CTE_LOCALIZACION", "CEUTAMELILLA");
+    #[allow(clippy::approx_constant)]
     wfcym.wdata.push(Factor::new(
         ELECTRICIDAD,
         RED,
@@ -226,6 +232,101 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
     factors
 }
 
+#[allow(non_snake_case)]
+/// Parte renovable de la demanda de ACS considerando el perímetro próximo
+///
+/// Permite calcular el indicador de HE4 con las siguientes restricciones:
+/// - no se usa más de un vector energético que no pertenezca al perímetro in situ
+/// - no se permite consumo de electricidad cogenerada (solo la parte térmica).
+///   Si se pudiese usar electricidad y existiese cogeneración tendríamos 2 vectores no insitu (BIOMASA, ELECTRICIDAD)
+///   y, si no se usase la parte térmica, no sabríamos si tiene procedencia renovable o no.
+/// Si no fuese así, necesitaríamos conocer la demanda satisfecha por cada equipo (algo que todavía no hacemos)
+pub fn demanda_renovable_acs_nrb(
+    components: &Components,
+    wfactors: &Factors,
+) -> Result<f32, EpbdError> {
+    let get_fp_ren = |c: &Component| -> Result<f32, EpbdError> {
+        // El origen es la red, salvo para la electricidad producida in situ
+        let src = match c.carrier {
+            Carrier::ELECTRICIDAD => Source::INSITU,
+            _ => Source::RED,
+        };
+        wfactors
+            .wdata
+            .iter()
+            .find(|f| f.carrier == c.carrier && f.source == src)
+            .ok_or_else(|| {
+                EpbdError::WrongInput(format!(
+                    "No se encuentra el factor de paso para \"{}\"",
+                    c.carrier
+                ))
+            })
+            .and_then(|f| Ok(f.ren))
+    };
+
+    let components = &components.filter_by_service(Service::ACS);
+    let cr_list = &components.cdata;
+
+    // Comprobaremos que las hipótesis para poder calcular la demanda renovable se cumplen:
+    // - No puede haber consumo de más de un vector que no sea insitu (necesitaríamos rendimientos)
+    let n_cr_nearby_distant = cr_list
+        .iter()
+        .filter(|c| c.carrier != Carrier::MEDIOAMBIENTE && c.ctype == CType::CONSUMO)
+        .count();
+    if n_cr_nearby_distant > 1 {
+        return Err(EpbdError::WrongInput(
+            "Más de un vector con origen no in situ".to_string(),
+        ));
+    };
+    let exists_el_cgn = &cr_list
+        .iter()
+        .find(|c| c.ctype == CType::PRODUCCION && c.csubtype == CSubtype::COGENERACION);
+    if exists_el_cgn.is_some() {
+        return Err(EpbdError::WrongInput(
+            "Uso de electricidad cogenerada".to_string(),
+        ));
+    };
+
+    // 1. Consumo de electricidad "renovable"
+    // No podemos considerar la electricidad producida por cogeneración con biomasa porque no sabemos qué parte de la demanda
+    // se genera con cada equipo (biomasa, eléctrico)
+    let num_steps = cr_list[0].values.len();
+
+    // a. Total de consumo de electricidad para ACS, de cualquier origen
+    let E_EPus_el_t = cr_list
+        .iter()
+        .filter(|c| c.carrier == Carrier::ELECTRICIDAD)
+        .filter(|c| c.ctype == CType::CONSUMO && c.csubtype == CSubtype::EPB)
+        .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
+    // b. Total de producción de electricidad in situ asignada, en principio, a ACS
+    // La producción de cogeneración no la podemos considerar,
+    // puesto que si hay consumo eléctrico no sabemos qué parte de la demanda satisface la cogen y qué parte el sistema eléctrico
+    // Para poder calcularlo necesitaríamos saber las demandas de cada equipo
+    let E_pr_el_onsite_t = cr_list
+        .iter()
+        .filter(|c| c.carrier == Carrier::ELECTRICIDAD)
+        .filter(|c| c.ctype == CType::PRODUCCION && c.csubtype == CSubtype::INSITU)
+        .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
+    // c. Consumo efectivo de electricidad renovable en ACS (Mínimo entre el consumo y la producción in situ)
+    // Consideramos que la conversión es con rendimiento 1.0
+    // XXX: La interacción con f_match_t, si se implementa, debería ser correcta, si se ha hecho bien el reparto de electr. por servicio
+    let E_pr_el_onsite_used_EPus_an_ren: f32 =
+        vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();
+
+    // 2. Otros consumos Nearby
+    // Podemos obtener la parte renovable, con su factor de paso y
+    // suponiendo que la conversión a calor es con rendimiento 1.0
+    let E_EPus_nrb_an_ren = cr_list
+        .iter()
+        .filter(|c| c.ctype == CType::CONSUMO && CTE_NRBY.contains(&c.carrier))
+        .map(|c| Ok(c.values.iter().sum::<f32>() * get_fp_ren(c)?))
+        .collect::<Result<Vec<f32>, EpbdError>>()?
+        .iter()
+        .sum::<f32>();
+
+    Ok(E_pr_el_onsite_used_EPus_an_ren + E_EPus_nrb_an_ren)
+}
+
 /*
 Utilidades para visualización del balance
 -----------------------------------------
@@ -265,7 +366,7 @@ pub fn balance_to_plain(balance: &Balance) -> String {
         .collect::<Vec<String>>();
     b_byuse.sort();
 
-    format!(
+    let out = format!(
         "Area_ref = {:.2} [m2]
 k_exp = {:.2}
 C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
@@ -286,7 +387,32 @@ E_CO2 [kg_CO2e/m2.an]: {:.2}
         co2,
         use_byuse.join("\n"),
         b_byuse.join("\n")
-    )
+    );
+    // Añade parámetros de demanda HE4 si existen
+    if let Some(map) = &balance.misc {
+        let demanda = map
+            .get("demanda_anual_acs")
+            .and_then(|v| v.parse::<f32>().and_then(|r| Ok(format!("{:.1}", r))).ok())
+            .unwrap_or_else(|| "-".to_string());
+        let pct_ren = map
+            .get("fraccion_renovable_demanda_acs_nrb")
+            .and_then(|v| {
+                v.parse::<f32>()
+                    .and_then(|r| Ok(format!("{:.1}", r * 100.0)))
+                    .ok()
+            })
+            .unwrap_or_else(|| "-".to_string());
+        format!(
+            "{}
+** Indicadores adicionales
+Demanda total de ACS: {} [kWh]
+Porcentaje renovable de la demanda de ACS (perímetro próximo): {} [%]
+",
+            out, demanda, pct_ren
+        )
+    } else {
+        out
+    }
 }
 
 /// Muestra el balance (paso B) en formato XML

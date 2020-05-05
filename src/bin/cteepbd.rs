@@ -42,6 +42,7 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
 
 */
 
+use std::collections::HashMap;
 use std::fs::{read_to_string, File};
 use std::io::prelude::*;
 use std::path::Path;
@@ -329,6 +330,10 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
         //     .takes_value(true)
         //     .number_of_values(3))
         // Cálculo para servicio de ACS y factores en perímetro nearby
+        .arg(Arg::with_name("demanda_anual_acs")
+            .long("demanda_anual_acs")
+            .value_name("DEM_ACS")
+            .help("Demanda anual de ACS [kWh]"))
         .arg(Arg::with_name("acsnrb")
             .short("N")
             .long("acs_nearby")
@@ -566,7 +571,39 @@ fn main() {
     };
 
     // Salida de resultados -----------------------------------------------------------------------
-    if let Some(balance) = balance {
+    if let Some(mut balance) = balance {
+        // Añade información miscelánea de usuario
+        if matches.is_present("demanda_anual_acs") {
+            // Añadir a balance.misc un diccionario si no existe
+            let mut map = balance.misc.unwrap_or_else(HashMap::<String, String>::new);
+            // Añadir datos a diccionario: "demanda_anual_acs" y "porcentaje_renovable_demanda_acs_nrb"
+            let demanda_anual_acs = matches
+                .value_of("demanda_anual_acs")
+                .and_then(|v| v.parse::<f32>().ok())
+                .unwrap_or_else(|| {
+                    eprintln!("ERROR: demanda anual de ACS con formato incorrecto");
+                    exit(exitcode::DATAERR);
+                });
+            let demanda_renovable_acs_nrb = cte::demanda_renovable_acs_nrb(&components, &fpdata)
+                .unwrap_or_else(|e| {
+                    eprintln!(
+                        "ERROR: no se puede calcular la demanda renovable de ACS \"{}\"",
+                        e
+                    );
+                    exit(exitcode::DATAERR);
+                });
+            let porcentaje_renovable_demanda_acs_nrb =
+                demanda_renovable_acs_nrb / demanda_anual_acs;
+            map.insert(
+                "demanda_anual_acs".to_string(),
+                format!("{}", demanda_anual_acs),
+            );
+            map.insert(
+                "fraccion_renovable_demanda_acs_nrb".to_string(),
+                format!("{}", porcentaje_renovable_demanda_acs_nrb),
+            );
+            balance.misc = Some(map);
+        }
         // Guardar balance en formato json
         if matches.is_present("archivo_salida_json") {
             let path = matches.value_of_os("archivo_salida_json").unwrap();

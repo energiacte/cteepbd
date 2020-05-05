@@ -69,6 +69,8 @@ pub struct Balance {
     pub balance: BalanceTotal,
     /// Global energy balance results expressed as area ratios
     pub balance_m2: BalanceTotal,
+    /// Generic miscelaneous user provided data
+    pub misc: Option<HashMap<String, String>>,
 }
 
 /// Resultados del balance global (todos los vectores), en valor absoluto o por m2.
@@ -94,7 +96,7 @@ pub struct BalanceTotal {
 }
 
 /// Calcula enficiencia energética agregando resultados por vector energético
-/// 
+///
 /// Compute overall energy performance by aggregating results from all energy carriers.
 ///
 /// * `components` - energy components
@@ -203,6 +205,7 @@ pub fn energy_performance(
         balance_cr,
         balance,
         balance_m2,
+        misc: None,
     })
 }
 

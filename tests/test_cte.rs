@@ -767,3 +767,89 @@ fn cte_balance_byuse() {
 
     assert_eq!(result, bal.balance_m2.B_byuse);
 }
+
+// Tests para demanda renovable de ACS
+
+/// Efecto Joule con 60% PV (100kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_joule_60pv() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,100
+ELECTRICIDAD,PRODUCCION,INSITU,ACS,60"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
+    assert_eq!(format!("{:.1}", demanda_ren_acs), "60.0");
+}
+
+/// Gas natural (fp_nren = 1.1, con rend=0.9) y 60% de cobertura solar (100kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_gn_60pst() {
+    let comps = "GASNATURAL,CONSUMO,EPB,ACS,44.44
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
+    assert_eq!(format!("{:.1}", demanda_ren_acs), "60.0");
+}
+
+/// Bomba de calor (SCOP=2.5) (100kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_bdc_60ma() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
+    assert_eq!(format!("{:.1}", demanda_ren_acs), "60.0");
+}
+
+/// Bomba de calor (SCOP=2.5) (100kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,60
+ELECTRICIDAD,PRODUCCION,INSITU,NDEF,10"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
+    assert_eq!(format!("{:.1}", demanda_ren_acs), "70.0");
+}
+
+/// Bomba de calor (SCOP=2.5) con electricidad cogenerada (100kWh demanda ACS)
+// Caso no cubierto, al definirse cogeneración (solo permitimos la parte térmica)
+// Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
+#[test]
+fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,60
+ELECTRICIDAD,PRODUCCION,COGENERACION,ACS,10"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP);
+    assert!(demanda_ren_acs.is_err());
+}
+
+/// Bomba de calor (SCOP=2.5) y 25% caldera de GN (rend. 0.9) (100kWh demanda ACS)
+// Falla al haber más de un suministro de red que no es insitu
+#[test]
+fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,30.0
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,45
+GASNATURAL,CONSUMO,EPB,ACS,27.88"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP);
+    assert!(demanda_ren_acs.is_err());
+}
