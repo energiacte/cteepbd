@@ -103,6 +103,7 @@ bundle: release docs examples
 	$(info [INFO]: Generando archivo .zip de distribución)
 	cp LICENSE dist/LICENSE
 	cp README.md dist/README.md
+	cp CHANGELOG.md dist/CHANGELOG.md
 	-cd dist && [ -e $(OUTBUNDLE) ] && mv $(OUTBUNDLE) $(OUTBUNDLEBAK)
 	cd dist && zip -r $(OUTBUNDLE) ./*
 
