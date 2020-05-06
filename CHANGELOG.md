@@ -13,7 +13,7 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
-## [Sin publicar] - 2020-05-xx
+## [0.16.0] - 2020-05-06
 
 ### Novedades
 
