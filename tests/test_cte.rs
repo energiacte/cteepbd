@@ -726,7 +726,7 @@ fn cte_new_services_format() {
 fn cte_new_services_format_ACS() {
     // Igual que N_R09, y usamos valores por defecto en función de normalize
     let comps =
-        components_from_file("test_data/newServicesFormat.csv").filter_by_service(Service::ACS);
+        components_from_file("test_data/newServicesFormat.csv").filter_by_epb_service(Service::ACS);
     let FP = get_ctefp_peninsula();
     let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
     assert!(approx_equal(
@@ -809,12 +809,28 @@ MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
     assert_eq!(format!("{:.1}", demanda_ren_acs), "60.0");
 }
 
-/// Bomba de calor (SCOP=2.5) (100kWh demanda ACS)
+/// Bomba de calor (SCOP=2.5) + 10kWh PV (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
     let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
 MEDIOAMBIENTE,CONSUMO,EPB,ACS,60
 ELECTRICIDAD,PRODUCCION,INSITU,NDEF,10"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
+    assert_eq!(format!("{:.1}", demanda_ren_acs), "70.0");
+}
+
+/// Bomba de calor (SCOP=2.5) + 10kWh PV con 5kWh consumo eléctrico NEPB (100kWh demanda ACS)
+/// Debería dar igual el tipo de uso definido para NEPB
+#[test]
+fn cte_ACS_demanda_ren_bdc_60ma_10pv_nEPB() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,60
+ELECTRICIDAD,PRODUCCION,INSITU,NDEF,10
+ELECTRICIDAD,CONSUMO,NEPB,NDEF,40.0"
         .parse::<Components>()
         .unwrap()
         .normalize();

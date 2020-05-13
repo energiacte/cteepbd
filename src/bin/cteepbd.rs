@@ -384,7 +384,7 @@ fn main() {
 
     // Cálculo para servicio de ACS en nearby
     if matches.is_present("acsnrb") {
-        components = components.filter_by_service(Service::ACS);
+        components = components.filter_by_epb_service(Service::ACS);
     }
 
     if verbosity > 1 && !components.cmeta.is_empty() {

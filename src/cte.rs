@@ -264,7 +264,7 @@ pub fn demanda_renovable_acs_nrb(
             .and_then(|f| Ok(f.ren))
     };
 
-    let components = &components.filter_by_service(Service::ACS);
+    let components = &components.filter_by_epb_service(Service::ACS);
     let cr_list = &components.cdata;
 
     // Comprobaremos que las hipótesis para poder calcular la demanda renovable se cumplen:
