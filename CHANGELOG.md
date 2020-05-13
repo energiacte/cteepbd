@@ -14,11 +14,11 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
 
-## [unreleased]
+## [0.17.0] - 2020-05-13
 
 ### Correcciones
 
-- Se considera correctamente el consumo eléctrico No EPB en los repartos por servicios
+- Corrección del reparto de la producción eléctrica por servicios en presencia de consumos No EPB
 
 ## [0.16.0] - 2020-05-06
 
