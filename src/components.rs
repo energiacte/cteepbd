@@ -184,15 +184,6 @@ impl Components {
             let E_EPus_el_t_tot = E_EPus_el_t
                 .clone()
                 .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
-            let E_pr_el_t_tot = E_pr_el_t
-                .clone()
-                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
-
-            // Energía eléctrica producida y consumida en usos EPB
-            // let f_match_t = vec![1.0; num_steps]; // TODO: implementar f_match_t
-            
-            // let E_pr_el_used_EPus_t =
-            //     vecvecmul(&f_match_t, &vecvecmin(&E_EPus_el_t_tot, &E_pr_el_t_tot));
 
             // Fracción del consumo EPB que representa el servicio srv
             let E_srv_el_t_tot = E_srv_el_t
