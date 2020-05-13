@@ -175,11 +175,8 @@ impl Components {
         });
 
         // Energía eléctrica consumida en el servicio srv
-        let E_srv_el_an: f32 = E_EPus_el_t
-            .clone()
-            .filter(|c| c.service == service)
-            .flat_map(|c| c.values.iter())
-            .sum();
+        let E_srv_el_t = E_EPus_el_t.clone().filter(|c| c.service == service);
+        let E_srv_el_an: f32 = E_srv_el_t.clone().flat_map(|c| c.values.iter()).sum();
 
         // Si hay consumo y producción de electricidad, se reparte el consumo
         if E_srv_el_an > 0.0 && E_pr_el_an > 0.0 {
@@ -198,8 +195,14 @@ impl Components {
             //     vecvecmul(&f_match_t, &vecvecmin(&E_EPus_el_t_tot, &E_pr_el_t_tot));
 
             // Fracción del consumo EPB que representa el servicio srv
-            // FIXME: esto debe ser paso a paso y no anual
-            let f_srv: f32 = E_srv_el_an / E_EPus_el_t_tot.iter().sum::<f32>();
+            let E_srv_el_t_tot = E_srv_el_t
+                .clone()
+                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
+            let f_srv_t = E_srv_el_t_tot
+                .iter()
+                .zip(E_EPus_el_t_tot)
+                .map(|(v, t)| if v.abs() < f32::EPSILON { 0.0 } else { v / t })
+                .collect::<Vec<_>>();
 
             // Repartimos la producción eléctrica proporcionalemente
             // FIXME: Aquí podría haber un exceso de producción, por encima del consumo. Ver.
@@ -207,10 +210,17 @@ impl Components {
                 // Fracción de la producción total que corresponde al generador i
                 let f_pr_el_i: f32 = E_pr_el_i.values.iter().sum::<f32>() / E_pr_el_an;
 
-                E_pr_el_i.values = veckmul(&E_pr_el_i.values, f_pr_el_i * f_srv);
+                E_pr_el_i.values = E_pr_el_i
+                    .values
+                    .iter()
+                    .zip(&f_srv_t)
+                    .map(|(v, f_srv)| v * f_pr_el_i * f_srv)
+                    .collect();
                 E_pr_el_i.service = service;
-                E_pr_el_i.comment =
-                    format!("{} Producción eléctrica reasignada al servicio", E_pr_el_i.comment);
+                E_pr_el_i.comment = format!(
+                    "{} Producción eléctrica reasignada al servicio",
+                    E_pr_el_i.comment
+                );
                 cdata_srv.push(E_pr_el_i);
             }
         }

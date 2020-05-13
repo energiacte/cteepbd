@@ -155,6 +155,6 @@ fn ejemplo_testcarriers_loc_nearby() {
             "--acs_nearby",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 9.2, nren = 4.9, tot = 14.0, RER = 0.65")
+        .contains("C_ep [kWh/m2.an]: ren = 9.2, nren = 4.7, tot = 13.9, RER = 0.66")
         .unwrap();
 }
