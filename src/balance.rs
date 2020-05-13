@@ -402,6 +402,8 @@ fn balance_for_carrier(
     // Implementation WITHOUT priorities on energy use
 
     // * Fraction of produced energy of type i (origin from generator i) (formula 14)
+    // FIXME: ¿El factor de reparto debería hacerse para cada componente de ese tipo y no agrupado por tipo
+    // FIXME: aunque la agrupación por tipo sea útil para ver orígenes?
     let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
     for gen in &pr_generators {
         let f = if E_pr_cr_an > 1e-3 {
