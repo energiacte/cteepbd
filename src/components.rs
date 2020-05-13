@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{CSubtype, CType, Carrier, Component, Meta, MetaVec, Service},
-    vecops::{veckmul, veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
+    vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
 
 /// Lista de datos de componentes con sus metadatos
@@ -191,18 +191,27 @@ impl Components {
                 .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
             let f_srv_t = E_srv_el_t_tot
                 .iter()
-                .zip(E_EPus_el_t_tot)
+                .zip(&E_EPus_el_t_tot)
                 .map(|(v, t)| if v.abs() < f32::EPSILON { 0.0 } else { v / t })
                 .collect::<Vec<_>>();
 
-            // Repartimos la producción eléctrica proporcionalemente
-            // FIXME: Aquí podría haber un exceso de producción, por encima del consumo. Ver.
+            // Repartimos la producción eléctrica
+
+            // Energía eléctrica producida y consumida en usos EPB, corregida por f_match_t
+            let f_match_t = vec![1.0; num_steps]; // TODO: implementar f_match_t
+            let E_pr_el_t_tot = E_pr_el_t
+                .clone()
+                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
+            let E_pr_el_used_EPus_t =
+                vecvecmul(&f_match_t, &vecvecmin(&E_EPus_el_t_tot, &E_pr_el_t_tot));
+
+            // Para cada generador i
             for mut E_pr_el_i in E_pr_el_t.cloned() {
                 // Fracción de la producción total que corresponde al generador i
                 let f_pr_el_i: f32 = E_pr_el_i.values.iter().sum::<f32>() / E_pr_el_an;
 
-                E_pr_el_i.values = E_pr_el_i
-                    .values
+                // Reparto proporcional a la producción del generador i y al consumo del servicio srv
+                E_pr_el_i.values = (&E_pr_el_used_EPus_t)
                     .iter()
                     .zip(&f_srv_t)
                     .map(|(v, f_srv)| v * f_pr_el_i * f_srv)
@@ -348,6 +357,20 @@ MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.7
 MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
 ELECTRICIDAD, PRODUCCION, INSITU, CAL, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción eléctrica reasignada al servicio";
 
+    // La producción se debe repartir al 50% entre los usos EPB y sin excesos
+    const TCOMPS2: &str = "#META CTE_AREAREF: 1.0
+ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 2.00, 6.00, 2.00
+ELECTRICIDAD, CONSUMO, EPB, REF, 1.00, 1.00, 1.00
+ELECTRICIDAD, CONSUMO, EPB, CAL, 1.00, 2.00, 1.00
+MEDIOAMBIENTE, CONSUMO, EPB, CAL, 2.00, 2.00, 2.00";
+
+    const TCOMPSRES3: &str = "#META CTE_AREAREF: 1.0
+#META CTE_SERVICIO: CAL
+ELECTRICIDAD, CONSUMO, EPB, CAL, 1.00, 2.00, 1.00
+MEDIOAMBIENTE, CONSUMO, EPB, CAL, 2.00, 2.00, 2.00
+MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 2.00, 2.00, 2.00 # Equilibrado de consumo sin producción declarada
+ELECTRICIDAD, PRODUCCION, INSITU, CAL, 1.00, 2.00, 1.00 #  Producción eléctrica reasignada al servicio";
+
     #[test]
     fn tcomponents_parse() {
         let tcomps = TCOMPS1.parse::<Components>().unwrap();
@@ -369,5 +392,15 @@ ELECTRICIDAD, PRODUCCION, INSITU, CAL, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64,
             .normalize()
             .filter_by_epb_service(Service::CAL);
         assert_eq!(tcompsnormfilt.to_string(), TCOMPSRES2);
+    }
+
+    #[test]
+    fn tcomponents_filter_by_epb_service_prod_excess() {
+        let tcompsnormfilt = TCOMPS2
+            .parse::<Components>()
+            .unwrap()
+            .normalize()
+            .filter_by_epb_service(Service::CAL);
+        assert_eq!(tcompsnormfilt.to_string(), TCOMPSRES3);
     }
 }
