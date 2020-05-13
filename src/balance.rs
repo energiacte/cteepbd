@@ -305,8 +305,15 @@ pub struct BalanceForCarrier {
 ///
 /// # Errors
 ///
-/// * Missing weighting factors for a carrier, origin, destination or calculation step
+/// * Missing weighting factors for a carrier, origin type, destination or calculation step
 ///
+/// TODO:
+/// - Ahora mismo nosotros consideramos únicamente la existencia de dos orígenes de generación:
+///   insitu y cogeneración, sin diferenciar generadores individuales. Es decir, consideramos que hay
+///   dos generadores como mucho. La norma hace el reparto de la energía producida (14) por generador i
+///   y si implementamos el soporte generador a generador habría que revisar esto. En particular,
+///   cómo se calcula f_pr_cr_i.
+/// - Implementar factor de reparto de carga f_match_t
 #[allow(non_snake_case)]
 fn balance_for_carrier(
     carrier: Carrier,
