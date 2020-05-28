@@ -1,26 +1,30 @@
 [package]
 name = "cteepbd"
-version = "0.9.3"
+version = "0.17.1-alpha.0"
 authors = ["Rafael Villar Burke <pachi@ietcc.csic.es>"]
 edition = "2018"
+description = "Computation of energy balance of buildings according to UNE-EN ISO 52000-1:2017 to comply with CTE DB-HE 2018"
+repository = "https://github.com/energiacte/cteepbd"
+readme = "README.md"
+keywords = ["buildings", "energy", "CTE", "DB-HE", "NZEB"]
+categories = ["command-line-utilities", "science"]
+license = "MIT"
 
 [dependencies]
-clap = "2.32.0"
+clap = "2.33.0"
 exitcode = "1.1.2"
-failure = "0.1.2"
-itertools = "0.7.8"
-num= "0.2.0"
-serde = "1.0.72"
-serde_json = "1.0.26"
-serde_derive = "1.0.72"
-strum = "0.10.0"
-strum_macros = "0.10.0"
+num= "0.2.1"
+once_cell = "1.3.1"
+serde = { version = "1.0.106", features = ["derive"] }
+serde_json = "1.0.52"
 
 [dev-dependencies]
-pretty_assertions = "0.5.1"
+pretty_assertions = "0.6.1"
 assert_cli = "0.6.3"
 
-#[profile.release]
-#debug = true
-#opt-level = "z"
-#lto = true
+[profile.release]
+panic = "abort"
+lto = true
+codegen-units = 1
+incremental = false
+opt-level = "z"

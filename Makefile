@@ -14,6 +14,15 @@ test:
 	#cargo test -- nocapture
 	cargo test
 
+mintest:
+	$(info [INFO]: Ejemplos de prueba mínimos)
+	${BUILDDIR}/${SCRIPT} --help
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 0.331 --red1 0 1.3 0.252 --red2 0 1.3 0.252
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA
+	${BUILDDIR}/${SCRIPT} -c ${TESTCARRIERS} -l PENINSULA --acs_nearby
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --demanda_anual_acs 2800.0
+
 run:
 	$(info [INFO]: Ejecutando versión de depuración)
 	cargo run
@@ -29,6 +38,13 @@ linux:
 win32:
 	$(info [INFO]: Versión de producción para i686-pc-windows-gnu)
 	cargo build --release --target=i686-pc-windows-gnu
+
+fixcross:
+	$(info [INFO]: Reparando compilación cruzada desde linux a i686-pc-windows-gnu)
+	sudo aptitude install -y mingw-w64 mingw-w64-tools
+	cp /usr/i686-w64-mingw32/lib/crt2.o ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/i686-pc-windows-gnu/lib/
+	cp /usr/i686-w64-mingw32/lib/dllcrt2.o ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/i686-pc-windows-gnu/lib/
+	cp /usr/i686-w64-mingw32/lib/libmsvcrt.a ~/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/i686-pc-windows-gnu/lib/
 
 release: linux win32
 	$(info [INFO]: Compilando versión de producción)
@@ -47,13 +63,7 @@ bloat:
 	cargo bloat --release -n 10
 	cargo bloat --release --crates -n 10
 
-cteepbd: build
-	$(info [INFO]: Ejemplos de prueba mínimos)
-	${BUILDDIR}/${SCRIPT} --help
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 --red1 0 1.3 --red2 0 1.3
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA
-	${BUILDDIR}/${SCRIPT} -c ${TESTCARRIERS} -l PENINSULA --acs_nearby
+cteepbd: build mintest
 
 FPTEST=test_data/factores_paso_test.csv
 docexamples: linux
@@ -73,6 +83,7 @@ docexamples: linux
 	target/release/cteepbd -c $(TESTCARRIERS) -f $(FPTEST) > $(TESTDIR)/output/cte_test_carriers.out
 	target/release/cteepbd -N -c $(TESTCARRIERS) -l PENINSULA > $(TESTDIR)/output/cte_test_carriers_ACS.out
 	target/release/cteepbd -c $(TESTCARRIERS) -l PENINSULA --json "$(TESTDIR)/output/balance.json" --xml "$(TESTDIR)/output/balance.xml" > "$(TESTDIR)/output/balance.plain"
+	target/release/cteepbd -c ${TESTCARRIERS} -l PENINSULA --demanda_anual_acs 2800.0 --json "$(TESTDIR)/output/balance_dem_acs.json" > "$(TESTDIR)/output/cte_test_carriers_dem_ACS.out"
 
 docs: docexamples docs/Manual_cteepbd.tex
 	$(info [INFO]: Generando manual)
@@ -92,5 +103,10 @@ bundle: release docs examples
 	$(info [INFO]: Generando archivo .zip de distribución)
 	cp LICENSE dist/LICENSE
 	cp README.md dist/README.md
-	-cd dist && [ -f $(OUTBUNDLE) ] && mv $(OUTBUNDLE) $(OUTBUNDLEBAK)
+	cp CHANGELOG.md dist/CHANGELOG.md
+	-cd dist && [ -e $(OUTBUNDLE) ] && mv $(OUTBUNDLE) $(OUTBUNDLEBAK)
 	cd dist && zip -r $(OUTBUNDLE) ./*
+
+genjson:
+	cargo run -- -c $(TESTCARRIERS) -l PENINSULA --json "prueba.json"
+

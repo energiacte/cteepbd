@@ -155,6 +155,22 @@ fn ejemplo_testcarriers_loc_nearby() {
             "--acs_nearby",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 9.2, nren = 4.9, tot = 14.0, RER = 0.65")
+        .contains("C_ep [kWh/m2.an]: ren = 9.2, nren = 4.7, tot = 13.9, RER = 0.66")
+        .unwrap();
+}
+
+#[test]
+fn ejemplo_acs_demanda_ren_con_nepb() {
+    assert_cli::Assert::main_binary()
+        .with_args(&[
+            "-c",
+            "test_data/acs_demanda_ren_con_nepb.csv",
+            "-l",
+            "PENINSULA",
+            "--demanda_anual_acs",
+            "1823.8",
+        ])
+        .stdout()
+        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 77.3 [%]")
         .unwrap();
 }

@@ -1,5 +1,5 @@
-// Copyright (c) 2018 Ministerio de Fomento
-//                    Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
+// Copyright (c) 2018-2019  Ministerio de Fomento
+//                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,15 @@
 // SOFTWARE.
 
 // Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>,
-//            Daniel Jiménez González <dani@ietcc.csic.es>
+//            Daniel Jiménez González <dani@ietcc.csic.es>,
+//            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-// -----------------------------------------------------------------------------------
-// Vector utilities
-// -----------------------------------------------------------------------------------
+/*!
+Vector utilities
+================
+
+Helper utilities for vector handling, mostly elementwise ops.
+*/
 
 use num::{Float, Zero};
 use std::iter::Sum;
@@ -147,6 +151,6 @@ mod tests {
 
     #[test]
     fn vecops_vecsum() {
-        assert_eq!(9.0, vecsum(&[2.0, 3.0, 4.0]));
+        assert!(f32::abs(9.0 - vecsum(&[2.0, 3.0, 4.0])) < f32::EPSILON);
     }
 }

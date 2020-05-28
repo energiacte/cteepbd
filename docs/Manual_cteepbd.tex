@@ -86,8 +86,8 @@ boxrule=0pt,boxsep=0pt,breakable}
 
 \lstdefinelanguage{ctepebd}
 {
-morekeywords={ELECTRICIDAD,BIOCARBURANTE,BIOMASA,CARBON,FUELOIL,GASNATURAL,GASOLEO,GLP,MEDIOAMBIENTE,BIOMASADENSIFICADA,RED1,RED2},
-morekeywords={[2]PRODUCCION,CONSUMO,EPB,NEPB,RED,INSITU,A,B,COGENERACION,input,to_grid,to_nEPB,ACS,CAL,REF,VEN,HU,DHU,ILU,NDEF},
+morekeywords={ELECTRICIDAD,BIOCARBURANTE,BIOMASA,CARBON,GASNATURAL,GASOLEO,GLP,MEDIOAMBIENTE,BIOMASADENSIFICADA,RED1,RED2},
+morekeywords={[2]PRODUCCION,CONSUMO,EPB,NEPB,RED,INSITU,A,B,COGENERACION,SUMINISTRO,A_RED,A_NEPB,ACS,CAL,REF,VEN,HU,DHU,ILU,NDEF},
 sensitive=false,
 morecomment=[l][\color{mygray}]{\#},
 morecomment=[l][\color{Coral4}]{\#META}
@@ -178,10 +178,10 @@ para su aplicación al CTE DB-HE (procedimiento EN ISO 52000-1) y formatos de da
 \begin{center} \footnotesize
 
 \fbox{\parbox{.75\textwidth}{
-\textbf{\copyright ~ 2018 Ministerio de Fomento}\\
-\textbf{\phantom{\copyright ~ 2018 }Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)}\\[5pt]
+\textbf{\copyright ~ 2018-2019 Ministerio de Fomento}\\
+\textbf{\phantom{\copyright ~ 2018-2019 }Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)}\\[5pt]
 \textbf{Autores}:\\[5pt]
-\-\qquad Grupo de Energética Edificatoria y Sostenibilidad de la Unidad de Calidad en la Construcción:\\
+\-\qquad Grupo de Energética Edificatoria y Sostenibilidad de la Unidad de Calidad en la Construcción (IETcc-CSIC):\\
 \-\qquad Rafael Villar Burke \href{mailto:pachi@ietcc.csic.es}{<pachi@ietcc.csic.es>}\\
 \-\qquad Daniel Jiménez González \href{mailto:danielj@ietcc.csic.es}{<danielj@ietcc.csic.es>}\\
 \-\qquad Marta Sorribes Gil \href{mailto:msorribes@ietcc.csic.es}{<msorribes@ietcc.csic.es>}
@@ -204,7 +204,7 @@ Este manual documenta el programa \texttt{cteepbd}, elaborado por el \textit{Ins
 
 El objetivo del programa es facilitar la aplicación de la metodología al \textit{Documento Básico de Ahorro de Energía} del \textit{Código Técnico de la Edificación} (\textit{CTE DB-HE}) y la adaptación de las herramientas de evaluación de la eficiencia energética.
 
-El manual describe la interfaz de usuario del programa \textit{cteepbd} y el formato de los archivos de datos de entrada y salida. Los datos de entrada incluyen los valores de producción y consumo energético del edificio, así como los factores de paso empleados para el cálculo, y los de salida, el consumo de energía primaria no renovable y consumo de energía primaria total, entre otros.
+El manual describe la interfaz de usuario del programa \textit{cteepbd} y el formato de los archivos de datos de entrada y salida. Los datos de entrada incluyen los valores de producción y consumo energético del edificio, así como los factores de paso empleados para el cálculo, y los de salida, el consumo de energía primaria no renovable, consumo de energía primaria total, emisiones de CO2, entre otros.
 
 El programa calcula la energía suministrada al edificio (desde redes de abastecimiento o producida \textit{in situ}) y la energía exportada (a la red y a usos no EPB) para obtener diversos indicadores de la eficiencia energética del edificio, expresada como energía ponderada, tomando en consideración los factores de paso de los distintos vectores energéticos y el factor de exportación ($k_{exp}$).
 
@@ -225,38 +225,33 @@ The application evaluates both the delivered and exported energy according to th
 
 \subsection{Uso básico}
 
-La interacción con el programa se produce invocando el mismo (\texttt{cteepbd} o \texttt{cteepbd.exe} en sistemas Windows) a través de la línea de comandos del sistema operativo (señalada con \$ en este texto) y añadiendo los parámetros deseados, incluyendo al menos el archivo con los componentes energéticos\footnote{Estos datos se obtienen a partir de los resultados de un programa de evaluación de la eficiencia energética}, y los factores de paso, del siguiente modo:
+La interacción con el programa (\texttt{cteepbd}, o \texttt{cteepbd.exe} en sistemas Windows) se produce a través de la línea de comandos (señalada con \$ en este texto) indicando los parámetros deseados, que han de incluir al menos el archivo con los componentes energéticos\footnote{Estos datos se obtienen a partir de los resultados de un programa de evaluación de la eficiencia energética.} y los factores de paso:
 
 \begin{Verbatim}[fontsize=\small]
 	$ cteepbd -c test_data/cte_test_carriers.csv -l PENINSULA
 \end{Verbatim}
 %$
 
-La salida puede redirigirse a un archivo del siguiente modo:
-
-\begin{Verbatim}[fontsize=\small]
-	$ cteepbd -c test_data/cte_test_carriers.csv -l PENINSULA > balance.txt
-\end{Verbatim}
-%$
-
-La ejecución del programa realiza el procesado del archivo de componentes energéticos
-(\texttt{cte\_test\_carriers.csv} en el ejemplo) y emite los resultados  del cálculo del balance de energía primaria (paso B) por pantalla:
+La ejecución del programa procesa el archivo de componentes energéticos
+(\texttt{cte\_test\_carriers.csv} en el ejemplo) y emite los resultados por pantalla (balance de energía primaria y emisiones (paso B) en el ejemplo):
 
 \VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers.out}
 
-De forma análoga, se podrían obtener los resultados referidos únicamente al servicio de ACS y para factores de paso considerando el perímetro próximo (comprobación de fracción renovable para el servicio de ACS):
+De forma análoga, el programa permite obtener los resultados anteriores, incrementados con la fracción renovable de la demanda de ACS, obtenida considerando el perímetro próximo, del siguiente modo:
 
 \begin{Verbatim}[fontsize=\small]
-	$ cteepbd --acs_nearby -c test_data/cte_test_carriers.csv -l PENINSULA > balance.txt
+	$ cteepbd -c test_data/cte_test_carriers.csv -l PENINSULA --demanda_total_acs 2800 > balance_acs.txt
 \end{Verbatim}
 %$
 
-\VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers_ACS.out}
+\VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/cte_test_carriers_dem_ACS.out}
 
 
 \clearpage
 \newpage
-\subsection{Ayuda del programa y uso detallado}
+\subsection{Uso detallado}
+
+\subsubsection{Ayuda del programa}
 La llamada al programa sin ningún parámetro o con las opciones \texttt{-h} o \texttt{-{}-help} muestra la ayuda:
 
 \begin{Verbatim}[fontsize=\small]
@@ -267,7 +262,9 @@ La llamada al programa sin ningún parámetro o con las opciones \texttt{-h} o \
 \VerbatimInput[fontsize=\small, frame=lines, rulecolor=\color{gray}]{../test_data/output/salida_ayuda.txt}
 
 \begin{myquote}\footnotesize
-Aunque el programa está concebido para calcular la eficiencia energética con factores de paso y factor exportación arbitrarios, emplea de manera predeterminada valores normativos. Los resultados obtenidos solamente tienen sentido para la justificación de valores normativos si se utilizan con los parámetros adecuados.
+Aunque el programa está concebido para calcular la eficiencia energética con factores de paso y factor exportación arbitrarios, emplea de manera predeterminada valores normativos.
+
+Los resultados obtenidos solamente tienen sentido para la justificación de valores normativos si se utilizan con los parámetros adecuados.
 \end{myquote}
 
 \subsubsection{Argumentos de definición de los datos de entrada}
@@ -295,29 +292,39 @@ Alternativamente, estos factores de paso pueden definirse mediante una localizac
 
 Este argumento indica los factores de paso para el cálculo de la eficiencia energética a partir de una localización. Puede tomar los valores \texttt{PENINSULA}, \texttt{CANARIAS}, \texttt{BALEARES} o \texttt{CEUTAMELILLA} para generar los factores de paso reglamentarios correspondientes a dichas zonas \footnote{El \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016 contiene los valores aplicables en cada uno de los casos.}.
 
-\textbf{\texttt{-N, -{}-acs\_nearby}}
+%\textbf{\texttt{-N, -{}-acs\_nearby}}
+%
+%Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}).
 
-Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}). Este cálculo está orientado a la obtención de la fracción de energía renovable para uso de ACS para el perímetro próximo (\textit{RER}).
+\textbf{\texttt{-{}-cogen COGEN\_ren COGEN\_nren COGEN\_co2}}
 
-\textbf{\texttt{-{}-cogengrid COGENGRID COGENGRID}}
+Este argumento indica los 3 factores de exportación a la red (parte renovable, parte no renovable y emisiones) de la electricidad cogenerada. Estos factores no necesariamente se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
-Este argumento indica los 2 factores de exportación a la red (parte renovable y parte no renovable) de la electricidad cogenerada. Estos factores no se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario.
+El ejemplo \texttt{-{}-cogen 0 2.5 0.3} indica que el factor de paso de exportación a la red es de 0 para la parte renovable, de 2.5 para la no renovable y de 0.3 para las emisiones.
 
-El ejemplo \texttt{-{}-cogengrid 0 2.5} indica que el factor de paso de exportación a la red es de 0 para la parte renovable y de 2.5 para la no renovable.
+\textbf{\texttt{-{}-cogen COGENNEPB\_ren COGENNEPB\_nren COGENNEPB\_co2}}
 
-\textbf{\texttt{-{}-red1 RED1 RED1}}
+Este argumento indica los 3 factores de exportación a usos no EPB (parte renovable, parte no renovable y emisiones) de la electricidad cogenerada. Estos factores no necesariamente se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
-Este argumento indica los 2 factores de paso del vectores energético \texttt{RED1} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red.
+El ejemplo \texttt{-{}-cogennepb 0 2.5 0.3} indica que el factor de paso de exportación a la red es de 0 para la parte renovable, de 2.5 para la no renovable y de 0.3 para las emisiones.
 
-El ejemplo \texttt{-{}-red1 0 1.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED1} son 0 (parte renovable) y 1.3 (parte no renovable).
+\textbf{\texttt{-{}-red1 RED1\_ren RED1\_nren RED1\_co2}}
 
-\textbf{\texttt{-{}-red2 RED2 RED2}}
+Este argumento indica los 3 factores de paso del vectores energético \texttt{RED1} (paso a energía renovable, paso a energía renovable y emisiones). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
 
-Este argumento indica los 2 factores de paso del vectores energético \texttt{RED2} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red.
+El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED1} son 0 (parte renovable), 1.3 (parte no renovable) y 0.3 (emisiones).
 
-El ejemplo \texttt{-{}-red1 0 1.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED2} son 0 (parte renovable) y 1.3 (parte no renovable).
+\textbf{\texttt{-{}-red2 RED2\_ren RED2\_nren RED2\_co2}}
 
-\subsubsection{Argumentos de definición de valores intermedios}
+Este argumento indica los 3 factores de paso del vectores energético \texttt{RED2} (paso a energía renovable y paso a energía renovable). Este vector resulta útil para modelizar redes de distrito de calor y/o frío y no pueden deducirse de la localización del edificio, siendo por tanto definidos por el usuario a partir de las características técnicas de la red. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
+
+El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable y no renovable del vector \texttt{RED2} son 0 (parte renovable), 1.3 (parte no renovable) y 0.3 (emisiones).
+
+\textbf{\texttt{-{}-demanda\_anual\_acs <DEM\_ACS>}}
+
+Este argumento indica la demanda total anual para el servicio de agua caliente sanitaria (ACS), en  $kWh$, usado para calcular el porcentaje de la demanda de ACS de origen renovable en el perímetro próximo. Permite el cálculo del indicador de la sección 4 del DB-HE. Este cálculo puede realizarse solo en aquellos casos en los que no se utiliza para producir ACS más de un vector con procedencia distinta a la de la parcela (in situ).
+
+\subsubsection{Argumentos de salida de valores de entrada modificados}
 
 Estos argumentos permiten obtener una salida en archivos de texto del procesado inicial de los datos de entrada.
 
@@ -335,9 +342,13 @@ Este argumento indica la ruta de salida del archivo con los factores de paso gen
 
 Este argumento indica la ruta de salida de un archivo en formato JSON con la información detallada del cálculo de la eficiencia energética. Las propiedades definidas en el objeto se detallan en el apartado \nameref{sec:formatosalida}.
 
+\textbf{\texttt{-{}-txt ARCHIVO\_SALIDA\_TXT}}
+
+Este argumento indica la ruta de salida de un archivo en formato de texto plano, con información general del cálculo de la eficiencia energética. Las propiedades definidas en el objeto se detallan en el apartado \nameref{sec:formatosalida}.
+
 \textbf{\texttt{-{}-xml ARCHIVO\_SALIDA\_XML}}
 
-Este argumento indica la ruta de salida de un archivo en formato XML con la información del cálculo de la eficiencia energética. El formato se detalla en el apartado \nameref{sec:formatosalida}.
+Este argumento indica la ruta de salida de un archivo en formato XML, con información básica del cálculo de la eficiencia energética. El formato se detalla en el apartado \nameref{sec:formatosalida}.
 
 \subsubsection{Otros argumentos}
 
@@ -377,12 +388,12 @@ Para el archivo de definición de los componentes energéticos se establecen las
 \item \texttt{CTE\_AREAREF}: valor numérico que indica el área de referencia (superficie útil);
 \item \texttt{CTE\_KEXP}; valor numérico que indica el factor de exportación;
 \item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
-\item \texttt{CTE\_COGEN}: dos valores numéricos separados por una coma, que indican los factores de paso (energía primaria) para exportación a la red de electricidad cogenerada, y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED1}: dos valores numéricos separados por una coma, que definen los factores de paso (energía primaria) de la red de distrito 1 (vector energético \texttt{RED1}), y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED2}: dos valores numéricos separados por una coma, que definen los factores de paso (energía primaria) de la red de distrito 2 (vector energético \texttt{RED2}), y se refieren a la parte renovable y a la parte no renovable;
+\item \texttt{CTE\_COGEN}: tres valores numéricos separados por una coma, que indican los factores de paso (energía primaria renovable, no renovable y emisiones) para exportación a la red de electricidad cogenerada;
+\item \texttt{CTE\_RED1}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 1 (vector energético \texttt{RED1});
+\item \texttt{CTE\_RED2}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 2 (vector energético \texttt{RED2});
 \end{itemize}
 
-Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
+Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos del archivo de componentes tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
 
 \subsubsection{Componentes energéticos}\label{sec:componentesenergeticos}
 
@@ -427,14 +438,15 @@ Además del suministro de energía a través de combustibles, deben tenerse en c
 
 \begin{itemize}
 \item Calor suministrado a través de una red de distrito;
-\item refrigeracicón suministrada a través de una red de distrito;
-\item calor producido con biomasa.
+\item Refrigeración suministrada a través de una red de distrito;
+\item Calor producido con biomasa sólida (normal o densificada).
 \end{itemize}
 
 \item \textit{Sistemas o componentes del perímetro \textit{lejano} (distant)}
 
 \begin{itemize}
 \item Producción eléctrica a partir de fuentes renovables.
+\item Producción de energía a partir de biogas o biocombustibles.
 \end{itemize}
 \end{itemize}
 
@@ -449,7 +461,6 @@ La lista de vectores energéticos posibles es la siguiente:
 \begin{itemize}
 \item \texttt{ELECTRICIDAD}
 \item \texttt{GASOLEO}
-\item \texttt{FUELOIL}
 \item \texttt{GLP}
 \item \texttt{GASNATURAL}
 \item \texttt{CARBON}
@@ -462,7 +473,7 @@ La lista de vectores energéticos posibles es la siguiente:
 \end{itemize}
 \end{multicols}
 
-Los vectores \texttt{RED1} y \texttt{RED2} están representan vectores energéticos genéricos que correspondientes a redes de distrito de frío y/o calor, y el vector energético \texttt{MEDIOAMBIENTE} representa la energía térmica procedente del medioambiente.
+Los vectores \texttt{RED1} y \texttt{RED2} están representan vectores energéticos genéricos, cuyos factores de paso están definidas por el suministrador, y corresponden a redes de distrito de frío y/o calor. El vector energético \texttt{MEDIOAMBIENTE} representa la energía térmica procedente del medioambiente (capturada por bombas de calor, paneles solares térmicos, etc).
 
 \textit{Tipos (\texttt{tipo})}
 
@@ -505,8 +516,11 @@ El servicio al que se destina la producción o que genera el consumo puede tomar
 \item \texttt{ILU} - Iluminación
 \item \texttt{HU} - Humidificación
 \item \texttt{DHU} - Deshumidificación
+\item \texttt{BAC} - Automatización y control del edificio
 \item \texttt{NDEF} - Sin servicio de destino definido
 \end{itemize}
+
+\textbf{Nota:} Para el caso de la producción del vector energético \texttt{ELECTRICIDAD}, por las características de su distribución, no se contempla en la versión actual la posibilidad de asignar un servicio específico, tomándose siempre como servicio de destino \texttt{NDEF}, que adjudica la producción a los distintos servicios en función del porcentaje que representan respecto al consumo total de \texttt{ELECTRICIDAD}.
 
 \textit{Valores (\texttt{valor})}
 
@@ -522,12 +536,12 @@ Este campo, con valor descriptivo, no está delimitado por un signo de coma prev
 \newpage
 \subsection{Archivo de definición de factores de paso}\label{sec:formatofactorespaso}
 
-El archivo de definición de factores de paso detalla los coeficientes de conversión de energía final a energía primaria, en función del paso de cálculo y el destino de la energía, así como un conjunto de metadatos asociados a dicha información.
+El archivo de definición de factores de paso detalla los coeficientes de conversión de energía final a energía primaria (parte renovable  y parte no renovable) y de energía final a emisiones, en función del paso de cálculo y el destino de la energía, así como un conjunto de metadatos asociados a dicha información.
 
-Cada línea del archivo define un metadato o un par de factores de paso (parte renovable y parte no renovable) usando una variante del formato de \textit{valores separados por comas}\footnote{El formato está documentado en el estándar RFC 4180 (\url{https://tools.ietf.org/html/rfc4180}).}. El archivo puede incluir también líneas en blanco y comentarios (líneas que empiezan por \texttt{\#} y que no son metadatos), que se ingnoran al ser procesadas.
+Cada línea del archivo define un metadato o un tres de factores de paso (parte renovable, parte no renovable y emisiones) usando una variante del formato de \textit{valores separados por comas}\footnote{El formato está documentado en el estándar RFC 4180 (\url{https://tools.ietf.org/html/rfc4180}).}. El archivo puede incluir también líneas en blanco y comentarios (líneas que empiezan por \texttt{\#} y que no son metadatos), que se ingnoran al ser procesadas.
 
 \begin{myquote}\small
-\textbf{NOTA:} El programa \texttt{cteepbd} está preparado para funcionar con cualquier conjunto de factores de paso que pueda definir el usuario, pero está orientado a su uso, mediante opciones, con los definidos en el \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016.
+\textbf{NOTA:} El programa \texttt{cteepbd} está preparado para funcionar con cualquier conjunto de factores de paso que pueda definir el usuario, pero está orientado a su uso, mediante opciones, con los definidos en el \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016. Estos factores son los utilizados también en el DB-HE 2013.
 \end{myquote}
 
 A continuación se muestra el archivo que correspondería a la definición de los factores de paso peninsulares:
@@ -547,12 +561,9 @@ En el ejemplo, la siguiente línea define un metadato con clave \texttt{CTE\_LOC
 Para el archivo de definición de factores de paso se establecen las siguientes claves conocidas de metadatos y los valores que pueden adoptar (todos los valores numéricos usan de separador decimal el punto):
 
 \begin{itemize}
-\item \texttt{CTE\_FUENTE}: cadena de texto que define el origen de los datos de factores de paso (actualmente puede tomar el valor \texttt{CTE2013});
+\item \texttt{CTE\_FUENTE}: cadena de texto que define el origen de los datos de factores de paso (actualmente puede tomar el valor \texttt{RITE2014});
 \item \texttt{CTE\_FUENTE\_COMENTARIO}; cadena de texto que incluye información adicional sobre la fuente de datos;
 \item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
-\item \texttt{CTE\_COGEN}: dos valores numéricos separados por una coma, que recogen los factores de paso usados (energía primaria) para exportación a la red de electricidad cogenerada, y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED1}: dos valores numéricos separados por una coma, que recogen los factores de paso usados (energía primaria) de la red de distrito 1 (vector energético \texttt{RED1}), y se refieren a la parte renovable y a la parte no renovable;
-\item \texttt{CTE\_RED2}: dos valores numéricos separados por una coma, que definen los factores de paso usados (energía primaria) de la red de distrito 2 (vector energético \texttt{RED2}), y se refieren a la parte renovable y a la parte no renovable;
 \end{itemize}
 
 \subsubsection{Factores de paso}
@@ -566,14 +577,15 @@ Los factores de paso tienen la siguiente estructura de columnas (valores separad
 \item campo \texttt{paso}, que identifica los recursos evaluados: los recursos empleados para obtener una unidad del vector energético (paso \texttt{A}), o el impacto en la red al emplear el vector energético en lugar de usar el vector energético desde la red de suministro (paso \texttt{B});
 \item campos \texttt{parte renovable}, el factor de paso desde energía final a la parte renovable de la energía primaria utilizada;
 \item campos \texttt{parte no renovable}, el factor de paso desde energía final a la parte no renovable de la energía primaria utilizada;
+\item campos \texttt{emisiones}, el factor de paso desde energía final a emisiones de CO2;
 \item un campo opcional \texttt{comentario}, que puede contener cualquier texto y no está separado del contenido precedente por una coma sino por una almohadilla \texttt{\#}.
 \end{itemize}
 
-Las dos siguientes líneas definen los factores de paso para la energía eléctrica obtenida desde la red de suministro y los de la energía eléctrica generada in situ, ambos en paso A:
+Las siguiente línea define, por ejemplo,  los factores de paso para la energía eléctrica obtenida desde la red de suministro, en el paso A:
 
-\lstinputlisting[firstline=18, lastline=19,numbers=none]{../test_data/factores_paso_PENINSULA_20140203.csv}
+\lstinputlisting[firstline=18, lastline=18,numbers=none]{../test_data/factores_paso_PENINSULA_20140203.csv}
 
-Así, el suministro de 1kWh de electricidad procedente de la red supone el consumo 0,414~kWh de energía primiaria renovable y 1.954~kWh de energía primaria no renovable.
+Así, el suministro de 1kWh de electricidad procedente de la red supone el consumo 0,414~kWh de energía primiaria renovable, de 1.954~kWh de energía primaria no renovable y la emisión de 0,331~kg de CO2.
 
 \clearpage
 \newpage
@@ -581,9 +593,9 @@ Así, el suministro de 1kWh de electricidad procedente de la red supone el consu
 
 \subsection{Indicadores}
 
-La norma \textit{EN ISO 52000-1} establece como indicadores de la eficiencia energética de los edificios el \textit{consumo total de energía primaria} (\texttt{$C_{ep,tot}$}) y el \textit{porcentaje de energía primaria renovable del consumo total de energía} (\texttt{$RER$}).
+La norma \textit{EN ISO 52000-1} establece, entre otros, los indicadores de eficiencia energética de los edificios: \textit{consumo total de energía primaria} (\texttt{$C_{ep,tot}$}), \textit{porcentaje de energía primaria renovable del consumo total de energía} (\texttt{$RER$}) y las \textit{emisiones de $CO_{2e}$} (\texttt{$CO_{2e}$}).
 
-El programa ofrece, además de dichos indicadores (para los pasos A y A+B), la descomposición consumo total de energía primaria en su parte renovable (\texttt{$C_{ep,ren}$}) y no renovable (\texttt{$C_{ep,nren}$}), como se muestra en la \autoref{tab:indicadoresFinales}.
+El programa ofrece, además de dichos indicadores (para los pasos A y A+B), la descomposición consumo total de energía primaria en su parte renovable (\texttt{$C_{ep,ren}$}) y no renovable (\texttt{$C_{ep,nren}$}) y las emisiones de CO2 (\texttt{$E_{CO2}$}), como se muestra en la \autoref{tab:indicadoresFinales}.
 
 \begin{table}[H]
 \centering
@@ -597,17 +609,20 @@ El programa ofrece, además de dichos indicadores (para los pasos A y A+B), la d
     $C_{ep,nren}$& Parte no renovable del consumo de energía primaria total\\
     $C_{ep,tot}$ & Consumo total de energía primaria\\
     $RER$      & Fracción de energía primaria renovable en el consumo total\\
+    $E_{CO2e}$ & Emisiones de $CO_{2e}$\\
     \bottomrule
 \end{tabular}
 \end{table}
 
-Además de estos resultados, la salida del programa muestra datos de la entrada con la que han sido obtenido los resultados y otros datos intermedios (balances por vectores energéticos, energía usada en servicios EPB, energía exportada a servicios no EPB o a la red, energía total producida, etc).
+Además de estos resultados, la salida del programa muestra datos de la entrada con la que han sido obtenido los resultados y otros datos intermedios (balances por vectores energéticos, balances por servicios, energía usada en servicios EPB, energía exportada a servicios no EPB o a la red, energía total producida, etc).
 
 \subsection{Salida simple}
 
 Esta salida se emite siempre a través de la salida estándar y se puede redirigir a un archivo, tal como se describe en la \autoref{sec:usoprograma}, de \nameref{sec:usoprograma}.
 
-La salida muestra los datos de entrada, con un nivel de detalle dependiente de las opciones de llamada al programa pero sin datos intermedios y los resultados básicos de consumo en el paso B, en términos de energía primaria y energía primaria repercutida por superficie.
+La salida muestra los datos de entrada, con un nivel de detalle dependiente de las opciones de llamada al programa pero sin datos intermedios y los resultados básicos de consumo en el paso B (energía primaria y emisiones), tanto en valor absoluto como en valor repercutido por superficie.
+
+Además, se muestran los valores repercutidos por superficie y desglosados por servicios del consumo de energía final (solo para usos EPB) y del consumo de energía primaria y las emisiones.
 
 A continuación se muestra un ejemplo de la salida simple que genera el ejemplo \texttt{cte\_test\_carriers.csv}:
 
@@ -615,6 +630,7 @@ A continuación se muestra un ejemplo de la salida simple que genera el ejemplo 
 
 \newpage
 \subsection{Salida en formato XML}
+\label{subsec:formatoxml}
 
 Esta salida guarda la información en el formato XML.
 
@@ -626,29 +642,103 @@ A continuación se muestra la salida en el formato XML para el mismo caso anteri
 
 \newpage
 \subsection{Salida en formato JSON}
+\label{subsec:formatojson}
 
-Esta salida guarda la información en la notación de objetos de JavaScript (JSON) y tiene el nivel de detalle más alto.
+Esta salida guarda la información en la notación de objetos de JavaScript (JSON) y permite obtener el mayor nivel de información disponible para la aplicación.
 
-La salida incluye los componentes energéticos (\texttt{components}), los factores de paso (\texttt{wfactors}), el área de referencia (\texttt{arearef}), el factor de exportación (\texttt{k\_exp}), el balance energético para cada intervalo de cálculo y por vector energético (\texttt{balance\_cr\_i}), el balance global (\texttt{balance}), y el balance global repercutido por superficie (\texttt{balance\_m2}).
+La \textbf{estructura de salida} incluye las siguientes claves, descritas en términos de energía primaria pero que, dependiendo del tipo de factores de paso, se podrían interpretar en términos de emisiones:
 
-El balance energético por vector energético (\texttt{balance\_cr\_i}) incluye la energía destinada a usos EPB (\texttt{used\_EPB}), la energía destinada a usos no EPB (\texttt{used\_nEPB}), la energía producida por origen (\texttt{produced\_bygen}) y la total anual por origen (\texttt{produced\_bygen\_an}), la energía producida por intervalo (\texttt{produced}) y la producida total anual (\texttt{produced\_an}), el factor de coincidencia de cargas (\texttt{f\_match}), la energía exportada (\texttt{exported}) y la total exportada anualmente (\texttt{exported\_an}), la exportada por origen (\texttt{exported\_byorigin}) y la exportada anualmente por origen (\texttt{exported\_byorigin\_an}), la exportada a la red (\texttt{exported\_grid}) y la exportada a la red total anual (\texttt{exported\_grid\_an}), la exportada a usos no EPB (\texttt{exported\_nEPB}) y la exportada a usos no EPB total anual (\texttt{exported\_nEPB\_an}), la suministrada por la red (\texttt{delivered\_grid}) y el total suministrado por la red (\texttt{delivered\_grid\_an}), la energía anual ponderada suministrada a la red (\texttt{we\_delivered\_grid\_an}), la energía anual ponderada suministrada producida (\texttt{we\_delivered\_prod\_an}), la energía anual ponderada suministrada (\texttt{we\_delivered\_an}), la energía anual ponderada exportada en el paso A (\texttt{we\_exported\_an\_A}), la energía anual exportada para usos no EPB en el paso AB (\texttt{we\_exported\_nEPB\_an\_AB}), la energía anual exportada a la red en el paso AB (\texttt{we\_exported\_grid\_an\_AB}), la energía anual exportada en el paso B (\texttt{we\_exported\_an}), la energía anual ponderada en el paso A (\texttt{we\_an\_A}) y la energía anual ponderada en el paso B (\texttt{we\_an}).
+\begin{itemize}
+\item \texttt{components} - los componentes energéticos;
+\item \texttt{wfactors} - los factores de paso;
+\item \texttt{k\_exp} - el factor de exportación;
+\item \texttt{arearef} - el área de referencia;
+\item \texttt{balance\_cr} - el balance energético para cada intervalo de cálculo y por vector energético;
+\item \texttt{balance} - el balance global;
+\item \texttt{balance\_m2} - el balance global repercutido por superficie.
+\item \texttt{misc} - indicadores adicionales
+\end{itemize}
+
+El \textbf{factor de exportación} y el \textbf{área de referencia} tienen una representación trivial en la salida JSON, mientras que los \textbf{componentes energéticos} y \textbf{factores de paso} tienen una representación que es una traducción directa del formato de entrada indicado en los apartados correspondientes de este manual.
+
+El \textbf{balance energético por vector energético} (\texttt{balance\_cr}) incluye, para cada vector energético:
+
+\begin{itemize}
+\item \texttt{carrier} - el nombre del vector energético;
+\item \texttt{used\_EPB} - la energía destinada a usos EPB, para cada intervalo;
+\item \texttt{used\_EPB\_an\-byuse} - la energía destinada a usos EPB, por servicio y en total anual;
+\item \texttt{used\_nEPB} - la energía destinada a usos no EPB, para cada intervalo;
+\item \texttt{produced} - la energía producida, para cada intervalo;
+\item \texttt{produced\_an} - la energía producida, en total anual;
+\item \texttt{produced\_bygen} - la energía producida, por origen y para cada intervalo;
+\item \texttt{produced\_bygen\_an} - la energía producida, por origen y en total anual;
+\item \texttt{produced\_used\_EPus} - la energía producida y usada en usos EPB, para cada intervalo;
+\item \texttt{produced\_used\_EPus\_bygen} - la energía producida y usada en usos EPB, por origen y para cada intervalo;
+\item \texttt{f\_match} - el factor de coincidencia de cargas (producción y consumo);
+\item \texttt{exported} - la energía exportada, para cada intervalo;
+\item \texttt{exported\_an} - la energía exportada anualmente, en total anual;
+\item \texttt{exported\_bygen} - la energía exportada, por origen y para cada intervalo;
+\item \texttt{exported\_bygen\_an} - la energía exportada, por origen, en total anual;
+\item \texttt{exported\_grid} - la energía exportada a la red, para cada intervalo;
+\item \texttt{exported\_grid\_an} - la energía exportada a la red, en total anual;
+\item \texttt{exported\_nEPB} - la exportada a usos no EPB, para cada intervalo;
+\item \texttt{exported\_nEPB\_an} - la energía exportada a usos no EPB, en total anual;
+\item \texttt{delivered\_grid} - la energía suministrada por la red, para cada intervalo;
+\item \texttt{delivered\_grid\_an} - la energía suministrada por la red, en total anual;
+\item \texttt{we\_delivered\_grid\_an} - la energía ponderada suministrada por la red, en total anual;
+\item \texttt{we\_delivered\_prod\_an} - la energía ponderada suministrada por producción, en total anual;
+\item \texttt{we\_delivered\_an} - la energía ponderada suministrada, en total anual;
+\item \texttt{we\_exported\_an\_A} - la energía ponderada exportada en el paso A, en total anual;
+\item \texttt{we\_exported\_nEPB\_an\_AB} - la energía ponderada exportada para usos no EPB en el paso AB, en total anual;
+\item \texttt{we\_exported\_grid\_an\_AB} - la energía ponderada exportada a la red en el paso AB, en total anual;
+\item \texttt{we\_exported\_an\_AB} - la energía ponderada exportada en el paso AB, en total anual;
+\item \texttt{we\_exported\_an} - la energía ponderada exportada en el paso B, en total anual;
+\item \texttt{we\_an\_A} - la energía ponderada en el paso A, en total anual;
+\item \texttt{we\_an\_A\_byuse} - la energía ponderada en el paso A, por servicio EPB y en total anual;
+\item \texttt{we\_an} - la energía ponderada en el paso B, en total anual;
+\item \texttt{we\_an\_byuse} - la energía ponderada en el paso B, por servicio EPB y en total anual.
+\end{itemize}
 
 \begin{myquote}\small
 Esta salida permite, por ejemplo, calcular la energía eléctrica producida y autoconsumida como:
 \\
 
-\texttt{balance\_cr\_i.ELECTRICIDAD.produced\_an - balance\_cr\_i.ELECTRICIDAD.exported\_grid\_an}
+\texttt{balance\_cr.ELECTRICIDAD.produced\_an - balance\_cr\_i.ELECTRICIDAD.exported\_grid\_an}
 \\
 
-o, si no se considera como autoconsumidos los usos no EPB:
+o, como suma de los valores de los valores de los intervalos mensuales en:
 \\
 
-\texttt{balance\_cr\_i.ELECTRICIDAD.produced\_an - balance\_cr\_i.ELECTRICIDAD.exported\_an}
+\texttt{balance\_cr.ELECTRICIDAD.produced\_used\_EPus}
 \end{myquote}
 
-Los balances globales (\texttt{balance}, \texttt{balance\_m2}) incluyen la parte renovable y no renovable de la energía primaria en el paso A (\texttt{A}), en el paso B (\texttt{B}), la energía primaria suministrada (\texttt{we\_del}), la energía primaria exportada en el paso A (\texttt{we\_exp\_A}) y la energía exportada en el paso B (\texttt{we\_exp}).
+El \textbf{balance global} (\texttt{balance}) y el \textbf{balance global repercutido por superficie} \texttt{balance\_m2} contiene la siguiente información, obtenida de la agregación de los resultados parciales de cada vector energético:
 
-A continuación se muestra la salida en el formato JSON para el mismo caso anterior:
+\begin{itemize}
+\item \texttt{used\_EPB\_byuse} - Energía usada para servicios EPB, por servicio, en total anual
+\item \texttt{A} - Energía ponderada en el paso A, en total anual
+\item \texttt{A\_byuse} - Energía ponderada en el paso A, por servicio EPB y en total anual
+\item \texttt{B} - Energía ponderada en el paso A+B, en total anual
+\item \texttt{B\_byuse} - Energía ponderada en el paso B, por servicio EPB y en total anual
+\item \texttt{we\_del} - Energía ponderada suministrada, en total anual
+\item \texttt{we\_exp\_A} - Energía ponderada exportada en el paso A, en total anual
+\item \texttt{we\_exp} - Energía ponderada exportada en el paso A+B, en total anual
+\end{itemize}
+
+En los balances globales, los indicadores de energía ponderada se expresan separando la parte renovable (\texttt{ren}) de la no renovable (\texttt{nren}).
+
+La clave de \textbf{indicadores adicionales} (\texttt{misc}) contiene datos organizados como un diccionario (hashmap) de longitud no determinada (puede ser \texttt{null}) con clave y valor de tipo texto.
+
+En la versión actual del programa se emiten los siguientes valores:
+
+\begin{itemize}
+\item \texttt{fraccion\_renovable\_demanda\_acs\_nrb} - Fracción de la demanda de ACS con origen renovable considerando el perímetro próximo. Se calcula únicamente cuando se usa la opción \texttt{-{}-demanda\_anual\_acs} y se cumplen las restricciones para su cálculo en cuanto al origen de la energía usada. Se almacena como un texto que contiene un número decimal y se expresa en tanto por uno.
+\item \texttt{demanda\_anual\_acs} - Demanda anual de ACS aportada con la opcion \texttt{-{}-demanda\_anual\_acs}. Se almacena como texto y se expresa en $kWh$.
+\end{itemize}
+
+\subsubsection{Ejemplo de salida en formato JSON}
+
+A continuación se muestra la salida en el formato JSON, para el caso anterior, incluyendo la información adicional (clave \texttt{misc} distinta a \texttt{null}):
 
 \lstset{
     string=[s]{"}{"},
@@ -656,7 +746,7 @@ A continuación se muestra la salida en el formato JSON para el mismo caso anter
     comment=[l]{:},
     commentstyle=\color{black},
 }
-\lstinputlisting{../test_data/output/balance.json}
+\lstinputlisting{../test_data/output/balance_dem_acs.json}
 
 \clearpage
 \newpage
@@ -748,16 +838,27 @@ Este ejemplo J9 muestra un caso completamente eléctrico y con usos no EPB pero 
 
 \clearpage
 \newpage
-\section{Integración de la herramienta \texttt{cteepbd} con programas de simulación}
+\section{Integración de la herramienta \texttt{cteepbd} con programas de simulación para el cumplimiento del CTE DB-HE}
 \label{sec:anexointegracion}
 \setcounter{figure}{0} % resetear contador por sección
 \setcounter{table}{0} % resetear contador por sección
 
-Este apéndice detalla aquellos aspectos más relevantes para la integración de la herramienta \texttt{cteepbd} con programas de simulación energética y de cumplimiento del \textit{CTE DB-HE}.
+Este apéndice detalla aquellos aspectos más relevantes para la integración de la herramienta \texttt{cteepbd} con programas de simulación energética orientada al cumplimiento del \textit{CTE DB-HE}.
+
+\subsection{Preparación de los datos de entrada}
+
+Los programas de simulación energética son los responsables de realizar el cálculo de la energía final consumida por el edificio y de la energía final producida.
+
+Además de respetar el formato descrito en la sección \textit{\nameref{sec:formatocomponentes}}, el archivo de componentes energéticos debe incluir\footnote{Condiciones de acuerdo con la propuesta de actualización del DB-HE (2018) publicada para información pública. Estas condiciones podrían variar en función de las modificaciones sufridas tras el periodo de información pública.} la producción de energía obtenida \textit{in situ} (solar térmica, solar fotovoltaica, minieólica, geotérmica, etc) o mediante procesos de cogeneración y el consumo de energía final de los servicios de calefacción, refrigeración, ACS, ventilación y, en el caso de edificios de uso distinto al residencial privado, iluminación.
+
+En particular, debe recalcarse, por no ser habitual este cómputo hasta el momento, que la energía final consumida ha de incluir la energía térmica (renovable) extraída del medioambiente. Por ejemplo, en el caso de una bomba de calor de SPF 2.5, se considera que por cada kWh eléctrico consumido el equipo consume también 1.5 kWh del medioambiente\footnote{Para el cálculo de la energía renovable procedente de las bombas de calor véase la \href{https://www.boe.es/doue/2013/062/L00027-00035.pdf}{Decisión de la Comisión, de 1 de marzo de 2013, por la que se establecen las directrices para el cálculo por los Estados miembros de la energía renovable procedente de las bombas de calor de diferentes tecnologías, conforme a lo dispuesto en el artículo 5 de la Directiva 2009/28/CE del Parlamento Europeo y del Consejo [notificada con el número C(2013) 1082]}.}\footnote{En el caso de las bombas de calor, también hay que tener en cuenta que en el modo de refrigeración el equipo no extrae calor del medioambiente, sino que rechaza la transmisión del calor interno del edificio, de modo que el proceso no es simétrico en términos de energía que atraviesa la frontera de evaluación.}.
+
+En el caso de que existan equipos de cogeneración, debe tenerse en cuenta que el balance de la energía producida y consumida incluye el consumo del combustible o vector energético usado para la cogeneración y la producción eléctrica con origen en la cogeneración. Dado que la energía térmica es producida y consumida \textit{in situ}, esta no atraviesa el perímetro de evaluación y, por tanto, no figura en el balance. En caso necesario, la imputación del consumo del combustible para la cogeneración puede realizarse a los servicios térmicos o eléctricos en función del rendimiento térmico y eléctrico, y debe reflejarse coherentemente en los factores de paso asignados a la electricidad procedente de la cogeneración\footnote{Para la asignación de factores de paso y el cálculo de la energía eléctrica y térmica producida, véanse los Anexos I y II de la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2012-82191}{Directiva 2012/27/UE del Parlamento Europeo y del Consejo, de 25 de octubre de 2012, relativa a la eficiencia energética, por la que se modifican las Directivas 2009/125/CE y 2010/30/UE, y por la que se derogan las Directivas 2004/8/CE y 2006/32/CE}, la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2008-82509}{Decisión de la Comisión, de 19 de noviembre de 2008, por la que se establecen orientaciones detalladas para la aplicación del anexo II de la Directiva 2004/8/CE del Parlamento Europeo y del Consejo [notificada con el número C(2008) 7294]}, y el apartado \textit{9.6.6 Factores de paso} de la \textit{UNE EN ISO 52000-1}.}.
+
 
 \subsection{Llamada al programa y salida de resultados}
 
-El programa está pensado para ser llamado mediante un subproceso independiente, suministrando como parámetros al menos el archivo de componentes energéticos (p.e. \texttt{- c "Archivo\_de\_componentes.csv"}) y la localización (p.e. \texttt{-l PENINSULA}) del edificio.
+El programa está pensado para ser llamado mediante un subproceso independiente, suministrando como parámetros, al menos, el archivo de componentes energéticos (p.e. \texttt{-c ''componentes.cteepbd''}) y la localización (p.e. \texttt{-l PENINSULA}) del edificio.
 
 \begin{Verbatim}[fontsize=\small]
     $ cteepbd -c ruta/archivo_componentes_caso.csv -l PENINSULA
@@ -767,35 +868,124 @@ El programa está pensado para ser llamado mediante un subproceso independiente,
 El programa genera así una salida simple que puede redirigirse a un archivo para su postproceso por la herramienta de simulación o de cumplimiento reglamentario.
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c ruta/archivo_componentes.csv -l PENINSULA > archivo_salida.txt
+    $ cteepbd -c componentes.cteepbd -l PENINSULA > resultados_cteepbd_EP.txt
 \end{Verbatim}
 %$
 
-Opcionalmente, puede solicitarse la salida en formato XML o JSON, siendo este última la más completa de todas ellas y la más estable.
+También puede usarse la opción de guardado a un archivo de texto plano:
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -c ruta/archivo_componentes.csv -l PENINSULA --json archivo_salida.json
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --txt resultados_cteepbd_EP.txt
 \end{Verbatim}
 %$
 
-Para obtener la fracción renovable de ACS obtenida teniendo en cuenta la generación in situ o en las proximidades de la parcela se usa la opción \texttt{--acs\_nearby, N}:
+En general, se recomienda utilizar la salida en formato \textit{JSON} (\autoref{subsec:formatojson}), que es la que contiene información más detallada y esta se recoge en un formato estructurado, fácil de procesar.
 
 \begin{Verbatim}[fontsize=\small]
-    $ cteepbd -N -c ruta/archivo_componentes.csv -l PENINSULA --json archivo_salida_ACS_nrb.json
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_EP.json
 \end{Verbatim}
 %$
 
-\subsection{Preparación de los datos de entrada}
+\subsection{Proceso general}
 
-Además de los detalles relacionados con el formato, descritas en la sección \textit{\nameref{sec:formatocomponentes}}, el archivo debe contener\footnote{Condiciones de acuerdo con la propuesta de actualización del DB-HE (2018) publicada para información pública. Estas condiciones podrían variar en función de las modificaciones sufridas tras el periodo de información pública.} la producción de energía obtenida \textit{in situ} (solar térmica, solar fotovoltaica, minieólica, geotérmica, etc) o mediante procesos de cogeneración y el consumo de energía final de los servicios de calefacción, refrigeración, ACS, ventilación y, en el caso de edificios de uso distinto al residencial privado, iluminación.
+Para la obtención de datos generales relativos al consumo de energía final, energía primaria y emisiones se realizaría la llamada:
 
-Dentro de la energía final consumida debe tenerse en cuenta aquella energía renovable extraída del medioambiente. Por ejemplo, en el caso de una bomba de calor de SPF 2.5, se considera que por cada kWh eléctrico consumido el equipo consume también 1.5 kWh del medioambiente\footnote{Para el cálculo de la energía renovable procedente de las bombas de calor véase la \href{https://www.boe.es/doue/2013/062/L00027-00035.pdf}{Decisión de la Comisión, de 1 de marzo de 2013, por la que se establecen las directrices para el cálculo por los Estados miembros de la energía renovable procedente de las bombas de calor de diferentes tecnologías, conforme a lo dispuesto en el artículo 5 de la Directiva 2009/28/CE del Parlamento Europeo y del Consejo [notificada con el número C(2013) 1082]}.}.
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --json resultados_cteepbd_EP.json --xml resultados_cteepbd_EP.xml
+\end{Verbatim}
+%$
 
-En el caso de que existan equipos de cogeneración, debe tenerse en cuenta que el balance de la energía producida y consumida incluye el consumo del combustible o vector energético usado para la cogeneración y la producción eléctrica con origen en la cogeneración. Dado que la energía térmica es producida y consumida \textit{in situ}, esta no atraviesa el perímetro de evaluación y, por tanto, no figura en el balance. En caso necesario, la imputación del consumo del combustible para la cogeneración puede realizarse a los servicios térmicos o eléctricos en función del rendimiento térmico y eléctrico, y debe reflejarse coherentemente en los factores de paso asignados a la electricidad procedente de la cogeneración\footnote{Para la asignación de factores de paso y el cálculo de la energía eléctrica y térmica producida, véanse los Anexos I y II de la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2012-82191}{Directiva 2012/27/UE del Parlamento Europeo y del Consejo, de 25 de octubre de 2012, relativa a la eficiencia energética, por la que se modifican las Directivas 2009/125/CE y 2010/30/UE, y por la que se derogan las Directivas 2004/8/CE y 2006/32/CE}, la \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2008-82509}{Decisión de la Comisión, de 19 de noviembre de 2008, por la que se establecen orientaciones detalladas para la aplicación del anexo II de la Directiva 2004/8/CE del Parlamento Europeo y del Consejo [notificada con el número C(2008) 7294]}, y el apartado \textit{9.6.6 Factores de paso} de la \textit{UNE EN ISO 52000-1}.}.
+Cuando se quiera obtener, además el dato de la fracción de la demanda de origen renovable, obtenida para el permímetro próximo se añadiría la opción \texttt{-{}-demanda\_anual\_acs DEM\_ACS}:
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --demanda_anual_acs 2800.0 --json resultados_cteepbd_ACS_nrb_EP.json
+\end{Verbatim}
+%$
+
+En los siguientes subapartados se muestra cómo obtener información sobre los indicadores del \textit{CTE DB-HE} o la certificación energética utilizando esta salida en formato \textit{JSON}. Se hará referencia a los valores del objeto generado usando notación de punto (p.e., \texttt{balance.B.ren} se correponde al valor localizado con la clave \texttt{ren} en el objeto con clave \texttt{B} en el objeto con clave \texttt{balance}, perteneciente al objeto global).
+
+\subsection{Obtención del consumo de energía primaria no renovable y total}
+
+El consumo de energía primaria no renovable, en $kWh/m^2$ se obtiene como resultado directo:
+
+$C_{ep,ren} [kWh/m^2] = \texttt{balance\_m2.B.ren}$
+
+Mientras que el consumo de energía primaria total se obtiene a partir de la suma del la parte renovable y no renovable del consumo:
+
+$C_{ep,tot} [kWh/m^2] = C_{ep,ren} + C_{ep,nren} = \texttt{balance\_m2.B.ren} + \texttt{balance\_m2.B.nren}$
+
+\subsection{Obtención del consumo de energía final por servicios}
+
+El consumo de energía final usada en servicios (sólo servicios EPB) se localiza en el objeto:
+
+$\texttt{balance\_m2.used\_EPB\_byuse}$
+
+donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$.
+
+Así, el consumo de energía final del servicio de calefacción se localizaría en:
+
+$\texttt{balance\_m2.used\_EPB\_byuse.CAL}$
+
+\textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo
+
+\subsection{Obtención del consumo de energía primaria por servicios}
+
+El consumo de energía primaria, desagregada por servicios (sólo servicios EPB), se localiza en el objeto:
+
+$\texttt{balance\_m2.B\_byuse}$
+
+donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$, y en sus componentes renovable y no renovable.
+
+Así, el consumo de energía primaria no renovable del servicio de calefacción se localizaría en:
+
+$\texttt{balance\_m2.B\_byuse.CAL.nren}$
+
+\textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo.
+
+\subsection{Obtención de la energía eléctrica generada y autoconsumida}
+
+La energía eléctrica generada in situ y autoconsumida (sólo en servicios EPB) se puede obtener a partir del balance para el vector energético \texttt{ELECTRICIDAD}, en la clave de energía consumida en usos EPB:
+
+$\texttt{balance\_cr.ELECTRICIDAD.used\_EPB}$
+
+Dicha clave contiene los valores para cada paso de cálculo de la energía eléctrica usada en servicios EPB, de modo que el valor total anual se obtiene como suma de los valores mensuales.
+
+\subsection{Obtención de las emisiones de CO2 y de las emisiones por servicio}
+
+Los datos relativos a emisiones totales se obtienen en las entradas:
+
+$E_{CO2e} [kg_{CO2}] = \texttt{balance.B.co2}$
+
+y las repercutidas por la superficie de referencia en:
+
+$E_{CO2e} [kg_{CO2_e}/m^2] = \texttt{balance\_m2.B.co2}$
+
+Al igual que en el caso del consumo, es posible obtener los valores desagregados por servicios EPB en los objetos:
+
+$\texttt{balance.B\_byuse}$
+
+o, para valores repercutidos por la superficie útil:
+
+$\texttt{balance\_m2.B\_byuse}$
+
+\subsection{Obtención del porcentaje de la demanda con origen renovable, calculada para el perímetro próximo}
+
+Este dato se obtiene siempre que se invoque la aplicación usando la opción \texttt{-{}-demanda\_anual\_acs DEM\_ACS} y se cumplan las limitaciones que actualmente tiene el programa para su obtención (consumo de un único vector para la generación de ACS con origen distinto al \textit{in situ}).
+
+El valor del porcentaje se obtiene multiplicando por 100 el dato dado como fracción:
+
+$\%_{dem,ACS,nrb} [\%] = 100 \cdot \texttt{misc.fraccion\_renovable\_demanda\_acs\_nrb}$
 
 
+\subsection{Obtención del fragmento XML para el Certificado energético}
 
+El programa \texttt{cteepbd} permite obtener el fragmento de \textit{XML} (\autoref{subsec:formatoxml}) con la información relativa a los componentes de consumo y producción de energía, factores de paso y balance energético, que es necesaria para la definición del Certificado energético en formato \textit{XML}.
 
+Para ello basta indicar la salida \texttt{XML}:
 
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --xml fragmentocert.xml
+\end{Verbatim}
+%$
 
 \end{document}
