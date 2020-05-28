@@ -585,6 +585,10 @@ fn main() {
                     eprintln!("ERROR: demanda anual de ACS con formato incorrecto");
                     exit(exitcode::DATAERR);
                 });
+            if demanda_anual_acs.abs() < f32::EPSILON {
+                eprintln!("ERROR: demanda anual de ACS nula");
+                exit(exitcode::DATAERR);
+            };
             let demanda_renovable_acs_nrb = cte::demanda_renovable_acs_nrb(&components, &fpdata)
                 .unwrap_or_else(|e| {
                     eprintln!(

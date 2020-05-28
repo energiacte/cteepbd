@@ -267,6 +267,11 @@ pub fn demanda_renovable_acs_nrb(
     let components = &components.filter_by_epb_service(Service::ACS);
     let cr_list = &components.cdata;
 
+    // Casos sin consumo (o producción) de ACS
+    if cr_list.is_empty() {
+        return Ok(0.0)
+    };
+
     // Comprobaremos que las hipótesis para poder calcular la demanda renovable se cumplen:
     // - No puede haber consumo de más de un vector que no sea insitu (necesitaríamos rendimientos)
     let n_cr_nearby_distant = cr_list
