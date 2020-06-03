@@ -13,6 +13,15 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0]
+
+### Novedades
+
+- Documentación de los códigos de salida de la aplicación (OK y errores)
+
+### Correcciones
+
+- Detalla error al recibir demanda anual de ACS nula para el cálculo de la parte renovable de la demanda (emite error)
 
 ## [0.17.0] - 2020-05-13
 
