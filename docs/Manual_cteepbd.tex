@@ -360,6 +360,21 @@ Este argumento evita la simplificación de los factores de paso que de forma pre
 
 Este argumento muestra la licencia de distribución del programa (MIT).
 
+
+\subsection{Manejo de errores}
+
+\texttt{cteepbd} informa al sistema operativo del resultado de la ejecución del programa mediante códigos de error. Usa un valor 0 cuando la ejecución es correcta (no se han producido errores) y valores distintos de 0 para informar del tipo de error genérico que se ha producido. Además, mientras que los resultados e información del programa se muestran a través de la salida estándar (`stdout`), la información de error, más detallada que los códigos de salida, se emite en la salida estándar (`stderr`). Esto permite redirigir de forma separada la información de error para su procesado.
+
+Actualmente, \texttt{cteepbd} utiliza los siguientes códigos de salida:
+
+\begin{itemize}
+\item[0] (\textit{OK}): el programa ha finalizado correctamente
+\item[64] (\textit{USAGE}): uso incorrecto del programa
+\item[65] (\textit{DATAERR}): datos de entrada incorrectos
+\item[73] (\textit{CANTCREAT}): no se puede crear un archivo
+\item[74] (\textit{IOERR}): error en la E/S
+\end{itemize}
+
 \clearpage
 \newpage
 \section{Formatos de entrada de datos}
