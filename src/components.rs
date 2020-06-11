@@ -324,7 +324,7 @@ impl Components {
             })
             .filter(std::option::Option::is_some)
             .collect::<Option<Vec<_>>>()
-            .unwrap_or_else(|| vec![]);
+            .unwrap_or_else(Vec::new);
         // Agrega componentes no compensados
         self.cdata.append(&mut balancecomps);
     }

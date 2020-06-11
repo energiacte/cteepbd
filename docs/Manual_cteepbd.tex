@@ -400,6 +400,7 @@ En el ejemplo, la siguiente línea define un metadato con clave \texttt{CTE\_ARE
 Para el archivo de definición de los componentes energéticos se establecen las siguientes claves conocidas de metadatos y los valores que pueden adoptar (todos los valores numéricos usan de separador decimal el punto):
 
 \begin{itemize}
+\item \texttt{CTE\_ACS\_DEMANDA\_ANUAL}: valor numérico que indica la demanda anual de ACS (kWh/a) para el cálculo del porcentaje de la demanda de fuentes renovables;
 \item \texttt{CTE\_AREAREF}: valor numérico que indica el área de referencia (superficie útil);
 \item \texttt{CTE\_KEXP}; valor numérico que indica el factor de exportación;
 \item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
@@ -546,6 +547,8 @@ Todos los registros deben emplear número igual de pasos de tiempo.
 \textit{Comentario (\texttt{comentario})}
 
 Este campo, con valor descriptivo, no está delimitado por un signo de coma previo sino precedido por un signo de almohadilla (\texttt{\#}) y puede contener un texto arbitrario, que no se tiene en cuenta en el cálculo.
+
+\textbf{Nota:} En el caso de que el comentario incluya la cadena \texttt{CTEEPBD\_EXCLUYE\_AUX\_ACS} el componente es descartado para el cálculo de la fracción renovable de la demanda de ACS. Esto permite descartar dichos consumos en la contribución a la demanda de ACS y permite así el cálculo de más casos con generación renovable de ACS (diferente de la electricidad), para los que no se cumpliría la restricción para el cálculo de la fracción renovable de la demanda de ACS de que no se empleen más de dos vectores energéticos con procedencia en la red.
 
 \clearpage
 \newpage
@@ -747,7 +750,7 @@ La clave de \textbf{indicadores adicionales} (\texttt{misc}) contiene datos orga
 En la versión actual del programa se emiten los siguientes valores:
 
 \begin{itemize}
-\item \texttt{fraccion\_renovable\_demanda\_acs\_nrb} - Fracción de la demanda de ACS con origen renovable considerando el perímetro próximo. Se calcula únicamente cuando se usa la opción \texttt{-{}-demanda\_anual\_acs} y se cumplen las restricciones para su cálculo en cuanto al origen de la energía usada. Se almacena como un texto que contiene un número decimal y se expresa en tanto por uno.
+\item \texttt{fraccion\_renovable\_demanda\_acs\_nrb} - Fracción de la demanda de ACS con origen renovable considerando el perímetro próximo. Se calcula únicamente cuando se usa la opción \texttt{-{}-demanda\_anual\_acs} o se incluye el metadato \texttt{CTE\_ACS\_DEMANDA\_ANUAL} y se cumplen las restricciones para su cálculo en cuanto al origen de la energía usada. Se almacena como un texto que contiene un número decimal y se expresa en tanto por uno.
 \item \texttt{demanda\_anual\_acs} - Demanda anual de ACS aportada con la opcion \texttt{-{}-demanda\_anual\_acs}. Se almacena como texto y se expresa en $kWh$.
 \end{itemize}
 

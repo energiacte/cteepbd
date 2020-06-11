@@ -52,6 +52,7 @@ ELECTRICIDAD, INSITU, A_NEPB, B, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018
 
 MEDIOAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 MEDIOAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
@@ -868,4 +869,14 @@ GASNATURAL,CONSUMO,EPB,ACS,27.88"
     let FP: Factors = TESTFP.parse().unwrap();
     let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP);
     assert!(demanda_ren_acs.is_err());
+}
+
+#[test]
+fn cte_ACS_demanda_ren_excluye_aux() {
+    // Caso de GT con exclusión de líneas de consumo eléctrico auxiliar
+    let comps =
+        components_from_file("test_data/acs_demanda_ren_con_exclusion_auxiliares.csv");
+    let FP = TESTFP.parse().unwrap();
+    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
+    assert_eq!(format!("{:.1}", demanda_ren_acs), "4549.0");
 }

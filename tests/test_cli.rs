@@ -174,3 +174,33 @@ fn ejemplo_acs_demanda_ren_con_nepb() {
         .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 77.3 [%]")
         .unwrap();
 }
+
+#[test]
+fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux() {
+    assert_cli::Assert::main_binary()
+        .with_args(&[
+            "-c",
+            "test_data/acs_demanda_ren_con_exclusion_auxiliares.csv",
+            "-l",
+            "PENINSULA",
+            "--demanda_anual_acs",
+            "4549.0",
+        ])
+        .stdout()
+        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 100.0 [%]")
+        .unwrap();
+}
+
+#[test]
+fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux_meta() {
+    assert_cli::Assert::main_binary()
+        .with_args(&[
+            "-c",
+            "test_data/acs_demanda_ren_con_exclusion_auxiliares.csv",
+            "-l",
+            "PENINSULA",
+        ])
+        .stdout()
+        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 100.0 [%]")
+        .unwrap();
+}

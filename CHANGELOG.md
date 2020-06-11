@@ -13,6 +13,14 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2020-06-12
+
+- Posibilidad de excluir en el cálculo de la demanda renovable de ACS de
+  los componentes marcados con ```CTEEPBD_EXCLUYE_AUX_ACS``` en el comentario.
+  Esto permite excluir los consumos auxiliares eléctricos, que no
+  contribuyen a la demanda.
+- Posiblidad de indicar la demanda anual de ACS en los metadatos con ```CTE_ACS_DEMANDA_ANUAL```
+
 ## [0.18.0] - 2020-06-03
 
 ### Novedades

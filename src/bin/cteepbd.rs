@@ -573,22 +573,26 @@ fn main() {
 
     // Salida de resultados -----------------------------------------------------------------------
     if let Some(mut balance) = balance {
-        // Añade información miscelánea de usuario
-        if matches.is_present("demanda_anual_acs") {
-            // Añadir a balance.misc un diccionario si no existe
-            let mut map = balance.misc.unwrap_or_else(HashMap::<String, String>::new);
-            // Añadir datos a diccionario: "demanda_anual_acs" y "porcentaje_renovable_demanda_acs_nrb"
-            let demanda_anual_acs = matches
-                .value_of("demanda_anual_acs")
-                .and_then(|v| v.parse::<f32>().ok())
-                .unwrap_or_else(|| {
+        // Lee dato de CLI > Meta > None
+        let maybe_demanda_anual_acs = matches
+            .value_of("demanda_anual_acs")
+            .and_then(|v| {
+                v.parse::<f32>().ok().or_else(|| {
                     eprintln!("ERROR: demanda anual de ACS con formato incorrecto");
                     exit(exitcode::DATAERR);
-                });
-            if demanda_anual_acs.abs() < f32::EPSILON {
-                eprintln!("ERROR: demanda anual de ACS nula");
-                exit(exitcode::DATAERR);
-            };
+                })
+            })
+            .or_else(|| components.get_meta_f32("CTE_ACS_DEMANDA_ANUAL"))
+            .or(None)
+            .map(|dacs| {
+                if dacs.abs() < f32::EPSILON {
+                    eprintln!("ERROR: demanda anual de ACS nula");
+                    exit(exitcode::DATAERR);
+                };
+                dacs
+            });
+
+        if let Some(demanda_anual_acs) = maybe_demanda_anual_acs {
             let demanda_renovable_acs_nrb = cte::demanda_renovable_acs_nrb(&components, &fpdata)
                 .unwrap_or_else(|e| {
                     eprintln!(
@@ -599,6 +603,10 @@ fn main() {
                 });
             let porcentaje_renovable_demanda_acs_nrb =
                 demanda_renovable_acs_nrb / demanda_anual_acs;
+            // Añadir a balance.misc un diccionario, si no existe, con datos:
+            // - "demanda_anual_acs"
+            // - "porcentaje_renovable_demanda_acs_nrb"
+            let mut map = balance.misc.unwrap_or_else(HashMap::<String, String>::new);
             map.insert(
                 "demanda_anual_acs".to_string(),
                 format!("{:.1}", demanda_anual_acs),
@@ -609,6 +617,7 @@ fn main() {
             );
             balance.misc = Some(map);
         }
+
         // Guardar balance en formato json
         if matches.is_present("archivo_salida_json") {
             let path = matches.value_of_os("archivo_salida_json").unwrap();

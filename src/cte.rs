@@ -264,12 +264,17 @@ pub fn demanda_renovable_acs_nrb(
             .and_then(|f| Ok(f.ren))
     };
 
+    // Lista de componentes para ACS y filtrados auxiliares excluidos de participar en la demanda
     let components = &components.filter_by_epb_service(Service::ACS);
-    let cr_list = &components.cdata;
+    let cr_list: &Vec<&Component> = &components
+        .cdata
+        .iter()
+        .filter(|c| !&c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS"))
+        .collect();
 
     // Casos sin consumo (o producción) de ACS
     if cr_list.is_empty() {
-        return Ok(0.0)
+        return Ok(0.0);
     };
 
     // Comprobaremos que las hipótesis para poder calcular la demanda renovable se cumplen:
