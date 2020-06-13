@@ -42,7 +42,6 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
 
 */
 
-use std::collections::HashMap;
 use std::fs::{read_to_string, File};
 use std::io::prelude::*;
 use std::path::Path;
@@ -549,17 +548,30 @@ fn main() {
         }
     }
 
+    // Demanda anual de ACS: CLI > Meta > None ----------------------------------------------------
+    let maybe_demanda_anual_acs = matches
+        .value_of("demanda_anual_acs")
+        .and_then(|v| {
+            v.parse::<f32>().ok().or_else(|| {
+                eprintln!("ERROR: demanda anual de ACS con formato incorrecto");
+                exit(exitcode::DATAERR);
+            })
+        })
+        .or_else(|| components.get_meta_f32("CTE_ACS_DEMANDA_ANUAL"))
+        .or(None);
+
     // Cálculo del balance ------------------------------------------------------------------------
     let balance: Option<Balance> = if !components.cdata.is_empty() {
-        Some(
-            energy_performance(&components, &fpdata, kexp, arearef).unwrap_or_else(|e| {
+        let balance = energy_performance(&components, &fpdata, kexp, arearef)
+            .map(|b| cte::incorpora_demanda_renovable_acs_nrb(b, maybe_demanda_anual_acs))
+            .unwrap_or_else(|e| {
                 eprintln!(
                     "ERROR: no se ha podido calcular el balance energético: {}",
                     e
                 );
                 exit(exitcode::DATAERR);
-            }),
-        )
+            });
+        Some(balance)
     } else if matches.is_present("gen_archivos_factores") {
         println!(
             "No se calcula el balance pero se ha generado el archivo de factores de paso {:?}",
@@ -572,52 +584,7 @@ fn main() {
     };
 
     // Salida de resultados -----------------------------------------------------------------------
-    if let Some(mut balance) = balance {
-        // Lee dato de CLI > Meta > None
-        let maybe_demanda_anual_acs = matches
-            .value_of("demanda_anual_acs")
-            .and_then(|v| {
-                v.parse::<f32>().ok().or_else(|| {
-                    eprintln!("ERROR: demanda anual de ACS con formato incorrecto");
-                    exit(exitcode::DATAERR);
-                })
-            })
-            .or_else(|| components.get_meta_f32("CTE_ACS_DEMANDA_ANUAL"))
-            .or(None)
-            .map(|dacs| {
-                if dacs.abs() < f32::EPSILON {
-                    eprintln!("ERROR: demanda anual de ACS nula");
-                    exit(exitcode::DATAERR);
-                };
-                dacs
-            });
-
-        if let Some(demanda_anual_acs) = maybe_demanda_anual_acs {
-            let demanda_renovable_acs_nrb = cte::demanda_renovable_acs_nrb(&components, &fpdata)
-                .unwrap_or_else(|e| {
-                    eprintln!(
-                        "ERROR: no se puede calcular la demanda renovable de ACS \"{}\"",
-                        e
-                    );
-                    exit(exitcode::DATAERR);
-                });
-            let porcentaje_renovable_demanda_acs_nrb =
-                demanda_renovable_acs_nrb / demanda_anual_acs;
-            // Añadir a balance.misc un diccionario, si no existe, con datos:
-            // - "demanda_anual_acs"
-            // - "porcentaje_renovable_demanda_acs_nrb"
-            let mut map = balance.misc.unwrap_or_else(HashMap::<String, String>::new);
-            map.insert(
-                "demanda_anual_acs".to_string(),
-                format!("{:.1}", demanda_anual_acs),
-            );
-            map.insert(
-                "fraccion_renovable_demanda_acs_nrb".to_string(),
-                format!("{:.3}", porcentaje_renovable_demanda_acs_nrb),
-            );
-            balance.misc = Some(map);
-        }
-
+    if let Some(balance) = balance {
         // Guardar balance en formato json
         if matches.is_present("archivo_salida_json") {
             let path = matches.value_of_os("archivo_salida_json").unwrap();

@@ -1,6 +1,6 @@
 # Cambios
 
-Los principales cambios del proyect se reflejan en este archivo.
+Los principales cambios del proyecto se reflejan en este archivo.
 
 El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), y refleja los cambios clasificados en:
 
@@ -13,7 +13,16 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2020-06-13
+
+### Cambios
+
+- El cálculo de la parte renovable de la demanda de ACS en perímetro próximo es ahora una
+  operación infalible (siempre devuelve un resultado). En el caso de que el indicador no se pueda calcular, se añade en ```balance.misc``` una clave ```error_acs``` donde se dan los detalles, evitando la salida abrupta del programa.
+
 ## [0.19.0] - 2020-06-12
+
+### Novedades
 
 - Posibilidad de excluir en el cálculo de la demanda renovable de ACS de
   los componentes marcados con ```CTEEPBD_EXCLUYE_AUX_ACS``` en el comentario.

@@ -232,6 +232,11 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
     factors
 }
 
+/*
+Parte renovable de la demanda de ACS en el perímetro próximo
+------------------------------------------------------------
+*/
+
 #[allow(non_snake_case)]
 /// Parte renovable de la demanda de ACS considerando el perímetro próximo
 ///
@@ -335,6 +340,56 @@ pub fn demanda_renovable_acs_nrb(
         .sum::<f32>();
 
     Ok(E_pr_el_onsite_used_EPus_an_ren + E_EPus_nrb_an_ren)
+}
+
+/// Devuelve balance con datos de demanda renovable de ACS en perímetro próximo incorporados
+pub fn incorpora_demanda_renovable_acs_nrb(mut balance: Balance, demanda_anual_acs: Option<f32>) -> Balance {
+    // Añadir a balance.misc un diccionario, si no existe, con datos:
+    let mut map = balance.misc.unwrap_or_else(HashMap::<String, String>::new);
+    match demanda_anual_acs {
+        Some(demanda_anual_acs) => {
+            map.insert(
+                "demanda_anual_acs".to_string(),
+                format!("{:.1}", demanda_anual_acs),
+            );
+
+            if demanda_anual_acs.abs() < f32::EPSILON {
+                map.insert(
+                    "error_acs".to_string(),
+                    "ERROR: demanda anual de ACS nula o casi nula".to_string(),
+                );
+            } else {
+                match demanda_renovable_acs_nrb(&balance.components, &balance.wfactors) {
+                    Ok(demanda_renovable_acs_nrb) => {
+                        let porcentaje_renovable_demanda_acs_nrb =
+                            demanda_renovable_acs_nrb / demanda_anual_acs;
+                        map.insert(
+                            "fraccion_renovable_demanda_acs_nrb".to_string(),
+                            format!("{:.3}", porcentaje_renovable_demanda_acs_nrb),
+                        );
+                        map.remove("error_acs");
+                    }
+                    Err(e) => {
+                        map.insert(
+                            "error_acs".to_string(),
+                            format!(
+                                "ERROR: no se puede calcular la demanda renovable de ACS \"{}\"",
+                                e
+                            ),
+                        );
+                    }
+                }
+            }
+        },
+        _ => {
+            map.insert(
+                "error_acs".to_string(),
+                "ERROR: demanda anual de ACS no definida".to_string(),
+            );
+        }
+    }
+    balance.misc = Some(map);
+    balance
 }
 
 /*
