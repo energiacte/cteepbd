@@ -235,7 +235,7 @@ impl Factors {
                             && f.step == Step::A
                             && f.dest == Dest::SUMINISTRO
                     })
-                    .and_then(|f| Some(f.factors()));
+                    .map(|f| f.factors());
 
                 if let Some(factors) = fp_a_input {
                     // VECTOR, SRC, A_RED, A, ren, nren === VECTOR, SRC, SUMINISTRO, A, ren, nren
@@ -291,7 +291,7 @@ impl Factors {
                         && f.dest == Dest::SUMINISTRO
                         && f.step == Step::A
                 })
-                .and_then(|f| Some(f.factors()));
+                .map(|f| f.factors());
 
             if let Some(factors) = fp_a_red_input {
                 // VECTOR, SRC, A_RED, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren

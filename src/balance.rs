@@ -600,11 +600,11 @@ fn balance_for_carrier(
         let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {
             // Used energy
-            E_Epus_cr_an_byuse.insert(service.clone(), E_EPus_cr_an * f_us_k_cr);
+            E_Epus_cr_an_byuse.insert(*service, E_EPus_cr_an * f_us_k_cr);
             // Step A
-            E_we_cr_an_A_byuse.insert(service.clone(), E_we_cr_an_A * f_us_k_cr);
+            E_we_cr_an_A_byuse.insert(*service, E_we_cr_an_A * f_us_k_cr);
             // Step B (E.2.6)
-            E_we_cr_an_byuse.insert(service.clone(), E_we_cr_an * f_us_k_cr);
+            E_we_cr_an_byuse.insert(*service, E_we_cr_an * f_us_k_cr);
         }
     }
 

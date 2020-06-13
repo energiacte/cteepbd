@@ -119,7 +119,7 @@ pub trait MetaVec {
         self.get_metavec()
             .iter()
             .find(|m| m.key == key)
-            .and_then(|v| Some(v.value.clone()))
+            .map(|v| v.value.clone())
     }
 
     /// Get (optional) metadata value (f32) by key as f32
