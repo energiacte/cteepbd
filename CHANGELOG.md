@@ -17,8 +17,8 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 ### Cambios
 
-- El cálculo del porcentaje renovable de la demanda de ACS en el perímetro próximo ahora admite más casos y permite excluir consumos eléctricos auxiliares
-  - Admite más de un vector de red salvo que se combine con biomasa
+- El cálculo del porcentaje renovable de la demanda de ACS en el perímetro próximo ahora admite más casos, con las siguientes restricciones:
+  - Si se produce ACS con biomasa, solo se puede combinar con otra producción in situ
   - No admite producción de ACS con electricidad cogenerada
 
 ### Correcciones
