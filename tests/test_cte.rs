@@ -780,8 +780,8 @@ ELECTRICIDAD,PRODUCCION,INSITU,ACS,60"
         .unwrap()
         .normalize();
     let FP: Factors = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
-    assert_eq!(format!("{:.1}", demanda_ren_acs), "60.0");
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
 }
 
 /// Gas natural (fp_nren = 1.1, con rend=0.9) y 60% de cobertura solar (100kWh demanda ACS)
@@ -793,8 +793,52 @@ MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
         .unwrap()
         .normalize();
     let FP: Factors = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
-    assert_eq!(format!("{:.1}", demanda_ren_acs), "60.0");
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
+}
+
+/// Biomasa rend 75% y PST (75kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_biomasa_10PST_100() {
+    let comps = "BIOMASA,CONSUMO,EPB,ACS,100
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,10"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "1.00");
+}
+
+/// Biomasa rend 75% (75kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_biomasa_100() {
+    let comps = "BIOMASA,CONSUMO,EPB,ACS,100"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "1.00");
+}
+
+/// Red de distrito, red1 50% renovable y red2 10% renovable (100kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_red1_red2() {
+    let comps = "RED1,CONSUMO,EPB,ACS,50
+RED2,CONSUMO,EPB,ACS,50"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let TESTFPEXT = format!(
+        "{}\n{}\n{}",
+        TESTFP,
+        "RED1,RED,SUMINISTRO,A,0.5,0.0,0.0", // Red de distrito 50% renovable
+        "RED2,RED,SUMINISTRO,A,0.1,0.0,0.0"  // Red de distrito 10% renovable
+    );
+    let FP: Factors = TESTFPEXT.parse().unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.30");
 }
 
 /// Bomba de calor (SCOP=2.5) (100kWh demanda ACS)
@@ -806,8 +850,8 @@ MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
         .unwrap()
         .normalize();
     let FP: Factors = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
-    assert_eq!(format!("{:.1}", demanda_ren_acs), "60.0");
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
 }
 
 /// Bomba de calor (SCOP=2.5) + 10kWh PV (100kWh demanda ACS)
@@ -820,8 +864,8 @@ ELECTRICIDAD,PRODUCCION,INSITU,NDEF,10"
         .unwrap()
         .normalize();
     let FP: Factors = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
-    assert_eq!(format!("{:.1}", demanda_ren_acs), "70.0");
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
 }
 
 /// Bomba de calor (SCOP=2.5) + 10kWh PV con 5kWh consumo eléctrico NEPB (100kWh demanda ACS)
@@ -836,8 +880,8 @@ ELECTRICIDAD,CONSUMO,NEPB,NDEF,40.0"
         .unwrap()
         .normalize();
     let FP: Factors = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
-    assert_eq!(format!("{:.1}", demanda_ren_acs), "70.0");
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
 }
 
 /// Bomba de calor (SCOP=2.5) con electricidad cogenerada (100kWh demanda ACS)
@@ -852,14 +896,13 @@ ELECTRICIDAD,PRODUCCION,COGENERACION,ACS,10"
         .unwrap()
         .normalize();
     let FP: Factors = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP);
-    assert!(demanda_ren_acs.is_err());
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0);
+    assert!(fraccion_ren_acs.is_err());
 }
 
 /// Bomba de calor (SCOP=2.5) y 25% caldera de GN (rend. 0.9) (100kWh demanda ACS)
-// Falla al haber más de un suministro de red que no es insitu
 #[test]
-fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn() {
+fn cte_ACS_demanda_ren_bdc_45ma_25gn() {
     let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,30.0
 MEDIOAMBIENTE,CONSUMO,EPB,ACS,45
 GASNATURAL,CONSUMO,EPB,ACS,27.88"
@@ -867,16 +910,31 @@ GASNATURAL,CONSUMO,EPB,ACS,27.88"
         .unwrap()
         .normalize();
     let FP: Factors = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP);
-    assert!(demanda_ren_acs.is_err());
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.45");
+}
+
+/// Bomba de calor (SCOP=2.5) y 25% caldera de GN y de BIOMASA (rend. 0.9) (100kWh demanda ACS)
+// Falla al haber BIOMASA y otro suministro de red que no es insitu
+#[test]
+fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn_y_biomasa() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,30.0
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,45
+BIOMASA,CONSUMO,EPB,ACS,13.94
+GASNATURAL,CONSUMO,EPB,ACS,13.94"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0);
+    assert!(fraccion_ren_acs.is_err());
 }
 
 #[test]
 fn cte_ACS_demanda_ren_excluye_aux() {
     // Caso de GT con exclusión de líneas de consumo eléctrico auxiliar
-    let comps =
-        components_from_file("test_data/acs_demanda_ren_con_exclusion_auxiliares.csv");
+    let comps = components_from_file("test_data/acs_demanda_ren_con_exclusion_auxiliares.csv");
     let FP = TESTFP.parse().unwrap();
-    let demanda_ren_acs = demanda_renovable_acs_nrb(&comps, &FP).unwrap();
-    assert_eq!(format!("{:.1}", demanda_ren_acs), "4549.0");
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 4549.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "1.00");
 }

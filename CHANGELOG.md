@@ -13,6 +13,18 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0] - 2020-06-30
+
+### Cambios
+
+- El cálculo del porcentaje renovable de la demanda de ACS en el perímetro próximo ahora admite más casos y permite excluir consumos eléctricos auxiliares
+  - Admite más de un vector de red salvo que se combine con biomasa
+  - No admite producción de ACS con electricidad cogenerada
+
+### Correcciones
+
+- Se corrige el cálculo del porcentaje renovable de la demanda de ACS en el perímetro próximo, que en algunos casos se reportaba superior al 100%.
+
 ## [0.20.0] - 2020-06-13
 
 ### Cambios

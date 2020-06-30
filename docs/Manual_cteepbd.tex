@@ -322,7 +322,7 @@ El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable
 
 \textbf{\texttt{-{}-demanda\_anual\_acs <DEM\_ACS>}}
 
-Este argumento indica la demanda total anual para el servicio de agua caliente sanitaria (ACS), en  $kWh$, usado para calcular el porcentaje de la demanda de ACS de origen renovable en el perímetro próximo. Permite el cálculo del indicador de la sección 4 del DB-HE. Este cálculo puede realizarse solo en aquellos casos en los que no se utiliza para producir ACS más de un vector con procedencia distinta a la de la parcela (in situ).
+Este argumento indica la demanda total anual para el servicio de agua caliente sanitaria (ACS), en  $kWh$, usado para calcular el porcentaje de la demanda de ACS de origen renovable en el perímetro próximo. Permite el cálculo del indicador de la sección 4 del DB-HE. Este cálculo puede realizarse solo en aquellos casos en los que no se utiliza para producir ACS electricidad procedente de cogeneración o, en el caso de usar biomasa, esta solamente se combina con otros consumos de energía producida \textit{in situ}.
 
 \subsubsection{Argumentos de salida de valores de entrada modificados}
 
@@ -988,7 +988,7 @@ $\texttt{balance\_m2.B\_byuse}$
 
 \subsection{Obtención del porcentaje de la demanda con origen renovable, calculada para el perímetro próximo}
 
-Este dato se obtiene siempre que se invoque la aplicación usando la opción \texttt{-{}-demanda\_anual\_acs DEM\_ACS} y se cumplan las limitaciones que actualmente tiene el programa para su obtención (consumo de un único vector para la generación de ACS con origen distinto al \textit{in situ}).
+Este dato se obtiene siempre que se invoque la aplicación usando la opción \texttt{-{}-demanda\_anual\_acs DEM\_ACS} o se disponga del metadato \texttt{CTE\_ACS\_DEMANDA\_ANUAL} y se cumplan las limitaciones que actualmente tiene el programa para su obtención (si la producción de ACS se realiza mediante biomasa solamente puede tener contribución de otros vectores producidos \textit{in situ}, y se puede producir ACS mediante electricidad procedente de cogeneración).
 
 El valor del porcentaje se obtiene multiplicando por 100 el dato dado como fracción:
 

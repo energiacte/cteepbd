@@ -10,6 +10,9 @@ Este programa, `CteEPBD`, implementa la metodología de cálculo de la eficienci
 
 El programa calcula la energía suministrada al edificio (desde redes de abastecimiento o producida *in situ*) y la energía exportada (a la red y a usos no EPB) para obtener diversos indicadores de la eficiencia energética del edificio, expresada como energía ponderada (p.e. consumo de energía primaria no renovable, consumo de energía primaria total, fracción renovable del consumo de energía primaria o emisiones de CO2). Para ello, toma en consideración los factores de paso de los distintos vectores energéticos y el factor de exportación (*k_exp*).
 
+En algunos casos también permite calcular el porcentaje de la demanda de ACS de origen renovable (no calcula este indicador cuando se usa biomasa con otros vectores
+no producidos in situ o cuando se produce ACS con electricidad de cogeneración).
+
 ## Uso
 
 El programa es autodocumentado y puede obtenerse ayuda usando la opción `-h`.
@@ -59,3 +62,5 @@ Se han adoptado las siguientes hipótesis de cálculo y simplificaciones:
 - el factor de coincidencia de cargas (f_match_t) se fija igual a 1.0
 - no se asignan los consumos y producciones de energía a sistemas concretos (no son identificables)
 - el reparto de energía eléctrica producida entre servicios es proporcional al consumo eléctrico del servicio respecto al total
+- para el cálculo del porcentaje renovable de la demanda de ACS se considera que el rendimiento térmico de las aportaciones
+  renovables distintas a la biomasa es igual a 1.0.
