@@ -343,7 +343,10 @@ pub fn demanda_renovable_acs_nrb(
 }
 
 /// Devuelve balance con datos de demanda renovable de ACS en perímetro próximo incorporados
-pub fn incorpora_demanda_renovable_acs_nrb(mut balance: Balance, demanda_anual_acs: Option<f32>) -> Balance {
+pub fn incorpora_demanda_renovable_acs_nrb(
+    mut balance: Balance,
+    demanda_anual_acs: Option<f32>,
+) -> Balance {
     // Añadir a balance.misc un diccionario, si no existe, con datos:
     let mut map = balance.misc.unwrap_or_else(HashMap::<String, String>::new);
     match demanda_anual_acs {
@@ -380,7 +383,7 @@ pub fn incorpora_demanda_renovable_acs_nrb(mut balance: Balance, demanda_anual_a
                     }
                 }
             }
-        },
+        }
         _ => {
             map.insert(
                 "error_acs".to_string(),
