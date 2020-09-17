@@ -4,14 +4,20 @@ Los principales cambios del proyecto se reflejan en este archivo.
 
 El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), y refleja los cambios clasificados en:
 
-- ```Novedades```: para nueva funcionalidad.
-- ```Cambios```: para modificaciones de funcionalidad existente.
-- ```Obsoleto```: para funcionalidad anteriormente estable que será eliminada en versiones futuras.
-- ```Eliminaciones```: para funcionalidades obsoletas que han sido eliminadas en esta versión.
-- ```Correcciones```: para correcciones de errores.
-- ```Seguridad```: para invitar a la actualización en el caso de vulnerabilidades.
+- `Novedades`: para nueva funcionalidad.
+- `Cambios`: para modificaciones de funcionalidad existente.
+- `Obsoleto`: para funcionalidad anteriormente estable que será eliminada en versiones futuras.
+- `Eliminaciones`: para funcionalidades obsoletas que han sido eliminadas en esta versión.
+- `Correcciones`: para correcciones de errores.
+- `Seguridad`: para invitar a la actualización en el caso de vulnerabilidades.
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
+
+## [0.22.0] - 2020-09-17
+
+### Correcciones
+
+- Corrección del fragmento XML (\<CO2> --> \<co2>)
 
 ## [0.21.0] - 2020-06-30
 
@@ -30,17 +36,17 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 ### Cambios
 
 - El cálculo de la parte renovable de la demanda de ACS en perímetro próximo es ahora una
-  operación infalible (siempre devuelve un resultado). En el caso de que el indicador no se pueda calcular, se añade en ```balance.misc``` una clave ```error_acs``` donde se dan los detalles, evitando la salida abrupta del programa.
+  operación infalible (siempre devuelve un resultado). En el caso de que el indicador no se pueda calcular, se añade en `balance.misc` una clave `error_acs` donde se dan los detalles, evitando la salida abrupta del programa.
 
 ## [0.19.0] - 2020-06-12
 
 ### Novedades
 
 - Posibilidad de excluir en el cálculo de la demanda renovable de ACS de
-  los componentes marcados con ```CTEEPBD_EXCLUYE_AUX_ACS``` en el comentario.
+  los componentes marcados con `CTEEPBD_EXCLUYE_AUX_ACS` en el comentario.
   Esto permite excluir los consumos auxiliares eléctricos, que no
   contribuyen a la demanda.
-- Posiblidad de indicar la demanda anual de ACS en los metadatos con ```CTE_ACS_DEMANDA_ANUAL```
+- Posiblidad de indicar la demanda anual de ACS en los metadatos con `CTE_ACS_DEMANDA_ANUAL`
 
 ## [0.18.0] - 2020-06-03
 
