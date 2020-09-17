@@ -589,7 +589,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 co2,
                 comment,
             } = f;
-            format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><CO2>{:.3}</CO2><Comentario>{}</Comentario></Dato>",
+            format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2><Comentario>{}</Comentario></Dato>",
             carrier, source, dest, step, ren, nren, co2, escape_xml(comment))
         })
         .collect::<Vec<String>>()
