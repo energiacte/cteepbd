@@ -548,7 +548,7 @@ Todos los registros deben emplear número igual de pasos de tiempo.
 
 Este campo, con valor descriptivo, no está delimitado por un signo de coma previo sino precedido por un signo de almohadilla (\texttt{\#}) y puede contener un texto arbitrario, que no se tiene en cuenta en el cálculo.
 
-\textbf{Nota:} En el caso de que el comentario incluya la cadena \texttt{CTEEPBD\_EXCLUYE\_AUX\_ACS} el componente es descartado para el cálculo de la fracción renovable de la demanda de ACS. Esto permite descartar dichos consumos en la contribución a la demanda de ACS y permite así el cálculo de más casos con generación renovable de ACS (diferente de la electricidad), para los que no se cumpliría la restricción para el cálculo de la fracción renovable de la demanda de ACS de que no se empleen más de dos vectores energéticos con procedencia en la red.
+\textbf{Nota:} En el caso de que el comentario incluya la cadena \texttt{CTEEPBD\_EXCLUYE\_AUX\_ACS} o \texttt{CTEEPBD\_EXCLUYE\_SCOP\_ACS} el componente es descartado para el cálculo de la fracción renovable de la demanda de ACS. Esto permite descartar dichos consumos (eléctricos y de energía ambiente, respectivamente) en la contribución a la demanda de ACS. Esto permite, por un lado, el cálculo de más casos con generación renovable de ACS (diferente de la electricidad), para los que no se cumpliría la restricción para el cálculo de la fracción renovable de la demanda de ACS de que no se empleen más de dos vectores energéticos con procedencia en la red, y, por otro lado, excluir las aportaciones de energía ambiente de equipos con un SCOP inferior al mínimo para ser considerada una aportación renovable.
 
 \clearpage
 \newpage

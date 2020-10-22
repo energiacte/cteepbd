@@ -914,6 +914,21 @@ GASNATURAL,CONSUMO,EPB,ACS,27.88"
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.45");
 }
 
+/// Bomba de calor (SCOP=2.0) y 25% caldera de GN (rend. 0.9) (100kWh demanda ACS)
+/// En este caso se excluye la producción de medioambiente puesto que no es renovable
+#[test]
+fn cte_ACS_demanda_ren_bdc_38ma__25gn_excluye_medioambiente() {
+    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,37.5
+MEDIOAMBIENTE,CONSUMO,EPB,ACS,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
+GASNATURAL,CONSUMO,EPB,ACS,27.88"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.00");
+}
+
 /// Bomba de calor (SCOP=2.5) y 25% caldera de GN y de BIOMASA (rend. 0.9) (100kWh demanda ACS)
 // Falla al haber BIOMASA y otro suministro de red que no es insitu
 #[test]

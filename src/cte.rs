@@ -277,12 +277,15 @@ pub fn fraccion_renovable_acs_nrb(
             .and_then(|f| Ok(f.ren))
     };
 
-    // Lista de componentes para ACS y filtrados auxiliares excluidos de participar en la demanda
+    // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
     let components = &components.filter_by_epb_service(Service::ACS);
     let cr_list: &Vec<&Component> = &components
         .cdata
         .iter()
-        .filter(|c| !&c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS"))
+        .filter(|c| {
+            !(c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS")
+                || c.comment.contains("CTEEPBD_EXCLUYE_SCOP_ACS"))
+        })
         .collect();
 
     // Casos sin consumo (o producción) de ACS

@@ -13,6 +13,14 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## []
+
+### Novedades
+
+- Posibilidad de excluir en el cálculo de la demanda renovable de ACS de
+  los componentes marcados con `CTEEPBD_EXCLUYE_SCOP_ACS` en el comentario.
+  Esto permite excluir los consumos de energía ambiente en casos de Bombas de calor con SCOP < 2.5
+
 ## [0.22.0] - 2020-09-17
 
 ### Correcciones
