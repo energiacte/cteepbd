@@ -187,7 +187,7 @@ fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux() {
             "4549.0",
         ])
         .stdout()
-        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 100.0 [%]")
+        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 96.7 [%]")
         .unwrap();
 }
 
@@ -201,6 +201,6 @@ fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux_meta() {
             "PENINSULA",
         ])
         .stdout()
-        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 100.0 [%]")
+        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 96.7 [%]")
         .unwrap();
 }
