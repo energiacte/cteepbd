@@ -822,6 +822,50 @@ fn cte_ACS_demanda_ren_biomasa_100() {
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.967");
 }
 
+/// Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS)
+#[test]
+fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
+    let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 50
+    #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 50
+    BIOMASA,CONSUMO,EPB,ACS,50
+    BIOMASADENSIFICADA,CONSUMO,EPB,ACS,50"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let TESTFPEXT = format!(
+        "{}\n{}\n{}",
+        TESTFP,
+        "BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018",
+        "BIOMASADENSIFICADA,RED,SUMINISTRO, A, 1.028, 0.085, 0.018" // Red de distrito 50% renovable
+    );
+    let FP: Factors = TESTFPEXT.parse().unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
+    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.945");
+}
+
+/// Gas rend 90% (40% demanda -> 50kWh) + Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS las dos)
+#[test]
+fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
+    let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 30
+    #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 30
+    GASNATURAL,CONSUMO,EPB,ACS,55.556
+    BIOMASA,CONSUMO,EPB,ACS,50
+    BIOMASADENSIFICADA,CONSUMO,EPB,ACS,50"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let TESTFPEXT = format!(
+        "{}\n{}\n{}",
+        TESTFP,
+        "BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018",
+        "BIOMASADENSIFICADA,RED,SUMINISTRO, A, 1.028, 0.085, 0.018" // Red de distrito 50% renovable
+    );
+    let FP: Factors = TESTFPEXT.parse().unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 125.0).unwrap();
+    // Las dos biomasas producen lo mismo que antes de renovable = 0.945 * 75 = 70.875 , con el nuevo total de demanda (125kWh) -> 70.875 / 125.0 = 0.567
+    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.567");
+}
+
 /// Red de distrito, red1 50% renovable y red2 10% renovable (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_red1_red2() {

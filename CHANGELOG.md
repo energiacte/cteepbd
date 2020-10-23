@@ -20,6 +20,14 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 - Posibilidad de excluir en el cálculo de la demanda renovable de ACS de
   los componentes marcados con `CTEEPBD_EXCLUYE_SCOP_ACS` en el comentario.
   Esto permite excluir los consumos de energía ambiente en casos de Bombas de calor con SCOP < 2.5
+- Posibilidad de calcular la fracción renovable de la demanda de ACS con cualquier combinación con equipos de biomasa.
+  Si se usan distintos tipos de biomasa sólida o se combinan con vectores distintos a la energía ambiente o de redes de distrito, es necesario indicar en los metadatos
+  el porcentaje de la demanda de ACS que se cubre con `BIOMASA` (clave `CTE_DEMANDA_ACS_PCT_BIOMASA`) y/o con `BIOMASADENSIFICADA` (clave `CTE_DEMANDA_ACS_PCT_BIOMASA`).
+  Así, ahora únicamente no se podría calcular la fracción renovable de la demanda de ACS de aquellos casos con consumo de electricidad cogenerada.
+
+### Correcciones
+
+- Corrección del cálculo de la fracción de ACS con vectores de red de distrito `RED1` y `RED2` y cálculo más preciso para los vectores `BIOMASA` y `BIOMASADENSIFICADA`.
 
 ## [0.22.0] - 2020-09-17
 

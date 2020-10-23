@@ -322,7 +322,7 @@ El ejemplo \texttt{-{}-red1 0 1.3 0.3} indica que los factores de paso renovable
 
 \textbf{\texttt{-{}-demanda\_anual\_acs <DEM\_ACS>}}
 
-Este argumento indica la demanda total anual para el servicio de agua caliente sanitaria (ACS), en  $kWh$, usado para calcular el porcentaje de la demanda de ACS de origen renovable en el perímetro próximo. Permite el cálculo del indicador de la sección 4 del DB-HE. Este cálculo puede realizarse solo en aquellos casos en los que no se utiliza para producir ACS electricidad procedente de cogeneración o, en el caso de usar biomasa, esta solamente se combina con otros consumos de energía producida \textit{in situ}.
+Este argumento indica la demanda total anual para el servicio de agua caliente sanitaria (ACS), en  $kWh$, usado para calcular el porcentaje de la demanda de ACS de origen renovable en el perímetro próximo. Permite el cálculo del indicador de la sección 4 del DB-HE. Este cálculo puede realizarse solo en aquellos casos en los que no se utiliza para producir ACS electricidad procedente de cogeneración. En el caso de usar biomasa y esta no se combina únicamente con otros consumos de energía ambiente o de red de distrito, puede ser necesario definir el porcentaje de la demanda satisfecha por los sistemas que consumen biomasa usando los metadatos \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASA} y/o \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASADENSIFICADA}.
 
 \subsubsection{Argumentos de salida de valores de entrada modificados}
 
@@ -407,6 +407,8 @@ Para el archivo de definición de los componentes energéticos se establecen las
 \item \texttt{CTE\_COGEN}: tres valores numéricos separados por una coma, que indican los factores de paso (energía primaria renovable, no renovable y emisiones) para exportación a la red de electricidad cogenerada;
 \item \texttt{CTE\_RED1}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 1 (vector energético \texttt{RED1});
 \item \texttt{CTE\_RED2}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 2 (vector energético \texttt{RED2});
+\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{MEDIOAMBIENTE}, \texttt{RED1} o \texttt{RED2};
+\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASADENSIFICADA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASADENSIFICADA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{MEDIOAMBIENTE}, \texttt{RED1} o \texttt{RED2};
 \end{itemize}
 
 Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos del archivo de componentes tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
