@@ -143,7 +143,6 @@ impl Components {
     /// - las producciones eléctricas no pueden ser asignadas a un servicio
     #[allow(non_snake_case)]
     pub fn filter_by_epb_service(&self, service: Service) -> Self {
-        let num_steps = self.cdata[0].values.len(); // Pasos de cálculo
         let cdata = self.cdata.iter(); // Componentes
 
         // 1. Consumos y producciones del servicio, salvo la producción eléctrica
@@ -176,6 +175,9 @@ impl Components {
 
         // Si hay consumo y producción de electricidad, se reparte el consumo
         if E_srv_el_an > 0.0 && E_pr_el_an > 0.0 {
+             // Pasos de cálculo. Sabemos que cdata.len() > 1 porque si no no se podría cumplir el condicional
+            let num_steps = self.cdata[0].values.len();
+            
             // Energía eléctrica consumida en usos EPB
             let E_EPus_el_t_tot = E_EPus_el_t
                 .clone()
