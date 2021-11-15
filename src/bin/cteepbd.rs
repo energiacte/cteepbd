@@ -138,7 +138,7 @@ fn validate_kexp(kexpstr: &str, orig: &str) -> Option<f32> {
         );
         exit(exitcode::DATAERR);
     });
-    if kexp < 0.0 || kexp > 1.0 {
+    if !(0.0..=1.0).contains(&kexp) {
         eprintln!(
             "ERROR: factor de exportación k_exp fuera de rango [0.00 - 1.00]: {:.2} ({})",
             kexp, orig
@@ -183,7 +183,7 @@ fn get_factor(
 ) -> Option<RenNrenCo2> {
     let factor = matches
         .values_of(meta)
-        .and_then(|v| {
+        .map(|v| {
             // Datos desde línea de comandos
             let vv: Vec<f32> = v
                 .map(|vv| {
@@ -193,11 +193,11 @@ fn get_factor(
                     })
                 })
                 .collect();
-            Some(RenNrenCo2 {
+            RenNrenCo2 {
                 ren: vv[0],
                 nren: vv[1],
                 co2: vv[2],
-            })
+            }
         })
         .or_else(|| components.get_meta_rennren(meta));
     if let Some(factor) = factor {
@@ -434,11 +434,11 @@ fn main() {
             ("archivo", fp_cli.to_string(), fp)
         }
         (None, Some(l_cli), _) => {
-            let fp = cte::wfactors_from_loc(&l_cli, &default_locwf, user_wf, default_userwf);
+            let fp = cte::wfactors_from_loc(l_cli, default_locwf, user_wf, default_userwf);
             ("usuario", l_cli.to_string(), fp)
         }
         (None, None, Some(l_meta)) => {
-            let fp = cte::wfactors_from_loc(&l_meta, &default_locwf, user_wf, default_userwf);
+            let fp = cte::wfactors_from_loc(&l_meta, default_locwf, user_wf, default_userwf);
             ("metadatos", l_meta, fp)
         }
         _ => {

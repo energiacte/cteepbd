@@ -466,7 +466,7 @@ fn balance_for_carrier(
         .get(&CSubtype::INSITU)
         .and_then(|E_pr_cr_i| {
             fp_find(fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
-                .and_then(|fpA_pr_cr_i| Ok(E_pr_cr_i * fpA_pr_cr_i.factors()))
+                .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i.factors())
                 .ok()
         })
         .unwrap_or_default();
@@ -487,7 +487,7 @@ fn balance_for_carrier(
     if E_exp_cr_an != 0.0 {
         // This case implies there is exported energy.
         // If there's no exportation, it's either because the carrier cannot be exported
-        // or becuause there's no effective exportation
+        // or because there's no effective exportation
         // * Step A: weighting depends on exported energy generation (origin generator)
         // Factors are averaged weighting by production for each origin (no priority, 9.6.6.2.4)
 

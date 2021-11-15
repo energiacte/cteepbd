@@ -264,7 +264,7 @@ impl fmt::Display for Component {
             .map(|v| format!("{:.2}", v))
             .collect::<Vec<_>>()
             .join(", ");
-        let comment = if self.comment != "" {
+        let comment = if !self.comment.is_empty() {
             format!(" # {}", self.comment)
         } else {
             "".to_owned()
@@ -303,10 +303,7 @@ impl str::FromStr for Component {
             .parse()
             .map_err(|_| EpbdError::ParseError(items[2].into()))?;
         let carrier_ok = match ctype {
-            CONSUMO => match csubtype {
-                EPB | NEPB => true,
-                _ => false,
-            },
+            CONSUMO => matches!(csubtype, EPB | NEPB),
             PRODUCCION => match csubtype {
                 INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
                 COGENERACION => carrier == ELECTRICIDAD,
@@ -517,7 +514,7 @@ impl Factor {
 
 impl fmt::Display for Factor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let comment = if self.comment != "" {
+        let comment = if !self.comment.is_empty() {
             format!(" # {}", self.comment)
         } else {
             "".to_owned()

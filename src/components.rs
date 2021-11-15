@@ -95,11 +95,7 @@ impl str::FromStr for Components {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<Components, Self::Err> {
-        let s_nobom = if s.starts_with("\u{feff}") {
-            &s[3..]
-        } else {
-            s
-        };
+        let s_nobom = s.strip_prefix('\u{feff}').or(Some(s)).unwrap();
         let lines: Vec<&str> = s_nobom.lines().map(str::trim).collect();
         let metalines = lines
             .iter()

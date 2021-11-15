@@ -37,7 +37,7 @@ use std::ops::Mul;
 /// Elementwise sum res[i] = vec1[i] + vec2[i] + ... + vecj[i]
 pub fn veclistsum<T: Float>(veclist: &[&[T]]) -> Vec<T> {
     let maxlen: usize = veclist.iter().map(|lst| lst.len()).max().unwrap_or(0_usize);
-    veclist.iter().fold(vec![Zero::zero()], |acc, ref x| {
+    veclist.iter().fold(vec![Zero::zero()], |acc, x| {
         (0..maxlen)
             .map(|idx| {
                 *acc.get(idx).unwrap_or(&Zero::zero()) + *x.get(idx).unwrap_or(&Zero::zero())
@@ -93,6 +93,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::useless_vec)]
     use super::*;
 
     #[test]

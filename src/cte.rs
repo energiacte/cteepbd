@@ -253,7 +253,7 @@ fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError>
         .ok_or_else(|| {
             EpbdError::WrongInput(format!("No se encuentra el factor de paso para \"{}\"", c))
         })
-        .and_then(|f| Ok(f.ren / (f.ren + f.nren)))
+        .map(|f| f.ren / (f.ren + f.nren))
 }
 
 #[allow(non_snake_case)]
@@ -262,7 +262,7 @@ fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError>
 /// Podemos obtener la parte renovable, con la fracción que supone su factor de paso ren respecto al total y
 /// suponiendo que la conversión de consumo a demanda es con rendimiento 1.0 (de modo que demanda = consumo para estos vectores)
 fn Q_district_and_env_an(
-    cr_list: &Vec<&Component>,
+    cr_list: &[&Component],
     wfactors: &Factors,
 ) -> Result<(f32, f32), EpbdError> {
     use Carrier::{MEDIOAMBIENTE, RED1, RED2};
@@ -287,7 +287,7 @@ fn Q_district_and_env_an(
 }
 
 /// Vectores energéticos consumidos
-fn get_used_carriers(cr_list: &Vec<&Component>) -> Vec<Carrier> {
+fn get_used_carriers(cr_list: &[&Component]) -> Vec<Carrier> {
     let mut used_carriers = cr_list
         .iter()
         .filter(|c| c.ctype == CType::CONSUMO)
@@ -406,12 +406,12 @@ pub fn fraccion_renovable_acs_nrb(
         // Solo hay un tipo de biomasa y no hay otros vectores que no sean de distrito o energía ambiente
         // entonces podemos calcular el % de la demanda de ACS abastecida por la biomasa
         let Q_any_biomass_acs_an = demanda_anual_acs - Q_district_and_env_an_tot;
-        let Q_any_biomass_acs_an_ren = if has_biomass {
+        // Parte renovable: Q_any_biomass_acs_an_ren
+        if has_biomass {
             Q_any_biomass_acs_an * get_fp_ren_fraction(BIOMASA, wfactors)?
         } else {
             Q_any_biomass_acs_an * get_fp_ren_fraction(BIOMASADENSIFICADA, wfactors)?
-        };
-        Q_any_biomass_acs_an_ren
+        }
     } else if has_any_biomass {
         // Además de biomasa hay otros vectores que no son de distrito o insitu y necesitamos saber qué cantidad de ACS produce la biomasa
         let Q_biomass_an_ren = if has_biomass {
@@ -586,15 +586,11 @@ E_CO2 [kg_CO2e/m2.an]: {:.2}
     if let Some(map) = &balance.misc {
         let demanda = map
             .get("demanda_anual_acs")
-            .and_then(|v| v.parse::<f32>().and_then(|r| Ok(format!("{:.1}", r))).ok())
+            .and_then(|v| v.parse::<f32>().map(|r| format!("{:.1}", r)).ok())
             .unwrap_or_else(|| "-".to_string());
         let pct_ren = map
             .get("fraccion_renovable_demanda_acs_nrb")
-            .and_then(|v| {
-                v.parse::<f32>()
-                    .and_then(|r| Ok(format!("{:.1}", r * 100.0)))
-                    .ok()
-            })
+            .and_then(|v| v.parse::<f32>().map(|r| format!("{:.1}", r * 100.0)).ok())
             .unwrap_or_else(|| "-".to_string());
         format!(
             "{}

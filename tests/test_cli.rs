@@ -1,5 +1,3 @@
-use assert_cli;
-
 #[test]
 fn ejemplo_j1_loc() {
     assert_cli::Assert::main_binary()
