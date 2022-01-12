@@ -285,24 +285,22 @@ impl str::FromStr for Component {
         use self::CType::*;
         use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
 
+        // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
+
+        // Minimal possible length (carrier + type + subtype + 1 value)
         if items.len() < 4 {
             return Err(EpbdError::ParseError(s.into()));
         };
-        // TODO: implement Display and FromStr traits for Carrier, CType, CSubtype
-        // TODO: and avoid mapping error here
-        let carrier: Carrier = items[0]
-            .parse()
-            .map_err(|_| EpbdError::ParseError(items[0].into()))?;
-        let ctype: CType = items[1]
-            .parse()
-            .map_err(|_| EpbdError::ParseError(items[1].into()))?;
-        let csubtype: CSubtype = items[2]
-            .parse()
-            .map_err(|_| EpbdError::ParseError(items[2].into()))?;
-        let carrier_ok = match ctype {
+
+        let carrier: Carrier = items[0].parse()?;
+        let ctype: CType = items[1].parse()?;
+        let csubtype: CSubtype = items[2].parse()?;
+
+        // Check coherence of ctype and csubtype
+        let subtype_belongs_to_type = match ctype {
             CONSUMO => matches!(csubtype, EPB | NEPB),
             PRODUCCION => match csubtype {
                 INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
@@ -310,16 +308,17 @@ impl str::FromStr for Component {
                 _ => false,
             },
         };
-        if !carrier_ok {
+        if !subtype_belongs_to_type {
             return Err(EpbdError::ParseError(s.into()));
         }
-        // Account for the legacy version, which may leave out the service field
-        let maybeservice: Result<Service, _> = items[3].parse();
-        let (valuesidx, service) = match maybeservice {
+
+        // Check service field. May be missing in legacy versions
+        let (valuesidx, service) = match items[3].parse() {
             Ok(s) => (4, s),
             Err(_) => (3, Service::default()),
         };
-        // Collect energy values taking into account the existance of the service field
+
+        // Collect energy values from the service field on
         let values = items[valuesidx..]
             .iter()
             .map(|v| v.parse::<f32>())
