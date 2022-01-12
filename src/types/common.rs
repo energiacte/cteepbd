@@ -41,7 +41,7 @@ use crate::{error::EpbdError, types::RenNrenCo2};
 pub enum Carrier {
     /// Electricity
     ELECTRICIDAD,
-    /// Environment thermal energy
+    /// Environment thermal energy or from solar origin
     MEDIOAMBIENTE,
     /// Biofuel
     BIOCARBURANTE,
@@ -128,9 +128,9 @@ impl std::fmt::Display for CType {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CSubtype {
-    /// on site energy source
+    /// On site energy source
     INSITU,
-    /// cogeneration energy source
+    /// Cogeneration energy source
     COGENERACION,
     /// EPB use
     EPB,
@@ -244,9 +244,13 @@ impl Default for Service {
 pub struct Component {
     /// Carrier name
     pub carrier: Carrier,
-    /// Produced (`PRODUCCION`) or consumed (`CONSUMO`) component type
+    /// Component type
+    /// - `PRODUCCION` for produced / generated energy components
+    /// - `CONSUMO` for consumed / used energy components
     pub ctype: CType,
-    /// Energy origin (`INSITU` or `COGENERACION`) for produced component types or end use type (`EPB` or `NEPB`) for consumed component types
+    /// Energy origin or end use type
+    /// - `INSITU` or `COGENERACION` for generated energy component types
+    /// - `EPB` or `NEPB` for used energy component types
     pub csubtype: CSubtype,
     /// End use
     pub service: Service,
