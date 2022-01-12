@@ -27,7 +27,7 @@ use std::convert::TryFrom;
 use std::fmt;
 use std::str;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{error::EpbdError, types::RenNrenCo2};
 
@@ -237,7 +237,7 @@ impl Default for Service {
 // Define basic Component and Components (Compoment list + Metadata) types
 
 /// Componente de energía.
-/// 
+///
 /// Representa la producción o consumo de energía para cada paso de cálculo
 /// y a lo largo del periodo de cálculo, para cada tipo, subtipo y uso de la energía.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -313,16 +313,18 @@ impl str::FromStr for Component {
         if !carrier_ok {
             return Err(EpbdError::ParseError(s.into()));
         }
-        //This accounts for the legacy version, which may not have a service type
+        // Account for the legacy version, which may leave out the service field
         let maybeservice: Result<Service, _> = items[3].parse();
         let (valuesidx, service) = match maybeservice {
             Ok(s) => (4, s),
             Err(_) => (3, Service::default()),
         };
+        // Collect energy values taking into account the existance of the service field
         let values = items[valuesidx..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
+
         Ok(Component {
             carrier,
             ctype,
@@ -375,7 +377,10 @@ impl TryFrom<CSubtype> for Source {
         match subtype {
             CSubtype::INSITU => Ok(Self::INSITU),
             CSubtype::COGENERACION => Ok(Self::COGENERACION),
-            _ => Err(EpbdError::ParseError(format!("CSubtype as Source {}", subtype))),
+            _ => Err(EpbdError::ParseError(format!(
+                "CSubtype as Source {}",
+                subtype
+            ))),
         }
     }
 }
