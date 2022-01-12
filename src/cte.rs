@@ -397,8 +397,8 @@ pub fn fraccion_renovable_acs_nrb(
     let has_any_biomass = has_biomass || has_dens_biomass;
     let has_only_one_type_of_biomass =
         (has_biomass || has_dens_biomass) && !(has_biomass && has_dens_biomass);
-    let has_only_biomass_or_onsite_or_district = !used_carriers.iter().any(|c| {
-        *c != MEDIOAMBIENTE && *c != RED1 && *c != RED2 && *c != BIOMASA && *c != BIOMASADENSIFICADA
+    let has_only_biomass_or_onsite_or_district = !used_carriers.iter().any(|&c| {
+        c != MEDIOAMBIENTE && c != RED1 && c != RED2 && c != BIOMASA && c != BIOMASADENSIFICADA
     });
 
     let Q_biomass_an_ren = if has_only_one_type_of_biomass && has_only_biomass_or_onsite_or_district
@@ -454,14 +454,12 @@ pub fn fraccion_renovable_acs_nrb(
     // a. Total de consumo de electricidad para ACS, de cualquier origen
     let E_EPus_el_t = cr_list
         .iter()
-        .filter(|c| c.carrier == ELECTRICIDAD)
-        .filter(|c| c.ctype == CONSUMO && c.csubtype == CSubtype::EPB)
+        .filter(|c| c.carrier == ELECTRICIDAD && c.ctype == CONSUMO && c.csubtype == CSubtype::EPB)
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
     // b. Total de producción de electricidad in situ asignada, en principio, a ACS
     let E_pr_el_onsite_t = cr_list
         .iter()
-        .filter(|c| c.carrier == ELECTRICIDAD)
-        .filter(|c| c.ctype == PRODUCCION && c.csubtype == CSubtype::INSITU)
+        .filter(|c| c.carrier == ELECTRICIDAD && c.ctype == PRODUCCION && c.csubtype == CSubtype::INSITU)
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
     // c. Consumo efectivo de electricidad renovable en ACS (Mínimo entre el consumo y la producción in situ) (consumo == demanda)
     let Q_el_an_ren: f32 = vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();
