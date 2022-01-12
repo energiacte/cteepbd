@@ -660,10 +660,7 @@ fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
         .iter()
         .filter(|c| c.ctype == CType::CONSUMO && c.csubtype == CSubtype::EPB);
     // Energy use for all EPB services and carrier i (Q_Epus_cr)
-    let q_us_all: f32 = cr_use_list
-        .clone()
-        .map(|c| c.values.iter().sum::<f32>())
-        .sum();
+    let q_us_all: f32 = cr_use_list.clone().map(Component::values_sum).sum();
     if q_us_all != 0.0 {
         // No energy use for this carrier!
         // Collect share of step A weighted energy for each use item (service)
@@ -672,7 +669,7 @@ fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
             let q_us_k: f32 = cr_use_list
                 .clone()
                 .filter(|c| c.service == us)
-                .map(|c| c.values.iter().sum::<f32>())
+                .map(Component::values_sum)
                 .sum();
             // Factor for use k
             factors_us_k.insert(us, q_us_k / q_us_all);

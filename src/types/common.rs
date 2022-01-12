@@ -260,6 +260,13 @@ pub struct Component {
     pub comment: String,
 }
 
+impl Component {
+    /// Sum of values for the component
+    pub fn values_sum(&self) -> f32 {
+        self.values.iter().sum::<f32>()
+    }
+}
+
 impl fmt::Display for Component {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let valuelist = self

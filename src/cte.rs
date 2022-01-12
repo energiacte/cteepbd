@@ -274,7 +274,7 @@ fn Q_district_and_env_an(
                 && (c.carrier == RED1 || c.carrier == RED2 || c.carrier == MEDIOAMBIENTE)
         })
         .map(|c| {
-            let tot = c.values.iter().sum::<f32>();
+            let tot = c.values_sum();
             let ren = tot * get_fp_ren_fraction(c.carrier, wfactors)?;
             Ok((tot, ren))
         })

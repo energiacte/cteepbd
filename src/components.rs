@@ -206,7 +206,7 @@ impl Components {
             // Para cada generador i
             for mut E_pr_el_i in E_pr_el_t.cloned() {
                 // Fracción de la producción total que corresponde al generador i
-                let f_pr_el_i: f32 = E_pr_el_i.values.iter().sum::<f32>() / E_pr_el_an;
+                let f_pr_el_i: f32 = E_pr_el_i.values_sum() / E_pr_el_an;
 
                 // Reparto proporcional a la producción del generador i y al consumo del servicio srv
                 E_pr_el_i.values = (&E_pr_el_used_EPus_t)
@@ -280,6 +280,7 @@ impl Components {
                 if consumed.is_empty() {
                     return None;
                 };
+                
                 // Consumos no compensados con producción
                 let mut unbalanced_values = veclistsum(
                     &consumed
