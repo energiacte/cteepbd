@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019  Ministerio de Fomento
+// Copyright (c) 2018-2022  Ministerio de Fomento
 //                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -311,7 +311,7 @@ pub struct BalanceForCarrier {
 /// - Ahora mismo nosotros consideramos únicamente la existencia de dos orígenes de generación:
 ///   insitu y cogeneración, sin diferenciar generadores individuales. Es decir, consideramos que hay
 ///   dos generadores como mucho. La norma hace el reparto de la energía producida (14) por generador i
-///   y si implementamos el soporte generador a generador habría que revisar esto. En particular,
+///   y, si implementamos el soporte generador a generador, habría que revisar esto. En particular,
 ///   cómo se calcula f_pr_cr_i.
 /// - Implementar factor de reparto de carga f_match_t
 #[allow(non_snake_case)]
