@@ -1,7 +1,7 @@
 # TODO
 
 - check if the `#[non_exhaustive]` attribute can be useful in some enums
-- maybe bug: see why emissions for ACS for the example in the manual change
+- maybe bug: see why emissions for ACS for the manual's example change
   depending on whether nearby factors are used or not.
 
 - cte

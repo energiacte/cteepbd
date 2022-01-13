@@ -87,6 +87,7 @@ fn get_energydatalist() -> Components {
         cmeta: vec![],
         cdata: vec![
             Component {
+                id: 0,
                 values: vec![
                     9.67, 7.74, 4.84, 4.35, 2.42, 2.9, 3.87, 3.39, 2.42, 3.87, 5.8, 7.74,
                 ],
@@ -97,6 +98,7 @@ fn get_energydatalist() -> Components {
                 comment: "".into(),
             },
             Component {
+                id: 0,
                 values: vec![
                     1.13, 1.42, 1.99, 2.84, 4.82, 5.39, 5.67, 5.11, 4.54, 3.40, 2.27, 1.42,
                 ],
@@ -107,6 +109,7 @@ fn get_energydatalist() -> Components {
                 comment: "".into(),
             },
             Component {
+                id: 0,
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
@@ -117,6 +120,7 @@ fn get_energydatalist() -> Components {
                 comment: "".into(),
             },
             Component {
+                id: 0,
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
@@ -996,4 +1000,25 @@ fn cte_ACS_demanda_ren_excluye_aux() {
     let FP = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 4549.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.967");
+}
+
+/// Componentes con id de sistema explicitados
+#[test]
+fn new_format_with_system_id() {
+    "# Bomba de calor 1
+    1,ELECTRICIDAD,CONSUMO,EPB,ACS,100 # BdC 1
+    1,MEDIOAMBIENTE,CONSUMO,EPB,ACS,150 # BdC 1
+    # Bomba de calor 2
+    2,ELECTRICIDAD,CONSUMO,EPB,CAL,200 # BdC 2
+    2,MEDIOAMBIENTE,CONSUMO,EPB,CAL,300 # BdC 2
+    # Producción fotovoltaica in situ
+    1,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,50 # PV
+    2,ELECTRICIDAD,PRODUCCION,INSITU,ACS,100 # PV
+    # Producción de energía ambiente dada por el usuario
+    0,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+    1,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+    2,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
+    # Compensación de energía ambiente a completar por CteEPBD"
+        .parse::<Components>()
+        .unwrap();
 }

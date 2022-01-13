@@ -680,6 +680,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         .iter()
         .map(|c| {
             let Component {
+                id,
                 carrier,
                 ctype,
                 csubtype,
@@ -694,10 +695,11 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 .join(",");
             format!(
                 "      <Dato>
-            <Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
+            <Id>{}</Id><Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
             <Valores>{}</Valores>
             <Comentario>{}</Comentario>
         </Dato>",
+                id,
                 carrier,
                 ctype,
                 csubtype,

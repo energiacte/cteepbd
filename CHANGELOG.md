@@ -13,6 +13,17 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - Sin publicar
+
+### Novedades
+
+- Incorporación del identificador de componente. Permite diferenciar los sistemas o partes a las que se asocia el componente (p.e. un equipo concreto). El valor 0 sirve, convencionalmente para identificar el conjunto del edificio (id=0).
+  La compensación automática de consumos se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
+
+### Incompatibilidades
+
+- El formato de salida en XML incluye la etiqueta "<Id>" de identificación de sistemas.
+
 ## [0.23.0] - 2020-10-23
 
 ### Novedades

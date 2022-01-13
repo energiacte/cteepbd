@@ -181,7 +181,7 @@ para su aplicación al CTE DB-HE (procedimiento EN ISO 52000-1) y formatos de da
 \textbf{\copyright ~ 2018-2022 Ministerio de Fomento}\\
 \textbf{\phantom{\copyright ~ 2018-2022 }Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)}\\[5pt]
 \textbf{Autores}:\\[5pt]
-\-\qquad Grupo de Energética Edificatoria y Sostenibilidad de la Unidad de Calidad en la Construcción (IETcc-CSIC):\\
+\-\qquad Grupo de Energética Edificatoria de la Unidad de Calidad en la Construcción (IETcc-CSIC):\\
 \-\qquad Rafael Villar Burke \href{mailto:pachi@ietcc.csic.es}{<pachi@ietcc.csic.es>}\\
 \-\qquad Daniel Jiménez González \href{mailto:danielj@ietcc.csic.es}{<danielj@ietcc.csic.es>}\\
 \-\qquad Marta Sorribes Gil \href{mailto:msorribes@ietcc.csic.es}{<msorribes@ietcc.csic.es>}
@@ -381,7 +381,7 @@ Actualmente, \texttt{cteepbd} utiliza los siguientes códigos de salida:
 
 \subsection{Archivo de definición de componentes energéticos}\label{sec:formatocomponentes}
 
-El archivo de definición de componentes energéticos detalla la energía consumida y producida en el edificio en cada intervalo de cálculo, según su origen y el uso al que se destina la energía, así como un conjunto de metadatos asociados a dicha información.
+El archivo de definición de componentes energéticos detalla la energía consumida y producida en el edificio en cada intervalo de cálculo, según el sistema asociado, el origen o el uso al que se destina la energía, así como un conjunto de metadatos asociados a dicha información.
 
 Cada línea del archivo define un metadato o un componente energético usando una variante del formato de \textit{valores separados por comas}\footnote{El formato está documentado en el estándar RFC 4180 (\url{https://tools.ietf.org/html/rfc4180}).}. El archivo puede incluir también líneas en blanco y comentarios (líneas que empiezan por \texttt{\#} y que no son metadatos), que se ingnoran al ser procesadas.
 
@@ -420,6 +420,7 @@ Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los a
 Los componentes energéticos (producción o consumo) tienen la siguiente estructura de columnas (valores separados por comas):
 
 \begin{itemize}
+\item campo \texttt{id}, de identificación del sistema, equipo o parte asociada al componente. Si este campo no aparece se supone igual al valor `0` y normalmente se asocia al conjunto del edificio.
 \item campo \texttt{vector}, de nombre del vector energético;
 \item campo \texttt{tipo}, que indica si se trata de energía producida o consumida;
 \item campo \texttt{subtipo}, que identifica el origen de la energía producida o el uso de la energía consumida;
@@ -428,11 +429,11 @@ Los componentes energéticos (producción o consumo) tienen la siguiente estruct
 \item un campo opcional \texttt{comentario}, que puede contener cualquier texto y no está precedido de una coma, sino de una almohadilla \texttt{\#}.
 \end{itemize}
 
-Las dos siguientes líneas definen un componente de producción de energía y otro componente de consumo de energía:
+Las dos siguientes líneas definen un componente de producción de energía (sistema 1) y otro componente de consumo de energía (sistema 6):
 
 \begin{lstlisting}
-ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 34.21, 41.94, 64.94, 73.88, 88.44, 88.64, 91.04, 76.15, 52.84, 39.26, 27.43, 26.26 # PV 5m2 (5kWp)
-ELECTRICIDAD, CONSUMO, EPB, VEN, 98.74, 89.18, 98.74, 95.55, 98.74, 95.55, 98.74, 98.74, 95.55, 98.74, 95.55, 98.74 # VENTILACIÓN
+1, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 34.21, 41.94, 64.94, 73.88, 88.44, 88.64, 91.04, 76.15, 52.84, 39.26, 27.43, 26.26 # PV 5m2 (5kWp)
+6, ELECTRICIDAD, CONSUMO, EPB, VEN, 98.74, 89.18, 98.74, 95.55, 98.74, 95.55, 98.74, 98.74, 95.55, 98.74, 95.55, 98.74 # VENTILACIÓN
 \end{lstlisting}
 
 \begin{myquote}\small

@@ -182,6 +182,11 @@ pub enum Service {
     BAC,
     /// Undefined or generic use
     NDEF,
+    // TODO: Consumo de combustible imputable a la parte eléctrica de un sistema de cogeneración
+    // COGEN,
+    // TODO: Consumo auxiliar de un equipo
+    // Es necesario pensar si esto se modela como un servicio o como un componente diferenciado
+    // AUX,
 }
 
 /// Lista de usos disponibles
@@ -242,6 +247,11 @@ impl Default for Service {
 /// y a lo largo del periodo de cálculo, para cada tipo, subtipo y uso de la energía.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Component {
+    /// System or part id
+    /// This can identify the system or part linked to this component.
+    /// By default, id=0 means the whole building
+    /// A value that is not 0 could identify the system that generates or uses some energy
+    pub id: u8,
     /// Carrier name
     pub carrier: Carrier,
     /// Component type
@@ -282,8 +292,8 @@ impl fmt::Display for Component {
         };
         write!(
             f,
-            "{}, {}, {}, {}, {}{}",
-            self.carrier, self.ctype, self.csubtype, self.service, valuelist, comment
+            "{}, {}, {}, {}, {}, {}{}",
+            self.id, self.carrier, self.ctype, self.csubtype, self.service, valuelist, comment
         )
     }
 }
@@ -306,9 +316,14 @@ impl str::FromStr for Component {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        let carrier: Carrier = items[0].parse()?;
-        let ctype: CType = items[1].parse()?;
-        let csubtype: CSubtype = items[2].parse()?;
+        let (baseidx, id) = match items[0].parse() {
+            Ok(id) => (1, id),
+            Err(_) => (0, 0_u8),
+        };
+
+        let carrier: Carrier = items[baseidx].parse()?;
+        let ctype: CType = items[baseidx + 1].parse()?;
+        let csubtype: CSubtype = items[baseidx + 2].parse()?;
 
         // Check coherence of ctype and csubtype
         let subtype_belongs_to_type = match ctype {
@@ -324,9 +339,9 @@ impl str::FromStr for Component {
         }
 
         // Check service field. May be missing in legacy versions
-        let (valuesidx, service) = match items[3].parse() {
-            Ok(s) => (4, s),
-            Err(_) => (3, Service::default()),
+        let (valuesidx, service) = match items[baseidx + 3].parse() {
+            Ok(s) => (baseidx + 4, s),
+            Err(_) => (baseidx + 3, Service::default()),
         };
 
         // Collect energy values from the service field on
@@ -336,6 +351,7 @@ impl str::FromStr for Component {
             .collect::<Result<Vec<f32>, _>>()?;
 
         Ok(Component {
+            id,
             carrier,
             ctype,
             csubtype,
@@ -590,6 +606,7 @@ mod tests {
     #[test]
     fn tcomponent() {
         let component1 = Component {
+            id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
             ctype: "CONSUMO".parse().unwrap(),
             csubtype: "EPB".parse().unwrap(),
@@ -599,8 +616,9 @@ mod tests {
             ],
             comment: "Comentario cons 1".into(),
         };
-        let component1str = "ELECTRICIDAD, CONSUMO, EPB, REF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1str = "0, ELECTRICIDAD, CONSUMO, EPB, REF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
         let component2 = Component {
+            id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
             ctype: "PRODUCCION".parse().unwrap(),
             csubtype: "INSITU".parse().unwrap(),
@@ -610,7 +628,7 @@ mod tests {
             ],
             comment: "Comentario prod 1".into(),
         };
-        let component2str = "ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let component2str = "0, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
         let component2strlegacy = "ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
 
         // consumer component
@@ -648,7 +666,7 @@ mod tests {
         };
         let factor1str =
             "ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Electricidad de red paso A";
-        let factor2str = "ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let factor2str = "0, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
 
         // consumer component
         assert_eq!(factor1.to_string(), factor1str);
