@@ -310,20 +310,27 @@ fn get_used_carriers(cr_list: &[&Component]) -> Vec<Carrier> {
 /// 3. el rendimiento térmico de la contribución renovable de vectores RED1, RED2 y MEDIOAMBIENTE es 1.0. (demanda == consumo)
 /// 4. las únicas aportaciones nearby son biomasa (cualquiera), RED1, RED2, ELECTRICIDAD insitu y MEDIOAMBIENTE (insitu)
 ///
+/// Se pueden excluir consumos eléctricos auxiliares con la etiqueta CTEEPBD_EXCLUYE_AUX_ACS en el comentario del componente de consumo y vector ELECTRICIDAD
+/// Se pueden excluir producciones renovables para equipos con SCOP < 2,5 con la etiqueta CTEEPBD_EXCLUYE_SCOP_ACS en el comentario del componente de vector MEDIOAMBIENTE
+///
 /// Casos que no podemos calcular:
 /// - Cuando hay electricidad cogenerada
 ///     - En este caso sería necesario que la imputación del combustible fuese en función del destino final del consumo,
 ///       sea eléctrico o térmico. Alternativamente se podrían modificar los factores de paso, pero parece más complicado. Analizar.
 ///       Se podría estudiar hacer un reparto de la producción de combustible para generar electricidad en función del reparto de la
 ///       electricidad cogenerada por usos. Pensar qué ocurre con parte exportada
+///
+///       También se puede resolver si separamos el uso térmico del eléctrico en la cogeneración (y asignaríamos la poporción de electricidad cogenerada asignada a ACS).
 /// - Cuando necesitaríamos conocer el % de la demanda anual de ACS satisfecha por el vector BIOMASA y BIOMASADENSIFICADA porque
-///     - Hay más de un vector BIOMASA o BIOMASADENSIFICADA
 ///     - Hay BIOMASA o BIOMASADENSIFICADA y otro vector que no sea insitu o de distrito.
-/// TODO:
-///     - Añadir metadatos CTE_DEMANDA_ACS_PCT_BIOMASA, CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA
-///     - Como esos son los únicos vectores para los que necesitamos saber el porcentaje de producción de ACS que suponen, nos bastaría para
+///      
+///       Como esos son los únicos vectores para los que necesitamos saber el porcentaje de producción de ACS que suponen, nos bastaría para
 ///       hacer el cálculo (ahora lo obtenemos por sustracción de las aportaciones en las que consumo === demanda) aún en presencia
 ///       de más de un vector no in situ.
+///
+///       Podemos resolver esto también si se incluye la energía entregada o absorbida por los equipos (id, Q_OUT) y viendo la proporción
+///       que supone sobre la demanda global del edificio (id=0, DEMANDA).
+///
 pub fn fraccion_renovable_acs_nrb(
     components: &Components,
     wfactors: &Factors,
@@ -459,7 +466,9 @@ pub fn fraccion_renovable_acs_nrb(
     // b. Total de producción de electricidad in situ asignada, en principio, a ACS
     let E_pr_el_onsite_t = cr_list
         .iter()
-        .filter(|c| c.carrier == ELECTRICIDAD && c.ctype == PRODUCCION && c.csubtype == CSubtype::INSITU)
+        .filter(|c| {
+            c.carrier == ELECTRICIDAD && c.ctype == PRODUCCION && c.csubtype == CSubtype::INSITU
+        })
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
     // c. Consumo efectivo de electricidad renovable en ACS (Mínimo entre el consumo y la producción in situ) (consumo == demanda)
     let Q_el_an_ren: f32 = vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();

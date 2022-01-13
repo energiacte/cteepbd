@@ -182,10 +182,10 @@ pub enum Service {
     BAC,
     /// Undefined or generic use
     NDEF,
-    // TODO: Consumo de combustible imputable a la parte eléctrica de un sistema de cogeneración
+    // TODO: Electricity cogeneration (share of electrical use, excluding thermal use)
     // COGEN,
-    // TODO: Consumo auxiliar de un equipo
-    // Es necesario pensar si esto se modela como un servicio o como un componente diferenciado
+    // TODO: Auxiliary energy
+    // Should this be a service or a distinct component
     // AUX,
 }
 
@@ -200,6 +200,8 @@ pub const SERVICES: [Service; 9] = [
     Service::DHU,
     Service::BAC,
     Service::NDEF,
+    //Service::COGEN,
+    //Service::AUX,
 ];
 
 impl str::FromStr for Service {
@@ -220,6 +222,8 @@ impl str::FromStr for Service {
             "DHU" => Ok(Service::DHU),
             "BAC" => Ok(Service::BAC),
             "NDEF" => Ok(Service::NDEF),
+            // "COGEN" => Ok(Service::COGEN),
+            // "AUX" => Ok(Service::AUX),
             "" => Ok(Service::default()),
             _ => Err(EpbdError::ParseError(s.into())),
         }
