@@ -540,6 +540,7 @@ El servicio al que se destina la producción o que genera el consumo puede tomar
 \end{itemize}
 
 \textbf{Nota:} Para el caso de la producción del vector energético \texttt{ELECTRICIDAD}, por las características de su distribución, no se contempla en la versión actual la posibilidad de asignar un servicio específico, tomándose siempre como servicio de destino \texttt{NDEF}, que adjudica la producción a los distintos servicios en función del porcentaje que representan respecto al consumo total de \texttt{ELECTRICIDAD}.
+\textbf{Nota:} En algunos casos, los consumos de algunos servicios pueden estar combinados. Por ejemplo, el consumo de humidificación puede estar incluido en el de calefacción, el de deshumidificación en el de refrigeración o el de ventilación en los de calefacción y/o refrigeración.
 
 \textit{Valores (\texttt{valor})}
 
@@ -551,7 +552,7 @@ Todos los registros deben emplear número igual de pasos de tiempo.
 
 Este campo, con valor descriptivo, no está delimitado por un signo de coma previo sino precedido por un signo de almohadilla (\texttt{\#}) y puede contener un texto arbitrario, que no se tiene en cuenta en el cálculo.
 
-\textbf{Nota:} En el caso de que el comentario incluya la cadena \texttt{CTEEPBD\_EXCLUYE\_AUX\_ACS} o \texttt{CTEEPBD\_EXCLUYE\_SCOP\_ACS} el componente es descartado para el cálculo de la fracción renovable de la demanda de ACS. Esto permite descartar dichos consumos (eléctricos y de energía ambiente, respectivamente) en la contribución a la demanda de ACS. Esto permite, por un lado, el cálculo de más casos con generación renovable de ACS (diferente de la electricidad), para los que no se cumpliría la restricción para el cálculo de la fracción renovable de la demanda de ACS de que no se empleen más de dos vectores energéticos con procedencia en la red, y, por otro lado, excluir las aportaciones de energía ambiente de equipos con un SCOP inferior al mínimo para ser considerada una aportación renovable.
+\textbf{Nota:} En el caso de que el comentario incluya la cadena \texttt{CTEEPBD\_EXCLUYE\_AUX\_ACS}, \texttt{CTEEPBD\_AUX}  o \texttt{CTEEPBD\_EXCLUYE\_SCOP\_ACS} el componente es descartado para el cálculo de la fracción renovable de la demanda de ACS. Esto permite descartar dichos consumos (eléctricos y de energía ambiente, respectivamente) en la contribución a la demanda de ACS. Esto permite, por un lado, el cálculo de más casos con generación renovable de ACS (diferente de la electricidad), para los que no se cumpliría la restricción para el cálculo de la fracción renovable de la demanda de ACS de que no se empleen más de dos vectores energéticos con procedencia en la red, y, por otro lado, excluir las aportaciones de energía ambiente de equipos con un SCOP inferior al mínimo para ser considerada una aportación renovable.
 
 \clearpage
 \newpage
