@@ -253,9 +253,10 @@ impl Default for Service {
 pub struct Component {
     /// System or part id
     /// This can identify the system or part linked to this component.
-    /// By default, id=0 means the whole building
+    /// By default, id=0 means the whole building (all zones, whole building system)
+    /// Negative numbers should represent ficticious elements (ficticious spaces or systems)
     /// A value that is not 0 could identify the system that generates or uses some energy
-    pub id: u8,
+    pub id: i32,
     /// Carrier name
     pub carrier: Carrier,
     /// Component type
@@ -322,7 +323,7 @@ impl str::FromStr for Component {
 
         let (baseidx, id) = match items[0].parse() {
             Ok(id) => (1, id),
-            Err(_) => (0, 0_u8),
+            Err(_) => (0, 0_i32),
         };
 
         let carrier: Carrier = items[baseidx].parse()?;

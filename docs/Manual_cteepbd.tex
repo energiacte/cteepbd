@@ -420,7 +420,7 @@ Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los a
 Los componentes energéticos (producción o consumo) tienen la siguiente estructura de columnas (valores separados por comas):
 
 \begin{itemize}
-\item campo \texttt{id}, de identificación del sistema, equipo o parte asociada al componente. Si este campo no aparece se supone igual al valor `0` y normalmente se asocia al conjunto del edificio.
+\item campo \texttt{id}, de identificación del sistema, zona o parte asociada al componente. Si este campo no aparece se supone igual al valor `0` y normalmente se asocia al conjunto del edificio.
 \item campo \texttt{vector}, de nombre del vector energético;
 \item campo \texttt{tipo}, que indica si se trata de energía producida o consumida;
 \item campo \texttt{subtipo}, que identifica el origen de la energía producida o el uso de la energía consumida;
@@ -471,6 +471,12 @@ Además del suministro de energía a través de combustibles, deben tenerse en c
 
 \textbf{NOTA:} La energía renovable pasiva (efectos sobre la demanda) no se considera a estos efectos como energía suministrada.
 \end{myquote}
+
+\textit{Identificador de componente (\texttt{id})}
+
+Este identificador permite ligar un componente a una zona, sistema o parte específica del edificio.
+
+De forma predefinida, el valor 0 se refiere a la globalidad del edificio, mientras que los valores negativos se utilizarían para referirse a elementos ficticios (sistemas de referencia, demanda del edificio de referencia).
 
 \textit{Vectores energéticos (\texttt{vector})}
 
