@@ -54,8 +54,8 @@ use crate::{
 /// List of component data bundled with its metadata
 ///
 /// #META CTE_AREAREF: 100.5
-/// ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
-/// ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
+/// 0, ELECTRICIDAD,CONSUMO,EPB,16.39,13.11,8.20,7.38,4.10,4.92,6.56,5.74,4.10,6.56,9.84,13.11
+/// 0, ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Components {
     /// Component list
@@ -255,7 +255,7 @@ impl Components {
     /// cuando el consumo de esos vectores supera la producción.
     /// Es solamente una comodidad, para no tener que declarar las producciones de MEDIOAMBIENTE, solo los consumos.
     /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción (incluso con NDEF) ni entre sistemas.
-    /// 
+    ///
     /// Esto significa que, para cada sistema (j=id) y servicio a servicio:
     /// 1) se calculan las cantidades descompensadas
     /// 2) se reparte la producción existente para ese servicio y sistema
@@ -427,19 +427,19 @@ mod tests {
     #[test]
     fn normalize() {
         let comps = "# Bomba de calor 1
-    1,ELECTRICIDAD,CONSUMO,EPB,ACS,100 # BdC 1
-    1,MEDIOAMBIENTE,CONSUMO,EPB,ACS,150 # BdC 1
-    # Bomba de calor 2
-    2,ELECTRICIDAD,CONSUMO,EPB,CAL,200 # BdC 2
-    2,MEDIOAMBIENTE,CONSUMO,EPB,CAL,300 # BdC 2
-    # Producción fotovoltaica in situ
-    1,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,50 # PV
-    2,ELECTRICIDAD,PRODUCCION,INSITU,ACS,100 # PV
-    # Producción de energía ambiente dada por el usuario
-    0,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
-    1,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-    2,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
-    # Compensación de energía ambiente a completar por CteEPBD"
+            1,ELECTRICIDAD,CONSUMO,EPB,ACS,100 # BdC 1
+            1,MEDIOAMBIENTE,CONSUMO,EPB,ACS,150 # BdC 1
+            # Bomba de calor 2
+            2,ELECTRICIDAD,CONSUMO,EPB,CAL,200 # BdC 2
+            2,MEDIOAMBIENTE,CONSUMO,EPB,CAL,300 # BdC 2
+            # Producción fotovoltaica in situ
+            1,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,50 # PV
+            2,ELECTRICIDAD,PRODUCCION,INSITU,ACS,100 # PV
+            # Producción de energía ambiente dada por el usuario
+            0,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+            1,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+            2,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
+            # Compensación de energía ambiente a completar por CteEPBD"
             .parse::<Components>()
             .unwrap()
             .normalize();
@@ -467,5 +467,23 @@ mod tests {
             .map(Component::values_sum)
             .sum();
         assert_eq!(format!("{:.1}", ma_prod_2), "400.0");
+    }
+
+    /// Prueba del formato con componentes de zona y sistema para declarar
+    /// demanda del edificio y energía entregada o absorbida por los sistemas
+    #[test]
+    fn tcomponents_extended_parse() {
+        "#META CTE_AREAREF: 1.0
+            0, -, ZONA, DEMANDA, REF, -3.0 # Demanda ref. edificio
+            0, -, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
+            1, -, SISTEMA, DEMANDA, REF, -3.0 # Demanda ref. EER 3
+            2, -, SISTEMA, DEMANDA, CAL, 3.0 # Demanda cal. COP 3
+            1, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 2.00 # Producción PV
+            2, ELECTRICIDAD, CONSUMO, EPB, REF, 1.00 # BdC modo refrigeración
+            2, ELECTRICIDAD, CONSUMO, EPB, CAL, 1.00 # BdC modo calefacción
+            2, MEDIOAMBIENTE, CONSUMO, EPB, CAL, 2.00 # BdC modo calefacción
+            "
+        .parse::<Components>()
+        .unwrap();
     }
 }

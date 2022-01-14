@@ -61,6 +61,8 @@ pub enum Carrier {
     RED1,
     /// Generic energy carrier 2
     RED2,
+    /// No carrier, placeholder
+    NONE,
 }
 
 impl str::FromStr for Carrier {
@@ -79,6 +81,7 @@ impl str::FromStr for Carrier {
             "GLP" => Ok(Carrier::GLP),
             "RED1" => Ok(Carrier::RED1),
             "RED2" => Ok(Carrier::RED2),
+            "-" => Ok(Carrier::NONE),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -86,7 +89,10 @@ impl str::FromStr for Carrier {
 
 impl std::fmt::Display for Carrier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            Self::NONE => write!(f, "-"),
+            _ => write!(f, "{:?}", self),
+        }
     }
 }
 
@@ -98,10 +104,14 @@ impl std::fmt::Display for Carrier {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CType {
-    /// Produced energy
+    /// Produced energy by system Y (E_pr_el for electricity, Q_X_Y_out for ambient energy or solar systems)
     PRODUCCION,
-    /// Consumed energy
+    /// Used energy by system Y to provide service X (E_X_Y_in)
     CONSUMO,
+    /// Energy needs of zone i (i=0 for whole building) to provide service X (Q_X_nd_i)
+    ZONA,
+    /// Energy output (or absorbed heat) of generator Y to provide service X (Q_X_Y_out)
+    SISTEMA,
 }
 
 impl str::FromStr for CType {
@@ -111,6 +121,8 @@ impl str::FromStr for CType {
         match s {
             "PRODUCCION" => Ok(CType::PRODUCCION),
             "CONSUMO" => Ok(CType::CONSUMO),
+            "ZONA" => Ok(CType::ZONA),
+            "SISTEMA" => Ok(CType::SISTEMA),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -136,6 +148,15 @@ pub enum CSubtype {
     EPB,
     /// Non EPB use
     NEPB,
+    /// Energy needs of zone or energy output of system (Q_X_Y_nd, Q_X_Y_out)
+    DEMANDA,
+    // TODO:
+    // Energy losses linked to service X (Q_X_ls)
+    // E_X_Y_in * COP = Q_X_Y_out + Q_X_ls_tot - Q_X_y_in - f_Y;aux;rvd * W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
+    // Energy_use * COP = Energy_out + Energy_losses - (Energy_from_heat_source_input + Energy_from_recovered_aux_energy_not_accounted_for_in_COP_input)
+    // PERDIDAS
+    // Number of hours where temperature shedule limits are not met (CAL, REF)
+    // HORASFUERACONSIGNA
 }
 
 impl str::FromStr for CSubtype {
@@ -147,6 +168,7 @@ impl str::FromStr for CSubtype {
             "COGENERACION" => Ok(CSubtype::COGENERACION),
             "EPB" => Ok(CSubtype::EPB),
             "NEPB" => Ok(CSubtype::NEPB),
+            "DEMANDA" => Ok(CSubtype::DEMANDA),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -161,6 +183,9 @@ impl std::fmt::Display for CSubtype {
 // -------------------- Service
 
 /// Uso al que está destinada la energía
+///
+/// Algunos servicios pueden estar incluidos ya en el consumo de otros, como podría ser el
+/// caso del consumo para HU en CAL, de DHU en REF o VEN en CAL y/o REF.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Service {
@@ -184,9 +209,6 @@ pub enum Service {
     NDEF,
     // TODO: Electricity cogeneration (share of electrical use, excluding thermal use)
     // COGEN,
-    // TODO: Auxiliary energy
-    // Should this be a service or a distinct component
-    // AUX,
 }
 
 /// Lista de usos disponibles
@@ -201,7 +223,6 @@ pub const SERVICES: [Service; 9] = [
     Service::BAC,
     Service::NDEF,
     //Service::COGEN,
-    //Service::AUX,
 ];
 
 impl str::FromStr for Service {
@@ -223,7 +244,6 @@ impl str::FromStr for Service {
             "BAC" => Ok(Service::BAC),
             "NDEF" => Ok(Service::NDEF),
             // "COGEN" => Ok(Service::COGEN),
-            // "AUX" => Ok(Service::AUX),
             "" => Ok(Service::default()),
             _ => Err(EpbdError::ParseError(s.into())),
         }
@@ -260,18 +280,23 @@ pub struct Component {
     /// Carrier name
     pub carrier: Carrier,
     /// Component type
-    /// - `PRODUCCION` for produced / generated energy components
-    /// - `CONSUMO` for consumed / used energy components
+    /// - `PRODUCCION` for produced energy components from system Y (E_pr_el for electricity, Q_X_Y_out for ambient energy or solar systems)
+    /// - `CONSUMO` for consumed / used energy components for system Y providing service X (E_X_Y_cr)
+    /// - `ZONA` for energy needs components providing service X (for zone i or whole building i=0) (Q_X_nd_i)
+    /// - `SISTEMA` for the energy output (heat) of generator Y providing service X (Q_X_Y_out)
     pub ctype: CType,
     /// Energy origin or end use type
     /// - `INSITU` or `COGENERACION` for generated energy component types
     /// - `EPB` or `NEPB` for used energy component types
+    /// - `DEMANDA` for `ZONA` or `SISTEMA` component types
     pub csubtype: CSubtype,
     /// End use
     pub service: Service,
-    /// List of energy values, one value for each timestep
+    /// List of energy values, one value for each timestep. Negative values mean absorbed energy. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
+    /// This can also be used to label a component as auxiliary energy use
+    /// by including in this field the "CTEEPBD_AUX" tag
     pub comment: String,
 }
 
@@ -338,6 +363,7 @@ impl str::FromStr for Component {
                 COGENERACION => carrier == ELECTRICIDAD,
                 _ => false,
             },
+            ZONA | SISTEMA => matches!(csubtype, DEMANDA),
         };
         if !subtype_belongs_to_type {
             return Err(EpbdError::ParseError(s.into()));

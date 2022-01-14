@@ -310,7 +310,7 @@ fn get_used_carriers(cr_list: &[&Component]) -> Vec<Carrier> {
 /// 3. el rendimiento térmico de la contribución renovable de vectores RED1, RED2 y MEDIOAMBIENTE es 1.0. (demanda == consumo)
 /// 4. las únicas aportaciones nearby son biomasa (cualquiera), RED1, RED2, ELECTRICIDAD insitu y MEDIOAMBIENTE (insitu)
 ///
-/// Se pueden excluir consumos eléctricos auxiliares con la etiqueta CTEEPBD_EXCLUYE_AUX_ACS en el comentario del componente de consumo y vector ELECTRICIDAD
+/// Se pueden excluir consumos eléctricos auxiliares con la etiqueta CTEEPBD_EXCLUYE_AUX_ACS o CTEEPBD_AUX en el comentario del componente de consumo y vector ELECTRICIDAD
 /// Se pueden excluir producciones renovables para equipos con SCOP < 2,5 con la etiqueta CTEEPBD_EXCLUYE_SCOP_ACS en el comentario del componente de vector MEDIOAMBIENTE
 ///
 /// Casos que no podemos calcular:
@@ -345,7 +345,9 @@ pub fn fraccion_renovable_acs_nrb(
         .cdata
         .iter()
         .filter(|c| {
-            !((c.carrier == ELECTRICIDAD && c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS"))
+            !((c.carrier == ELECTRICIDAD
+                && (c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS")
+                    || c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS")))
                 || (c.carrier == MEDIOAMBIENTE && c.comment.contains("CTEEPBD_EXCLUYE_SCOP_ACS")))
         })
         .collect();
