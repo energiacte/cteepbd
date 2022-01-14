@@ -254,7 +254,12 @@ impl Components {
     /// Completa el balance de las producciones in situ de energía procedente del medioambiente
     /// cuando el consumo de esos vectores supera la producción.
     /// Es solamente una comodidad, para no tener que declarar las producciones de MEDIOAMBIENTE, solo los consumos.
-    /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción (incluso con NDEF)
+    /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción (incluso con NDEF) ni entre sistemas.
+    /// 
+    /// Esto significa que, para cada sistema (j=id) y servicio a servicio:
+    /// 1) se calculan las cantidades descompensadas
+    /// 2) se reparte la producción existente para ese servicio y sistema
+    /// 3) se genera una producción que completa las cantidades que puedan quedar pendientes para ese serivicio y sistema
     fn compensate_env_use(&mut self) {
         // Localiza componentes de energía procedente del medioambiente
         let envcomps: Vec<_> = self
@@ -265,11 +270,6 @@ impl Components {
             .collect();
 
         // Genera componentes de consumo no compensados con producción completando sistema a sistema y servicio a servicio
-        // TODO: Para cada sistema (j=id) y servicio a servicio:
-        // 1) calcula las cantidades descompensadas sistema a sistema (id) para cada servicio
-        // 2) reparte la producción global (id=0) existente entre sistemas, para cada servicio != NDEF, en proporción a sus cantidades todavía no compensadas
-        // 3) reparte la producción global (id=0) existente entre sistemas, para uso no definido NDEF, entre servicios, en proporción a las cantidades todavía no compensadas
-        // 4) genera una producción sistema a sistema que complete las cantidades que puedan quedar pendientes
 
         // Componentes de MEDIOAMBIENTE que debemos añadir
         let mut balancecomps = Vec::new();
