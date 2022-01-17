@@ -3,6 +3,7 @@
 - check if the `#[non_exhaustive]` attribute can be useful in some enums
 - maybe bug: see why emissions for ACS for the manual's example change
   depending on whether nearby factors are used or not.
+- Aclarar la definición de cogeneración (imputación de combustible a uso cogeneración con destino/servicio COGEN). Ver impacto en resto de cálculos.
 
 - cte
 
@@ -19,6 +20,24 @@
 
 - tests:
   - cte: check non matching computation modes in component metadata and weighting factors metadata
+
+- output:
+  - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data
+    - Energy needs (with annual totals)
+    - System (by_id) efficiencies / indicators
+    - ¿Whole building efficiencies by service (non renewable primary energy)?
+    - Fraction of energy use covered by renewable sources, by service and by system (id)
+    - ReduccionEPNR y ReduccionEmisiones
+    - demanda por servicios y total (¿y demanda de referencia si la hay?)
+    - valores totales de los distintos indicadores (Ver BalanceEPB nuevo)
+    - e.final
+      - De todos los servicios y desglosado por servicio
+    - balance B, balance A, AB: ren, nren, tot, emisiones.
+      - De todos los servicios y desglosado por servicio
+    - emisiones, desglose eléctrico y no eléctrico
+    - Calcular % de cobertura renovable (consumo EF y demanda) para los distintos servicios
+    - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
+  - Split XML output, generated from JSON results
 
 ## Wishlist
 
