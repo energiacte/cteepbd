@@ -274,7 +274,7 @@ pub struct Component {
     /// System or part id
     /// This can identify the system or part linked to this component.
     /// By default, id=0 means the whole building (all zones, whole building system)
-    /// Negative numbers should represent ficticious elements (ficticious spaces or systems)
+    /// Negative numbers should represent ficticious elements (ficticious zones or systems, such as reference ones)
     /// A value that is not 0 could identify the system that generates or uses some energy
     pub id: i32,
     /// Carrier name
