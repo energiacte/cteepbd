@@ -37,9 +37,7 @@ Hipótesis:
 - No se permite la producción de electricidad a usos concretos (se asume NDEF) (XXX: se podría eliminar)
 */
 
-use std::collections::HashSet;
-use std::fmt;
-use std::str;
+use std::{collections::HashSet, fmt, str};
 
 use serde::{Deserialize, Serialize};
 
@@ -58,9 +56,9 @@ use crate::{
 /// 0, ELECTRICIDAD,PRODUCCION,INSITU,8.20,6.56,4.10,3.69,2.05,2.46,3.28,2.87,2.05,3.28,4.92,6.56
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Components {
-    /// Component list
-    pub cmeta: Vec<Meta>,
     /// Metadata
+    pub cmeta: Vec<Meta>,
+    /// Energy use and generation data
     pub cdata: Vec<Component>,
 }
 
@@ -109,9 +107,10 @@ impl str::FromStr for Components {
         let cdata = datalines
             .map(|e| e.parse())
             .collect::<Result<Vec<Component>, _>>()?;
+
+        // Check that all components have an equal number of steps (data lengths)
         {
-            // Check that all components have an equal number of steps (data lengths)
-            let cdata_lens: Vec<_> = cdata.iter().map(|e| e.values.len()).collect();
+            let cdata_lens: Vec<_> = cdata.iter().map(|e| e.num_steps()).collect();
             if cdata_lens.iter().max().unwrap() != cdata_lens.iter().min().unwrap() {
                 return Err(EpbdError::ParseError(s.into()));
             }
@@ -121,6 +120,13 @@ impl str::FromStr for Components {
 }
 
 impl Components {
+    /// Devuelve iterador sobre componentes de energía consumida o producida
+    pub fn used_or_generated_iter(&self) -> impl Iterator<Item = &Component> + '_ + Clone {
+        self.cdata
+            .iter()
+            .filter(|c| c.is_used() || c.is_generated())
+    }
+
     /// Corrige los componentes de consumo y producción
     ///
     /// - Asegura que la energía MEDIOAMBIENTE consumida tiene su producción correspondiente
@@ -135,9 +141,9 @@ impl Components {
 
     /// Filtra Componentes relacionados con un servicio EPB
     ///
-    /// 1. Se seleccionan todos los consumos y producciones asignados al servicio
-    /// 2. Se toman las producciones eléctricas
-    /// 3. Reparto de las producciones eléctricas en proporción al consumo del servicio respecto al consumo EPB
+    /// 1. Selecciona todos los consumos y producciones asignados al servicio elegido (se excluyen componentes de zona y sistema)
+    /// 2. Toma las producciones eléctricas
+    /// 3. Reparte las producciones eléctricas en proporción al consumo del servicio elegido respecto al consumo EPB
     ///
     /// *Nota*: los componentes deben estar normalizados (ver método normalize) para asegurar que:
     /// - los consumos de MEDIOAMBIENTE de un servicio ya están equilibrados
@@ -149,11 +155,13 @@ impl Components {
         let cdata = self.cdata.iter(); // Componentes
 
         // 1. Consumos y producciones del servicio, salvo la producción eléctrica
+        // XXX: Se excluyen los componentes de zona y sistema
         let mut cdata_srv: Vec<_> = cdata
             .clone()
             .filter(|c| {
-                c.service == service
-                    && !(c.carrier == Carrier::ELECTRICIDAD && c.ctype == CType::PRODUCCION)
+                (c.is_used() || c.is_generated())
+                    && c.has_service(service)
+                    && !(c.is_electricity() && c.is_generated())
             })
             .cloned()
             .collect();
@@ -161,19 +169,17 @@ impl Components {
         // 2. Producción eléctrica
         let E_pr_el_t = cdata
             .clone()
-            .filter(|c| c.carrier == Carrier::ELECTRICIDAD && c.ctype == CType::PRODUCCION);
+            .filter(|c| c.is_electricity() && c.is_generated());
         let E_pr_el_an: f32 = E_pr_el_t.clone().flat_map(|c| c.values.iter()).sum();
 
         // 3. Reparto de la producción electrica en proporción al consumo de usos EPB
         // Energía eléctrica consumida en usos EPB
-        let E_EPus_el_t = cdata.clone().filter(|c| {
-            c.carrier == Carrier::ELECTRICIDAD
-                && c.ctype == CType::CONSUMO
-                && c.csubtype == CSubtype::EPB
-        });
+        let E_EPus_el_t = cdata
+            .clone()
+            .filter(|c| c.is_electricity() && c.is_used() && c.is_epb());
 
         // Energía eléctrica consumida en el servicio srv
-        let E_srv_el_t = E_EPus_el_t.clone().filter(|c| c.service == service);
+        let E_srv_el_t = E_EPus_el_t.clone().filter(|c| c.has_service(service));
         let E_srv_el_an: f32 = E_srv_el_t.clone().flat_map(|c| c.values.iter()).sum();
 
         // Si hay consumo y producción de electricidad, se reparte el consumo
@@ -244,7 +250,7 @@ impl Components {
     fn force_ndef_use_for_electricity_production(&mut self) {
         // Localiza componentes de energía procedente del medioambiente
         for component in &mut self.cdata {
-            if component.carrier == Carrier::ELECTRICIDAD && component.ctype == CType::PRODUCCION {
+            if component.is_electricity() && component.is_generated() {
                 component.service = Service::NDEF
             }
         }
@@ -267,7 +273,7 @@ impl Components {
             .cdata
             .iter()
             .cloned()
-            .filter(|c| c.carrier == Carrier::MEDIOAMBIENTE)
+            .filter(|c| c.has_carrier(Carrier::MEDIOAMBIENTE))
             .collect();
 
         // Genera componentes de consumo no compensados con producción completando sistema a sistema y servicio a servicio
@@ -288,12 +294,12 @@ impl Components {
                 // Componentes para el servicio y sistema dado
                 let components_for_service_and_id = envcomps
                     .iter()
-                    .filter(|c| c.service == service && c.id == id);
+                    .filter(|c| c.has_service(service) && c.id == id);
 
                 // Componentes de consumo del servicio
                 let consumed: Vec<_> = components_for_service_and_id
                     .clone()
-                    .filter(|c| c.ctype == CType::CONSUMO)
+                    .filter(|c| c.is_used())
                     .collect();
                 // Si no hay consumo que compensar con producción retornamos None
                 if consumed.is_empty() {
@@ -311,7 +317,7 @@ impl Components {
                 // Componentes de producción del servicio
                 let produced: Vec<_> = components_for_service_and_id
                     .clone()
-                    .filter(|c| c.ctype == CType::PRODUCCION)
+                    .filter(|c| c.is_generated())
                     .collect();
                 // Descontamos la producción existente de los consumos
                 if !produced.is_empty() {
@@ -447,7 +453,7 @@ mod tests {
         let ma_prod = comps
             .cdata
             .iter()
-            .filter(|c| c.ctype == CType::PRODUCCION && c.carrier == Carrier::MEDIOAMBIENTE)
+            .filter(|c| c.is_generated() && c.has_carrier(Carrier::MEDIOAMBIENTE))
             .inspect(|f| println!("{}", f));
         let ma_prod_tot: f32 = ma_prod.clone().map(Component::values_sum).sum();
 

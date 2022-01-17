@@ -41,7 +41,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::{EpbdError, Result},
     types::{
-        CSubtype, CType, Carrier, Component, Dest, Factor, RenNrenCo2, Service, Source, Step,
+        CSubtype, Carrier, Component, Dest, Factor, RenNrenCo2, Service, Source, Step,
         SERVICES,
     },
     vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
@@ -123,15 +123,19 @@ pub fn energy_performance(
         )));
     };
 
-    let carriers: HashSet<_> = components.cdata.iter().map(|e| e.carrier).collect();
+    let used_or_generated_energy_components = components.used_or_generated_iter();
+
+    let carriers: HashSet<_> = used_or_generated_energy_components
+        .clone()
+        .map(|e| e.carrier)
+        .collect();
 
     // Compute balance for each carrier
     let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
     for &carrier in &carriers {
-        let components_cr: Vec<Component> = components
-            .cdata
-            .iter()
-            .filter(|e| e.carrier == carrier)
+        let components_cr: Vec<Component> = used_or_generated_energy_components
+            .clone()
+            .filter(|e| e.has_carrier(carrier))
             .cloned()
             .collect();
         let fp_cr: Vec<Factor> = wfactors
@@ -327,21 +331,18 @@ fn balance_for_carrier(
     // * Energy used by technical systems for EPB services, for each time step
     let E_EPus_cr_t = cr_list
         .iter()
-        .filter(|e| e.ctype == CType::CONSUMO && e.csubtype == CSubtype::EPB)
+        .filter(|c| c.is_used() && c.is_epb())
         .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
 
     // * Energy used by technical systems for non-EPB services, for each time step
     let E_nEPus_cr_t = cr_list
         .iter()
-        .filter(|e| e.ctype == CType::CONSUMO && e.csubtype == CSubtype::NEPB)
+        .filter(|c| c.is_used() && !c.is_epb())
         .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
 
     // * Produced on-site energy and inside the assessment boundary, by generator i (origin i)
     let mut E_pr_cr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
-    for comp in cr_list
-        .iter()
-        .filter(|comp| comp.ctype == CType::PRODUCCION)
-    {
+    for comp in cr_list.iter().filter(|c| c.is_generated()) {
         E_pr_cr_i_t
             .entry(comp.csubtype)
             .and_modify(|e| *e = vecvecsum(e, &comp.values))
@@ -656,9 +657,7 @@ fn balance_for_carrier(
 fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
     let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
     // Energy use components (EPB uses) for current carrier i
-    let cr_use_list = cr_list
-        .iter()
-        .filter(|c| c.ctype == CType::CONSUMO && c.csubtype == CSubtype::EPB);
+    let cr_use_list = cr_list.iter().filter(|c| c.is_used() && c.is_epb());
     // Energy use for all EPB services and carrier i (Q_Epus_cr)
     let q_us_all: f32 = cr_use_list.clone().map(Component::values_sum).sum();
     if q_us_all != 0.0 {
@@ -668,7 +667,7 @@ fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
             // Energy use for use k
             let q_us_k: f32 = cr_use_list
                 .clone()
-                .filter(|c| c.service == us)
+                .filter(|c| c.has_service(us))
                 .map(Component::values_sum)
                 .sum();
             // Factor for use k

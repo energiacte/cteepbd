@@ -80,7 +80,6 @@ fn get_energydatalist() -> Components {
     use CSubtype::*;
     use CType::*;
     use Carrier::*;
-    use Service::*;
 
     //3 PV BdC_normativo
     Components {
@@ -94,7 +93,7 @@ fn get_energydatalist() -> Components {
                 carrier: ELECTRICIDAD,
                 ctype: CONSUMO,
                 csubtype: EPB,
-                service: NDEF,
+                service: Service::NDEF,
                 comment: "".into(),
             },
             Component {
@@ -105,7 +104,7 @@ fn get_energydatalist() -> Components {
                 carrier: ELECTRICIDAD,
                 ctype: PRODUCCION,
                 csubtype: INSITU,
-                service: NDEF,
+                service: Service::NDEF,
                 comment: "".into(),
             },
             Component {
@@ -116,7 +115,7 @@ fn get_energydatalist() -> Components {
                 carrier: MEDIOAMBIENTE,
                 ctype: CONSUMO,
                 csubtype: EPB,
-                service: NDEF,
+                service: Service::NDEF,
                 comment: "".into(),
             },
             Component {
@@ -127,7 +126,7 @@ fn get_energydatalist() -> Components {
                 carrier: MEDIOAMBIENTE,
                 ctype: PRODUCCION,
                 csubtype: INSITU,
-                service: NDEF,
+                service: Service::NDEF,
                 comment: "".into(),
             },
         ],
