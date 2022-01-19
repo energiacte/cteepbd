@@ -104,14 +104,39 @@ impl str::FromStr for Components {
         let cmeta = metalines
             .map(|e| e.parse())
             .collect::<Result<Vec<Meta>, _>>()?;
-        let cdata = datalines
-            .map(|e| e.parse())
-            .collect::<Result<Vec<Component>, _>>()?;
+
+        let mut cdata = Vec::new();
+
+        // Tipos disponibles
+        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "ZONA", "SISTEMA"];
+
+        for line in datalines {
+            let tags: Vec<_> = line.splitn(4, ',').map(str::trim).skip(1).take(2).collect();
+            let tag1 = tags.get(0).unwrap_or(&"");
+            let tag2 = tags.get(1).unwrap_or(&"");
+            let tag = if ctypes_tag_list.contains(tag1) {
+                tag1
+            } else {
+                tag2
+            };
+            match *tag {
+                "CONSUMO" => cdata.push(line.parse()?),
+                "PRODUCCION" => cdata.push(line.parse()?),
+                "ZONA" => cdata.push(line.parse()?),
+                "SISTEMA" => cdata.push(line.parse()?),
+                _ => {
+                    return Err(EpbdError::ParseError(format!(
+                        "ERROR: No se reconoce el componente de la línea: {}",
+                        line
+                    )))
+                }
+            }
+        }
 
         // Check that all components have an equal number of steps (data lengths)
         {
-            let cdata_lens: Vec<_> = cdata.iter().map(|e| e.num_steps()).collect();
-            if cdata_lens.iter().max().unwrap() != cdata_lens.iter().min().unwrap() {
+            let cdata_lengths: Vec<_> = cdata.iter().map(|e: &Component| e.num_steps()).collect();
+            if cdata_lengths.iter().max().unwrap() != cdata_lengths.iter().min().unwrap() {
                 return Err(EpbdError::ParseError(s.into()));
             }
         }
