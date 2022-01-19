@@ -130,6 +130,8 @@ fn get_energydatalist() -> Components {
                 comment: "".into(),
             },
         ],
+        zones: vec![],
+        systems: vec![],
     }
 }
 

@@ -58,8 +58,12 @@ use crate::{
 pub struct Components {
     /// Metadata
     pub cmeta: Vec<Meta>,
-    /// Energy use and generation data
+    /// Energy use and generation components
     pub cdata: Vec<Component>,
+    /// Zone data components
+    pub zones: Vec<Component>,
+    /// System data components
+    pub systems: Vec<Component>,
 }
 
 impl MetaVec for Components {
@@ -106,6 +110,8 @@ impl str::FromStr for Components {
             .collect::<Result<Vec<Meta>, _>>()?;
 
         let mut cdata = Vec::new();
+        let mut zones = Vec::new();
+        let mut systems = Vec::new();
 
         // Tipos disponibles
         let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "ZONA", "SISTEMA"];
@@ -122,8 +128,8 @@ impl str::FromStr for Components {
             match *tag {
                 "CONSUMO" => cdata.push(line.parse()?),
                 "PRODUCCION" => cdata.push(line.parse()?),
-                "ZONA" => cdata.push(line.parse()?),
-                "SISTEMA" => cdata.push(line.parse()?),
+                "ZONA" => zones.push(line.parse()?),
+                "SISTEMA" => systems.push(line.parse()?),
                 _ => {
                     return Err(EpbdError::ParseError(format!(
                         "ERROR: No se reconoce el componente de la línea: {}",
@@ -133,14 +139,19 @@ impl str::FromStr for Components {
             }
         }
 
-        // Check that all components have an equal number of steps (data lengths)
+        // Check that all used or produced energy components have an equal number of steps (data lengths)
         {
             let cdata_lengths: Vec<_> = cdata.iter().map(|e: &Component| e.num_steps()).collect();
             if cdata_lengths.iter().max().unwrap() != cdata_lengths.iter().min().unwrap() {
                 return Err(EpbdError::ParseError(s.into()));
             }
         }
-        Ok(Components { cmeta, cdata })
+        Ok(Components {
+            cmeta,
+            cdata,
+            zones,
+            systems,
+        })
     }
 }
 
@@ -259,8 +270,10 @@ impl Components {
 
         let cmeta = self.cmeta.clone();
         let mut newcomponents = Self {
-            cdata: cdata_srv,
             cmeta,
+            cdata: cdata_srv,
+            zones: self.zones.clone(),
+            systems: self.systems.clone(),
         };
         newcomponents.set_meta("CTE_SERVICIO", &service.to_string());
 
@@ -273,7 +286,6 @@ impl Components {
     /// solamente en base al consumo de cada servicio y sin tener en cuenta si se define un destino
     ///XXX: *Esta restricción podría eliminarse*
     fn force_ndef_use_for_electricity_production(&mut self) {
-        // Localiza componentes de energía procedente del medioambiente
         for component in &mut self.cdata {
             if component.is_electricity() && component.is_generated() {
                 component.service = Service::NDEF

@@ -49,9 +49,9 @@ pub struct Component {
     /// Carrier name
     pub carrier: Carrier,
     /// Component type
-    /// - `PRODUCCION` for produced energy components from system Y (E_pr_el for electricity, Q_X_Y_out for ambient energy or solar systems)
-    /// - `CONSUMO` for consumed / used energy components for system Y providing service X (E_X_Y_cr)
-    /// - `ZONA` for energy needs components providing service X (for zone i or whole building i=0) (Q_X_nd_i)
+    /// - `PRODUCCION` for produced energy components from system Y (E_pr_cr_Y_t, where cr is electricity or ambient energy, could be Q_X_Y_in for solar systems)
+    /// - `CONSUMO` for consumed / used energy components for system Y providing service X (E_X_gen_Y_in_cr_t)
+    /// - `ZONA` for energy needs of zone to provide service X (for zone i or whole building i=0) (Q_X_nd_i)
     /// - `SISTEMA` for the energy output (heat) of generator Y providing service X (Q_X_Y_out)
     pub ctype: CType,
     /// Energy origin or end use type
