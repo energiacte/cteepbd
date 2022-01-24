@@ -347,8 +347,7 @@ fn balance_for_carrier(
             .or_insert_with(|| comp.values.clone());
     }
 
-    // PRODUCED ENERGY GENERATORS (CSubtype::INSITU or CSubtype::COGENERACION)
-    // generators are unique in this list
+    // List of produced energy generators (CSubtype::INSITU or CSubtype::COGENERACION)
     let pr_generators: Vec<CSubtype> = E_pr_cr_i_t.keys().cloned().collect(); // INSITU, COGENERACION
 
     // Annually produced on-site energy from generator i (origin i)
@@ -357,7 +356,7 @@ fn balance_for_carrier(
         E_pr_cr_i_an.insert(*gen, vecsum(&E_pr_cr_i_t[gen]));
     }
 
-    // * Energy produced on-site and inside the assessment boundary (formula 30)
+    // * Energy produced on-site and inside the assessment boundary for all generators (formula 30)
     let mut E_pr_cr_t = vec![0.0; num_steps];
     for gen in &pr_generators {
         E_pr_cr_t = vecvecsum(&E_pr_cr_t, &E_pr_cr_i_t[gen])
