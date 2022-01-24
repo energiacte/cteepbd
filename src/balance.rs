@@ -327,24 +327,26 @@ fn balance_for_carrier(
     let num_steps = cr_list[0].values.len();
 
     // * Energy used by technical systems for EPB services, for each time step
-    let E_EPus_cr_t = cr_list
-        .iter()
-        .filter(|c| c.is_used() && c.is_epb())
-        .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
-
+    let mut E_EPus_cr_t = vec![0.0; num_steps];
     // * Energy used by technical systems for non-EPB services, for each time step
-    let E_nEPus_cr_t = cr_list
-        .iter()
-        .filter(|c| c.is_used() && !c.is_epb())
-        .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
-
+    let mut E_nEPus_cr_t = vec![0.0; num_steps];
     // * Produced on-site energy and inside the assessment boundary, by generator i (origin i)
     let mut E_pr_cr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
-    for comp in cr_list.iter().filter(|c| c.is_generated()) {
-        E_pr_cr_i_t
-            .entry(comp.csubtype)
-            .and_modify(|e| *e = vecvecsum(e, &comp.values))
-            .or_insert_with(|| comp.values.clone());
+
+    // Accumulate for all components
+    for c in &cr_list {
+        if c.is_used() {
+            if c.is_epb() {
+                E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, &c.values)
+            } else {
+                E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, &c.values)
+            }
+        } else if c.is_generated() {
+            E_pr_cr_i_t
+                .entry(c.csubtype)
+                .and_modify(|e| *e = vecvecsum(e, &c.values))
+                .or_insert_with(|| c.values.clone());
+        }
     }
 
     // List of produced energy generators (CSubtype::INSITU or CSubtype::COGENERACION)
