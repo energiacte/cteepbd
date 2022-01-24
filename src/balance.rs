@@ -435,32 +435,6 @@ fn balance_for_carrier(
     // NOTE: All weighting factors have been considered constant through all timesteps
     // NOTE: This allows using annual quantities and not timestep expressions
 
-    // Find weighting factor for 'step' of energy exported to 'dest' from the given energy 'source'.
-    //
-    // * `fp_cr` - weighting factor list for a given energy carrier where search is done
-    // * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
-    // * `dest` - match this energy destination (use)
-    // * `step` - match this calculation step
-    fn fp_find<T>(fp_cr: &[Factor], source: T, dest: Dest, step: Step) -> Result<RenNrenCo2>
-    where
-        T: TryInto<Source>,
-        T::Error: std::fmt::Display,
-    {
-        let source = source
-            .try_into()
-            .map_err(|e| EpbdError::ParseError(format!("{}", e)))?;
-        fp_cr
-            .iter()
-            .find(|fp| fp.source == source && fp.dest == dest && fp.step == step)
-            .map(|fp| fp.factors())
-            .ok_or_else(|| {
-                EpbdError::MissingFactor(format!(
-                    "'{}, {}, {}, {}'",
-                    fp_cr[0].carrier, source, dest, step
-                ))
-            })
-    }
-
     // * Weighted energy for delivered energy: the cost of producing that energy
     let fpA_grid = fp_find(&fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid; // formula 19, 39
@@ -653,4 +627,30 @@ fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
         }
     }
     factors_us_k
+}
+
+/// Find weighting factor for 'step' of energy exported to 'dest' from the given energy 'source'.
+///
+/// * `fp_cr` - weighting factor list for a given energy carrier where search is done
+/// * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
+/// * `dest` - match this energy destination (use)
+/// * `step` - match this calculation step
+fn fp_find<T>(fp_cr: &[Factor], source: T, dest: Dest, step: Step) -> Result<RenNrenCo2>
+where
+    T: TryInto<Source>,
+    T::Error: std::fmt::Display,
+{
+    let source = source
+        .try_into()
+        .map_err(|e| EpbdError::ParseError(format!("{}", e)))?;
+    fp_cr
+        .iter()
+        .find(|fp| fp.source == source && fp.dest == dest && fp.step == step)
+        .map(|fp| fp.factors())
+        .ok_or_else(|| {
+            EpbdError::MissingFactor(format!(
+                "'{}, {}, {}, {}'",
+                fp_cr[0].carrier, source, dest, step
+            ))
+        })
 }
