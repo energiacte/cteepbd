@@ -441,10 +441,18 @@ fn balance_for_carrier(
     // * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
     // * `dest` - match this energy destination (use)
     // * `step` - match this calculation step
-    fn fp_find(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor> {
+    fn fp_find<T>(fp_cr: &[Factor], source: T, dest: Dest, step: Step) -> Result<RenNrenCo2>
+    where
+        T: TryInto<Source>,
+        T::Error: std::fmt::Display,
+    {
+        let source = source
+            .try_into()
+            .map_err(|e| EpbdError::ParseError(format!("{}", e)))?;
         fp_cr
             .iter()
             .find(|fp| fp.source == source && fp.dest == dest && fp.step == step)
+            .map(|fp| fp.factors())
             .ok_or_else(|| {
                 EpbdError::MissingFactor(format!(
                     "'{}, {}, {}, {}'",
@@ -455,14 +463,14 @@ fn balance_for_carrier(
 
     // * Weighted energy for delivered energy: the cost of producing that energy
     let fpA_grid = fp_find(&fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
-    let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid.factors(); // formula 19, 39
+    let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid; // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources (origin i)
     let E_we_del_cr_onsite_an = E_pr_cr_i_an
         .get(&CSubtype::INSITU)
         .and_then(|E_pr_cr_i| {
             fp_find(&fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
-                .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i.factors())
+                .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i)
                 .ok()
         })
         .unwrap_or_default();
@@ -487,21 +495,23 @@ fn balance_for_carrier(
         // * Step A: weighting depends on exported energy generation (origin generator)
         // Factors are averaged weighting by the amount of production for each origin relative to the amount for all origins (no priority, 9.6.6.2.4, eq (8))
 
-        // Generators (produced energy sources) that are exporting some energy (!= 0)
-        let exp_generators: Vec<_> = E_exp_cr_i_an.keys().collect();
+        // Compute mean energy weighting factor for all (non grid) sources
+        // uses exported energy from origin relative to all exported energy as weighting criteria
+        let f_we_exp_cr_compute = |dest: Dest, step: Step| -> Result<RenNrenCo2> {
+            let mut result = RenNrenCo2::default();
+            for (gen, E_exp_cr_gen_an) in &E_exp_cr_i_an {
+                let fp_i = fp_find(&fp_cr, *gen, dest, step)?;
+                result += fp_i * (E_exp_cr_gen_an / E_exp_cr_an);
+            }
+            Ok(result)
+        };
 
         // Weighting factors for energy exported to nEP uses (step A) (~formula 24)
         let f_we_exp_cr_stepA_nEPus: RenNrenCo2 = if E_exp_cr_used_nEPus_an == 0.0 {
             // No exported energy to nEP uses
             RenNrenCo2::default() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::default()),
-                |acc: Result<RenNrenCo2>, &gen| {
-                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?;
-                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
-                },
-            )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
+            f_we_exp_cr_compute(Dest::A_NEPB, Step::A)?
         };
 
         // Weighting factors for energy exported to the grid (step A) (~formula 25)
@@ -509,13 +519,7 @@ fn balance_for_carrier(
             // No energy exported to grid
             RenNrenCo2::default() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::default()),
-                |acc: Result<RenNrenCo2>, &gen| {
-                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?;
-                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
-                },
-            )? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
+            f_we_exp_cr_compute(Dest::A_RED, Step::A)?
         };
 
         // Weighted exported energy according to resources used to generate that energy (formula 23)
@@ -529,13 +533,7 @@ fn balance_for_carrier(
             // No energy exported to nEP uses
             RenNrenCo2::default() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::default()),
-                |acc: Result<RenNrenCo2>, &gen| {
-                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?;
-                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
-                },
-            )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
+            f_we_exp_cr_compute(Dest::A_NEPB, Step::B)?
         };
 
         // Weighting factors for energy exported to the grid (step B)
@@ -543,13 +541,7 @@ fn balance_for_carrier(
             // No energy exported to grid
             RenNrenCo2::default() // ren: 0.0, nren: 0.0, co2: 0.0
         } else {
-            exp_generators.iter().fold(
-                Ok(RenNrenCo2::default()),
-                |acc: Result<RenNrenCo2>, &gen| {
-                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?;
-                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
-                },
-            )? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
+            f_we_exp_cr_compute(Dest::A_RED, Step::B)?
         };
 
         // Effect of exported energy on weighted energy performance (step B) (formula 26)
