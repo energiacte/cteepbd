@@ -48,7 +48,7 @@ pub trait HasValues {
 }
 
 // -------------------- Component
-// Define basic Component and Components (Compoment list + Metadata) types
+// Define basic Component type
 
 /// Componente de energía.
 ///
