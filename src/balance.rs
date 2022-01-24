@@ -131,47 +131,37 @@ pub fn energy_performance(
         .map(|e| e.carrier)
         .collect();
 
-    // Compute balance for each carrier
+    // Compute balance for each carrier and accumulate partial balance values for total balance
+    let mut balance = BalanceTotal::default();
     let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
-    for &carrier in &carriers {
-        let bal = balance_for_carrier(
-            carrier,
-            &used_or_generated_energy_components,
-            wfactors,
-            k_exp,
-        )?;
-        balance_cr.insert(carrier, bal);
-    }
+    for cr in &carriers {
+        let bal = balance_for_carrier(*cr, &used_or_generated_energy_components, wfactors, k_exp)?;
+        balance_cr.insert(*cr, bal);
 
-    // Accumulate partial balance values for total balance
-    let balance: BalanceTotal = carriers
-        .iter()
-        .fold(BalanceTotal::default(), |mut acc, cr| {
-            // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
-            acc.A += balance_cr[cr].we_an_A;
-            // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
-            acc.B += balance_cr[cr].we_an;
-            // Weighted energy partials
-            acc.we_del += balance_cr[cr].we_delivered_an;
-            acc.we_exp_A += balance_cr[cr].we_exported_an_A;
-            acc.we_exp += balance_cr[cr].we_exported_an;
-            // Weighted energy for each use item (EPB services)
-            for &service in &SERVICES {
-                // Energy use
-                if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(&service) {
-                    *acc.used_EPB_byuse.entry(service).or_default() += *value
-                }
-                // Step A
-                if let Some(value) = balance_cr[cr].we_an_A_byuse.get(&service) {
-                    *acc.A_byuse.entry(service).or_default() += *value
-                }
-                // Step B
-                if let Some(value) = balance_cr[cr].we_an_byuse.get(&service) {
-                    *acc.B_byuse.entry(service).or_default() += *value;
-                }
+        // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
+        balance.A += balance_cr[cr].we_an_A;
+        // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
+        balance.B += balance_cr[cr].we_an;
+        // Weighted energy partials
+        balance.we_del += balance_cr[cr].we_delivered_an;
+        balance.we_exp_A += balance_cr[cr].we_exported_an_A;
+        balance.we_exp += balance_cr[cr].we_exported_an;
+        // Weighted energy for each use item (EPB services)
+        for &service in &SERVICES {
+            // Energy use
+            if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(&service) {
+                *balance.used_EPB_byuse.entry(service).or_default() += *value
             }
-            acc
-        });
+            // Step A
+            if let Some(value) = balance_cr[cr].we_an_A_byuse.get(&service) {
+                *balance.A_byuse.entry(service).or_default() += *value
+            }
+            // Step B
+            if let Some(value) = balance_cr[cr].we_an_byuse.get(&service) {
+                *balance.B_byuse.entry(service).or_default() += *value;
+            }
+        }
+    }
 
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
