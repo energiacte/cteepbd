@@ -412,8 +412,6 @@ fn balance_for_carrier(
         } else {
             0.0
         };
-        f_pr_cr_i.insert(*gen, f);
-    }
 
         E_pr_cr_i_used_EPus_t.insert(*gen, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i));
     }
