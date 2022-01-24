@@ -206,8 +206,10 @@ pub enum Service {
     BAC,
     /// Undefined or generic use
     NDEF,
-    // TODO: Electricity cogeneration (share of electrical use, excluding thermal use)
+    // TODO: Electricity cogeneration (electrical use, excluded thermal use)
     // COGEN,
+    // TODO: Non EPB uses
+    // NEPB,
 }
 
 /// Lista de usos disponibles
@@ -222,6 +224,7 @@ pub const SERVICES: [Service; 9] = [
     Service::BAC,
     Service::NDEF,
     //Service::COGEN,
+    //Service::NEPB,
 ];
 
 impl str::FromStr for Service {
@@ -260,3 +263,13 @@ impl Default for Service {
         Service::NDEF
     }
 }
+
+// impl Service {
+//     // Is this an EPB service? How does it interact with cogeneration?
+//     fn is_epb(&self) -> bool {
+//         self != Service::NEPB && self != Service::COGEN
+//     }
+//     fn is_nepb(&self) -> bool {
+//         self == Service::NEPB
+//     }
+// }
