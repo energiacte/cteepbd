@@ -127,30 +127,36 @@ pub fn energy_performance(
     let mut balance = BalanceTotal::default();
     let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
     for cr in &components.available_carriers() {
+        // Compute balance for this carrier ---
+        let bal_cr = balance_for_carrier(*cr, &components.cdata, wfactors, k_exp)?;
 
+        // Modify global balance using this carrier balance ---
         // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
-        balance.A += balance_cr[cr].we_an_A;
+        balance.A += bal_cr.we_an_A;
         // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step B
-        balance.B += balance_cr[cr].we_an;
+        balance.B += bal_cr.we_an;
         // Weighted energy partials
-        balance.we_del += balance_cr[cr].we_delivered_an;
-        balance.we_exp_A += balance_cr[cr].we_exported_an_A;
-        balance.we_exp += balance_cr[cr].we_exported_an;
+        balance.we_del += bal_cr.we_delivered_an;
+        balance.we_exp_A += bal_cr.we_exported_an_A;
+        balance.we_exp += bal_cr.we_exported_an;
         // Weighted energy for each use item (EPB services)
         for &service in &SERVICES {
             // Energy use
-            if let Some(value) = balance_cr[cr].used_EPB_an_byuse.get(&service) {
+            if let Some(value) = bal_cr.used_EPB_an_byuse.get(&service) {
                 *balance.used_EPB_byuse.entry(service).or_default() += *value
             }
             // Step A
-            if let Some(value) = balance_cr[cr].we_an_A_byuse.get(&service) {
+            if let Some(value) = bal_cr.we_an_A_byuse.get(&service) {
                 *balance.A_byuse.entry(service).or_default() += *value
             }
             // Step B
-            if let Some(value) = balance_cr[cr].we_an_byuse.get(&service) {
+            if let Some(value) = bal_cr.we_an_byuse.get(&service) {
                 *balance.B_byuse.entry(service).or_default() += *value;
             }
         }
+
+        // Append to the map of balances by carrier ---
+        balance_cr.insert(*cr, bal_cr);
     }
 
     // Compute area weighted total balance

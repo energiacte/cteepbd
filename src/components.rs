@@ -156,7 +156,7 @@ impl str::FromStr for Components {
 }
 
 impl Components {
-    /// Devuelve iterador sobre componentes de energía consumida o producida
+    /// Conjunto de vectores energéticos disponibles en componentes de energía consumida o producida
     pub fn available_carriers(&self) -> HashSet<Carrier> {
         self.cdata
             .iter()
