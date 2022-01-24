@@ -44,7 +44,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        CSubtype, CType, Carrier, Component, HasValues, Meta, MetaVec, Service, ZoneNeeds,
+        CSubtype, CType, Carrier, Component, HasValues, Meta, MetaVec, Service, SystemNeeds,
+        ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
@@ -65,7 +66,7 @@ pub struct Components {
     /// Zone data components
     pub zones: Vec<ZoneNeeds>,
     /// System data components
-    pub systems: Vec<Component>,
+    pub systems: Vec<SystemNeeds>,
 }
 
 impl MetaVec for Components {
@@ -524,8 +525,8 @@ mod tests {
         "#META CTE_AREAREF: 1.0
             0, ZONA, DEMANDA, REF, -3.0 # Demanda ref. edificio
             0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
-            1, -, SISTEMA, DEMANDA, REF, -3.0 # Demanda ref. EER 3
-            2, -, SISTEMA, DEMANDA, CAL, 3.0 # Demanda cal. COP 3
+            1, SISTEMA, DEMANDA, REF, -3.0 # Demanda ref. EER 3
+            2, SISTEMA, DEMANDA, CAL, 3.0 # Demanda cal. COP 3
             1, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 2.00 # Producción PV
             2, ELECTRICIDAD, CONSUMO, EPB, REF, 1.00 # BdC modo refrigeración
             2, ELECTRICIDAD, CONSUMO, EPB, CAL, 1.00 # BdC modo calefacción

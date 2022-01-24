@@ -67,13 +67,10 @@ pub struct Component {
     /// Component type
     /// - `PRODUCCION` for produced energy components from system Y (E_pr_cr_Y_t, where cr is electricity or ambient energy, could be Q_X_Y_in for solar systems)
     /// - `CONSUMO` for consumed / used energy components for system Y providing service X (E_X_gen_Y_in_cr_t)
-    /// - `ZONA` for energy needs of zone to provide service X (for zone i or whole building i=0) (Q_X_nd_i)
-    /// - `SISTEMA` for the energy output (heat) of generator Y providing service X (Q_X_Y_out)
     pub ctype: CType,
     /// Energy origin or end use type
     /// - `INSITU` or `COGENERACION` for generated energy component types
     /// - `EPB` or `NEPB` for used energy component types
-    /// - `DEMANDA` for `ZONA` or `SISTEMA` component types
     pub csubtype: CSubtype,
     /// End use
     pub service: Service,
@@ -178,8 +175,7 @@ impl str::FromStr for Component {
                 INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
                 COGENERACION => carrier == ELECTRICIDAD,
                 _ => false,
-            },
-            ZONA | SISTEMA => matches!(csubtype, DEMANDA),
+            }
         };
         if !subtype_belongs_to_type {
             return Err(EpbdError::ParseError(s.into()));

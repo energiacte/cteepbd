@@ -107,10 +107,6 @@ pub enum CType {
     PRODUCCION,
     /// Used energy by system Y to provide service X (E_X_Y_in)
     CONSUMO,
-    /// Energy needs of zone i (i=0 for whole building) to provide service X (Q_X_nd_i)
-    ZONA,
-    /// Energy output (or absorbed heat) of generator Y to provide service X (Q_X_Y_out)
-    SISTEMA,
 }
 
 impl str::FromStr for CType {
@@ -120,8 +116,6 @@ impl str::FromStr for CType {
         match s {
             "PRODUCCION" => Ok(CType::PRODUCCION),
             "CONSUMO" => Ok(CType::CONSUMO),
-            "ZONA" => Ok(CType::ZONA),
-            "SISTEMA" => Ok(CType::SISTEMA),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -147,15 +141,6 @@ pub enum CSubtype {
     EPB,
     /// Non EPB use
     NEPB,
-    /// Energy needs of zone or energy output of system (Q_X_Y_nd, Q_X_Y_out)
-    DEMANDA,
-    // TODO:
-    // Energy losses linked to service X (Q_X_ls)
-    // E_X_Y_in * COP = Q_X_Y_out + Q_X_ls_tot - Q_X_y_in - f_Y;aux;rvd * W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
-    // Energy_use * COP = Energy_out + Energy_losses - (Energy_from_heat_source_input + Energy_from_recovered_aux_energy_not_accounted_for_in_COP_input)
-    // PERDIDAS
-    // Number of hours where temperature shedule limits are not met (CAL, REF)
-    // HORASFUERACONSIGNA
 }
 
 impl str::FromStr for CSubtype {
@@ -167,7 +152,6 @@ impl str::FromStr for CSubtype {
             "COGENERACION" => Ok(CSubtype::COGENERACION),
             "EPB" => Ok(CSubtype::EPB),
             "NEPB" => Ok(CSubtype::NEPB),
-            "DEMANDA" => Ok(CSubtype::DEMANDA),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }

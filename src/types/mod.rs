@@ -35,6 +35,7 @@ mod common;
 mod component;
 mod factor;
 mod rennrenco2;
+mod system_needs;
 mod tmeta;
 mod zone_needs;
 
@@ -42,5 +43,6 @@ pub use common::*;
 pub use component::*;
 pub use factor::*;
 pub use rennrenco2::*;
+pub use system_needs::*;
 pub use tmeta::*;
 pub use zone_needs::*;
