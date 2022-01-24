@@ -211,6 +211,8 @@ pub struct BalanceForCarrier {
     pub used_EPB_an_byuse: HashMap<Service, f32>,
     /// Used energy for non EPB uses in each timestep
     pub used_nEPB: Vec<f32>,
+    /// Energy used for non EPB uses
+    pub used_nEPB_an: f32,
     /// Produced energy in each timestep
     pub produced: Vec<f32>,
     /// Produced energy (from all sources)
@@ -219,10 +221,14 @@ pub struct BalanceForCarrier {
     pub produced_bygen: HashMap<CSubtype, Vec<f32>>,
     /// Produced energy by non grid source (COGENERACION / INSITU)
     pub produced_bygen_an: HashMap<CSubtype, f32>,
-    /// Produced energy from all origins and used for EPB services
+    /// Produced energy from all origins and used for EPB services in each timestep
     pub produced_used_EPus: Vec<f32>,
-    /// Produced energy with origin in generator i and used for EPB services
+    /// Produced energy from all origins and used for EPB services
+    pub produced_used_EPus_an: f32,
+    /// Produced energy with origin in generator i and used for EPB services in each timestep
     pub produced_used_EPus_bygen: HashMap<CSubtype, Vec<f32>>,
+    /// Produced energy with origin in generator i and used for EPB services
+    pub produced_used_EPus_bygen_an: HashMap<CSubtype, f32>,
     /// Load matching factor
     pub f_match: Vec<f32>,
     /// Exported energy to the grid and non EPB uses in each timestep
@@ -539,7 +545,7 @@ fn balance_for_carrier(
     // used energy for service_i / used energy for all services)
     let f_us_cr = compute_factors_by_use_cr(&cr_list);
     // Annual energy use for carrier
-    let E_EPus_cr_an: f32 = E_EPus_cr_t.iter().sum();
+    let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
 
     // Used (final) and Weighted energy for each use item (for EPB services)
     let mut E_Epus_cr_an_byuse: HashMap<Service, f32> = HashMap::new();
@@ -557,17 +563,32 @@ fn balance_for_carrier(
         }
     }
 
+    // === Other aggregated values ===
+
+    // Annual energy use for carrier for non EPB uses
+    let E_nEPus_cr_an = vecsum(&E_nEPus_cr_t);
+    // Annually produced energy used in EPB uses
+    let E_pr_cr_used_EPus_an = vecsum(&E_pr_cr_used_EPus_t);
+    // Annually produced energy used in EPB uses by generator
+    let E_pr_cr_i_used_EPus_an: HashMap<CSubtype, f32> = E_pr_cr_i_used_EPus_t
+        .iter()
+        .map(|(gen, values)| (*gen, vecsum(values)))
+        .collect();
+
     Ok(BalanceForCarrier {
         carrier,
         used_EPB: E_EPus_cr_t,
         used_EPB_an_byuse: E_Epus_cr_an_byuse,
         used_nEPB: E_nEPus_cr_t,
+        used_nEPB_an: E_nEPus_cr_an,
         produced: E_pr_cr_t,
         produced_an: E_pr_cr_an,
         produced_bygen: E_pr_cr_i_t,
         produced_bygen_an: E_pr_cr_i_an,
         produced_used_EPus: E_pr_cr_used_EPus_t,
+        produced_used_EPus_an: E_pr_cr_used_EPus_an,
         produced_used_EPus_bygen: E_pr_cr_i_used_EPus_t,
+        produced_used_EPus_bygen_an: E_pr_cr_i_used_EPus_an,
         f_match: f_match_t,   // load matching factor
         exported: E_exp_cr_t, // exp_used_nEPus + exp_grid
         exported_an: E_exp_cr_an,
