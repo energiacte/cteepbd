@@ -35,7 +35,7 @@ use crate::error::EpbdError;
 pub trait HasValues {
     /// Get list of values
     fn values(&self) -> &[f32];
-    
+
     /// Sum of all values
     fn values_sum(&self) -> f32 {
         self.values().iter().sum::<f32>()
@@ -218,6 +218,7 @@ mod tests {
 
     #[test]
     fn tcomponent() {
+        // consumer component
         let component1 = Component {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
@@ -230,6 +231,9 @@ mod tests {
             comment: "Comentario cons 1".into(),
         };
         let component1str = "0, ELECTRICIDAD, CONSUMO, EPB, REF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        assert_eq!(component1.to_string(), component1str);
+
+        // producer component
         let component2 = Component {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
@@ -243,11 +247,6 @@ mod tests {
         };
         let component2str = "0, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
         let component2strlegacy = "ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
-
-        // consumer component
-        assert_eq!(component1.to_string(), component1str);
-
-        // producer component
         assert_eq!(component2.to_string(), component2str);
 
         // roundtrip building from/to string
@@ -262,12 +261,6 @@ mod tests {
                 .unwrap()
                 .to_string(),
             component2str
-        );
-        let factor2str = "0, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
-        // roundtrip building from/to string
-        assert_eq!(
-            factor2str.parse::<Component>().unwrap().to_string(),
-            factor2str
         );
     }
 }
