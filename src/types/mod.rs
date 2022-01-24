@@ -36,9 +36,11 @@ mod component;
 mod factor;
 mod rennrenco2;
 mod tmeta;
+mod zone_needs;
 
 pub use common::*;
 pub use component::*;
 pub use factor::*;
 pub use rennrenco2::*;
 pub use tmeta::*;
+pub use zone_needs::*;

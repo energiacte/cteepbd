@@ -43,7 +43,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
-    types::{CSubtype, CType, Carrier, Component, HasValues, Meta, MetaVec, Service},
+    types::{
+        CSubtype, CType, Carrier, Component, HasValues, Meta, MetaVec, Service, ZoneNeeds,
+    },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
 
@@ -61,7 +63,7 @@ pub struct Components {
     /// Energy use and generation components
     pub cdata: Vec<Component>,
     /// Zone data components
-    pub zones: Vec<Component>,
+    pub zones: Vec<ZoneNeeds>,
     /// System data components
     pub systems: Vec<Component>,
 }
@@ -520,8 +522,8 @@ mod tests {
     #[test]
     fn tcomponents_extended_parse() {
         "#META CTE_AREAREF: 1.0
-            0, -, ZONA, DEMANDA, REF, -3.0 # Demanda ref. edificio
-            0, -, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
+            0, ZONA, DEMANDA, REF, -3.0 # Demanda ref. edificio
+            0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
             1, -, SISTEMA, DEMANDA, REF, -3.0 # Demanda ref. EER 3
             2, -, SISTEMA, DEMANDA, CAL, 3.0 # Demanda cal. COP 3
             1, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 2.00 # Producción PV
