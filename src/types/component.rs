@@ -31,6 +31,22 @@ use serde::{Deserialize, Serialize};
 use super::{CSubtype, CType, Carrier, Service};
 use crate::error::EpbdError;
 
+/// Elements that have a list of numeric values
+pub trait HasValues {
+    /// Get list of values
+    fn values(&self) -> &[f32];
+    
+    /// Sum of all values
+    fn values_sum(&self) -> f32 {
+        self.values().iter().sum::<f32>()
+    }
+
+    /// Number of steps
+    fn num_steps(&self) -> usize {
+        self.values().len()
+    }
+}
+
 // -------------------- Component
 // Define basic Component and Components (Compoment list + Metadata) types
 
@@ -99,15 +115,11 @@ impl Component {
     pub fn is_epb(&self) -> bool {
         self.csubtype == CSubtype::EPB
     }
+}
 
-    /// Number of steps
-    pub fn num_steps(&self) -> usize {
-        self.values.len()
-    }
-
-    /// Sum of values for the component
-    pub fn values_sum(&self) -> f32 {
-        self.values.iter().sum::<f32>()
+impl HasValues for Component {
+    fn values(&self) -> &[f32] {
+        &self.values
     }
 }
 

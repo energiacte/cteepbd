@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
-    types::{CSubtype, CType, Carrier, Component, Meta, MetaVec, Service},
+    types::{CSubtype, CType, Carrier, Component, HasValues, Meta, MetaVec, Service},
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
 
