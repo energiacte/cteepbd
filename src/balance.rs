@@ -485,19 +485,10 @@ fn balance_for_carrier(
         // If there's no exportation, it's either because the carrier cannot be exported
         // or because there's no effective exportation
         // * Step A: weighting depends on exported energy generation (origin generator)
-        // Factors are averaged weighting by production for each origin (no priority, 9.6.6.2.4)
+        // Factors are averaged weighting by the amount of production for each origin relative to the amount for all origins (no priority, 9.6.6.2.4, eq (8))
 
-        // * Fraction of produced energy tipe i (origin from generator i) that is exported (formula 14)
-        // NOTE: simplified for annual computations (not valid for timestep calculation)
-        let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
-        for gen in &pr_generators {
-            // Do not store generators without generation
-            if E_exp_cr_i_an[gen] != 0.0 {
-                f_pr_cr_i.insert(*gen, vecsum(&E_exp_cr_i_t[gen]) / E_exp_cr_i_an[gen]);
-            }
-        }
         // Generators (produced energy sources) that are exporting some energy (!= 0)
-        let exp_generators: Vec<_> = f_pr_cr_i.keys().collect();
+        let exp_generators: Vec<_> = E_exp_cr_i_an.keys().collect();
 
         // Weighting factors for energy exported to nEP uses (step A) (~formula 24)
         let f_we_exp_cr_stepA_nEPus: RenNrenCo2 = if E_exp_cr_used_nEPus_an == 0.0 {
@@ -507,8 +498,8 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?;
-                    Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
+                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?;
+                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
                 },
             )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
         };
@@ -521,8 +512,8 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?;
-                    Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
+                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?;
+                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
                 },
             )? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
         };
@@ -541,8 +532,8 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?;
-                    Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
+                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?;
+                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
                 },
             )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
         };
@@ -555,8 +546,8 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?;
-                    Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
+                    let fp_i = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?;
+                    Ok(acc? + (fp_i.factors() * (E_exp_cr_i_an[gen] / E_exp_cr_an)))
                 },
             )? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
         };
