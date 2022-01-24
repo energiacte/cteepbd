@@ -40,9 +40,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::{EpbdError, Result},
+    types::HasValues,
     types::{
-        CSubtype, Carrier, Component, Dest, Factor, RenNrenCo2, Service, Source, Step,
-        SERVICES,
+        CSubtype, Carrier, Component, Dest, Factor, RenNrenCo2, Service, Source, Step, SERVICES,
     },
     vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
     Components, Factors,
@@ -123,28 +123,23 @@ pub fn energy_performance(
         )));
     };
 
-    let used_or_generated_energy_components = components.used_or_generated_iter();
+    let used_or_generated_energy_components: Vec<Component> =
+        components.used_or_generated_iter().cloned().collect();
 
-    let carriers: HashSet<_> = used_or_generated_energy_components
-        .clone()
+    let carriers: HashSet<Carrier> = used_or_generated_energy_components
+        .iter()
         .map(|e| e.carrier)
         .collect();
 
     // Compute balance for each carrier
     let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
     for &carrier in &carriers {
-        let components_cr: Vec<Component> = used_or_generated_energy_components
-            .clone()
-            .filter(|e| e.has_carrier(carrier))
-            .cloned()
-            .collect();
-        let fp_cr: Vec<Factor> = wfactors
-            .wdata
-            .iter()
-            .filter(|e| e.carrier == carrier)
-            .cloned()
-            .collect();
-        let bal = balance_for_carrier(carrier, &components_cr, &fp_cr, k_exp)?;
+        let bal = balance_for_carrier(
+            carrier,
+            &used_or_generated_energy_components,
+            wfactors,
+            k_exp,
+        )?;
         balance_cr.insert(carrier, bal);
     }
 
@@ -321,10 +316,23 @@ pub struct BalanceForCarrier {
 #[allow(non_snake_case)]
 fn balance_for_carrier(
     carrier: Carrier,
-    cr_list: &[Component],
-    fp_cr: &[Factor],
+    carriers: &[Component],
+    wfactors: &Factors,
     k_exp: f32,
 ) -> Result<BalanceForCarrier> {
+    let cr_list: Vec<Component> = carriers
+        .iter()
+        .filter(|e| e.has_carrier(carrier))
+        .cloned()
+        .collect();
+
+    let fp_cr: Vec<Factor> = wfactors
+        .wdata
+        .iter()
+        .filter(|e| e.carrier == carrier)
+        .cloned()
+        .collect();
+
     // We know all carriers have the same timesteps (see FromStr for Components)
     let num_steps = cr_list[0].values.len();
 
@@ -459,14 +467,14 @@ fn balance_for_carrier(
     }
 
     // * Weighted energy for delivered energy: the cost of producing that energy
-    let fpA_grid = fp_find(fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
+    let fpA_grid = fp_find(&fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid.factors(); // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources (origin i)
     let E_we_del_cr_onsite_an = E_pr_cr_i_an
         .get(&CSubtype::INSITU)
         .and_then(|E_pr_cr_i| {
-            fp_find(fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
+            fp_find(&fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
                 .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i.factors())
                 .ok()
         })
@@ -512,7 +520,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?;
+                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
@@ -526,7 +534,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?;
+                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
@@ -546,7 +554,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?;
+                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
@@ -560,7 +568,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?;
+                    let fp = fp_find(&fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];
@@ -589,7 +597,7 @@ fn balance_for_carrier(
     // ================ Compute values by use ===============
     // Compute fraction of used energy by use (for EPB services):
     // used energy for service_i / used energy for all services)
-    let f_us_cr = compute_factors_by_use_cr(cr_list);
+    let f_us_cr = compute_factors_by_use_cr(&cr_list);
     // Annual energy use for carrier
     let E_EPus_cr_an: f32 = E_EPus_cr_t.iter().sum();
 
@@ -659,7 +667,7 @@ fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
     // Energy use components (EPB uses) for current carrier i
     let cr_use_list = cr_list.iter().filter(|c| c.is_used() && c.is_epb());
     // Energy use for all EPB services and carrier i (Q_Epus_cr)
-    let q_us_all: f32 = cr_use_list.clone().map(Component::values_sum).sum();
+    let q_us_all: f32 = cr_use_list.clone().map(HasValues::values_sum).sum();
     if q_us_all != 0.0 {
         // No energy use for this carrier!
         // Collect share of step A weighted energy for each use item (service)
@@ -668,7 +676,7 @@ fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
             let q_us_k: f32 = cr_use_list
                 .clone()
                 .filter(|c| c.has_service(us))
-                .map(Component::values_sum)
+                .map(HasValues::values_sum)
                 .sum();
             // Factor for use k
             factors_us_k.insert(us, q_us_k / q_us_all);
