@@ -399,13 +399,14 @@ fn balance_for_carrier(
 
     // Exported energy by generator i (origin) (9.6.6.2)
     // Implementation WITHOUT priorities on energy use
+    // We are doing this computations using generator types, not generator ids (i).
 
-    // * Fraction of produced energy of type i (origin from generator i) (formula 14)
-    // FIXME: ¿El factor de reparto debería hacerse para cada componente de ese tipo y no agrupado por tipo
-    // FIXME: aunque la agrupación por tipo sea útil para ver orígenes?
-    let mut f_pr_cr_i = HashMap::<CSubtype, f32>::new();
+    // * Produced energy with origin from generator i and used for EPB services (formula 15)
+    let mut E_pr_cr_i_used_EPus_t = HashMap::<CSubtype, Vec<f32>>::new();
     for gen in &pr_generators {
-        let f = if E_pr_cr_an > 1e-3 {
+        // * Fraction of produced energy of type i (origin from generator i) (formula 14)
+        // We have grouped by origin type (it could be made by generator i, for each one of them)
+        let f_pr_cr_i = if E_pr_cr_an > 1e-3 {
             E_pr_cr_i_an[gen] / E_pr_cr_an
         } else {
             0.0
@@ -413,10 +414,7 @@ fn balance_for_carrier(
         f_pr_cr_i.insert(*gen, f);
     }
 
-    // * Produced energy with origin from generator i and used for EPB services (formula 15)
-    let mut E_pr_cr_i_used_EPus_t = HashMap::<CSubtype, Vec<f32>>::new();
-    for gen in &pr_generators {
-        E_pr_cr_i_used_EPus_t.insert(*gen, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i[gen]));
+        E_pr_cr_i_used_EPus_t.insert(*gen, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_i));
     }
 
     // * Exported energy from generator i (origin i) (formula 16)
