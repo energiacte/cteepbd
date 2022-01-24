@@ -157,10 +157,12 @@ impl str::FromStr for Components {
 
 impl Components {
     /// Devuelve iterador sobre componentes de energía consumida o producida
-    pub fn used_or_generated_iter(&self) -> impl Iterator<Item = &Component> + '_ + Clone {
+    pub fn available_carriers(&self) -> HashSet<Carrier> {
         self.cdata
             .iter()
             .filter(|c| c.is_used() || c.is_generated())
+            .map(|e| e.carrier)
+            .collect()
     }
 
     /// Corrige los componentes de consumo y producción

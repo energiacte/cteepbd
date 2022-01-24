@@ -33,7 +33,7 @@ según la EN ISO 52000-1.
 
 */
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::convert::TryInto;
 
 use serde::{Deserialize, Serialize};
@@ -123,20 +123,10 @@ pub fn energy_performance(
         )));
     };
 
-    let used_or_generated_energy_components: Vec<Component> =
-        components.used_or_generated_iter().cloned().collect();
-
-    let carriers: HashSet<Carrier> = used_or_generated_energy_components
-        .iter()
-        .map(|e| e.carrier)
-        .collect();
-
     // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance = BalanceTotal::default();
     let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
-    for cr in &carriers {
-        let bal = balance_for_carrier(*cr, &used_or_generated_energy_components, wfactors, k_exp)?;
-        balance_cr.insert(*cr, bal);
+    for cr in &components.available_carriers() {
 
         // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
         balance.A += balance_cr[cr].we_an_A;
