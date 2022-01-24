@@ -1003,18 +1003,20 @@ fn cte_ACS_demanda_ren_excluye_aux() {
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.967");
 }
 
-/// Componentes con id de sistema explicitados
+/// Componentes con id de sistema explicitados, usos no EPB y exportación a usos nEPB y a la red
 #[test]
 fn new_format_with_system_id() {
-    "# Bomba de calor 1
+    let comps = "# Bomba de calor 1
     1,ELECTRICIDAD,CONSUMO,EPB,ACS,100 # BdC 1
     1,MEDIOAMBIENTE,CONSUMO,EPB,ACS,150 # BdC 1
+    2,ELECTRICIDAD,CONSUMO,NEPB,NDEF,10 # Ascensores
     # Bomba de calor 2
     2,ELECTRICIDAD,CONSUMO,EPB,CAL,200 # BdC 2
     2,MEDIOAMBIENTE,CONSUMO,EPB,CAL,300 # BdC 2
     # Producción fotovoltaica in situ
-    1,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,50 # PV
+    1,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,200 # PV
     2,ELECTRICIDAD,PRODUCCION,INSITU,ACS,100 # PV
+    3,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,5 # PV
     # Producción de energía ambiente dada por el usuario
     0,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
     1,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
@@ -1022,4 +1024,21 @@ fn new_format_with_system_id() {
     # Compensación de energía ambiente a completar por CteEPBD"
         .parse::<Components>()
         .unwrap();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let bal = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
+    assert!(approx_equal(
+        RenNrenCo2 {
+            ren: 7.525,
+            nren: -0.10,
+            co2: -0.021,
+        },
+        bal.balance_m2.B
+    ));
+    let balance_el = &bal.balance_cr[&Carrier::ELECTRICIDAD];
+    // NEPB used energy
+    assert_eq!("10.000", format!("{:.3}", balance_el.used_nEPB_an));
+    // Produced energy from all origins and used for EPB services
+    assert_eq!("300.000", format!("{:.3}", balance_el.produced_used_EPus_an));
+    // Exported energy to non EPB uses
+    assert_eq!("5.000", format!("{:.3}", balance_el.exported_nEPB_an));
 }
