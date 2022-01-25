@@ -31,7 +31,7 @@ use serde::{Deserialize, Serialize};
 use super::{component::HasValues, Service};
 use crate::error::EpbdError;
 
-// -------------------- System Demand Component
+// -------------------- System Energy Needs Component
 // Define basic Zone Energy Needs Component type
 // This component is used to express energy needs of this zone to provide service X (for zone i with i=0 for the whole building) (Q_X_nd_i)
 
@@ -149,7 +149,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn system_needs_component() {
+    fn component_system_needs() {
         // zone energy needs component
         let component1 = SystemNeeds {
             id: 0,

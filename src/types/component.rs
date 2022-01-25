@@ -213,7 +213,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn tcomponent() {
+    fn generic_component() {
         // consumer component
         let component1 = Component {
             id: 0,

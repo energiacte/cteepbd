@@ -149,7 +149,7 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn zone_needs_component() {
+    fn component_zone_needs() {
         // zone energy needs component
         let component1 = ZoneNeeds {
             id: 0,
