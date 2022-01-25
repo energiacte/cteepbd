@@ -39,7 +39,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
-    types::{CSubtype, Carrier, Dest, Factor, Meta, MetaVec, RenNrenCo2, Source, Step},
+    types::{Carrier, Dest, Factor, Meta, MetaVec, RenNrenCo2, Source, Step},
     Components,
 };
 
@@ -354,20 +354,20 @@ impl Factors {
         let has_cogen = components
             .cdata
             .iter()
-            .any(|c| c.csubtype() == CSubtype::COGENERACION);
+            .any(|c| c.is_cogen_pr());
         self.wdata
             .retain(|f| f.source != Source::COGENERACION || has_cogen);
         // Mantenemos factores a usos no EPB si hay uso de no EPB
         let has_nepb = components
             .cdata
             .iter()
-            .any(|c| c.csubtype() == CSubtype::NEPB);
+            .any(|c| !c.is_epb_use());
         self.wdata.retain(|f| f.dest != Dest::A_NEPB || has_nepb);
         // Mantenemos factores de electricidad in situ si no hay producción de ese tipo
         let has_elec_insitu = components
             .cdata
             .iter()
-            .any(|c| c.has_carrier(Carrier::ELECTRICIDAD) && c.csubtype() == CSubtype::INSITU);
+            .any(|c| c.has_carrier(Carrier::ELECTRICIDAD) && c.is_onsite_pr());
         self.wdata.retain(|f| {
             f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_insitu
         });

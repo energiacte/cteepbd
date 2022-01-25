@@ -154,14 +154,14 @@ pub enum Service {
     BAC,
     /// Undefined or generic use
     NDEF,
+    /// Non EPB uses
+    NEPB,
     // TODO: Electricity cogeneration (electrical use, excluded thermal use)
     // COGEN,
-    // TODO: Non EPB uses
-    // NEPB,
 }
 
 /// Lista de usos disponibles
-pub const SERVICES: [Service; 9] = [
+pub const SERVICES: [Service; 10] = [
     Service::ACS,
     Service::CAL,
     Service::REF,
@@ -171,8 +171,8 @@ pub const SERVICES: [Service; 9] = [
     Service::DHU,
     Service::BAC,
     Service::NDEF,
+    Service::NEPB,
     //Service::COGEN,
-    //Service::NEPB,
 ];
 
 impl str::FromStr for Service {
@@ -193,6 +193,7 @@ impl str::FromStr for Service {
             "DHU" => Ok(Service::DHU),
             "BAC" => Ok(Service::BAC),
             "NDEF" => Ok(Service::NDEF),
+            "NEPB" => Ok(Service::NEPB),
             // "COGEN" => Ok(Service::COGEN),
             "" => Ok(Service::default()),
             _ => Err(EpbdError::ParseError(s.into())),
@@ -211,16 +212,6 @@ impl Default for Service {
         Service::NDEF
     }
 }
-
-// impl Service {
-//     // Is this an EPB service? How does it interact with cogeneration?
-//     fn is_epb(&self) -> bool {
-//         self != Service::NEPB && self != Service::COGEN
-//     }
-//     fn is_nepb(&self) -> bool {
-//         self == Service::NEPB
-//     }
-// }
 
 /// Elements that have a list of numeric values
 pub trait HasValues {

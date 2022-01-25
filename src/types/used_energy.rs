@@ -48,9 +48,6 @@ pub struct UsedEnergy {
     pub id: i32,
     /// Carrier name
     pub carrier: Carrier,
-    /// Energy use type
-    /// - `EPB` or `NEPB` for used energy component types
-    pub csubtype: CSubtype,
     /// End use
     pub service: Service,
     /// List of timestep energy use for the current carrier and service. kWh
@@ -87,10 +84,10 @@ impl UsedEnergy {
         true
     }
 
-    /// Check if component is of the epb used energy subtype
-    pub fn is_epb(&self) -> bool {
-        self.csubtype == CSubtype::EPB
-    }
+    // /// Check if component is of the epb used energy subtype
+    // pub fn is_epb(&self) -> bool {
+    //     self.service != Service::NEPB
+    // }
 }
 
 impl HasValues for UsedEnergy {
@@ -112,10 +109,12 @@ impl fmt::Display for UsedEnergy {
         } else {
             "".to_owned()
         };
+        let subtype = if self.service == Service::NEPB { "NEPB" } else { "EPB" };
+
         write!(
             f,
             "{}, {}, CONSUMO, {}, {}, {}{}",
-            self.id, self.carrier, self.csubtype, self.service, valuelist, comment
+            self.id, self.carrier, subtype, self.service, valuelist, comment
         )
     }
 }
@@ -154,10 +153,15 @@ impl str::FromStr for UsedEnergy {
         }
 
         // Check service field. May be missing in legacy versions
-        let (valuesidx, service) = match items[baseidx + 3].parse() {
+        let (valuesidx, mut service) = match items[baseidx + 3].parse() {
             Ok(s) => (baseidx + 4, s),
             Err(_) => (baseidx + 3, Service::default()),
         };
+
+        // No usamos el ctype para identificar no EPB sino que lo hacemos con el servicio
+        if csubtype == NEPB {
+            service = Service::NEPB
+        }
 
         // Collect energy values from the service field on
         let values = items[valuesidx..]
@@ -168,7 +172,6 @@ impl str::FromStr for UsedEnergy {
         Ok(UsedEnergy {
             id,
             carrier,
-            csubtype,
             service,
             values,
             comment,
@@ -189,7 +192,6 @@ mod tests {
         let component1 = UsedEnergy {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
-            csubtype: "EPB".parse().unwrap(),
             service: "NDEF".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,

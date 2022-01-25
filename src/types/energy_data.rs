@@ -58,7 +58,8 @@ impl EnergyData {
     /// Get subtype (EPB / NEPB, INSITU / COGEN) for this component
     pub fn csubtype(&self) -> CSubtype {
         match self {
-            EnergyData::UsedEnergy(e) => e.csubtype,
+            // TODO: eliminar este método
+            EnergyData::UsedEnergy(_) => unreachable!(),
             EnergyData::ProducedEnergy(e) => e.csubtype,
         }
     }
@@ -88,10 +89,27 @@ impl EnergyData {
     }
 
     /// Is this of kind UsedEnergy and destination is an EPB service?
-    pub fn is_epb(&self) -> bool {
+    pub fn is_epb_use(&self) -> bool {
         match self {
-            EnergyData::UsedEnergy(e) => e.csubtype == CSubtype::EPB,
+            // TODO: tendría que tener también e.service != Service::COGEN
+            EnergyData::UsedEnergy(e) => e.service != Service::NEPB,
             EnergyData::ProducedEnergy(_) => false,
+        }
+    }
+
+    /// Is this ProducedEnergy of the onsite generated kind?
+    pub fn is_onsite_pr(&self) -> bool {
+        match self {
+            EnergyData::UsedEnergy(_) => false,
+            EnergyData::ProducedEnergy(e) => e.csubtype == CSubtype::INSITU,
+        }
+    }
+
+    /// Is this ProducedEnergy of the cogeneration kind?
+    pub fn is_cogen_pr(&self) -> bool {
+        match self {
+            EnergyData::UsedEnergy(_) => false,
+            EnergyData::ProducedEnergy(e) => e.csubtype == CSubtype::COGENERACION,
         }
     }
 

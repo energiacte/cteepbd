@@ -375,9 +375,7 @@ pub fn fraccion_renovable_acs_nrb(
     //   hora del reparto de electricidad, si se ha marcado el consumo de combustible como destinado a cogeneración eléctrica CTEEPBD_DESTINO_COGEN y uso NDEF.
     //   Habría que pensar qué ocurre si una parte no se consume y se exporta.
     // - Habría que ver cómo se imputa (prioridad) el consumo de electricidad in situ y cogenerada.
-    let has_el_cgn = cr_list
-        .iter()
-        .any(|c| c.is_generated() && c.csubtype() == CSubtype::COGENERACION);
+    let has_el_cgn = cr_list.iter().any(|c| c.is_cogen_pr());
     if has_el_cgn {
         return Err(EpbdError::WrongInput(
             "Uso de electricidad cogenerada".to_string(),
@@ -463,14 +461,12 @@ pub fn fraccion_renovable_acs_nrb(
     // a. Total de consumo de electricidad para ACS, de cualquier origen
     let E_EPus_el_t = cr_list
         .iter()
-        .filter(|c| c.has_carrier(ELECTRICIDAD) && c.is_used() && c.csubtype() == CSubtype::EPB)
+        .filter(|c| c.is_electricity() && c.is_epb_use())
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, c.values()));
     // b. Total de producción de electricidad in situ asignada, en principio, a ACS
     let E_pr_el_onsite_t = cr_list
         .iter()
-        .filter(|c| {
-            c.has_carrier(ELECTRICIDAD) && c.is_generated() && c.csubtype() == CSubtype::INSITU
-        })
+        .filter(|c| c.is_electricity() && c.is_onsite_pr())
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, c.values()));
     // c. Consumo efectivo de electricidad renovable en ACS (Mínimo entre el consumo y la producción in situ) (consumo == demanda)
     let Q_el_an_ren: f32 = vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();
@@ -701,20 +697,18 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 EnergyData::UsedEnergy(UsedEnergy {
                     id,
                     carrier,
-                    csubtype,
                     service,
                     values,
                     comment,
                 }) => {
                     format!(
                         "      <Consumo>
-                    <Id>{}</Id><Vector>{}</Vector><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
+                    <Id>{}</Id><Vector>{}</Vector><Servicio>{}</Servicio>
                     <Valores>{}</Valores>
                     <Comentario>{}</Comentario>
                 </Consumo>",
                         id,
                         carrier,
-                        csubtype,
                         service,
                         format_values(values),
                         escape_xml(comment)

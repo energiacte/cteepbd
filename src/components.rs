@@ -221,7 +221,7 @@ impl Components {
         // Energía eléctrica consumida en usos EPB
         let E_EPus_el_t = cdata
             .clone()
-            .filter(|c| c.is_electricity() && c.is_used() && c.is_epb());
+            .filter(|c| c.is_electricity() && c.is_used() && c.is_epb_use());
 
         // Energía eléctrica consumida en el servicio srv
         let E_srv_el_t = E_EPus_el_t.clone().filter(|c| c.has_service(service));
@@ -501,8 +501,7 @@ mod tests {
         let ma_prod = comps
             .cdata
             .iter()
-            .filter(|c| c.is_generated() && c.has_carrier(Carrier::MEDIOAMBIENTE))
-            .inspect(|f| println!("{}", f));
+            .filter(|c| c.is_generated() && c.has_carrier(Carrier::MEDIOAMBIENTE));
         let ma_prod_tot: f32 = ma_prod.clone().map(EnergyData::values_sum).sum();
 
         assert_eq!(format!("{:.1}", ma_prod_tot), "650.0");
