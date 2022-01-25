@@ -42,7 +42,7 @@ use crate::{
     error::{EpbdError, Result},
     types::HasValues,
     types::{
-        CSubtype, Carrier, Component, Dest, Factor, RenNrenCo2, Service, Source, Step, SERVICES,
+        CSubtype, Carrier, Dest, EnergyData, Factor, RenNrenCo2, Service, Source, Step, SERVICES,
     },
     vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
     Components, Factors,
@@ -308,11 +308,11 @@ pub struct BalanceForCarrier {
 #[allow(non_snake_case)]
 fn balance_for_carrier(
     carrier: Carrier,
-    carriers: &[Component],
+    carriers: &[EnergyData],
     wfactors: &Factors,
     k_exp: f32,
 ) -> Result<BalanceForCarrier> {
-    let cr_list: Vec<Component> = carriers
+    let cr_list: Vec<EnergyData> = carriers
         .iter()
         .filter(|e| e.has_carrier(carrier))
         .cloned()
@@ -326,7 +326,7 @@ fn balance_for_carrier(
         .collect();
 
     // We know all carriers have the same timesteps (see FromStr for Components)
-    let num_steps = cr_list[0].values.len();
+    let num_steps = cr_list[0].num_steps();
 
     // * Energy used by technical systems for EPB services, for each time step
     let mut E_EPus_cr_t = vec![0.0; num_steps];
@@ -339,15 +339,15 @@ fn balance_for_carrier(
     for c in &cr_list {
         if c.is_used() {
             if c.is_epb() {
-                E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, &c.values)
+                E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, c.values())
             } else {
-                E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, &c.values)
+                E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, c.values())
             }
         } else if c.is_generated() {
             E_pr_cr_i_t
-                .entry(c.csubtype)
-                .and_modify(|e| *e = vecvecsum(e, &c.values))
-                .or_insert_with(|| c.values.clone());
+                .entry(c.csubtype())
+                .and_modify(|e| *e = vecvecsum(e, c.values()))
+                .or_insert_with(|| c.values().to_owned());
         }
     }
 
@@ -623,7 +623,7 @@ fn balance_for_carrier(
 /// It uses the reverse calculation method (E.3.6)
 /// * `cr_list` - components list for the selected carrier i
 ///
-fn compute_factors_by_use_cr(cr_list: &[Component]) -> HashMap<Service, f32> {
+fn compute_factors_by_use_cr(cr_list: &[EnergyData]) -> HashMap<Service, f32> {
     let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
     // Energy use components (EPB uses) for current carrier i
     let cr_use_list = cr_list.iter().filter(|c| c.is_used() && c.is_epb());

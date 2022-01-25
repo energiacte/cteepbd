@@ -262,7 +262,7 @@ fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError>
 /// Podemos obtener la parte renovable, con la fracción que supone su factor de paso ren respecto al total y
 /// suponiendo que la conversión de consumo a demanda es con rendimiento 1.0 (de modo que demanda = consumo para estos vectores)
 fn Q_district_and_env_an(
-    cr_list: &[&Component],
+    cr_list: &[&EnergyData],
     wfactors: &Factors,
 ) -> Result<(f32, f32), EpbdError> {
     use Carrier::{MEDIOAMBIENTE, RED1, RED2};
@@ -270,12 +270,12 @@ fn Q_district_and_env_an(
     let value = cr_list
         .iter()
         .filter(|c| {
-            c.ctype == CType::CONSUMO
-                && (c.carrier == RED1 || c.carrier == RED2 || c.carrier == MEDIOAMBIENTE)
+            c.is_used()
+                && (c.has_carrier(RED1) || c.has_carrier(RED2) || c.has_carrier(MEDIOAMBIENTE))
         })
         .map(|c| {
             let tot = c.values_sum();
-            let ren = tot * get_fp_ren_fraction(c.carrier, wfactors)?;
+            let ren = tot * get_fp_ren_fraction(c.carrier(), wfactors)?;
             Ok((tot, ren))
         })
         .collect::<Result<Vec<(f32, f32)>, EpbdError>>()?
@@ -287,11 +287,11 @@ fn Q_district_and_env_an(
 }
 
 /// Vectores energéticos consumidos
-fn get_used_carriers(cr_list: &[&Component]) -> Vec<Carrier> {
+fn get_used_carriers(cr_list: &[&EnergyData]) -> Vec<Carrier> {
     let mut used_carriers = cr_list
         .iter()
-        .filter(|c| c.ctype == CType::CONSUMO)
-        .map(|c| c.carrier)
+        .filter(|c| c.is_used())
+        .map(|c| c.carrier())
         .collect::<Vec<_>>();
     used_carriers.sort_unstable();
     used_carriers.dedup();
@@ -336,19 +336,19 @@ pub fn fraccion_renovable_acs_nrb(
     wfactors: &Factors,
     demanda_anual_acs: f32,
 ) -> Result<f32, EpbdError> {
-    use CType::{CONSUMO, PRODUCCION};
     use Carrier::{BIOMASA, BIOMASADENSIFICADA, ELECTRICIDAD, MEDIOAMBIENTE, RED1, RED2};
 
     // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
     let components = &components.filter_by_epb_service(Service::ACS);
-    let cr_list: &Vec<&Component> = &components
+    let cr_list: &Vec<&EnergyData> = &components
         .cdata
         .iter()
         .filter(|c| {
-            !((c.carrier == ELECTRICIDAD
-                && (c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS")
-                    || c.comment.contains("CTEEPBD_EXCLUYE_AUX_ACS")))
-                || (c.carrier == MEDIOAMBIENTE && c.comment.contains("CTEEPBD_EXCLUYE_SCOP_ACS")))
+            !((c.has_carrier(ELECTRICIDAD)
+                && (c.comment().contains("CTEEPBD_EXCLUYE_AUX_ACS")
+                    || c.comment().contains("CTEEPBD_EXCLUYE_AUX_ACS")))
+                || (c.has_carrier(MEDIOAMBIENTE)
+                    && c.comment().contains("CTEEPBD_EXCLUYE_SCOP_ACS")))
         })
         .collect();
 
@@ -377,7 +377,7 @@ pub fn fraccion_renovable_acs_nrb(
     // - Habría que ver cómo se imputa (prioridad) el consumo de electricidad in situ y cogenerada.
     let has_el_cgn = cr_list
         .iter()
-        .any(|c| c.ctype == PRODUCCION && c.csubtype == CSubtype::COGENERACION);
+        .any(|c| c.is_generated() && c.csubtype() == CSubtype::COGENERACION);
     if has_el_cgn {
         return Err(EpbdError::WrongInput(
             "Uso de electricidad cogenerada".to_string(),
@@ -458,20 +458,20 @@ pub fn fraccion_renovable_acs_nrb(
 
     // 3. === Electricidad producida in situ ===
     // Consumo de electricidad "renovable" (consumo == demanda)
-    let num_steps = cr_list[0].values.len();
+    let num_steps = cr_list[0].num_steps();
 
     // a. Total de consumo de electricidad para ACS, de cualquier origen
     let E_EPus_el_t = cr_list
         .iter()
-        .filter(|c| c.carrier == ELECTRICIDAD && c.ctype == CONSUMO && c.csubtype == CSubtype::EPB)
-        .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
+        .filter(|c| c.has_carrier(ELECTRICIDAD) && c.is_used() && c.csubtype() == CSubtype::EPB)
+        .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, c.values()));
     // b. Total de producción de electricidad in situ asignada, en principio, a ACS
     let E_pr_el_onsite_t = cr_list
         .iter()
         .filter(|c| {
-            c.carrier == ELECTRICIDAD && c.ctype == PRODUCCION && c.csubtype == CSubtype::INSITU
+            c.has_carrier(ELECTRICIDAD) && c.is_generated() && c.csubtype() == CSubtype::INSITU
         })
-        .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
+        .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, c.values()));
     // c. Consumo efectivo de electricidad renovable en ACS (Mínimo entre el consumo y la producción in situ) (consumo == demanda)
     let Q_el_an_ren: f32 = vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();
 
@@ -690,37 +690,65 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
     let cdatastring = cdata
         .iter()
         .map(|c| {
-            let Component {
-                id,
-                carrier,
-                ctype,
-                csubtype,
-                service,
-                values,
-                comment,
-            } = c;
-            let vals = values
-                .iter()
-                .map(|v| format!("{:.2}", v))
-                .collect::<Vec<String>>()
-                .join(",");
-            format!(
-                "      <Dato>
-            <Id>{}</Id><Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
-            <Valores>{}</Valores>
-            <Comentario>{}</Comentario>
-        </Dato>",
-                id,
-                carrier,
-                ctype,
-                csubtype,
-                service,
-                vals,
-                escape_xml(comment)
-            )
+            let format_values = |values: &[f32]| -> String {
+                values
+                    .iter()
+                    .map(|v| format!("{:.2}", v))
+                    .collect::<Vec<String>>()
+                    .join(",")
+            };
+            match c {
+                EnergyData::UsedEnergy(UsedEnergy {
+                    id,
+                    carrier,
+                    csubtype,
+                    service,
+                    values,
+                    comment,
+                }) => {
+                    format!(
+                        "      <Consumo>
+                    <Id>{}</Id><Vector>{}</Vector><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
+                    <Valores>{}</Valores>
+                    <Comentario>{}</Comentario>
+                </Consumo>",
+                        id,
+                        carrier,
+                        csubtype,
+                        service,
+                        format_values(values),
+                        escape_xml(comment)
+                    )
+                }
+                EnergyData::ProducedEnergy(ProducedEnergy {
+                    id,
+                    carrier,
+                    csubtype,
+                    service,
+                    values,
+                    comment,
+                }) => {
+                    format!(
+                        "      <Produccion>
+                    <Id>{}</Id><Vector>{}</Vector><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
+                    <Valores>{}</Valores>
+                    <Comentario>{}</Comentario>
+                </Produccion>",
+                        id,
+                        carrier,
+                        csubtype,
+                        service,
+                        format_values(values),
+                        escape_xml(comment)
+                    )
+                }
+            }
         })
         .collect::<Vec<String>>()
         .join("\n");
+    // TODO: No se ha serializado los datos de Zona y Sistemas, y Sería
+    // TODO: mejor usar en vez de <Dato>: <Factor> o <Energia>.
+    // TODO: Eliminar un nivel de etiquetas, dejando todo como una secuencia de <Metadato>, <Factor>, <Consumo>, <Produccion>, <DemandaZona>, <DemandaSistema>
 
     // Final assembly
     format!(

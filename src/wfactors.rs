@@ -347,27 +347,27 @@ impl Factors {
     ///  - para exportación a usos no EPB si no se aparecen en los datos
     ///  - de electricidad in situ si no aparece una producción de ese tipo
     pub fn strip(mut self, components: &Components) -> Self {
-        let wf_carriers: HashSet<_> = components.cdata.iter().map(|c| c.carrier).collect();
+        let wf_carriers: HashSet<_> = components.cdata.iter().map(|c| c.carrier()).collect();
         // Mantenemos factores para todos los vectores usados
         self.wdata.retain(|f| wf_carriers.contains(&f.carrier));
         // Mantenemos factores para cogeneración sólo si hay cogeneración
         let has_cogen = components
             .cdata
             .iter()
-            .any(|c| c.csubtype == CSubtype::COGENERACION);
+            .any(|c| c.csubtype() == CSubtype::COGENERACION);
         self.wdata
             .retain(|f| f.source != Source::COGENERACION || has_cogen);
         // Mantenemos factores a usos no EPB si hay uso de no EPB
         let has_nepb = components
             .cdata
             .iter()
-            .any(|c| c.csubtype == CSubtype::NEPB);
+            .any(|c| c.csubtype() == CSubtype::NEPB);
         self.wdata.retain(|f| f.dest != Dest::A_NEPB || has_nepb);
         // Mantenemos factores de electricidad in situ si no hay producción de ese tipo
         let has_elec_insitu = components
             .cdata
             .iter()
-            .any(|c| c.carrier == Carrier::ELECTRICIDAD && c.csubtype == CSubtype::INSITU);
+            .any(|c| c.has_carrier(Carrier::ELECTRICIDAD) && c.csubtype() == CSubtype::INSITU);
         self.wdata.retain(|f| {
             f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_insitu
         });

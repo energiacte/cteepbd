@@ -17,12 +17,24 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 ### Novedades
 
-- Incorporación del identificador de componente. Permite diferenciar los sistemas o partes a las que se asocia el componente (p.e. un equipo concreto). El valor 0 sirve, convencionalmente para identificar el conjunto del edificio (id=0).
-  La compensación automática de consumos se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
+- Incorporación de un identificador que asocia un componente con un sistema o una zona
+  - El valor 0 se utiliza para identificar sistemas globales o el conjunto del edificio.
+  - Los valores negativos identifican equipos o zonas ficticias (p.e. equipos de referencia con -999)
+  - ¿La compensación automática de consumos se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.?
+- Introducción de componentes de demanda de zona (id=0 para demanda global del edificio)
+  - Permite definir la demanda del edificio (id=0) en cada paso de cálculo y para cada servicio
+- Introducción de componentes de demanda sobre sistemas / equipos
+  - Permite definir la energía absorbida (p.e. refrigeración, valor negativo) o entregada (p.e. calor, valor positivo) en cada paso de cálculo, para cada servicio y para cada sistema (id=i)
 
 ### Incompatibilidades
 
-- El formato de salida en XML incluye la etiqueta "<Id>" de identificación de sistemas.
+- Cambios en el formato de salida en XML:
+  - se incluye siempre la etiqueta `<Id>` de identificador de sistemas.+
+  - los componentes de energía consumida se definen con una etiqueta `<Consumo>` y se elimina la etiqueta tipo `<Tipo>`
+  - los componentes de energía generada se definen con una etiqueta `<Produccion>` y se elimina la etiqueta tipo `<Tipo>`
+  - los componentes de demanda de zona se definen con una etiqueta `<Zona><Demanda>...</Demanda></Zona>` y se elimina la etiqueta tipo `<Tipo>`
+  - los componentes de demanda sobre los equipos se definen con una etiqueta `<Sistema><Demanda>...</Demanda></Sistema>` y se elimina la etiqueta tipo `<Tipo>`
+  - TODO: Revisar conversión a XML
 
 ## [0.23.0] - 2020-10-23
 

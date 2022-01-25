@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{component::HasValues, Service};
+use super::{HasValues, Service};
 use crate::error::EpbdError;
 
 // -------------------- System Energy Needs Component

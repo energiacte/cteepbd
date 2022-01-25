@@ -78,57 +78,52 @@ fn get_ctefp_peninsula() -> Factors {
 
 fn get_energydatalist() -> Components {
     use CSubtype::*;
-    use CType::*;
     use Carrier::*;
 
     //3 PV BdC_normativo
     Components {
         cmeta: vec![],
         cdata: vec![
-            Component {
+            EnergyData::UsedEnergy(UsedEnergy {
                 id: 0,
                 values: vec![
                     9.67, 7.74, 4.84, 4.35, 2.42, 2.9, 3.87, 3.39, 2.42, 3.87, 5.8, 7.74,
                 ],
                 carrier: ELECTRICIDAD,
-                ctype: CONSUMO,
                 csubtype: EPB,
                 service: Service::NDEF,
                 comment: "".into(),
-            },
-            Component {
+            }),
+            EnergyData::ProducedEnergy(ProducedEnergy {
                 id: 0,
                 values: vec![
                     1.13, 1.42, 1.99, 2.84, 4.82, 5.39, 5.67, 5.11, 4.54, 3.40, 2.27, 1.42,
                 ],
                 carrier: ELECTRICIDAD,
-                ctype: PRODUCCION,
                 csubtype: INSITU,
                 service: Service::NDEF,
                 comment: "".into(),
-            },
-            Component {
+            }),
+            EnergyData::UsedEnergy(UsedEnergy {
                 id: 0,
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
                 carrier: MEDIOAMBIENTE,
-                ctype: CONSUMO,
                 csubtype: EPB,
                 service: Service::NDEF,
                 comment: "".into(),
-            },
-            Component {
+            }),
+            EnergyData::ProducedEnergy(ProducedEnergy {
                 id: 0,
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
                 carrier: MEDIOAMBIENTE,
-                ctype: PRODUCCION,
                 csubtype: INSITU,
                 service: Service::NDEF,
                 comment: "".into(),
-            },
+            }),
         ],
         zones: vec![],
         systems: vec![],
@@ -752,7 +747,7 @@ ELECTRICIDAD,PRODUCCION,INSITU,CAL,40"
         .parse::<Components>()
         .unwrap()
         .normalize();
-    assert_eq!(comps.cdata[1].service, Service::NDEF);
+    assert_eq!(comps.cdata[1].service(), Service::NDEF);
 }
 
 #[test]

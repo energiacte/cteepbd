@@ -44,8 +44,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        CSubtype, CType, Carrier, Component, HasValues, Meta, MetaVec, Service, SystemNeeds,
-        ZoneNeeds,
+        CSubtype, Carrier, EnergyData, HasValues, Meta, MetaVec, ProducedEnergy, Service,
+        SystemNeeds, UsedEnergy, ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
@@ -61,11 +61,11 @@ use crate::{
 pub struct Components {
     /// Metadata
     pub cmeta: Vec<Meta>,
-    /// Energy use and generation components
-    pub cdata: Vec<Component>,
-    /// Zone data components
+    /// Used or produced energy data
+    pub cdata: Vec<EnergyData>,
+    /// Zone data
     pub zones: Vec<ZoneNeeds>,
-    /// System data components
+    /// System data
     pub systems: Vec<SystemNeeds>,
 }
 
@@ -129,8 +129,8 @@ impl str::FromStr for Components {
                 tag2
             };
             match *tag {
-                "CONSUMO" => cdata.push(line.parse()?),
-                "PRODUCCION" => cdata.push(line.parse()?),
+                "CONSUMO" => cdata.push(EnergyData::UsedEnergy(line.parse::<UsedEnergy>()?)),
+                "PRODUCCION" => cdata.push(EnergyData::ProducedEnergy(line.parse()?)),
                 "ZONA" => zones.push(line.parse()?),
                 "SISTEMA" => systems.push(line.parse()?),
                 _ => {
@@ -144,9 +144,12 @@ impl str::FromStr for Components {
 
         // Check that all used or produced energy components have an equal number of steps (data lengths)
         {
-            let cdata_lengths: Vec<_> = cdata.iter().map(|e: &Component| e.num_steps()).collect();
-            if cdata_lengths.iter().max().unwrap() != cdata_lengths.iter().min().unwrap() {
-                return Err(EpbdError::ParseError(s.into()));
+            let cdata_lengths: Vec<_> = cdata.iter().map(|e| e.num_steps()).collect();
+            let start_num_steps = *cdata_lengths.get(0).unwrap_or(&12);
+            if cdata_lengths.iter().any(|&clen| clen != start_num_steps) {
+                return Err(EpbdError::ParseError(
+                    "Componentes con distinto número de pasos de cálculo".into(),
+                ));
             }
         }
         Ok(Components {
@@ -164,7 +167,7 @@ impl Components {
         self.cdata
             .iter()
             .filter(|c| c.is_used() || c.is_generated())
-            .map(|e| e.carrier)
+            .map(|e| e.carrier())
             .collect()
     }
 
@@ -196,7 +199,8 @@ impl Components {
         let cdata = self.cdata.iter(); // Componentes
 
         // 1. Consumos y producciones del servicio, salvo la producción eléctrica
-        // XXX: Se excluyen los componentes de zona y sistema
+        // Se excluyen los componentes de zona y sistema
+        // La electricidad generada se reparte más abajo entre los distintos servicios
         let mut cdata_srv: Vec<_> = cdata
             .clone()
             .filter(|c| {
@@ -211,7 +215,7 @@ impl Components {
         let E_pr_el_t = cdata
             .clone()
             .filter(|c| c.is_electricity() && c.is_generated());
-        let E_pr_el_an: f32 = E_pr_el_t.clone().flat_map(|c| c.values.iter()).sum();
+        let E_pr_el_an: f32 = E_pr_el_t.clone().flat_map(|c| c.values().iter()).sum();
 
         // 3. Reparto de la producción electrica en proporción al consumo de usos EPB
         // Energía eléctrica consumida en usos EPB
@@ -221,22 +225,22 @@ impl Components {
 
         // Energía eléctrica consumida en el servicio srv
         let E_srv_el_t = E_EPus_el_t.clone().filter(|c| c.has_service(service));
-        let E_srv_el_an: f32 = E_srv_el_t.clone().flat_map(|c| c.values.iter()).sum();
+        let E_srv_el_an: f32 = E_srv_el_t.clone().flat_map(|c| c.values().iter()).sum();
 
         // Si hay consumo y producción de electricidad, se reparte el consumo
         if E_srv_el_an > 0.0 && E_pr_el_an > 0.0 {
             // Pasos de cálculo. Sabemos que cdata.len() > 1 porque si no no se podría cumplir el condicional
-            let num_steps = self.cdata[0].values.len();
+            let num_steps = self.cdata[0].num_steps();
 
             // Energía eléctrica consumida en usos EPB
             let E_EPus_el_t_tot = E_EPus_el_t
                 .clone()
-                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
+                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, e.values()));
 
             // Fracción del consumo EPB que representa el servicio srv
             let E_srv_el_t_tot = E_srv_el_t
                 .clone()
-                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
+                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, e.values()));
             let f_srv_t = E_srv_el_t_tot
                 .iter()
                 .zip(&E_EPus_el_t_tot)
@@ -249,26 +253,34 @@ impl Components {
             let f_match_t = vec![1.0; num_steps]; // TODO: implementar f_match_t
             let E_pr_el_t_tot = E_pr_el_t
                 .clone()
-                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, &e.values));
+                .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, e.values()));
             let E_pr_el_used_EPus_t =
                 vecvecmul(&f_match_t, &vecvecmin(&E_EPus_el_t_tot, &E_pr_el_t_tot));
 
-            // Para cada generador i
+            // Para cada producción de electricidad i
+            // Repartimos la electricidad generada en la parte que corresponde al servicio
+            // ya que la habíamos excluido en el filtrado incial
             for mut E_pr_el_i in E_pr_el_t.cloned() {
+                let pr_component = match E_pr_el_i {
+                    EnergyData::ProducedEnergy(ref mut c) => c,
+                    _ => continue,
+                };
+
                 // Fracción de la producción total que corresponde al generador i
-                let f_pr_el_i: f32 = E_pr_el_i.values_sum() / E_pr_el_an;
+                let f_pr_el_i: f32 = pr_component.values_sum() / E_pr_el_an;
 
                 // Reparto proporcional a la producción del generador i y al consumo del servicio srv
-                E_pr_el_i.values = (&E_pr_el_used_EPus_t)
+                pr_component.values = E_pr_el_used_EPus_t
                     .iter()
                     .zip(&f_srv_t)
                     .map(|(v, f_srv)| v * f_pr_el_i * f_srv)
                     .collect();
-                E_pr_el_i.service = service;
-                E_pr_el_i.comment = format!(
+                pr_component.service = service;
+                pr_component.comment = format!(
                     "{} Producción eléctrica reasignada al servicio",
-                    E_pr_el_i.comment
+                    pr_component.comment
                 );
+
                 cdata_srv.push(E_pr_el_i);
             }
         }
@@ -292,8 +304,11 @@ impl Components {
     ///XXX: *Esta restricción podría eliminarse*
     fn force_ndef_use_for_electricity_production(&mut self) {
         for component in &mut self.cdata {
-            if component.is_electricity() && component.is_generated() {
-                component.service = Service::NDEF
+            match component {
+                EnergyData::ProducedEnergy(ref mut c) if c.is_electricity() => {
+                    c.service = Service::NDEF
+                }
+                _ => continue,
             }
         }
     }
@@ -323,20 +338,20 @@ impl Components {
         // Componentes de MEDIOAMBIENTE que debemos añadir
         let mut balancecomps = Vec::new();
 
-        let ids: HashSet<_> = envcomps.iter().map(|c| c.id).collect();
+        let ids: HashSet<_> = envcomps.iter().map(|c| c.id()).collect();
 
         for id in ids {
             // Identifica servicios
             let services: HashSet<_> = envcomps
                 .iter()
-                .filter(|c| c.id == id)
-                .map(|c| c.service)
+                .filter(|c| c.has_id(id))
+                .map(|c| c.service())
                 .collect();
             for service in services {
                 // Componentes para el servicio y sistema dado
                 let components_for_service_and_id = envcomps
                     .iter()
-                    .filter(|c| c.has_service(service) && c.id == id);
+                    .filter(|c| c.has_service(service) && c.has_id(id));
 
                 // Componentes de consumo del servicio
                 let consumed: Vec<_> = components_for_service_and_id
@@ -349,12 +364,8 @@ impl Components {
                 };
 
                 // Consumos no compensados con producción
-                let mut unbalanced_values = veclistsum(
-                    &consumed
-                        .iter()
-                        .map(|&v| v.values.as_slice())
-                        .collect::<Vec<_>>(),
-                );
+                let mut unbalanced_values =
+                    veclistsum(&consumed.iter().map(|&v| v.values()).collect::<Vec<_>>());
 
                 // Componentes de producción del servicio
                 let produced: Vec<_> = components_for_service_and_id
@@ -363,12 +374,8 @@ impl Components {
                     .collect();
                 // Descontamos la producción existente de los consumos
                 if !produced.is_empty() {
-                    let totproduced = veclistsum(
-                        &produced
-                            .iter()
-                            .map(|&v| v.values.as_slice())
-                            .collect::<Vec<_>>(),
-                    );
+                    let totproduced =
+                        veclistsum(&produced.iter().map(|&v| v.values()).collect::<Vec<_>>());
                     unbalanced_values = vecvecdif(&unbalanced_values, &totproduced)
                         .iter()
                         .map(|&v| if v > 0.0 { v } else { 0.0 })
@@ -380,15 +387,14 @@ impl Components {
                 };
 
                 // Si hay desequilibrio agregamos un componente de producción
-                balancecomps.push(Component {
+                balancecomps.push(EnergyData::ProducedEnergy(ProducedEnergy {
                     id,
                     carrier: Carrier::MEDIOAMBIENTE,
-                    ctype: CType::PRODUCCION,
                     csubtype: CSubtype::INSITU,
                     service,
                     values: unbalanced_values,
                     comment: "Equilibrado de consumo sin producción declarada".into(),
-                });
+                }));
             }
         }
 
@@ -497,23 +503,23 @@ mod tests {
             .iter()
             .filter(|c| c.is_generated() && c.has_carrier(Carrier::MEDIOAMBIENTE))
             .inspect(|f| println!("{}", f));
-        let ma_prod_tot: f32 = ma_prod.clone().map(Component::values_sum).sum();
+        let ma_prod_tot: f32 = ma_prod.clone().map(EnergyData::values_sum).sum();
 
         assert_eq!(format!("{:.1}", ma_prod_tot), "650.0");
 
         // Se compensa una parte de ACS (50kWh) ya que se declara ya una parte (100kWh)
         let ma_prod_1: f32 = ma_prod
             .clone()
-            .filter(|c| c.id == 1)
-            .map(Component::values_sum)
+            .filter(|c| c.has_id(1))
+            .map(EnergyData::values_sum)
             .sum();
         assert_eq!(format!("{:.1}", ma_prod_1), "150.0");
 
         // Se compensa el consumo de CAL (300kWh) y se añade el declarado no compensable de ACS (100kWh)
         let ma_prod_2: f32 = ma_prod
             .clone()
-            .filter(|c| c.id == 2)
-            .map(Component::values_sum)
+            .filter(|c| c.has_id(2))
+            .map(EnergyData::values_sum)
             .sum();
         assert_eq!(format!("{:.1}", ma_prod_2), "400.0");
     }

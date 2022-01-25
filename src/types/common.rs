@@ -60,8 +60,6 @@ pub enum Carrier {
     RED1,
     /// Generic energy carrier 2
     RED2,
-    /// No carrier, placeholder
-    NDEF,
 }
 
 impl str::FromStr for Carrier {
@@ -80,7 +78,6 @@ impl str::FromStr for Carrier {
             "GLP" => Ok(Carrier::GLP),
             "RED1" => Ok(Carrier::RED1),
             "RED2" => Ok(Carrier::RED2),
-            "-" => Ok(Carrier::NDEF),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -88,44 +85,11 @@ impl str::FromStr for Carrier {
 
 impl std::fmt::Display for Carrier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::NDEF => write!(f, "-"),
-            _ => write!(f, "{:?}", self),
-        }
+        write!(f, "{:?}", self)
     }
 }
 
 // ==================== Energy Components
-
-// -------------------- CType
-
-/// Tipo del componente (energía consumida o producida)
-#[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
-pub enum CType {
-    /// Produced energy by system Y (E_pr_el for electricity, Q_X_Y_out for ambient energy or solar systems)
-    PRODUCCION,
-    /// Used energy by system Y to provide service X (E_X_Y_in)
-    CONSUMO,
-}
-
-impl str::FromStr for CType {
-    type Err = EpbdError;
-
-    fn from_str(s: &str) -> Result<CType, Self::Err> {
-        match s {
-            "PRODUCCION" => Ok(CType::PRODUCCION),
-            "CONSUMO" => Ok(CType::CONSUMO),
-            _ => Err(EpbdError::ParseError(s.into())),
-        }
-    }
-}
-
-impl std::fmt::Display for CType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
 
 // -------------------- CSubtype
 
@@ -257,3 +221,19 @@ impl Default for Service {
 //         self == Service::NEPB
 //     }
 // }
+
+/// Elements that have a list of numeric values
+pub trait HasValues {
+    /// Get list of values
+    fn values(&self) -> &[f32];
+
+    /// Sum of all values
+    fn values_sum(&self) -> f32 {
+        self.values().iter().sum::<f32>()
+    }
+
+    /// Number of steps
+    fn num_steps(&self) -> usize {
+        self.values().len()
+    }
+}
