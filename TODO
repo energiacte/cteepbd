@@ -14,9 +14,12 @@
     - No se ha serializado los datos de Zona y Sistemas, y Sería
     - mejor usar en vez de <Dato>: <Factor> o <Energia>.
     - Eliminar un nivel de etiquetas, dejando todo como una secuencia de <Metadato>, <Factor>, <Consumo>, <Produccion>, <DemandaZona>, <DemandaSistema>
+  - Sacar energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
 
 - epbd:
 
+  - remove legacy format and EPB / NEPB text field
+  - eliminate EnergyData::csubtype()
   - set a standard negative number to refer to reference systems (e.g. -999)
   - define NEPB as a new service
     - define EPB_SERVICES = [CAL, REF, ...] and add is_nepb() and is_epb() using this;
