@@ -7,13 +7,10 @@
 
 - cte
 
-  - Extraer función para generar XML desde components (y sacar de balance_to_xml)
-  - Hacer test de XML
+  - Test XML output
   - remove obsolete `acsnrb` option (fraccion_renovable_acs is unconditionally computed and added to JSON)
   - wfactors.normalize(defaults): ver si quitamos de aquí los valores por defecto y así podemos generar de forma más ergonómica los factores de paso sin usar wfactors_from_loc
     `CTE_LOCWF_RITE2014.get(loc)?.set_user_wfactors(&user_wf).normalize(&default_user_wf);`
-  - Cambiar salida XML:
-    - No se ha serializado los datos de Zona y Sistemas, <DemandaZona>, <DemandaSistema>
   - Sacar energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
 
 - epbd:

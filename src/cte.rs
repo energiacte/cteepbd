@@ -627,66 +627,17 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
 
     // Data
     let RenNrenCo2 { ren, nren, .. } = balance_m2.B;
-    let wmeta = &wfactors.wmeta;
-    let wdata = &wfactors.wdata;
-    let cmeta = &components.cmeta;
-    let cdata = &components.cdata;
-    let zonesdata = &components.zones;
-    let systemsdata = &components.systems;
 
     // Formatting
-    let wmetastring = wmeta
-        .iter()
-        .map(meta_to_xml)
-        .collect::<Vec<String>>()
-        .join("\n");
-    let wdatastring = wdata
-        .iter()
-        .map(factor_to_xml)
-        .collect::<Vec<String>>()
-        .join("\n");
-
-    let cmetastring = cmeta
-        .iter()
-        .map(meta_to_xml)
-        .collect::<Vec<String>>()
-        .join("\n");
-    let cdatastring = cdata
-        .iter()
-        .map(|c| match c {
-            EnergyData::UsedEnergy(e) => used_to_xml(e),
-            EnergyData::ProducedEnergy(e) => produced_to_xml(e),
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
-
-    let zonesdatastring = zonesdata
-        .iter()
-        .map(zoneneeds_to_xml)
-        .collect::<Vec<String>>()
-        .join("\n");
-
-    let systemsdatastring = systemsdata
-        .iter()
-        .map(systemneeds_to_xml)
-        .collect::<Vec<String>>()
-        .join("\n");
-
-    // TODO: Extraer método para components_to_xml y comprobar indentado de salida
+    // TODO: add extra_padding to _to_xml functions
+    let wfstring = wfactors_to_xml(wfactors);
+    let components_string = components_to_xml(components);
 
     // Final assembly
     format!(
         "<BalanceEPB>
-    <FactoresDePaso>
-        {}
-        {}
-    </FactoresDePaso>
-    <Componentes>
-        {}
-        {}
-        {}
-        {}
-    </Componentes>
+    {}
+    {}
     <kexp>{:.2}</kexp>
     <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
     <Epm2><!-- C_ep [kWh/m2.an] -->
@@ -694,12 +645,8 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         <nren>{:.1}</nren>
     </Epm2>
 </BalanceEPB>",
-        wmetastring,
-        wdatastring,
-        cmetastring,
-        cdatastring,
-        zonesdatastring,
-        systemsdatastring,
+        wfstring,
+        components_string,
         k_exp,
         arearef,
         ren + nren,
@@ -724,6 +671,70 @@ fn format_values_2f(values: &[f32]) -> String {
         .map(|v| format!("{:.2}", v))
         .collect::<Vec<String>>()
         .join(",")
+}
+
+/// Converte Factor a XML
+fn wfactors_to_xml(f: &Factors) -> String {
+    let Factors { wmeta, wdata } = &f;
+    let wmetastring = wmeta
+        .iter()
+        .map(meta_to_xml)
+        .collect::<Vec<String>>()
+        .join("\n");
+    let wdatastring = wdata
+        .iter()
+        .map(factor_to_xml)
+        .collect::<Vec<String>>()
+        .join("\n");
+    format!(
+        "<FactoresDePaso>
+    {}
+    {}
+</FactoresDePaso>",
+        wmetastring, wdatastring
+    )
+}
+
+/// Converte Factor a XML
+fn components_to_xml(c: &Components) -> String {
+    let Components {
+        cmeta,
+        cdata,
+        zones,
+        systems,
+    } = &c;
+    let cmetastring = cmeta
+        .iter()
+        .map(meta_to_xml)
+        .collect::<Vec<String>>()
+        .join("\n");
+    let cdatastring = cdata
+        .iter()
+        .map(|c| match c {
+            EnergyData::UsedEnergy(e) => used_to_xml(e),
+            EnergyData::ProducedEnergy(e) => produced_to_xml(e),
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    let zonesdatastring = zones
+        .iter()
+        .map(zoneneeds_to_xml)
+        .collect::<Vec<String>>()
+        .join("\n");
+    let systemsdatastring = systems
+        .iter()
+        .map(systemneeds_to_xml)
+        .collect::<Vec<String>>()
+        .join("\n");
+    format!(
+        "<Componentes>
+    {}
+    {}
+    {}
+    {}
+</Componentes>",
+        cmetastring, cdatastring, zonesdatastring, systemsdatastring
+    )
 }
 
 /// Converte Factor a XML
