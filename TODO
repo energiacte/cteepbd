@@ -3,7 +3,6 @@
 - check whether `#[non_exhaustive]` could be useful for some enums (Service?)
 - maybe bug: see why emissions for ACS for the manual's example change
   depending on whether nearby factors are used or not.
-- Aclarar la definición de cogeneración (imputación de combustible a uso cogeneración con destino/servicio COGEN). Ver impacto en resto de cálculos.
 
 - cte
 
@@ -18,6 +17,8 @@
   - set a standard negative number to refer to reference systems (e.g. -999)
   - define COGEN as a new (nonEPB) service for energy used for cogeneration
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)
+    - Used to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
+    - Describe default method to find used energy from electrical efficiency of cogeneration.
   - Define more component types:
     - Energy losses linked to service X (Q_X_ls)
       - E_X_Y_in * COP = Q_X_Y_out + Q_X_ls_tot - Q_X_y_in - f_Y;aux;rvd * W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
