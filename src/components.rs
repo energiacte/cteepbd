@@ -178,7 +178,6 @@ impl Components {
     ///
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
     pub fn normalize(mut self) -> Self {
-        self.force_ndef_use_for_electricity_production();
         self.compensate_env_use();
         self
     }
@@ -204,9 +203,7 @@ impl Components {
         let mut cdata_srv: Vec<_> = cdata
             .clone()
             .filter(|c| {
-                (c.is_used() || c.is_generated())
-                    && c.has_service(service)
-                    && !(c.is_electricity() && c.is_generated())
+                (c.is_used() && c.has_service(service)) || (c.is_generated() && !c.is_electricity())
             })
             .cloned()
             .collect();
@@ -275,7 +272,6 @@ impl Components {
                     .zip(&f_srv_t)
                     .map(|(v, f_srv)| v * f_pr_el_i * f_srv)
                     .collect();
-                pr_component.service = service;
                 pr_component.comment = format!(
                     "{} Producción eléctrica reasignada al servicio",
                     pr_component.comment
@@ -297,33 +293,19 @@ impl Components {
         newcomponents
     }
 
-    /// Asegura que la energía eléctrica producida no tiene un uso que no sea NDEF
-    ///
-    /// Esta restricción es propia de la implementación y de cómo hace el reparto de la producción,
-    /// solamente en base al consumo de cada servicio y sin tener en cuenta si se define un destino
-    ///XXX: *Esta restricción podría eliminarse*
-    fn force_ndef_use_for_electricity_production(&mut self) {
-        for component in &mut self.cdata {
-            match component {
-                EnergyData::ProducedEnergy(ref mut c) if c.carrier == Carrier::ELECTRICIDAD => {
-                    c.service = Service::NDEF
-                }
-                _ => continue,
-            }
-        }
-    }
-
     /// Asegura que la energía MEDIOAMBIENTE consumida está equilibrada por una producción in situ
     ///
     /// Completa el balance de las producciones in situ de energía procedente del medioambiente
     /// cuando el consumo de esos vectores supera la producción.
-    /// Es solamente una comodidad, para no tener que declarar las producciones de MEDIOAMBIENTE, solo los consumos.
-    /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción (incluso con NDEF) ni entre sistemas.
+    /// Evita tener que declarar las producciones de MEDIOAMBIENTE, basta con los consumos.
+    /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción entre sistemas.
     ///
     /// Esto significa que, para cada sistema (j=id) y servicio a servicio:
     /// 1) se calculan las cantidades descompensadas
-    /// 2) se reparte la producción existente para ese servicio y sistema
-    /// 3) se genera una producción que completa las cantidades que puedan quedar pendientes para ese serivicio y sistema
+    /// 2) se reparte la producción existente para ese sistema
+    /// 3) se genera una producción que completa las cantidades no satisfechas para el sistema
+    ///
+    /// Las producciones declaradas para un sistema, que no se consuman, no se trasvasan a otros.
     fn compensate_env_use(&mut self) {
         // Localiza componentes de energía procedente del medioambiente
         let envcomps: Vec<_> = self
@@ -333,30 +315,27 @@ impl Components {
             .filter(|c| c.has_carrier(Carrier::MEDIOAMBIENTE))
             .collect();
 
-        // Genera componentes de consumo no compensados con producción completando sistema a sistema y servicio a servicio
-
-        // Componentes de MEDIOAMBIENTE que debemos añadir
+        // Componentes de MEDIOAMBIENTE que vamos a añadir
         let mut balancecomps = Vec::new();
 
         let ids: HashSet<_> = envcomps.iter().map(|c| c.id()).collect();
 
-        for id in ids {
-            // Identifica servicios
-            let services: HashSet<_> = envcomps
-                .iter()
-                .filter(|c| c.has_id(id))
-                .map(|c| c.service())
-                .collect();
-            for service in services {
-                // Componentes para el servicio y sistema dado
-                let components_for_service_and_id = envcomps
-                    .iter()
-                    .filter(|c| c.has_service(service) && c.has_id(id));
+        // Identifica servicios en componentes de consumo
+        let services: HashSet<_> = envcomps
+            .iter()
+            .filter(|c| c.is_used())
+            .map(|c| c.service())
+            .collect();
 
+        for id in ids {
+            // Componentes para el sistema dado
+            let components_for_id = envcomps.iter().filter(|c| c.has_id(id));
+
+            for service in &services {
                 // Componentes de consumo del servicio
-                let consumed: Vec<_> = components_for_service_and_id
+                let consumed: Vec<_> = components_for_id
                     .clone()
-                    .filter(|c| c.is_used())
+                    .filter(|c| c.is_used() && c.has_service(*service))
                     .collect();
                 // Si no hay consumo que compensar con producción retornamos None
                 if consumed.is_empty() {
@@ -368,7 +347,7 @@ impl Components {
                     veclistsum(&consumed.iter().map(|&v| v.values()).collect::<Vec<_>>());
 
                 // Componentes de producción del servicio
-                let produced: Vec<_> = components_for_service_and_id
+                let produced: Vec<_> = components_for_id
                     .clone()
                     .filter(|c| c.is_generated())
                     .collect();
@@ -390,8 +369,7 @@ impl Components {
                 balancecomps.push(EnergyData::ProducedEnergy(ProducedEnergy {
                     id,
                     carrier: Carrier::MEDIOAMBIENTE,
-                    csubtype: ProdOrigin::INSITU,
-                    service,
+                    origin: ProdOrigin::INSITU,
                     values: unbalanced_values,
                     comment: "Equilibrado de consumo sin producción declarada".into(),
                 }));
@@ -409,40 +387,40 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     const TCOMPS1: &str = "#META CTE_AREAREF: 100.5
-0, ELECTRICIDAD, PRODUCCION, INSITU, CAL, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
-0, ELECTRICIDAD, CONSUMO, EPB, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, ELECTRICIDAD, CONSUMO, EPB, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
+0, ELECTRICIDAD, PRODUCCION, INSITU, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
+0, ELECTRICIDAD, CONSUMO, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, ELECTRICIDAD, CONSUMO, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, MEDIOAMBIENTE, CONSUMO, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
 
     // Se han puesto las producciones eléctricas a servicio NDEF y compensado consumos de MEDIOAMBIENTE
     const TCOMPSRES1: &str = "#META CTE_AREAREF: 100.5
-0, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
-0, ELECTRICIDAD, CONSUMO, EPB, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, ELECTRICIDAD, CONSUMO, EPB, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
-0, MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
+0, ELECTRICIDAD, PRODUCCION, INSITU, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
+0, ELECTRICIDAD, CONSUMO, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, ELECTRICIDAD, CONSUMO, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, MEDIOAMBIENTE, CONSUMO, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
+0, MEDIOAMBIENTE, PRODUCCION, INSITU, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
 
     // La producción se debe repartir al 50% entre los usos EPB
     const TCOMPSRES2: &str = "#META CTE_AREAREF: 100.5
 #META CTE_SERVICIO: CAL
-0, ELECTRICIDAD, CONSUMO, EPB, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, MEDIOAMBIENTE, CONSUMO, EPB, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
-0, MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
-0, ELECTRICIDAD, PRODUCCION, INSITU, CAL, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción eléctrica reasignada al servicio";
+0, ELECTRICIDAD, CONSUMO, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, MEDIOAMBIENTE, CONSUMO, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
+0, MEDIOAMBIENTE, PRODUCCION, INSITU, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
+0, ELECTRICIDAD, PRODUCCION, INSITU, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción eléctrica reasignada al servicio";
 
     // La producción se debe repartir al 50% entre los usos EPB y sin excesos
     const TCOMPS2: &str = "#META CTE_AREAREF: 1.0
-0, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 2.00, 6.00, 2.00
-0, ELECTRICIDAD, CONSUMO, EPB, REF, 1.00, 1.00, 1.00
-0, ELECTRICIDAD, CONSUMO, EPB, CAL, 1.00, 2.00, 1.00
-0, MEDIOAMBIENTE, CONSUMO, EPB, CAL, 2.00, 2.00, 2.00";
+0, ELECTRICIDAD, PRODUCCION, INSITU, 2.00, 6.00, 2.00
+0, ELECTRICIDAD, CONSUMO, REF, 1.00, 1.00, 1.00
+0, ELECTRICIDAD, CONSUMO, CAL, 1.00, 2.00, 1.00
+0, MEDIOAMBIENTE, CONSUMO, CAL, 2.00, 2.00, 2.00";
 
     const TCOMPSRES3: &str = "#META CTE_AREAREF: 1.0
 #META CTE_SERVICIO: CAL
-0, ELECTRICIDAD, CONSUMO, EPB, CAL, 1.00, 2.00, 1.00
-0, MEDIOAMBIENTE, CONSUMO, EPB, CAL, 2.00, 2.00, 2.00
-0, MEDIOAMBIENTE, PRODUCCION, INSITU, CAL, 2.00, 2.00, 2.00 # Equilibrado de consumo sin producción declarada
-0, ELECTRICIDAD, PRODUCCION, INSITU, CAL, 1.00, 2.00, 1.00 #  Producción eléctrica reasignada al servicio";
+0, ELECTRICIDAD, CONSUMO, CAL, 1.00, 2.00, 1.00
+0, MEDIOAMBIENTE, CONSUMO, CAL, 2.00, 2.00, 2.00
+0, MEDIOAMBIENTE, PRODUCCION, INSITU, 2.00, 2.00, 2.00 # Equilibrado de consumo sin producción declarada
+0, ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 1.00 #  Producción eléctrica reasignada al servicio";
 
     #[test]
     fn tcomponents_parse() {
@@ -482,18 +460,18 @@ mod tests {
     #[test]
     fn normalize() {
         let comps = "# Bomba de calor 1
-            1,ELECTRICIDAD,CONSUMO,EPB,ACS,100 # BdC 1
-            1,MEDIOAMBIENTE,CONSUMO,EPB,ACS,150 # BdC 1
+            1,ELECTRICIDAD,CONSUMO,ACS,100 # BdC 1
+            1,MEDIOAMBIENTE,CONSUMO,ACS,150 # BdC 1
             # Bomba de calor 2
-            2,ELECTRICIDAD,CONSUMO,EPB,CAL,200 # BdC 2
-            2,MEDIOAMBIENTE,CONSUMO,EPB,CAL,300 # BdC 2
+            2,ELECTRICIDAD,CONSUMO,CAL,200 # BdC 2
+            2,MEDIOAMBIENTE,CONSUMO,CAL,300 # BdC 2
             # Producción fotovoltaica in situ
-            1,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,50 # PV
-            2,ELECTRICIDAD,PRODUCCION,INSITU,ACS,100 # PV
+            1,ELECTRICIDAD,PRODUCCION,INSITU,50 # PV
+            2,ELECTRICIDAD,PRODUCCION,INSITU,100 # PV
             # Producción de energía ambiente dada por el usuario
-            0,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
-            1,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-            2,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
+            0,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+            1,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+            2,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
             # Compensación de energía ambiente a completar por CteEPBD"
             .parse::<Components>()
             .unwrap()
@@ -502,11 +480,8 @@ mod tests {
             .cdata
             .iter()
             .filter(|c| c.is_generated() && c.has_carrier(Carrier::MEDIOAMBIENTE));
-        let ma_prod_tot: f32 = ma_prod.clone().map(EnergyData::values_sum).sum();
 
-        assert_eq!(format!("{:.1}", ma_prod_tot), "650.0");
-
-        // Se compensa una parte de ACS (50kWh) ya que se declara ya una parte (100kWh)
+        // Se añaden 50kWh a los 100kWh declarados para compensar consumo en ACS (150kWh)
         let ma_prod_1: f32 = ma_prod
             .clone()
             .filter(|c| c.has_id(1))
@@ -514,13 +489,17 @@ mod tests {
             .sum();
         assert_eq!(format!("{:.1}", ma_prod_1), "150.0");
 
-        // Se compensa el consumo de CAL (300kWh) y se añade el declarado no compensable de ACS (100kWh)
+        // Se añaden 200kWh a los 100kWh declarados para compensar consumo en CAL (300kWh)
         let ma_prod_2: f32 = ma_prod
             .clone()
             .filter(|c| c.has_id(2))
             .map(EnergyData::values_sum)
             .sum();
-        assert_eq!(format!("{:.1}", ma_prod_2), "400.0");
+        assert_eq!(format!("{:.1}", ma_prod_2), "300.0");
+        // En total, se añaden 200 + 50 a los 300kWh declarados, para un total de 550kWh
+        // Hay 100kWh declarados para sistema 0 que no se consumen
+        let ma_prod_tot: f32 = ma_prod.clone().map(EnergyData::values_sum).sum();
+        assert_eq!(format!("{:.1}", ma_prod_tot), "550.0");
     }
 
     /// Prueba del formato con componentes de zona y sistema para declarar
@@ -532,10 +511,10 @@ mod tests {
             0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
             1, SISTEMA, DEMANDA, REF, -3.0 # Demanda ref. EER 3
             2, SISTEMA, DEMANDA, CAL, 3.0 # Demanda cal. COP 3
-            1, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 2.00 # Producción PV
-            2, ELECTRICIDAD, CONSUMO, EPB, REF, 1.00 # BdC modo refrigeración
-            2, ELECTRICIDAD, CONSUMO, EPB, CAL, 1.00 # BdC modo calefacción
-            2, MEDIOAMBIENTE, CONSUMO, EPB, CAL, 2.00 # BdC modo calefacción
+            1, ELECTRICIDAD, PRODUCCION, INSITU, 2.00 # Producción PV
+            2, ELECTRICIDAD, CONSUMO, REF, 1.00 # BdC modo refrigeración
+            2, ELECTRICIDAD, CONSUMO, CAL, 1.00 # BdC modo calefacción
+            2, MEDIOAMBIENTE, CONSUMO, CAL, 2.00 # BdC modo calefacción
             "
         .parse::<Components>()
         .unwrap();

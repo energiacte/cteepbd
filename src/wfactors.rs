@@ -511,7 +511,7 @@ MEDIOAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la r
 MEDIOAMBIENTE, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
 RED1, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
 RED2, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)";
-        let tcomps = "ELECTRICIDAD, CONSUMO, EPB, NDEF, 1 # Solo consume electricidad de red"
+        let tcomps = "ELECTRICIDAD, CONSUMO, NDEF, 1 # Solo consume electricidad de red"
             .parse::<Components>()
             .unwrap();
         let tfactors_normalized_stripped_str = "#META CTE_FUENTE: RITE2014

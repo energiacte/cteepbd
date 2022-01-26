@@ -55,12 +55,12 @@ impl EnergyData {
         }
     }
 
-    /// Get subtype (EPB / NEPB, INSITU / COGEN) for this component
-    pub fn csubtype(&self) -> ProdOrigin {
+    /// Get production origin (INSITU / COGEN) for this component
+    pub fn origin(&self) -> ProdOrigin {
         match self {
             // TODO: eliminar este método
             EnergyData::UsedEnergy(_) => unreachable!(),
-            EnergyData::ProducedEnergy(e) => e.csubtype,
+            EnergyData::ProducedEnergy(e) => e.origin,
         }
     }
 
@@ -68,7 +68,7 @@ impl EnergyData {
     pub fn service(&self) -> Service {
         match self {
             EnergyData::UsedEnergy(e) => e.service,
-            EnergyData::ProducedEnergy(e) => e.service,
+            EnergyData::ProducedEnergy(_) => unreachable!(),
         }
     }
 
@@ -101,7 +101,7 @@ impl EnergyData {
     pub fn is_onsite_pr(&self) -> bool {
         match self {
             EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.csubtype == ProdOrigin::INSITU,
+            EnergyData::ProducedEnergy(e) => e.origin == ProdOrigin::INSITU,
         }
     }
 
@@ -109,7 +109,7 @@ impl EnergyData {
     pub fn is_cogen_pr(&self) -> bool {
         match self {
             EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.csubtype == ProdOrigin::COGENERACION,
+            EnergyData::ProducedEnergy(e) => e.origin == ProdOrigin::COGENERACION,
         }
     }
 

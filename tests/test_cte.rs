@@ -99,8 +99,7 @@ fn get_energydatalist() -> Components {
                     1.13, 1.42, 1.99, 2.84, 4.82, 5.39, 5.67, 5.11, 4.54, 3.40, 2.27, 1.42,
                 ],
                 carrier: ELECTRICIDAD,
-                csubtype: INSITU,
-                service: Service::NDEF,
+                origin: INSITU,
                 comment: "".into(),
             }),
             EnergyData::UsedEnergy(UsedEnergy {
@@ -118,8 +117,7 @@ fn get_energydatalist() -> Components {
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
                 carrier: MEDIOAMBIENTE,
-                csubtype: INSITU,
-                service: Service::NDEF,
+                origin: INSITU,
                 comment: "".into(),
             }),
         ],
@@ -739,16 +737,6 @@ fn cte_new_services_format_ACS() {
 }
 
 #[test]
-fn cte_force_electricity_prod_to_NDEF() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,CAL,20
-ELECTRICIDAD,PRODUCCION,INSITU,CAL,40"
-        .parse::<Components>()
-        .unwrap()
-        .normalize();
-    assert_eq!(comps.cdata[1].service(), Service::NDEF);
-}
-
-#[test]
 fn cte_balance_byuse() {
     let ENERGYDATALIST = get_energydatalist();
     let FP = get_ctefp_peninsula();
@@ -772,8 +760,8 @@ fn cte_balance_byuse() {
 /// Efecto Joule con 60% PV (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_joule_60pv() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,100
-ELECTRICIDAD,PRODUCCION,INSITU,ACS,60"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,100
+ELECTRICIDAD,PRODUCCION,INSITU,60"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -785,8 +773,8 @@ ELECTRICIDAD,PRODUCCION,INSITU,ACS,60"
 /// Gas natural (fp_nren = 1.1, con rend=0.9) y 60% de cobertura solar (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_gn_60pst() {
-    let comps = "GASNATURAL,CONSUMO,EPB,ACS,44.44
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
+    let comps = "GASNATURAL,CONSUMO,ACS,44.44
+MEDIOAMBIENTE,CONSUMO,ACS,60"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -798,8 +786,8 @@ MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
 /// Biomasa rend 75% y PST (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_10PST_100() {
-    let comps = "BIOMASA,CONSUMO,EPB,ACS,100
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,10"
+    let comps = "BIOMASA,CONSUMO,ACS,100
+MEDIOAMBIENTE,CONSUMO,ACS,10"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -811,7 +799,7 @@ MEDIOAMBIENTE,CONSUMO,EPB,ACS,10"
 /// Biomasa rend 75% (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_100() {
-    let comps = "BIOMASA,CONSUMO,EPB,ACS,100"
+    let comps = "BIOMASA,CONSUMO,ACS,100"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -825,8 +813,8 @@ fn cte_ACS_demanda_ren_biomasa_100() {
 fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
     let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 50
     #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 50
-    BIOMASA,CONSUMO,EPB,ACS,50
-    BIOMASADENSIFICADA,CONSUMO,EPB,ACS,50"
+    BIOMASA,CONSUMO,ACS,50
+    BIOMASADENSIFICADA,CONSUMO,ACS,50"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -846,9 +834,9 @@ fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
 fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
     let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 30
     #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 30
-    GASNATURAL,CONSUMO,EPB,ACS,55.556
-    BIOMASA,CONSUMO,EPB,ACS,50
-    BIOMASADENSIFICADA,CONSUMO,EPB,ACS,50"
+    GASNATURAL,CONSUMO,ACS,55.556
+    BIOMASA,CONSUMO,ACS,50
+    BIOMASADENSIFICADA,CONSUMO,ACS,50"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -867,8 +855,8 @@ fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
 /// Red de distrito, red1 50% renovable y red2 10% renovable (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_red1_red2() {
-    let comps = "RED1,CONSUMO,EPB,ACS,50
-RED2,CONSUMO,EPB,ACS,50"
+    let comps = "RED1,CONSUMO,ACS,50
+RED2,CONSUMO,ACS,50"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -886,8 +874,8 @@ RED2,CONSUMO,EPB,ACS,50"
 /// Bomba de calor (SCOP=2.5) (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,ACS,60"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -899,9 +887,9 @@ MEDIOAMBIENTE,CONSUMO,EPB,ACS,60"
 /// Bomba de calor (SCOP=2.5) + 10kWh PV (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,60
-ELECTRICIDAD,PRODUCCION,INSITU,NDEF,10"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,ACS,60
+ELECTRICIDAD,PRODUCCION,INSITU,10"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -914,10 +902,10 @@ ELECTRICIDAD,PRODUCCION,INSITU,NDEF,10"
 /// Debería dar igual el tipo de uso definido para NEPB
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_nEPB() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,60
-ELECTRICIDAD,PRODUCCION,INSITU,NDEF,10
-ELECTRICIDAD,CONSUMO,NEPB,NDEF,40.0"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,ACS,60
+ELECTRICIDAD,PRODUCCION,INSITU,10
+ELECTRICIDAD,CONSUMO,NEPB,40.0"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -931,9 +919,9 @@ ELECTRICIDAD,CONSUMO,NEPB,NDEF,40.0"
 // Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,40.0
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,60
-ELECTRICIDAD,PRODUCCION,COGENERACION,ACS,10"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,40.0
+MEDIOAMBIENTE,CONSUMO,ACS,60
+ELECTRICIDAD,PRODUCCION,COGENERACION,10"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -945,9 +933,9 @@ ELECTRICIDAD,PRODUCCION,COGENERACION,ACS,10"
 /// Bomba de calor (SCOP=2.5) y 25% caldera de GN (rend. 0.9) (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_45ma_25gn() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,30.0
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,45
-GASNATURAL,CONSUMO,EPB,ACS,27.88"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,30.0
+MEDIOAMBIENTE,CONSUMO,ACS,45
+GASNATURAL,CONSUMO,ACS,27.88"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -960,9 +948,9 @@ GASNATURAL,CONSUMO,EPB,ACS,27.88"
 /// En este caso se excluye la producción de medioambiente puesto que no es renovable
 #[test]
 fn cte_ACS_demanda_ren_bdc_38ma__25gn_excluye_medioambiente() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,37.5
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
-GASNATURAL,CONSUMO,EPB,ACS,27.88"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,37.5
+MEDIOAMBIENTE,CONSUMO,ACS,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
+GASNATURAL,CONSUMO,ACS,27.88"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -975,10 +963,10 @@ GASNATURAL,CONSUMO,EPB,ACS,27.88"
 // Falla al haber BIOMASA y otro suministro de red que no es insitu
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn_y_biomasa() {
-    let comps = "ELECTRICIDAD,CONSUMO,EPB,ACS,30.0
-MEDIOAMBIENTE,CONSUMO,EPB,ACS,45
-BIOMASA,CONSUMO,EPB,ACS,13.94
-GASNATURAL,CONSUMO,EPB,ACS,13.94"
+    let comps = "ELECTRICIDAD,CONSUMO,ACS,30.0
+MEDIOAMBIENTE,CONSUMO,ACS,45
+BIOMASA,CONSUMO,ACS,13.94
+GASNATURAL,CONSUMO,ACS,13.94"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -1000,20 +988,20 @@ fn cte_ACS_demanda_ren_excluye_aux() {
 #[test]
 fn new_format_with_system_id() {
     let comps = "# Bomba de calor 1
-    1,ELECTRICIDAD,CONSUMO,EPB,ACS,100 # BdC 1
-    1,MEDIOAMBIENTE,CONSUMO,EPB,ACS,150 # BdC 1
-    2,ELECTRICIDAD,CONSUMO,NEPB,NDEF,10 # Ascensores
+    1,ELECTRICIDAD,CONSUMO,ACS,100 # BdC 1
+    1,MEDIOAMBIENTE,CONSUMO,ACS,150 # BdC 1
+    2,ELECTRICIDAD,CONSUMO,NEPB,10 # Ascensores
     # Bomba de calor 2
-    2,ELECTRICIDAD,CONSUMO,EPB,CAL,200 # BdC 2
-    2,MEDIOAMBIENTE,CONSUMO,EPB,CAL,300 # BdC 2
+    2,ELECTRICIDAD,CONSUMO,CAL,200 # BdC 2
+    2,MEDIOAMBIENTE,CONSUMO,CAL,300 # BdC 2
     # Producción fotovoltaica in situ
-    1,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,200 # PV
-    2,ELECTRICIDAD,PRODUCCION,INSITU,ACS,100 # PV
-    3,ELECTRICIDAD,PRODUCCION,INSITU,NDEF,5 # PV
+    1,ELECTRICIDAD,PRODUCCION,INSITU,200 # PV
+    2,ELECTRICIDAD,PRODUCCION,INSITU,100 # PV
+    3,ELECTRICIDAD,PRODUCCION,INSITU,5 # PV
     # Producción de energía ambiente dada por el usuario
-    0,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
-    1,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-    2,MEDIOAMBIENTE,PRODUCCION,INSITU,ACS,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
+    0,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+    1,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+    2,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
     # Compensación de energía ambiente a completar por CteEPBD"
         .parse::<Components>()
         .unwrap();

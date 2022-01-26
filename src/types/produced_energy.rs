@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{ProdOrigin, Carrier, HasValues, Service};
+use super::{ProdOrigin, Carrier, HasValues};
 use crate::error::EpbdError;
 
 // -------------------- Produced Energy Component
@@ -50,9 +50,7 @@ pub struct ProducedEnergy {
     pub carrier: Carrier,
     /// Energy origin
     /// - `INSITU` or `COGENERACION` for generated energy component types
-    pub csubtype: ProdOrigin,
-    /// End use
-    pub service: Service,
+    pub origin: ProdOrigin,
     /// List of produced energy values, one value for each timestep. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
@@ -80,8 +78,8 @@ impl fmt::Display for ProducedEnergy {
         };
         write!(
             f,
-            "{}, {}, PRODUCCION, {}, {}, {}{}",
-            self.id, self.carrier, self.csubtype, self.service, valuelist, comment
+            "{}, {}, PRODUCCION, {}, {}{}",
+            self.id, self.carrier, self.origin, valuelist, comment
         )
     }
 }
@@ -98,7 +96,7 @@ impl str::FromStr for ProducedEnergy {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (carrier + type + subtype + 1 value)
+        // Minimal possible length (carrier + type + origin + 1 value)
         if items.len() < 4 {
             return Err(EpbdError::ParseError(s.into()));
         };
@@ -110,10 +108,10 @@ impl str::FromStr for ProducedEnergy {
 
         let carrier: Carrier = items[baseidx].parse()?;
         let ctype = items[baseidx + 1];
-        let csubtype: ProdOrigin = items[baseidx + 2].parse()?;
+        let origin: ProdOrigin = items[baseidx + 2].parse()?;
 
         // Check coherence of ctype and csubtype
-        let subtype_belongs_to_type = match csubtype {
+        let subtype_belongs_to_type = match origin {
             INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
             COGENERACION => carrier == ELECTRICIDAD,
         };
@@ -124,14 +122,8 @@ impl str::FromStr for ProducedEnergy {
             )));
         }
 
-        // Check service field. May be missing in legacy versions
-        let (valuesidx, service) = match items[baseidx + 3].parse() {
-            Ok(s) => (baseidx + 4, s),
-            Err(_) => (baseidx + 3, Service::default()),
-        };
-
         // Collect energy values from the service field on
-        let values = items[valuesidx..]
+        let values = items[baseidx + 3..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
@@ -139,8 +131,7 @@ impl str::FromStr for ProducedEnergy {
         Ok(ProducedEnergy {
             id,
             carrier,
-            csubtype,
-            service,
+            origin,
             values,
             comment,
         })
@@ -160,14 +151,13 @@ mod tests {
         let component2 = ProducedEnergy {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
-            csubtype: "INSITU".parse().unwrap(),
-            service: "NDEF".parse().unwrap(),
+            origin: "INSITU".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
             comment: "Comentario prod 1".into(),
         };
-        let component2str = "0, ELECTRICIDAD, PRODUCCION, INSITU, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let component2str = "0, ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
         let component2strlegacy = "ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
         assert_eq!(component2.to_string(), component2str);
 

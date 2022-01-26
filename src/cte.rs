@@ -627,141 +627,65 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
 
     // Data
     let RenNrenCo2 { ren, nren, .. } = balance_m2.B;
-    let cmeta = &components.cmeta;
-    let cdata = &components.cdata;
     let wmeta = &wfactors.wmeta;
     let wdata = &wfactors.wdata;
-
-    /// Helper function -> XML escape symbols
-    fn escape_xml(unescaped: &str) -> String {
-        unescaped
-            .replace('&', "&amp;")
-            .replace('<', "&lt;")
-            .replace('>', "&gt;")
-            .replace('\\', "&apos;")
-            .replace('"', "&quot;")
-    }
+    let cmeta = &components.cmeta;
+    let cdata = &components.cdata;
+    let zonesdata = &components.zones;
+    let systemsdata = &components.systems;
 
     // Formatting
     let wmetastring = wmeta
         .iter()
-        .map(|m| {
-            format!(
-                "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
-                escape_xml(&m.key),
-                escape_xml(&m.value)
-            )
-        })
+        .map(meta_to_xml)
         .collect::<Vec<String>>()
         .join("\n");
     let wdatastring = wdata
         .iter()
-        .map(|f| {
-            let Factor {
-                carrier,
-                source,
-                dest,
-                step,
-                ren,
-                nren,
-                co2,
-                comment,
-            } = f;
-            format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2><Comentario>{}</Comentario></Dato>",
-            carrier, source, dest, step, ren, nren, co2, escape_xml(comment))
-        })
+        .map(factor_to_xml)
         .collect::<Vec<String>>()
         .join("\n");
+
     let cmetastring = cmeta
         .iter()
-        .map(|m| {
-            format!(
-                "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
-                escape_xml(&m.key),
-                escape_xml(&m.value)
-            )
-        })
+        .map(meta_to_xml)
         .collect::<Vec<String>>()
         .join("\n");
     let cdatastring = cdata
         .iter()
-        .map(|c| {
-            let format_values = |values: &[f32]| -> String {
-                values
-                    .iter()
-                    .map(|v| format!("{:.2}", v))
-                    .collect::<Vec<String>>()
-                    .join(",")
-            };
-            match c {
-                EnergyData::UsedEnergy(UsedEnergy {
-                    id,
-                    carrier,
-                    service,
-                    values,
-                    comment,
-                }) => {
-                    format!(
-                        "      <Consumo>
-                    <Id>{}</Id><Vector>{}</Vector><Servicio>{}</Servicio>
-                    <Valores>{}</Valores>
-                    <Comentario>{}</Comentario>
-                </Consumo>",
-                        id,
-                        carrier,
-                        service,
-                        format_values(values),
-                        escape_xml(comment)
-                    )
-                }
-                EnergyData::ProducedEnergy(ProducedEnergy {
-                    id,
-                    carrier,
-                    csubtype,
-                    service,
-                    values,
-                    comment,
-                }) => {
-                    format!(
-                        "      <Produccion>
-                    <Id>{}</Id><Vector>{}</Vector><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
-                    <Valores>{}</Valores>
-                    <Comentario>{}</Comentario>
-                </Produccion>",
-                        id,
-                        carrier,
-                        csubtype,
-                        service,
-                        format_values(values),
-                        escape_xml(comment)
-                    )
-                }
-            }
+        .map(|c| match c {
+            EnergyData::UsedEnergy(e) => used_to_xml(e),
+            EnergyData::ProducedEnergy(e) => produced_to_xml(e),
         })
         .collect::<Vec<String>>()
         .join("\n");
-    // TODO: No se ha serializado los datos de Zona y Sistemas, y Sería
-    // TODO: mejor usar en vez de <Dato>: <Factor> o <Energia>.
-    // TODO: Eliminar un nivel de etiquetas, dejando todo como una secuencia de <Metadato>, <Factor>, <Consumo>, <Produccion>, <DemandaZona>, <DemandaSistema>
+
+    let zonesdatastring = zonesdata
+        .iter()
+        .map(zoneneeds_to_xml)
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    let systemsdatastring = systemsdata
+        .iter()
+        .map(systemneeds_to_xml)
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    // TODO: Extraer método para components_to_xml y comprobar indentado de salida
 
     // Final assembly
     format!(
         "<BalanceEPB>
     <FactoresDePaso>
-        <Metadatos>
-    {}
-        </Metadatos>
-        <Datos>
-    {}
-        </Datos>
+        {}
+        {}
     </FactoresDePaso>
     <Componentes>
-        <Metadatos>
-    {}
-        </Metadatos>
-        <Datos>
-    {}
-        </Datos>
+        {}
+        {}
+        {}
+        {}
     </Componentes>
     <kexp>{:.2}</kexp>
     <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
@@ -774,9 +698,129 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         wdatastring,
         cmetastring,
         cdatastring,
+        zonesdatastring,
+        systemsdatastring,
         k_exp,
         arearef,
         ren + nren,
         nren
+    )
+}
+
+/// Helper function -> XML escape symbols
+fn escape_xml(unescaped: &str) -> String {
+    unescaped
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('\\', "&apos;")
+        .replace('"', "&quot;")
+}
+
+/// Convert list of numbers to string of comma separated values (2 decimal digits)
+fn format_values_2f(values: &[f32]) -> String {
+    values
+        .iter()
+        .map(|v| format!("{:.2}", v))
+        .collect::<Vec<String>>()
+        .join(",")
+}
+
+/// Converte Factor a XML
+fn factor_to_xml(f: &Factor) -> String {
+    let Factor {
+        carrier,
+        source,
+        dest,
+        step,
+        ren,
+        nren,
+        co2,
+        comment,
+    } = f;
+    format!(
+        "<Factor><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2><Comentario>{}</Comentario></Factor>",
+        carrier, source, dest, step, ren, nren, co2, escape_xml(comment)
+    )
+}
+
+/// Convierte componente de energía producida a XML
+fn produced_to_xml(e: &ProducedEnergy) -> String {
+    let ProducedEnergy {
+        id,
+        carrier,
+        origin,
+        values,
+        comment,
+    } = e;
+    format!(
+        "<Produccion><Id>{}</Id><Vector>{}</Vector><Origen>{}</Origen><Valores>{}</Valores><Comentario>{}</Comentario></Produccion>",
+        id,
+        carrier,
+        origin,
+        format_values_2f(values),
+        escape_xml(comment)
+    )
+}
+
+/// Convierte componente de energía consumida a XML
+fn used_to_xml(e: &UsedEnergy) -> String {
+    let UsedEnergy {
+        id,
+        carrier,
+        service,
+        values,
+        comment,
+    } = e;
+    format!(
+        "<Consumo><Id>{}</Id><Vector>{}</Vector><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></Consumo>",
+        id,
+        carrier,
+        service,
+        format_values_2f(values),
+        escape_xml(comment)
+    )
+}
+
+/// Convierte metadato a XML
+fn meta_to_xml(m: &Meta) -> String {
+    format!(
+        "<Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
+        escape_xml(&m.key),
+        escape_xml(&m.value)
+    )
+}
+
+/// Convierte componente de demanda de zona a XML
+fn zoneneeds_to_xml(e: &ZoneNeeds) -> String {
+    let ZoneNeeds {
+        id,
+        service,
+        values,
+        comment,
+    } = e;
+    format!(
+        "<DemandaZona><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></DemandaZona>",
+        id,
+        service,
+        format_values_2f(values),
+        escape_xml(comment)
+    )
+}
+
+/// Convierte componente de energía consumida a XML
+fn systemneeds_to_xml(e: &SystemNeeds) -> String {
+    let SystemNeeds {
+        id,
+        service,
+        values,
+        comment,
+    } = e;
+    format!(
+        "<DemandaSistema><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></DemandaSistema>",
+        id,
+        service,
+        format_values_2f(values),
+        escape_xml(comment)
     )
 }

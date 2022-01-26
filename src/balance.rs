@@ -344,7 +344,7 @@ fn balance_for_carrier(
             }
         } else if c.is_generated() {
             E_pr_cr_i_t
-                .entry(c.csubtype())
+                .entry(c.origin())
                 .and_modify(|e| *e = vecvecsum(e, c.values()))
                 .or_insert_with(|| c.values().to_owned());
         }

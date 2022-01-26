@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{HasValues, Carrier, Service};
+use super::{Carrier, HasValues, Service};
 use crate::error::EpbdError;
 
 // -------------------- Used Energy Component
@@ -77,12 +77,11 @@ impl fmt::Display for UsedEnergy {
         } else {
             "".to_owned()
         };
-        let subtype = if self.service == Service::NEPB { "NEPB" } else { "EPB" };
 
         write!(
             f,
-            "{}, {}, CONSUMO, {}, {}, {}{}",
-            self.id, self.carrier, subtype, self.service, valuelist, comment
+            "{}, {}, CONSUMO, {}, {}{}",
+            self.id, self.carrier, self.service, valuelist, comment
         )
     }
 }
@@ -107,12 +106,10 @@ impl str::FromStr for UsedEnergy {
         };
 
         let carrier: Carrier = items[baseidx].parse()?;
+        
+        // Check type
         let ctype = items[baseidx + 1];
-        // TODO: remove
-        let csubtype = items[baseidx + 2];
-
-        // Check coherence of ctype and csubtype
-        if !(ctype == "CONSUMO" && (csubtype == "EPB" || csubtype == "NEPB")) {
+        if ctype != "CONSUMO" {
             return Err(EpbdError::ParseError(format!(
                 "Componente de energía consumida con formato incorrecto: {}",
                 s
@@ -120,18 +117,10 @@ impl str::FromStr for UsedEnergy {
         }
 
         // Check service field. May be missing in legacy versions
-        let (valuesidx, mut service) = match items[baseidx + 3].parse() {
-            Ok(s) => (baseidx + 4, s),
-            Err(_) => (baseidx + 3, Service::default()),
-        };
-
-        // No usamos el ctype para identificar no EPB sino que lo hacemos con el servicio
-        if csubtype == "NEPB" {
-            service = Service::NEPB
-        }
+        let service = items[baseidx + 2].parse()?;
 
         // Collect energy values from the service field on
-        let values = items[valuesidx..]
+        let values = items[baseidx + 3..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
@@ -165,21 +154,12 @@ mod tests {
             ],
             comment: "Comentario cons 1".into(),
         };
-        let component1str = "0, ELECTRICIDAD, CONSUMO, EPB, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
-        let component1strlegacy = "0, ELECTRICIDAD, CONSUMO, EPB, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1str = "0, ELECTRICIDAD, CONSUMO, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string
         assert_eq!(
             component1str.parse::<UsedEnergy>().unwrap().to_string(),
-            component1str
-        );
-        // roundtrip building from/to string for legacy format
-        assert_eq!(
-            component1strlegacy
-                .parse::<UsedEnergy>()
-                .unwrap()
-                .to_string(),
             component1str
         );
     }
