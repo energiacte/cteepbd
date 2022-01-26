@@ -146,9 +146,9 @@ pub enum Service {
     DHU,
     /// Building automation and control
     BAC,
-    /// Undefined or generic use
+    /// Generic EPB use
     NDEF,
-    /// Non EPB uses
+    /// Generic non EPB use
     NEPB,
     // TODO: Energy used for electricity cogeneration
     // This excludes the energy feeding the cogenerated system that can attributed to thermal use
