@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        CSubtype, Carrier, EnergyData, HasValues, Meta, MetaVec, ProducedEnergy, Service,
+        Carrier, EnergyData, HasValues, Meta, MetaVec, ProdOrigin, ProducedEnergy, Service,
         SystemNeeds, UsedEnergy, ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
@@ -305,7 +305,7 @@ impl Components {
     fn force_ndef_use_for_electricity_production(&mut self) {
         for component in &mut self.cdata {
             match component {
-                EnergyData::ProducedEnergy(ref mut c) if c.is_electricity() => {
+                EnergyData::ProducedEnergy(ref mut c) if c.carrier == Carrier::ELECTRICIDAD => {
                     c.service = Service::NDEF
                 }
                 _ => continue,
@@ -390,7 +390,7 @@ impl Components {
                 balancecomps.push(EnergyData::ProducedEnergy(ProducedEnergy {
                     id,
                     carrier: Carrier::MEDIOAMBIENTE,
-                    csubtype: CSubtype::INSITU,
+                    csubtype: ProdOrigin::INSITU,
                     service,
                     values: unbalanced_values,
                     comment: "Equilibrado de consumo sin producción declarada".into(),

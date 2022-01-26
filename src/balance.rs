@@ -34,7 +34,6 @@ según la EN ISO 52000-1.
 */
 
 use std::collections::HashMap;
-use std::convert::TryInto;
 
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +41,7 @@ use crate::{
     error::{EpbdError, Result},
     types::HasValues,
     types::{
-        CSubtype, Carrier, Dest, EnergyData, Factor, RenNrenCo2, Service, Source, Step, SERVICES,
+        Carrier, Dest, EnergyData, Factor, ProdOrigin, RenNrenCo2, Service, Source, Step, SERVICES,
     },
     vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
     Components, Factors,
@@ -218,17 +217,17 @@ pub struct BalanceForCarrier {
     /// Produced energy (from all sources)
     pub produced_an: f32,
     /// Produced energy in each timestep by non grid source (COGENERACION / INSITU)
-    pub produced_bygen: HashMap<CSubtype, Vec<f32>>,
+    pub produced_bygen: HashMap<ProdOrigin, Vec<f32>>,
     /// Produced energy by non grid source (COGENERACION / INSITU)
-    pub produced_bygen_an: HashMap<CSubtype, f32>,
+    pub produced_bygen_an: HashMap<ProdOrigin, f32>,
     /// Produced energy from all origins and used for EPB services in each timestep
     pub produced_used_EPus: Vec<f32>,
     /// Produced energy from all origins and used for EPB services
     pub produced_used_EPus_an: f32,
     /// Produced energy with origin in generator i and used for EPB services in each timestep
-    pub produced_used_EPus_bygen: HashMap<CSubtype, Vec<f32>>,
+    pub produced_used_EPus_bygen: HashMap<ProdOrigin, Vec<f32>>,
     /// Produced energy with origin in generator i and used for EPB services
-    pub produced_used_EPus_bygen_an: HashMap<CSubtype, f32>,
+    pub produced_used_EPus_bygen_an: HashMap<ProdOrigin, f32>,
     /// Load matching factor
     pub f_match: Vec<f32>,
     /// Exported energy to the grid and non EPB uses in each timestep
@@ -236,9 +235,9 @@ pub struct BalanceForCarrier {
     /// Exported energy to the grid and non EPB uses
     pub exported_an: f32,
     /// Exported energy to the grid and non EPB uses in each timestep, by generation source
-    pub exported_bygen: HashMap<CSubtype, Vec<f32>>, // cambiado origin -> gen
+    pub exported_bygen: HashMap<ProdOrigin, Vec<f32>>, // cambiado origin -> gen
     /// Exported energy to the grid and non EPB uses, by generation source
-    pub exported_bygen_an: HashMap<CSubtype, f32>, // cambiado origin -> gen
+    pub exported_bygen_an: HashMap<ProdOrigin, f32>, // cambiado origin -> gen
     /// Exported energy to the grid in each timestep
     pub exported_grid: Vec<f32>,
     /// Exported energy to the grid
@@ -333,7 +332,7 @@ fn balance_for_carrier(
     // * Energy used by technical systems for non-EPB services, for each time step
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
     // * Produced on-site energy and inside the assessment boundary, by generator i (origin i)
-    let mut E_pr_cr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
+    let mut E_pr_cr_i_t = HashMap::<ProdOrigin, Vec<f32>>::new();
 
     // Accumulate for all components
     for c in &cr_list {
@@ -351,11 +350,11 @@ fn balance_for_carrier(
         }
     }
 
-    // List of produced energy generators (CSubtype::INSITU or CSubtype::COGENERACION)
-    let pr_generators: Vec<CSubtype> = E_pr_cr_i_t.keys().cloned().collect(); // INSITU, COGENERACION
+    // List of produced energy generators (ProdOrigin::INSITU or ProdOrigin::COGENERACION)
+    let pr_generators: Vec<ProdOrigin> = E_pr_cr_i_t.keys().cloned().collect(); // INSITU, COGENERACION
 
     // Annually produced on-site energy from generator i (origin i)
-    let mut E_pr_cr_i_an = HashMap::<CSubtype, f32>::new();
+    let mut E_pr_cr_i_an = HashMap::<ProdOrigin, f32>::new();
     for gen in &pr_generators {
         E_pr_cr_i_an.insert(*gen, vecsum(&E_pr_cr_i_t[gen]));
     }
@@ -405,7 +404,7 @@ fn balance_for_carrier(
     // We are doing this computations using generator types, not generator ids (i).
 
     // * Produced energy with origin from generator i and used for EPB services (formula 15)
-    let mut E_pr_cr_i_used_EPus_t = HashMap::<CSubtype, Vec<f32>>::new();
+    let mut E_pr_cr_i_used_EPus_t = HashMap::<ProdOrigin, Vec<f32>>::new();
     for gen in &pr_generators {
         // * Fraction of produced energy of type i (origin from generator i) (formula 14)
         // We have grouped by origin type (it could be made by generator i, for each one of them)
@@ -419,7 +418,7 @@ fn balance_for_carrier(
     }
 
     // * Exported energy from generator i (origin i) (formula 16)
-    let mut E_exp_cr_i_t = HashMap::<CSubtype, Vec<f32>>::new();
+    let mut E_exp_cr_i_t = HashMap::<ProdOrigin, Vec<f32>>::new();
     for gen in &pr_generators {
         E_exp_cr_i_t.insert(
             *gen,
@@ -428,7 +427,7 @@ fn balance_for_carrier(
     }
 
     // * Annually exported energy from generator i (origin i)
-    let mut E_exp_cr_i_an = HashMap::<CSubtype, f32>::new();
+    let mut E_exp_cr_i_an = HashMap::<ProdOrigin, f32>::new();
     for gen in &pr_generators {
         E_exp_cr_i_an.insert(*gen, vecsum(&E_exp_cr_i_t[gen]));
     }
@@ -443,7 +442,7 @@ fn balance_for_carrier(
 
     // 2) Delivered energy from non cogeneration on-site sources (origin i)
     let E_we_del_cr_onsite_an = E_pr_cr_i_an
-        .get(&CSubtype::INSITU)
+        .get(&ProdOrigin::INSITU)
         .and_then(|E_pr_cr_i| {
             fp_find(&fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
                 .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i)
@@ -570,7 +569,7 @@ fn balance_for_carrier(
     // Annually produced energy used in EPB uses
     let E_pr_cr_used_EPus_an = vecsum(&E_pr_cr_used_EPus_t);
     // Annually produced energy used in EPB uses by generator
-    let E_pr_cr_i_used_EPus_an: HashMap<CSubtype, f32> = E_pr_cr_i_used_EPus_t
+    let E_pr_cr_i_used_EPus_an: HashMap<ProdOrigin, f32> = E_pr_cr_i_used_EPus_t
         .iter()
         .map(|(gen, values)| (*gen, vecsum(values)))
         .collect();
@@ -652,14 +651,13 @@ fn compute_factors_by_use_cr(cr_list: &[EnergyData]) -> HashMap<Service, f32> {
 /// * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
 /// * `dest` - match this energy destination (use)
 /// * `step` - match this calculation step
-fn fp_find<T>(fp_cr: &[Factor], source: T, dest: Dest, step: Step) -> Result<RenNrenCo2>
-where
-    T: TryInto<Source>,
-    T::Error: std::fmt::Display,
-{
-    let source = source
-        .try_into()
-        .map_err(|e| EpbdError::ParseError(format!("{}", e)))?;
+fn fp_find(
+    fp_cr: &[Factor],
+    source: impl Into<Source>,
+    dest: Dest,
+    step: Step,
+) -> Result<RenNrenCo2> {
+    let source = source.into();
     fp_cr
         .iter()
         .find(|fp| fp.source == source && fp.dest == dest && fp.step == step)

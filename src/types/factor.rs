@@ -23,15 +23,13 @@
 //            Daniel Jiménez González <dani@ietcc.csic.es>,
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-use std::convert::TryFrom;
 use std::fmt;
 use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{CSubtype, Carrier};
+use super::{Carrier, ProdOrigin};
 use crate::{error::EpbdError, types::RenNrenCo2};
-
 
 // ==================== Weighting factors
 
@@ -68,16 +66,11 @@ impl std::fmt::Display for Source {
     }
 }
 
-impl TryFrom<CSubtype> for Source {
-    type Error = EpbdError;
-    fn try_from(subtype: CSubtype) -> Result<Self, Self::Error> {
+impl From<ProdOrigin> for Source {
+    fn from(subtype: ProdOrigin) -> Self {
         match subtype {
-            CSubtype::INSITU => Ok(Self::INSITU),
-            CSubtype::COGENERACION => Ok(Self::COGENERACION),
-            _ => Err(EpbdError::ParseError(format!(
-                "CSubtype as Source {}",
-                subtype
-            ))),
+            ProdOrigin::INSITU => Self::INSITU,
+            ProdOrigin::COGENERACION => Self::COGENERACION,
         }
     }
 }

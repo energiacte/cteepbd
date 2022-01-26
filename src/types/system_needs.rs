@@ -56,13 +56,6 @@ pub struct SystemNeeds {
     pub comment: String,
 }
 
-impl SystemNeeds {
-    /// Check if component matches a given service
-    pub fn has_service(&self, service: Service) -> bool {
-        self.service == service
-    }
-}
-
 impl HasValues for SystemNeeds {
     fn values(&self) -> &[f32] {
         &self.values

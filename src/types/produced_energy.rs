@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{CSubtype, Carrier, HasValues, Service};
+use super::{ProdOrigin, Carrier, HasValues, Service};
 use crate::error::EpbdError;
 
 // -------------------- Produced Energy Component
@@ -50,40 +50,13 @@ pub struct ProducedEnergy {
     pub carrier: Carrier,
     /// Energy origin
     /// - `INSITU` or `COGENERACION` for generated energy component types
-    pub csubtype: CSubtype,
+    pub csubtype: ProdOrigin,
     /// End use
     pub service: Service,
     /// List of produced energy values, one value for each timestep. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
     pub comment: String,
-}
-
-impl ProducedEnergy {
-    /// Check if component matches a given service
-    pub fn has_service(&self, service: Service) -> bool {
-        self.service == service
-    }
-
-    /// Check if component matches a given carrier
-    pub fn has_carrier(&self, carrier: Carrier) -> bool {
-        self.carrier == carrier
-    }
-
-    /// Check if component has carrier == ELECTRICITY
-    pub fn is_electricity(&self) -> bool {
-        self.carrier == Carrier::ELECTRICIDAD
-    }
-
-    /// Check if component is of generated energy type
-    pub fn is_generated(&self) -> bool {
-        true
-    }
-
-    /// Check if component is of used energy type
-    pub fn is_used(&self) -> bool {
-        false
-    }
 }
 
 impl HasValues for ProducedEnergy {
@@ -117,7 +90,7 @@ impl str::FromStr for ProducedEnergy {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<ProducedEnergy, Self::Err> {
-        use self::CSubtype::*;
+        use self::ProdOrigin::*;
         use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
 
         // Split comment from the rest of fields
@@ -137,13 +110,12 @@ impl str::FromStr for ProducedEnergy {
 
         let carrier: Carrier = items[baseidx].parse()?;
         let ctype = items[baseidx + 1];
-        let csubtype: CSubtype = items[baseidx + 2].parse()?;
+        let csubtype: ProdOrigin = items[baseidx + 2].parse()?;
 
         // Check coherence of ctype and csubtype
         let subtype_belongs_to_type = match csubtype {
             INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
             COGENERACION => carrier == ELECTRICIDAD,
-            _ => false,
         };
         if !(ctype == "PRODUCCION" && subtype_belongs_to_type) {
             return Err(EpbdError::ParseError(format!(

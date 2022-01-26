@@ -77,7 +77,7 @@ fn get_ctefp_peninsula() -> Factors {
 }
 
 fn get_energydatalist() -> Components {
-    use CSubtype::*;
+    use ProdOrigin::*;
     use Carrier::*;
 
     //3 PV BdC_normativo

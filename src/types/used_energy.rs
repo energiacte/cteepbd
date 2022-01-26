@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{HasValues, CSubtype, Carrier, Service};
+use super::{HasValues, Carrier, Service};
 use crate::error::EpbdError;
 
 // -------------------- Used Energy Component
@@ -56,38 +56,6 @@ pub struct UsedEnergy {
     /// This can also be used to label a component as auxiliary energy use
     /// by including in this field the "CTEEPBD_AUX" tag
     pub comment: String,
-}
-
-impl UsedEnergy {
-    /// Check if component matches a given service
-    pub fn has_service(&self, service: Service) -> bool {
-        self.service == service
-    }
-
-    /// Check if component matches a given carrier
-    pub fn has_carrier(&self, carrier: Carrier) -> bool {
-        self.carrier == carrier
-    }
-
-    /// Check if component has carrier == ELECTRICITY
-    pub fn is_electricity(&self) -> bool {
-        self.carrier == Carrier::ELECTRICIDAD
-    }
-
-    /// Check if component is of generated energy type
-    pub fn is_generated(&self) -> bool {
-        false
-    }
-
-    /// Check if component is of used energy type
-    pub fn is_used(&self) -> bool {
-        true
-    }
-
-    // /// Check if component is of the epb used energy subtype
-    // pub fn is_epb(&self) -> bool {
-    //     self.service != Service::NEPB
-    // }
 }
 
 impl HasValues for UsedEnergy {
@@ -123,8 +91,6 @@ impl str::FromStr for UsedEnergy {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<UsedEnergy, Self::Err> {
-        use self::CSubtype::*;
-
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
@@ -142,10 +108,11 @@ impl str::FromStr for UsedEnergy {
 
         let carrier: Carrier = items[baseidx].parse()?;
         let ctype = items[baseidx + 1];
-        let csubtype: CSubtype = items[baseidx + 2].parse()?;
+        // TODO: remove
+        let csubtype = items[baseidx + 2];
 
         // Check coherence of ctype and csubtype
-        if !(ctype == "CONSUMO" && matches!(csubtype, EPB | NEPB)) {
+        if !(ctype == "CONSUMO" && (csubtype == "EPB" || csubtype == "NEPB")) {
             return Err(EpbdError::ParseError(format!(
                 "Componente de energía consumida con formato incorrecto: {}",
                 s
@@ -159,7 +126,7 @@ impl str::FromStr for UsedEnergy {
         };
 
         // No usamos el ctype para identificar no EPB sino que lo hacemos con el servicio
-        if csubtype == NEPB {
+        if csubtype == "NEPB" {
             service = Service::NEPB
         }
 

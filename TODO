@@ -23,12 +23,12 @@
   - set a standard negative number to refer to reference systems (e.g. -999)
   - define NEPB as a new service
     - define EPB_SERVICES = [CAL, REF, ...] and add is_nepb() and is_epb() using this;
-    - remove NEPB (csybtype) and consumed energy component would not need Ctype and CSubtype
+    - remove NEPB (csybtype) and consumed energy component would not need Ctype and ProdOrigin
   - define COGEN as a new service for energy used for cogeneration
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)
   - Define subtypes of generation (INSITU, COGEN) and use these as subtypes for energy generation components
-    - If we could eliminate these we could convert all used and generated energy to a single basic struct
-      { id, service, values, comment } but we don't want to mix services and type of generated energy.
+    - If we could eliminate these we could convert all generated energy types to a single basic struct
+      { id, values, comment }
   - Define more component types:
     - Energy losses linked to service X (Q_X_ls)
       - E_X_Y_in * COP = Q_X_Y_out + Q_X_ls_tot - Q_X_y_in - f_Y;aux;rvd * W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)

@@ -91,37 +91,31 @@ impl std::fmt::Display for Carrier {
 
 // ==================== Energy Components
 
-// -------------------- CSubtype
+// -------------------- ProdOrigin
 
-/// Subtipo del componente (origen o destino de la energía)
+/// Origen de la energía producida
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub enum CSubtype {
+pub enum ProdOrigin {
     /// On site energy source
     INSITU,
     /// Cogeneration energy source
     COGENERACION,
-    /// EPB use
-    EPB,
-    /// Non EPB use
-    NEPB,
 }
 
-impl str::FromStr for CSubtype {
+impl str::FromStr for ProdOrigin {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<CSubtype, Self::Err> {
+    fn from_str(s: &str) -> Result<ProdOrigin, Self::Err> {
         match s {
-            "INSITU" => Ok(CSubtype::INSITU),
-            "COGENERACION" => Ok(CSubtype::COGENERACION),
-            "EPB" => Ok(CSubtype::EPB),
-            "NEPB" => Ok(CSubtype::NEPB),
+            "INSITU" => Ok(ProdOrigin::INSITU),
+            "COGENERACION" => Ok(ProdOrigin::COGENERACION),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
 
-impl std::fmt::Display for CSubtype {
+impl std::fmt::Display for ProdOrigin {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }
@@ -156,7 +150,8 @@ pub enum Service {
     NDEF,
     /// Non EPB uses
     NEPB,
-    // TODO: Electricity cogeneration (electrical use, excluded thermal use)
+    // TODO: Energy used for electricity cogeneration
+    // This excludes the energy feeding the cogenerated system that can attributed to thermal use
     // COGEN,
 }
 

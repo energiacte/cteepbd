@@ -27,7 +27,7 @@ use std::{fmt, str};
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{CSubtype, Carrier, HasValues, ProducedEnergy, Service, UsedEnergy};
+use crate::types::{Carrier, HasValues, ProdOrigin, ProducedEnergy, Service, UsedEnergy};
 
 /// Componentes de energía generada o consumida
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,7 +56,7 @@ impl EnergyData {
     }
 
     /// Get subtype (EPB / NEPB, INSITU / COGEN) for this component
-    pub fn csubtype(&self) -> CSubtype {
+    pub fn csubtype(&self) -> ProdOrigin {
         match self {
             // TODO: eliminar este método
             EnergyData::UsedEnergy(_) => unreachable!(),
@@ -101,7 +101,7 @@ impl EnergyData {
     pub fn is_onsite_pr(&self) -> bool {
         match self {
             EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.csubtype == CSubtype::INSITU,
+            EnergyData::ProducedEnergy(e) => e.csubtype == ProdOrigin::INSITU,
         }
     }
 
@@ -109,7 +109,7 @@ impl EnergyData {
     pub fn is_cogen_pr(&self) -> bool {
         match self {
             EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.csubtype == CSubtype::COGENERACION,
+            EnergyData::ProducedEnergy(e) => e.csubtype == ProdOrigin::COGENERACION,
         }
     }
 
