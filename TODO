@@ -53,6 +53,7 @@
       - HORASFUERACONSIGNA
   - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
     Have a look to the proposed value from the TR.
+  - JSON input
 
 - tests:
 
