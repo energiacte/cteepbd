@@ -13,16 +13,26 @@
   - Sacar energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
 
 - epbd:
-
-  - set a standard negative number to refer to reference systems (e.g. -999)
+  - set a standard negative number range to refer to reference systems (e.g. -999 < i < 0)
   - define COGEN as a new (nonEPB) service for energy used for cogeneration
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)
     - Used to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
     - Describe default method to find used energy from electrical efficiency of cogeneration.
+  - Compute system efficiencies (cal, ref?, acs) (and subsystems (generation, distribution, emission, storage))
+    - Input Energy is (15613-1, (3)): Q_X_Y_in = Q_X_Y_out + Q_X_ls - Q_X_Y_ls_rvd
+      - Q_X_Y_ls_rvd son las pérdidas recuperadas
+    - General case (15613-1 (1)):  
+      - A conventional weighting factor to add heat and electricity is used, for comparability (f_i = 2,5)
+      - (33) eff_i = (Q_i_out + f_i · E_el_i_out) / (Q_i_in + f_i · W_i_aux);
+      - (Q_i_in doesn't include heat captured in the evaporator from the heat source for heap pumps -> we get annual COP)
+    - HP (15613-4-2, (1), DWH (cal + acs)):
+      - E_X_Y_in * COP = Q_X_Y_out + Q_X_ls_tot - Q_X_Y_in (ambiente) - f_Y;aux;ls;rvd · W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
+      - Energy_use * COP = Energy_out + Energy_losses - (Energy_from_heat_source_input + Energy_from_recovered_aux_energy_not_accounted_for_in_COP_input)
+      - ESto es electr. o combustible * COP = energía entregada + pérdidas - energía aportada medioambiente (fuente de calor) - pérdidas recuperables
+      - Q_X_Y_in = E_X_Y_in * COP en términos de la EN 15316-1 (1). No considera energía ambiente capturada por la bomba.
+      - Para refrigeración ver UNE EN 14825=2016
   - Define more component types:
     - Energy losses linked to service X (Q_X_ls)
-      - E_X_Y_in * COP = Q_X_Y_out + Q_X_ls_tot - Q_X_y_in - f_Y;aux;rvd * W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
-      - Energy_use * COP = Energy_out + Energy_losses - (Energy_from_heat_source_input + Energy_from_recovered_aux_energy_not_accounted_for_in_COP_input)
       - PERDIDAS
     - Number of hours where temperature shedule limits are not met (CAL, REF)
       - HORASFUERACONSIGNA
@@ -36,9 +46,11 @@
 - output:
   - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data
     - Energy needs (with annual totals)
-    - System (by_id) efficiencies / indicators
-    - ¿Whole building efficiencies by service (non renewable primary energy)?
+    - System efficiencies / indicators
+      - See UNE_EN 15316-1 formula (35). Varies by subsystem type
+      - ¿Whole building efficiencies by service (non renewable primary energy)?
     - Fraction of energy use covered by renewable sources, by service and by system (id)
+      - Calcular % de cobertura renovable (RER_nrb, RER_dst) (consumo EF y demanda) para los distintos servicios
     - ReduccionEPNR y ReduccionEmisiones
     - demanda por servicios y total (¿y demanda de referencia si la hay?)
     - valores totales de los distintos indicadores (Ver BalanceEPB nuevo)
@@ -47,7 +59,6 @@
     - balance B, balance A, AB: ren, nren, tot, emisiones.
       - De todos los servicios y desglosado por servicio
     - emisiones, desglose eléctrico y no eléctrico
-    - Calcular % de cobertura renovable (RER_nrb, RER_ost, RER_dst) (consumo EF y demanda) para los distintos servicios
     - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
   - Split XML output, generated from JSON results
 
