@@ -543,16 +543,16 @@ pub fn balance_to_plain(balance: &Balance) -> String {
     let rer = balance_m2.B.rer();
 
     // Final
-    let mut use_byuse = balance_m2
-        .used_EPB_byuse
+    let mut use_by_service = balance_m2
+        .used_EPB_by_service
         .iter()
         .map(|(k, v)| format!("{}: {:.2}", k, v))
         .collect::<Vec<String>>();
-    use_byuse.sort();
+    use_by_service.sort();
 
     // Ponderada por m2 (por uso)
-    let mut b_byuse = balance_m2
-        .B_byuse
+    let mut b_by_service = balance_m2
+        .B_by_service
         .iter()
         .map(|(k, v)| {
             format!(
@@ -561,7 +561,7 @@ pub fn balance_to_plain(balance: &Balance) -> String {
             )
         })
         .collect::<Vec<String>>();
-    b_byuse.sort();
+    b_by_service.sort();
 
     let out = format!(
         "Area_ref = {:.2} [m2]
@@ -582,8 +582,8 @@ E_CO2 [kg_CO2e/m2.an]: {:.2}
         tot,
         rer,
         co2,
-        use_byuse.join("\n"),
-        b_byuse.join("\n")
+        use_by_service.join("\n"),
+        b_by_service.join("\n")
     );
     // Añade parámetros de demanda HE4 si existen
     if let Some(map) = &balance.misc {

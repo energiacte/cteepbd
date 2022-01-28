@@ -722,9 +722,9 @@ El \textbf{balance energético por vector energético} (\texttt{balance\_cr}) in
 \item \texttt{we\_exported\_an\_AB} - la energía ponderada exportada en el paso AB, en total anual;
 \item \texttt{we\_exported\_an} - la energía ponderada exportada en el paso B, en total anual;
 \item \texttt{we\_an\_A} - la energía ponderada en el paso A, en total anual;
-\item \texttt{we\_an\_A\_byuse} - la energía ponderada en el paso A, por servicio EPB y en total anual;
+\item \texttt{we\_an\_A\_by_service} - la energía ponderada en el paso A, por servicio EPB y en total anual;
 \item \texttt{we\_an} - la energía ponderada en el paso B, en total anual;
-\item \texttt{we\_an\_byuse} - la energía ponderada en el paso B, por servicio EPB y en total anual.
+\item \texttt{we\_an\_by_service} - la energía ponderada en el paso B, por servicio EPB y en total anual.
 \end{itemize}
 
 \begin{myquote}\small
@@ -743,11 +743,11 @@ o, como suma de los valores de los valores de los intervalos mensuales en:
 El \textbf{balance global} (\texttt{balance}) y el \textbf{balance global repercutido por superficie} \texttt{balance\_m2} contiene la siguiente información, obtenida de la agregación de los resultados parciales de cada vector energético:
 
 \begin{itemize}
-\item \texttt{used\_EPB\_byuse} - Energía usada para servicios EPB, por servicio, en total anual
+\item \texttt{used\_EPB\_by_service} - Energía usada para servicios EPB, por servicio, en total anual
 \item \texttt{A} - Energía ponderada en el paso A, en total anual
-\item \texttt{A\_byuse} - Energía ponderada en el paso A, por servicio EPB y en total anual
+\item \texttt{A\_by_service} - Energía ponderada en el paso A, por servicio EPB y en total anual
 \item \texttt{B} - Energía ponderada en el paso A+B, en total anual
-\item \texttt{B\_byuse} - Energía ponderada en el paso B, por servicio EPB y en total anual
+\item \texttt{B\_by_service} - Energía ponderada en el paso B, por servicio EPB y en total anual
 \item \texttt{we\_del} - Energía ponderada suministrada, en total anual
 \item \texttt{we\_exp\_A} - Energía ponderada exportada en el paso A, en total anual
 \item \texttt{we\_exp} - Energía ponderada exportada en el paso A+B, en total anual
@@ -946,13 +946,13 @@ $C_{ep,tot} [kWh/m^2] = C_{ep,ren} + C_{ep,nren} = \texttt{balance\_m2.B.ren} + 
 
 El consumo de energía final usada en servicios (sólo servicios EPB) se localiza en el objeto:
 
-$\texttt{balance\_m2.used\_EPB\_byuse}$
+$\texttt{balance\_m2.used\_EPB\_by_service}$
 
 donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$.
 
 Así, el consumo de energía final del servicio de calefacción se localizaría en:
 
-$\texttt{balance\_m2.used\_EPB\_byuse.CAL}$
+$\texttt{balance\_m2.used\_EPB\_by_service.CAL}$
 
 \textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo
 
@@ -960,13 +960,13 @@ $\texttt{balance\_m2.used\_EPB\_byuse.CAL}$
 
 El consumo de energía primaria, desagregada por servicios (sólo servicios EPB), se localiza en el objeto:
 
-$\texttt{balance\_m2.B\_byuse}$
+$\texttt{balance\_m2.B\_by_service}$
 
 donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$, y en sus componentes renovable y no renovable.
 
 Así, el consumo de energía primaria no renovable del servicio de calefacción se localizaría en:
 
-$\texttt{balance\_m2.B\_byuse.CAL.nren}$
+$\texttt{balance\_m2.B\_by_service.CAL.nren}$
 
 \textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo.
 
@@ -990,11 +990,11 @@ $E_{CO2e} [kg_{CO2_e}/m^2] = \texttt{balance\_m2.B.co2}$
 
 Al igual que en el caso del consumo, es posible obtener los valores desagregados por servicios EPB en los objetos:
 
-$\texttt{balance.B\_byuse}$
+$\texttt{balance.B\_by_service}$
 
 o, para valores repercutidos por la superficie útil:
 
-$\texttt{balance\_m2.B\_byuse}$
+$\texttt{balance\_m2.B\_by_service}$
 
 \subsection{Obtención del porcentaje de la demanda con origen renovable, calculada para el perímetro próximo}
 

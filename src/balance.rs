@@ -75,15 +75,15 @@ pub struct Balance {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BalanceTotal {
     /// Global energy use for EPB uses, by use
-    pub used_EPB_byuse: HashMap<Service, f32>,
+    pub used_EPB_by_service: HashMap<Service, f32>,
     /// Balance result for calculation step A
     pub A: RenNrenCo2,
     /// Weighted energy for calculation step A, by use (for EPB services)
-    pub A_byuse: HashMap<Service, RenNrenCo2>,
+    pub A_by_service: HashMap<Service, RenNrenCo2>,
     /// Balance result for calculation step A+B
     pub B: RenNrenCo2,
     /// Weighted energy, by use (for EPB services)
-    pub B_byuse: HashMap<Service, RenNrenCo2>,
+    pub B_by_service: HashMap<Service, RenNrenCo2>,
     /// Weighted delivered energy
     pub we_del: RenNrenCo2,
     /// Weighted exported energy for calculation step A
@@ -139,16 +139,16 @@ pub fn energy_performance(
         // Weighted energy for each use item (EPB services)
         for &service in &Service::SERVICES_ALL {
             // Energy use
-            if let Some(value) = bal_cr.used_EPB_an_byuse.get(&service) {
-                *balance.used_EPB_byuse.entry(service).or_default() += *value
+            if let Some(value) = bal_cr.used_EPB_an_by_service.get(&service) {
+                *balance.used_EPB_by_service.entry(service).or_default() += *value
             }
             // Step A
-            if let Some(value) = bal_cr.we_an_A_byuse.get(&service) {
-                *balance.A_byuse.entry(service).or_default() += *value
+            if let Some(value) = bal_cr.we_an_A_by_service.get(&service) {
+                *balance.A_by_service.entry(service).or_default() += *value
             }
             // Step B
-            if let Some(value) = bal_cr.we_an_byuse.get(&service) {
-                *balance.B_byuse.entry(service).or_default() += *value;
+            if let Some(value) = bal_cr.we_an_by_service.get(&service) {
+                *balance.B_by_service.entry(service).or_default() += *value;
             }
         }
 
@@ -158,21 +158,21 @@ pub fn energy_performance(
 
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
-    let mut used_EPB_byuse = balance.used_EPB_byuse.clone();
-    used_EPB_byuse.values_mut().for_each(|v| *v *= k_area);
+    let mut used_EPB_by_service = balance.used_EPB_by_service.clone();
+    used_EPB_by_service.values_mut().for_each(|v| *v *= k_area);
 
-    let mut A_byuse = balance.A_byuse.clone();
-    A_byuse.values_mut().for_each(|v| *v *= k_area);
+    let mut A_by_service = balance.A_by_service.clone();
+    A_by_service.values_mut().for_each(|v| *v *= k_area);
 
-    let mut B_byuse = balance.B_byuse.clone();
-    B_byuse.values_mut().for_each(|v| *v *= k_area);
+    let mut B_by_service = balance.B_by_service.clone();
+    B_by_service.values_mut().for_each(|v| *v *= k_area);
 
     let balance_m2 = BalanceTotal {
-        used_EPB_byuse,
+        used_EPB_by_service,
         A: k_area * balance.A,
-        A_byuse,
+        A_by_service,
         B: k_area * balance.B,
-        B_byuse,
+        B_by_service,
         we_del: k_area * balance.we_del,
         we_exp_A: k_area * balance.we_exp_A,
         we_exp: k_area * balance.we_exp,
@@ -205,7 +205,7 @@ pub struct BalanceForCarrier {
     /// Energy used for EPB uses in each timestep
     pub used_EPB: Vec<f32>,
     /// Energy used for EPB uses, by use
-    pub used_EPB_an_byuse: HashMap<Service, f32>,
+    pub used_EPB_an_by_service: HashMap<Service, f32>,
     /// Used energy for non EPB uses in each timestep
     pub used_nEPB: Vec<f32>,
     /// Energy used for non EPB uses
@@ -267,11 +267,11 @@ pub struct BalanceForCarrier {
     /// Weighted energy for calculation step A
     pub we_an_A: RenNrenCo2,
     /// Weighted energy for calculation step A, by use (for EPB services)
-    pub we_an_A_byuse: HashMap<Service, RenNrenCo2>,
+    pub we_an_A_by_service: HashMap<Service, RenNrenCo2>,
     /// Weighted energy
     pub we_an: RenNrenCo2,
     /// Weighted energy, by use (for EPB services)
-    pub we_an_byuse: HashMap<Service, RenNrenCo2>,
+    pub we_an_by_service: HashMap<Service, RenNrenCo2>,
 }
 
 // --------------------------------------------------------------------
@@ -546,18 +546,18 @@ fn balance_for_carrier(
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
 
     // Used (final) and Weighted energy for each use item (for EPB services)
-    let mut E_Epus_cr_an_byuse: HashMap<Service, f32> = HashMap::new();
-    let mut E_we_cr_an_A_byuse: HashMap<Service, RenNrenCo2> = HashMap::new();
-    let mut E_we_cr_an_byuse: HashMap<Service, RenNrenCo2> = HashMap::new();
+    let mut E_Epus_cr_an_by_service: HashMap<Service, f32> = HashMap::new();
+    let mut E_we_cr_an_A_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
+    let mut E_we_cr_an_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
     for service in &Service::SERVICES_ALL {
         let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {
             // Used energy
-            E_Epus_cr_an_byuse.insert(*service, E_EPus_cr_an * f_us_k_cr);
+            E_Epus_cr_an_by_service.insert(*service, E_EPus_cr_an * f_us_k_cr);
             // Step A
-            E_we_cr_an_A_byuse.insert(*service, E_we_cr_an_A * f_us_k_cr);
+            E_we_cr_an_A_by_service.insert(*service, E_we_cr_an_A * f_us_k_cr);
             // Step B (E.2.6)
-            E_we_cr_an_byuse.insert(*service, E_we_cr_an * f_us_k_cr);
+            E_we_cr_an_by_service.insert(*service, E_we_cr_an * f_us_k_cr);
         }
     }
 
@@ -576,7 +576,7 @@ fn balance_for_carrier(
     Ok(BalanceForCarrier {
         carrier,
         used_EPB: E_EPus_cr_t,
-        used_EPB_an_byuse: E_Epus_cr_an_byuse,
+        used_EPB_an_by_service: E_Epus_cr_an_by_service,
         used_nEPB: E_nEPus_cr_t,
         used_nEPB_an: E_nEPus_cr_an,
         produced: E_pr_cr_t,
@@ -608,9 +608,9 @@ fn balance_for_carrier(
         we_exported_an_AB: E_we_exp_cr_an_AB,
         we_exported_an: E_we_exp_cr_an,
         we_an_A: E_we_cr_an_A,
-        we_an_A_byuse: E_we_cr_an_A_byuse,
+        we_an_A_by_service: E_we_cr_an_A_by_service,
         we_an: E_we_cr_an,
-        we_an_byuse: E_we_cr_an_byuse,
+        we_an_by_service: E_we_cr_an_by_service,
     })
 }
 

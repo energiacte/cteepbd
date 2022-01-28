@@ -27,7 +27,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Permite definir la energía absorbida (p.e. refrigeración, valor negativo) o entregada (p.e. calor, valor positivo) en cada paso de cálculo, para cada servicio y para cada sistema (id=i)
 - Nuevo servicio NEPB para consumo destinado a usos no EPB
 - Nuevo servicio GEN para consumo destinado a la producción eléctrica
-- Renombrado "_bygen" a "_by_source" en salida JSON
+- Renombrado "_bygen" a "_by_source" y "_byuse" a "_by_service" en salida JSON
 - Nuevos resultados en salida JSON
 
 ### Incompatibilidades
