@@ -127,6 +127,10 @@ impl std::fmt::Display for ProdOrigin {
 ///
 /// Algunos servicios pueden estar incluidos ya en el consumo de otros, como podría ser el
 /// caso del consumo para HU en CAL, de DHU en REF o VEN en CAL y/o REF.
+/// 
+/// También debe tenerse en cuenta que algunos servicios, como la iluminación pueden considerarse
+/// no EPB en algunos casos (p.e. residencial privado) y en ese caso no deben indicarse los consumos
+/// como ILU sino como NEPB
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Service {
@@ -138,7 +142,7 @@ pub enum Service {
     REF,
     /// Ventilation, including heat recovery
     VEN,
-    /// Lighting
+    /// Lighting (only when considered as EPB)
     ILU,
     /// Humidification
     HU,
