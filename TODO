@@ -13,27 +13,31 @@
   - Sacar energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
 
 - epbd:
-  - set a standard negative number range to refer to reference systems (e.g. -999 < i < 0)
-  - define COGEN as a new (nonEPB) service for energy used for cogeneration
+  - Define new Auxiliary energy use (CONSUMOAUX), apart from electrical use (CONSUMO) and 
+    keep services, just keep tagging AUX uses in comments, or add new service and
+    distribute aux energy use among services??
+  - How to identify subsystems (generation, distribution, emission, storage) wrt energy use and production?
+  - define GEN as a new (nonEPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)
     - Used to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
     - Describe default method to find used energy from electrical efficiency of cogeneration.
   - Compute system efficiencies (cal, ref?, acs) (and subsystems (generation, distribution, emission, storage))
-    - Input Energy is (15613-1, (3)): Q_X_Y_in = Q_X_Y_out + Q_X_ls - Q_X_Y_ls_rvd
-      - Q_X_Y_ls_rvd son las pérdidas recuperadas
-    - General case (15613-1 (1)):  
-      - A conventional weighting factor to add heat and electricity is used, for comparability (f_i = 2,5)
-      - (33) eff_i = (Q_i_out + f_i · E_el_i_out) / (Q_i_in + f_i · W_i_aux);
-      - (Q_i_in doesn't include heat captured in the evaporator from the heat source for heap pumps -> we get annual COP)
-    - HP (15613-4-2, (1), DWH (cal + acs)):
+    - Generic system balance (15613-1, (3)): Q_X_Y_in = Q_X_Y_out + Q_X_ls - Q_X_Y_ls_rvd
+      - Q_X_Y_ls_rvd are recovered losses
+    - Generic energy efficiency (15613-1 (33)):  eff_i = (Q_i_out + f_i · E_el_i_out) / (Q_i_in + f_i · W_i_aux);
+      - A conventional weighting factor, f_i=2,5 is used to add up heat and electricity (for comparability reasons)
+      - Q_i_in doesn't include heat captured in the evaporator from the heat source for heap pumps -> we get annual COP
+    - System balance for heat pumps (15613-4-2, (1), DWH (cal + acs)):
       - E_X_Y_in * COP = Q_X_Y_out + Q_X_ls_tot - Q_X_Y_in (ambiente) - f_Y;aux;ls;rvd · W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
       - Energy_use * COP = Energy_out + Energy_losses - (Energy_from_heat_source_input + Energy_from_recovered_aux_energy_not_accounted_for_in_COP_input)
-      - ESto es electr. o combustible * COP = energía entregada + pérdidas - energía aportada medioambiente (fuente de calor) - pérdidas recuperables
+      - This is: electr. o combustible * COP = energía entregada + pérdidas - energía aportada medioambiente (fuente de calor) - pérdidas recuperables
       - Q_X_Y_in = E_X_Y_in * COP en términos de la EN 15316-1 (1). No considera energía ambiente capturada por la bomba.
       - Para refrigeración ver UNE EN 14825=2016
   - Define more component types:
     - Energy losses linked to service X (Q_X_ls)
       - PERDIDAS
+    - Recovered energy losses linked to service X and subsystem Y (Q_X_Y_ls_rvd)
+      - RECUPERADA
     - Number of hours where temperature shedule limits are not met (CAL, REF)
       - HORASFUERACONSIGNA
   - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
