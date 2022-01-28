@@ -84,7 +84,7 @@ fn get_energydatalist() -> Components {
     Components {
         cmeta: vec![],
         cdata: vec![
-            EnergyData::GenUse(GenUse {
+            EnergyData::GenCrIn(GenCrIn {
                 id: 0,
                 values: vec![
                     9.67, 7.74, 4.84, 4.35, 2.42, 2.9, 3.87, 3.39, 2.42, 3.87, 5.8, 7.74,
@@ -102,7 +102,7 @@ fn get_energydatalist() -> Components {
                 source: INSITU,
                 comment: "".into(),
             }),
-            EnergyData::GenUse(GenUse {
+            EnergyData::GenCrIn(GenCrIn {
                 id: 0,
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,

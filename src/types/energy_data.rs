@@ -27,13 +27,13 @@ use std::{fmt, str};
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Carrier, GenProd, GenUse, HasValues, Service, Source};
+use crate::types::{Carrier, GenProd, GenCrIn, HasValues, Service, Source};
 
 /// Componentes de energía generada o consumida
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EnergyData {
     /// Energía consumida
-    GenUse(GenUse),
+    GenCrIn(GenCrIn),
     /// Energía generada
     GenProd(GenProd),
 }
@@ -42,7 +42,7 @@ impl EnergyData {
     /// Get id for this service
     pub fn id(&self) -> i32 {
         match self {
-            EnergyData::GenUse(e) => e.id,
+            EnergyData::GenCrIn(e) => e.id,
             EnergyData::GenProd(e) => e.id,
         }
     }
@@ -50,7 +50,7 @@ impl EnergyData {
     /// Get carrier for this component
     pub fn carrier(&self) -> Carrier {
         match self {
-            EnergyData::GenUse(e) => e.carrier,
+            EnergyData::GenCrIn(e) => e.carrier,
             EnergyData::GenProd(e) => e.carrier,
         }
     }
@@ -58,7 +58,7 @@ impl EnergyData {
     /// Get production source (INSITU / COGEN) for this component
     pub fn source(&self) -> Source {
         match self {
-            EnergyData::GenUse(_) => unreachable!(),
+            EnergyData::GenCrIn(_) => unreachable!(),
             EnergyData::GenProd(e) => e.source,
         }
     }
@@ -66,7 +66,7 @@ impl EnergyData {
     /// Get service for this component
     pub fn service(&self) -> Service {
         match self {
-            EnergyData::GenUse(e) => e.service,
+            EnergyData::GenCrIn(e) => e.service,
             EnergyData::GenProd(_) => unreachable!(),
         }
     }
@@ -74,7 +74,7 @@ impl EnergyData {
     /// Get comment for this component
     pub fn comment(&self) -> &str {
         match self {
-            EnergyData::GenUse(e) => &e.comment,
+            EnergyData::GenCrIn(e) => &e.comment,
             EnergyData::GenProd(e) => &e.comment,
         }
     }
@@ -82,7 +82,7 @@ impl EnergyData {
     /// Is this of kind UsedEnergy?
     pub fn is_used(&self) -> bool {
         match self {
-            EnergyData::GenUse(_) => true,
+            EnergyData::GenCrIn(_) => true,
             EnergyData::GenProd(_) => false,
         }
     }
@@ -90,7 +90,7 @@ impl EnergyData {
     /// Is this energy of the produced energy kind?
     pub fn is_generated(&self) -> bool {
         match self {
-            EnergyData::GenUse(_) => false,
+            EnergyData::GenCrIn(_) => false,
             EnergyData::GenProd(_) => true,
         }
     }
@@ -98,7 +98,7 @@ impl EnergyData {
     /// Is this of kind UsedEnergy and destination is an EPB service?
     pub fn is_epb_use(&self) -> bool {
         match self {
-            EnergyData::GenUse(e) => e.service.is_epb(),
+            EnergyData::GenCrIn(e) => e.service.is_epb(),
             EnergyData::GenProd(_) => false,
         }
     }
@@ -106,7 +106,7 @@ impl EnergyData {
     /// Is this of kind UsedEnergy and destination is a non EPB service (but not GEN)?
     pub fn is_nepb_use(&self) -> bool {
         match self {
-            EnergyData::GenUse(e) => e.service.is_nepb(),
+            EnergyData::GenCrIn(e) => e.service.is_nepb(),
             EnergyData::GenProd(_) => false,
         }
     }
@@ -114,7 +114,7 @@ impl EnergyData {
     /// Is this energy of the onsite produced kind?
     pub fn is_onsite_pr(&self) -> bool {
         match self {
-            EnergyData::GenUse(_) => false,
+            EnergyData::GenCrIn(_) => false,
             EnergyData::GenProd(e) => e.source == Source::INSITU,
         }
     }
@@ -122,7 +122,7 @@ impl EnergyData {
     /// Is this energy of the cogeneration produced kind?
     pub fn is_cogen_pr(&self) -> bool {
         match self {
-            EnergyData::GenUse(_) => false,
+            EnergyData::GenCrIn(_) => false,
             EnergyData::GenProd(e) => e.source == Source::COGENERACION,
         }
     }
@@ -151,7 +151,7 @@ impl EnergyData {
 impl std::fmt::Display for EnergyData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EnergyData::GenUse(e) => e.fmt(f),
+            EnergyData::GenCrIn(e) => e.fmt(f),
             EnergyData::GenProd(e) => e.fmt(f),
         }
     }
@@ -160,7 +160,7 @@ impl std::fmt::Display for EnergyData {
 impl HasValues for EnergyData {
     fn values(&self) -> &[f32] {
         match self {
-            EnergyData::GenUse(e) => e.values(),
+            EnergyData::GenCrIn(e) => e.values(),
             EnergyData::GenProd(e) => e.values(),
         }
     }

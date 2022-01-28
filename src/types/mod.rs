@@ -38,7 +38,7 @@ mod gen_prod;
 mod rennrenco2;
 mod gen_out;
 mod tmeta;
-mod gen_use;
+mod gen_cr_in;
 mod zone_needs;
 
 pub use common::*;
@@ -48,5 +48,5 @@ pub use gen_prod::*;
 pub use rennrenco2::*;
 pub use gen_out::*;
 pub use tmeta::*;
-pub use gen_use::*;
+pub use gen_cr_in::*;
 pub use zone_needs::*;

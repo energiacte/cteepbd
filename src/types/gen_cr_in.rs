@@ -41,7 +41,7 @@ use crate::error::EpbdError;
 /// 
 /// Las cantidades de energía para combustibles son en relación al poder calorífico superior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GenUse {
+pub struct GenCrIn {
     /// System or part id
     /// This can identify the system linked to this energy use.
     /// By default, id=0 means the whole building systems.
@@ -60,13 +60,13 @@ pub struct GenUse {
     pub comment: String,
 }
 
-impl HasValues for GenUse {
+impl HasValues for GenCrIn {
     fn values(&self) -> &[f32] {
         &self.values
     }
 }
 
-impl fmt::Display for GenUse {
+impl fmt::Display for GenCrIn {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let valuelist = self
             .values
@@ -88,10 +88,10 @@ impl fmt::Display for GenUse {
     }
 }
 
-impl str::FromStr for GenUse {
+impl str::FromStr for GenCrIn {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<GenUse, Self::Err> {
+    fn from_str(s: &str) -> Result<GenCrIn, Self::Err> {
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
@@ -127,7 +127,7 @@ impl str::FromStr for GenUse {
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
 
-        Ok(GenUse {
+        Ok(GenCrIn {
             id,
             carrier,
             service,
@@ -147,7 +147,7 @@ mod tests {
     #[test]
     fn components_used_energy() {
         // Used energy component
-        let component1 = GenUse {
+        let component1 = GenCrIn {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
             service: "NDEF".parse().unwrap(),
@@ -161,7 +161,7 @@ mod tests {
 
         // roundtrip building from/to string
         assert_eq!(
-            component1str.parse::<GenUse>().unwrap().to_string(),
+            component1str.parse::<GenCrIn>().unwrap().to_string(),
             component1str
         );
     }

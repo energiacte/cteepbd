@@ -45,7 +45,7 @@ use crate::{
     error::EpbdError,
     types::{
         Carrier, EnergyData, HasValues, Meta, MetaVec, Source, GenProd, Service,
-        GenOut, GenUse, ZoneNeeds,
+        GenOut, GenCrIn, ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
@@ -129,7 +129,7 @@ impl str::FromStr for Components {
                 tag2
             };
             match *tag {
-                "CONSUMO" => cdata.push(EnergyData::GenUse(line.parse::<GenUse>()?)),
+                "CONSUMO" => cdata.push(EnergyData::GenCrIn(line.parse::<GenCrIn>()?)),
                 "PRODUCCION" => cdata.push(EnergyData::GenProd(line.parse()?)),
                 "ZONA" => zones.push(line.parse()?),
                 "GEN" => systems.push(line.parse()?),
