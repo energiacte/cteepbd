@@ -347,7 +347,7 @@ impl Factors {
     ///  - para exportación a usos no EPB si no se aparecen en los datos
     ///  - de electricidad in situ si no aparece una producción de ese tipo
     pub fn strip(mut self, components: &Components) -> Self {
-        let wf_carriers: HashSet<_> = components.cdata.iter().map(|c| c.carrier()).collect();
+        let wf_carriers = components.available_carriers();
         // Mantenemos factores para todos los vectores usados
         self.wdata.retain(|f| wf_carriers.contains(&f.carrier));
         // Mantenemos factores para cogeneración sólo si hay cogeneración
@@ -361,15 +361,15 @@ impl Factors {
         let has_nepb = components
             .cdata
             .iter()
-            .any(|c| !c.is_epb_use());
+            .any(|c| c.is_nepb_use());
         self.wdata.retain(|f| f.dest != Dest::A_NEPB || has_nepb);
         // Mantenemos factores de electricidad in situ si no hay producción de ese tipo
-        let has_elec_insitu = components
+        let has_elec_onsite = components
             .cdata
             .iter()
-            .any(|c| c.has_carrier(Carrier::ELECTRICIDAD) && c.is_onsite_pr());
+            .any(|c| c.is_electricity() && c.is_onsite_pr());
         self.wdata.retain(|f| {
-            f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_insitu
+            f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_onsite
         });
         self
     }

@@ -136,7 +136,7 @@ pub enum Service {
     CAL,
     /// Cooling
     REF,
-    /// Ventilation
+    /// Ventilation, including heat recovery
     VEN,
     /// Lighting
     ILU,
@@ -150,9 +150,24 @@ pub enum Service {
     NDEF,
     /// Generic non EPB use
     NEPB,
-    // TODO: Energy used for electricity cogeneration
-    // This excludes the energy feeding the cogenerated system that can attributed to thermal use
-    // COGEN,
+    // TODO: Electricity generation
+    // It accounts for energy used for electricity generation and excludes all energy that can attributed to thermal use
+    // GEN,
+}
+
+impl Service {
+    /// Check if service is an EPB service
+    /// This doesn't include the NEPB and GEN services
+    pub fn is_epb(&self) -> bool {
+        *self != Self::NEPB
+        // && self != Self::GEN
+    }
+
+    /// Check if service is a non EPB
+    /// This doesn't include the GEN service
+    pub fn is_nepb(&self) -> bool {
+        *self == Self::NEPB
+    }
 }
 
 /// Lista de usos disponibles
@@ -167,7 +182,7 @@ pub const SERVICES: [Service; 10] = [
     Service::BAC,
     Service::NDEF,
     Service::NEPB,
-    //Service::COGEN,
+    //Service::GEN,
 ];
 
 impl str::FromStr for Service {
@@ -189,7 +204,7 @@ impl str::FromStr for Service {
             "BAC" => Ok(Service::BAC),
             "NDEF" => Ok(Service::NDEF),
             "NEPB" => Ok(Service::NEPB),
-            // "COGEN" => Ok(Service::COGEN),
+            // "GEN" => Ok(Service::GEN),
             "" => Ok(Service::default()),
             _ => Err(EpbdError::ParseError(s.into())),
         }

@@ -38,6 +38,8 @@ use crate::error::EpbdError;
 ///
 /// Representa el consumo de energía en los distintos pasos de cálculo,
 /// a lo largo del periodo de cálculo, para cada vector energético, servicio y tipo de uso de la energía.
+/// 
+/// Las cantidades de energía para combustibles son en relación al poder calorífico superior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsedEnergy {
     /// System or part id

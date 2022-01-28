@@ -218,7 +218,7 @@ impl Components {
         // Energía eléctrica consumida en usos EPB
         let E_EPus_el_t = cdata
             .clone()
-            .filter(|c| c.is_electricity() && c.is_used() && c.is_epb_use());
+            .filter(|c| c.is_electricity() && c.is_epb_use());
 
         // Energía eléctrica consumida en el servicio srv
         let E_srv_el_t = E_EPus_el_t.clone().filter(|c| c.has_service(service));

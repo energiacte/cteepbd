@@ -625,7 +625,7 @@ fn balance_for_carrier(
 fn compute_factors_by_use_cr(cr_list: &[EnergyData]) -> HashMap<Service, f32> {
     let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
     // Energy use components (EPB uses) for current carrier i
-    let cr_use_list = cr_list.iter().filter(|c| c.is_used() && c.is_epb_use());
+    let cr_use_list = cr_list.iter().filter(|c| c.is_epb_use());
     // Energy use for all EPB services and carrier i (Q_Epus_cr)
     let q_us_all: f32 = cr_use_list.clone().map(HasValues::values_sum).sum();
     if q_us_all != 0.0 {

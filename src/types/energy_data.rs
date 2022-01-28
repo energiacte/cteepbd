@@ -91,8 +91,15 @@ impl EnergyData {
     /// Is this of kind UsedEnergy and destination is an EPB service?
     pub fn is_epb_use(&self) -> bool {
         match self {
-            // TODO: tendría que tener también e.service != Service::COGEN
-            EnergyData::UsedEnergy(e) => e.service != Service::NEPB,
+            EnergyData::UsedEnergy(e) => e.service.is_epb(),
+            EnergyData::ProducedEnergy(_) => false,
+        }
+    }
+
+    /// Is this of kind UsedEnergy and destination is a non EPB service (but not GEN)?
+    pub fn is_nepb_use(&self) -> bool {
+        match self {
+            EnergyData::UsedEnergy(e) => e.service.is_nepb(),
             EnergyData::ProducedEnergy(_) => false,
         }
     }

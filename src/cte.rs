@@ -344,9 +344,7 @@ pub fn fraccion_renovable_acs_nrb(
         .cdata
         .iter()
         .filter(|c| {
-            !((c.has_carrier(ELECTRICIDAD)
-                && (c.comment().contains("CTEEPBD_EXCLUYE_AUX_ACS")
-                    || c.comment().contains("CTEEPBD_EXCLUYE_AUX_ACS")))
+            !((c.has_carrier(ELECTRICIDAD) && c.comment().contains("CTEEPBD_EXCLUYE_AUX_ACS"))
                 || (c.has_carrier(MEDIOAMBIENTE)
                     && c.comment().contains("CTEEPBD_EXCLUYE_SCOP_ACS")))
         })
