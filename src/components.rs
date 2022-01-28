@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        Carrier, EnergyData, HasValues, Meta, MetaVec, ProdSource, ProducedEnergy, Service,
+        Carrier, EnergyData, HasValues, Meta, MetaVec, Source, ProducedEnergy, Service,
         SystemNeeds, UsedEnergy, ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
@@ -369,7 +369,7 @@ impl Components {
                 balancecomps.push(EnergyData::ProducedEnergy(ProducedEnergy {
                     id,
                     carrier: Carrier::MEDIOAMBIENTE,
-                    source: ProdSource::INSITU,
+                    source: Source::INSITU,
                     values: unbalanced_values,
                     comment: "Equilibrado de consumo sin producción declarada".into(),
                 }));

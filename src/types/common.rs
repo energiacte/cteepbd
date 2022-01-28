@@ -91,31 +91,34 @@ impl std::fmt::Display for Carrier {
 
 // ==================== Energy Components
 
-// -------------------- ProdOrigin
+// -------------------- Source
 
-/// Origen de la energía producida
+/// Fuente de origen de la energía
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ProdSource {
-    /// On site energy source
+pub enum Source {
+    /// Grid source
+    RED,
+    /// Insitu generation source
     INSITU,
-    /// Cogeneration energy source
+    /// Cogeneration source
     COGENERACION,
 }
 
-impl str::FromStr for ProdSource {
+impl str::FromStr for Source {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<ProdSource, Self::Err> {
+    fn from_str(s: &str) -> Result<Source, Self::Err> {
         match s {
-            "INSITU" => Ok(ProdSource::INSITU),
-            "COGENERACION" => Ok(ProdSource::COGENERACION),
+            "RED" => Ok(Source::RED),
+            "INSITU" => Ok(Source::INSITU),
+            "COGENERACION" => Ok(Source::COGENERACION),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
 
-impl std::fmt::Display for ProdSource {
+impl std::fmt::Display for Source {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }
@@ -127,7 +130,7 @@ impl std::fmt::Display for ProdSource {
 ///
 /// Algunos servicios pueden estar incluidos ya en el consumo de otros, como podría ser el
 /// caso del consumo para HU en CAL, de DHU en REF o VEN en CAL y/o REF.
-/// 
+///
 /// También debe tenerse en cuenta que algunos servicios, como la iluminación pueden considerarse
 /// no EPB en algunos casos (p.e. residencial privado) y en ese caso no deben indicarse los consumos
 /// como ILU sino como NEPB
@@ -160,6 +163,21 @@ pub enum Service {
 }
 
 impl Service {
+    /// Lista of available services
+    pub const SERVICES_ALL: [Service; 10] = [
+        Service::ACS,
+        Service::CAL,
+        Service::REF,
+        Service::VEN,
+        Service::ILU,
+        Service::HU,
+        Service::DHU,
+        Service::BAC,
+        Service::NDEF,
+        Service::NEPB,
+        //Service::GEN,
+    ];
+
     /// Check if service is an EPB service
     /// This doesn't include the NEPB and GEN services
     pub fn is_epb(&self) -> bool {
@@ -173,21 +191,6 @@ impl Service {
         *self == Self::NEPB
     }
 }
-
-/// Lista de usos disponibles
-pub const SERVICES: [Service; 10] = [
-    Service::ACS,
-    Service::CAL,
-    Service::REF,
-    Service::VEN,
-    Service::ILU,
-    Service::HU,
-    Service::DHU,
-    Service::BAC,
-    Service::NDEF,
-    Service::NEPB,
-    //Service::GEN,
-];
 
 impl str::FromStr for Service {
     type Err = EpbdError;
@@ -226,6 +229,73 @@ impl Default for Service {
         Service::NDEF
     }
 }
+
+// ================= Weighting Factors =============
+
+// -------------------- Dest
+
+/// Destino de la energía
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Dest {
+    /// Building delivery destination
+    SUMINISTRO,
+    /// Grid destination
+    A_RED,
+    /// Non EPB uses destination
+    A_NEPB,
+}
+
+impl str::FromStr for Dest {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<Dest, Self::Err> {
+        match s {
+            "SUMINISTRO" => Ok(Dest::SUMINISTRO),
+            "A_RED" => Ok(Dest::A_RED),
+            "A_NEPB" => Ok(Dest::A_NEPB),
+            _ => Err(EpbdError::ParseError(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for Dest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+// -------------------- Step
+
+/// Paso de cálculo para el que se define el factor de paso
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Step {
+    /// Calculation step A
+    A,
+    /// Calculation step B
+    B,
+}
+
+impl str::FromStr for Step {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<Step, Self::Err> {
+        match s {
+            "A" => Ok(Step::A),
+            "B" => Ok(Step::B),
+            _ => Err(EpbdError::ParseError(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for Step {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+// ================== Component Traits =====================
 
 /// Elements that have a list of numeric values
 pub trait HasValues {

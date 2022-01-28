@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{ProdSource, Carrier, HasValues};
+use super::{Source, Carrier, HasValues};
 use crate::error::EpbdError;
 
 // -------------------- Produced Energy Component
@@ -50,7 +50,7 @@ pub struct ProducedEnergy {
     pub carrier: Carrier,
     /// Energy source
     /// - `INSITU` or `COGENERACION` for generated energy component types
-    pub source: ProdSource,
+    pub source: Source,
     /// List of produced energy values, one value for each timestep. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
@@ -88,7 +88,7 @@ impl str::FromStr for ProducedEnergy {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<ProducedEnergy, Self::Err> {
-        use self::ProdSource::*;
+        use self::Source::*;
         use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
 
         // Split comment from the rest of fields
@@ -108,12 +108,13 @@ impl str::FromStr for ProducedEnergy {
 
         let carrier: Carrier = items[baseidx].parse()?;
         let ctype = items[baseidx + 1];
-        let source: ProdSource = items[baseidx + 2].parse()?;
+        let source: Source = items[baseidx + 2].parse()?;
 
         // Check coherence of ctype and csubtype
         let subtype_belongs_to_type = match source {
             INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
             COGENERACION => carrier == ELECTRICIDAD,
+            _ => false
         };
         if !(ctype == "PRODUCCION" && subtype_belongs_to_type) {
             return Err(EpbdError::ParseError(format!(
