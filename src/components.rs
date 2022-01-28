@@ -44,8 +44,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        Carrier, EnergyData, HasValues, Meta, MetaVec, Source, ProducedEnergy, Service,
-        SystemNeeds, UsedEnergy, ZoneNeeds,
+        Carrier, EnergyData, HasValues, Meta, MetaVec, Source, GenProd, Service,
+        GenOut, GenUse, ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
@@ -66,7 +66,7 @@ pub struct Components {
     /// Zone data
     pub zones: Vec<ZoneNeeds>,
     /// System data
-    pub systems: Vec<SystemNeeds>,
+    pub systems: Vec<GenOut>,
 }
 
 impl MetaVec for Components {
@@ -117,7 +117,7 @@ impl str::FromStr for Components {
         let mut systems = Vec::new();
 
         // Tipos disponibles
-        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "ZONA", "SISTEMA"];
+        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "ZONA", "GEN"];
 
         for line in datalines {
             let tags: Vec<_> = line.splitn(4, ',').map(str::trim).skip(1).take(2).collect();
@@ -129,10 +129,10 @@ impl str::FromStr for Components {
                 tag2
             };
             match *tag {
-                "CONSUMO" => cdata.push(EnergyData::UsedEnergy(line.parse::<UsedEnergy>()?)),
-                "PRODUCCION" => cdata.push(EnergyData::ProducedEnergy(line.parse()?)),
+                "CONSUMO" => cdata.push(EnergyData::GenUse(line.parse::<GenUse>()?)),
+                "PRODUCCION" => cdata.push(EnergyData::GenProd(line.parse()?)),
                 "ZONA" => zones.push(line.parse()?),
-                "SISTEMA" => systems.push(line.parse()?),
+                "GEN" => systems.push(line.parse()?),
                 _ => {
                     return Err(EpbdError::ParseError(format!(
                         "ERROR: No se reconoce el componente de la línea: {}",
@@ -259,7 +259,7 @@ impl Components {
             // ya que la habíamos excluido en el filtrado incial
             for mut E_pr_el_i in E_pr_el_t.cloned() {
                 let pr_component = match E_pr_el_i {
-                    EnergyData::ProducedEnergy(ref mut c) => c,
+                    EnergyData::GenProd(ref mut c) => c,
                     _ => continue,
                 };
 
@@ -366,7 +366,7 @@ impl Components {
                 };
 
                 // Si hay desequilibrio agregamos un componente de producción
-                balancecomps.push(EnergyData::ProducedEnergy(ProducedEnergy {
+                balancecomps.push(EnergyData::GenProd(GenProd {
                     id,
                     carrier: Carrier::MEDIOAMBIENTE,
                     source: Source::INSITU,
@@ -509,8 +509,8 @@ mod tests {
         "#META CTE_AREAREF: 1.0
             0, ZONA, DEMANDA, REF, -3.0 # Demanda ref. edificio
             0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
-            1, SISTEMA, DEMANDA, REF, -3.0 # Demanda ref. EER 3
-            2, SISTEMA, DEMANDA, CAL, 3.0 # Demanda cal. COP 3
+            1, GEN, CARGA, REF, -3.0 # Demanda ref. EER 3
+            2, GEN, CARGA, CAL, 3.0 # Demanda cal. COP 3
             1, ELECTRICIDAD, PRODUCCION, INSITU, 2.00 # Producción PV
             2, ELECTRICIDAD, CONSUMO, REF, 1.00 # BdC modo refrigeración
             2, ELECTRICIDAD, CONSUMO, CAL, 1.00 # BdC modo calefacción

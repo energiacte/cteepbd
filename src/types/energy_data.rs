@@ -27,102 +27,104 @@ use std::{fmt, str};
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Carrier, HasValues, Source, ProducedEnergy, Service, UsedEnergy};
+use crate::types::{Carrier, GenProd, GenUse, HasValues, Service, Source};
 
 /// Componentes de energía generada o consumida
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EnergyData {
     /// Energía consumida
-    UsedEnergy(UsedEnergy),
+    GenUse(GenUse),
     /// Energía generada
-    ProducedEnergy(ProducedEnergy),
+    GenProd(GenProd),
 }
 
 impl EnergyData {
     /// Get id for this service
     pub fn id(&self) -> i32 {
         match self {
-            EnergyData::UsedEnergy(e) => e.id,
-            EnergyData::ProducedEnergy(e) => e.id,
+            EnergyData::GenUse(e) => e.id,
+            EnergyData::GenProd(e) => e.id,
         }
     }
 
     /// Get carrier for this component
     pub fn carrier(&self) -> Carrier {
         match self {
-            EnergyData::UsedEnergy(e) => e.carrier,
-            EnergyData::ProducedEnergy(e) => e.carrier,
+            EnergyData::GenUse(e) => e.carrier,
+            EnergyData::GenProd(e) => e.carrier,
         }
     }
 
     /// Get production source (INSITU / COGEN) for this component
     pub fn source(&self) -> Source {
         match self {
-            // TODO: eliminar este método
-            EnergyData::UsedEnergy(_) => unreachable!(),
-            EnergyData::ProducedEnergy(e) => e.source,
+            EnergyData::GenUse(_) => unreachable!(),
+            EnergyData::GenProd(e) => e.source,
         }
     }
 
     /// Get service for this component
     pub fn service(&self) -> Service {
         match self {
-            EnergyData::UsedEnergy(e) => e.service,
-            EnergyData::ProducedEnergy(_) => unreachable!(),
+            EnergyData::GenUse(e) => e.service,
+            EnergyData::GenProd(_) => unreachable!(),
         }
     }
 
     /// Get comment for this component
     pub fn comment(&self) -> &str {
         match self {
-            EnergyData::UsedEnergy(e) => &e.comment,
-            EnergyData::ProducedEnergy(e) => &e.comment,
+            EnergyData::GenUse(e) => &e.comment,
+            EnergyData::GenProd(e) => &e.comment,
         }
     }
 
     /// Is this of kind UsedEnergy?
     pub fn is_used(&self) -> bool {
         match self {
-            EnergyData::UsedEnergy(_) => true,
-            EnergyData::ProducedEnergy(_) => false,
+            EnergyData::GenUse(_) => true,
+            EnergyData::GenProd(_) => false,
+        }
+    }
+
+    /// Is this energy of the produced energy kind?
+    pub fn is_generated(&self) -> bool {
+        match self {
+            EnergyData::GenUse(_) => false,
+            EnergyData::GenProd(_) => true,
         }
     }
 
     /// Is this of kind UsedEnergy and destination is an EPB service?
     pub fn is_epb_use(&self) -> bool {
         match self {
-            EnergyData::UsedEnergy(e) => e.service.is_epb(),
-            EnergyData::ProducedEnergy(_) => false,
+            EnergyData::GenUse(e) => e.service.is_epb(),
+            EnergyData::GenProd(_) => false,
         }
     }
 
     /// Is this of kind UsedEnergy and destination is a non EPB service (but not GEN)?
     pub fn is_nepb_use(&self) -> bool {
         match self {
-            EnergyData::UsedEnergy(e) => e.service.is_nepb(),
-            EnergyData::ProducedEnergy(_) => false,
+            EnergyData::GenUse(e) => e.service.is_nepb(),
+            EnergyData::GenProd(_) => false,
         }
     }
 
-    /// Is this ProducedEnergy of the onsite generated kind?
+    /// Is this energy of the onsite produced kind?
     pub fn is_onsite_pr(&self) -> bool {
         match self {
-            EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.source == Source::INSITU,
+            EnergyData::GenUse(_) => false,
+            EnergyData::GenProd(e) => e.source == Source::INSITU,
         }
     }
 
-    /// Is this ProducedEnergy of the cogeneration kind?
+    /// Is this energy of the cogeneration produced kind?
     pub fn is_cogen_pr(&self) -> bool {
         match self {
-            EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.source == Source::COGENERACION,
+            EnergyData::GenUse(_) => false,
+            EnergyData::GenProd(e) => e.source == Source::COGENERACION,
         }
-    }
-
-    /// Is this of kind ProducedEnergy?
-    pub fn is_generated(&self) -> bool {
-        !self.is_used()
     }
 
     /// Is this a production or use of the electricity carrier?
@@ -149,8 +151,8 @@ impl EnergyData {
 impl std::fmt::Display for EnergyData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EnergyData::UsedEnergy(e) => e.fmt(f),
-            EnergyData::ProducedEnergy(e) => e.fmt(f),
+            EnergyData::GenUse(e) => e.fmt(f),
+            EnergyData::GenProd(e) => e.fmt(f),
         }
     }
 }
@@ -158,8 +160,8 @@ impl std::fmt::Display for EnergyData {
 impl HasValues for EnergyData {
     fn values(&self) -> &[f32] {
         match self {
-            EnergyData::UsedEnergy(e) => e.values(),
-            EnergyData::ProducedEnergy(e) => e.values(),
+            EnergyData::GenUse(e) => e.values(),
+            EnergyData::GenProd(e) => e.values(),
         }
     }
 }

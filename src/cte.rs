@@ -709,8 +709,8 @@ fn components_to_xml(c: &Components) -> String {
     let cdatastring = cdata
         .iter()
         .map(|c| match c {
-            EnergyData::UsedEnergy(e) => used_to_xml(e),
-            EnergyData::ProducedEnergy(e) => produced_to_xml(e),
+            EnergyData::GenUse(e) => used_to_xml(e),
+            EnergyData::GenProd(e) => produced_to_xml(e),
         })
         .collect::<Vec<String>>()
         .join("\n");
@@ -754,8 +754,8 @@ fn factor_to_xml(f: &Factor) -> String {
 }
 
 /// Convierte componente de energía producida a XML
-fn produced_to_xml(e: &ProducedEnergy) -> String {
-    let ProducedEnergy {
+fn produced_to_xml(e: &GenProd) -> String {
+    let GenProd {
         id,
         carrier,
         source,
@@ -773,8 +773,8 @@ fn produced_to_xml(e: &ProducedEnergy) -> String {
 }
 
 /// Convierte componente de energía consumida a XML
-fn used_to_xml(e: &UsedEnergy) -> String {
-    let UsedEnergy {
+fn used_to_xml(e: &GenUse) -> String {
+    let GenUse {
         id,
         carrier,
         service,
@@ -818,8 +818,8 @@ fn zoneneeds_to_xml(e: &ZoneNeeds) -> String {
 }
 
 /// Convierte componente de energía consumida a XML
-fn systemneeds_to_xml(e: &SystemNeeds) -> String {
-    let SystemNeeds {
+fn systemneeds_to_xml(e: &GenOut) -> String {
+    let GenOut {
         id,
         service,
         values,

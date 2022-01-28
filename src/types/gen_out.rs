@@ -35,13 +35,13 @@ use crate::error::EpbdError;
 // Define basic System Energy Needs Component type
 // This component is used to express energy output of this system to provide service X (for zone i with i=0 for the whole building) (E_X_gen_i_out_t)
 
-/// Componente de sistema.
+/// Componente de generación.
 ///
-/// Componente de demanda de los sistemas pertenecientes al subsistema de generación del edificio
+/// Energía entregada o absorbida por los sistemas pertenecientes al subsistema de generación del edificio, E_X_gen_i_out
 ///
-/// Se serializa como: `id, SISTEMA, DEMANDA, servicio, vals... # comentario`
+/// Se serializa como: `id, GEN, CARGA, servicio, vals... # comentario`
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SystemNeeds {
+pub struct GenOut {
     /// System id
     /// 
     /// This identifies the system linked to this component.
@@ -57,13 +57,13 @@ pub struct SystemNeeds {
     pub comment: String,
 }
 
-impl HasValues for SystemNeeds {
+impl HasValues for GenOut {
     fn values(&self) -> &[f32] {
         &self.values
     }
 }
 
-impl fmt::Display for SystemNeeds {
+impl fmt::Display for GenOut {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let valuelist = self
             .values
@@ -78,30 +78,30 @@ impl fmt::Display for SystemNeeds {
         };
         write!(
             f,
-            "{}, SISTEMA, DEMANDA, {}, {}{}",
+            "{}, GEN, CARGA, {}, {}{}",
             self.id, self.service, valuelist, comment
         )
     }
 }
 
-impl str::FromStr for SystemNeeds {
+impl str::FromStr for GenOut {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<SystemNeeds, Self::Err> {
+    fn from_str(s: &str) -> Result<GenOut, Self::Err> {
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (id + SISTEMA + DEMANDA + 1 value)
+        // Minimal possible length (id + GEN + CARGA + 1 value)
         if items.len() < 4 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        // Check SISTEMA and DEMANDA marker fields;
-        if items[1] != "SISTEMA" || items[2] != "DEMANDA" {
+        // Check GEN and CARGA marker fields;
+        if items[1] != "GEN" || items[2] != "CARGA" {
             return Err(EpbdError::ParseError(format!(
-                "No se reconoce el formato como componente de Demanda sobre el Sistema: {}",
+                "No se reconoce el formato como componente de Carga sobre el Sistema: {}",
                 s
             )));
         }
@@ -111,7 +111,7 @@ impl str::FromStr for SystemNeeds {
             Ok(id) => id,
             Err(_) => {
                 return Err(EpbdError::ParseError(format!(
-                    "Id erróneo en componente de Demanda sobre el Sistema: {}",
+                    "Id erróneo en componente de Carga sobre el Sistema: {}",
                     s
                 )))
             }
@@ -126,7 +126,7 @@ impl str::FromStr for SystemNeeds {
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
 
-        Ok(SystemNeeds {
+        Ok(GenOut {
             id,
             service,
             values,
@@ -145,20 +145,20 @@ mod tests {
     #[test]
     fn component_system_needs() {
         // zone energy needs component
-        let component1 = SystemNeeds {
+        let component1 = GenOut {
             id: 0,
             service: "REF".parse().unwrap(),
             values: vec![
                 -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0,
             ],
-            comment: "Comentario demanda sobre sistema 0".into(),
+            comment: "Comentario carga sobre sistema 0".into(),
         };
-        let component1str = "0, SISTEMA, DEMANDA, REF, -1.00, -2.00, -3.00, -4.00, -5.00, -6.00, -7.00, -8.00, -9.00, -10.00, -11.00, -12.00 # Comentario demanda sobre sistema 0";
+        let component1str = "0, GEN, CARGA, REF, -1.00, -2.00, -3.00, -4.00, -5.00, -6.00, -7.00, -8.00, -9.00, -10.00, -11.00, -12.00 # Comentario carga sobre sistema 0";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string
         assert_eq!(
-            component1str.parse::<SystemNeeds>().unwrap().to_string(),
+            component1str.parse::<GenOut>().unwrap().to_string(),
             component1str
         );
     }
