@@ -25,6 +25,8 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Permite definir la demanda del edificio (id=0) en cada paso de cálculo y para cada servicio
 - Introducción de componentes de demanda sobre sistemas / equipos
   - Permite definir la energía absorbida (p.e. refrigeración, valor negativo) o entregada (p.e. calor, valor positivo) en cada paso de cálculo, para cada servicio y para cada sistema (id=i)
+- Nuevo servicio NEPB para consumo destinado a usos no EPB
+- Nuevo servicio GEN para consumo destinado a la producción eléctrica
 
 ### Incompatibilidades
 
