@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{ProdOrigin, Carrier, HasValues};
+use super::{ProdSource, Carrier, HasValues};
 use crate::error::EpbdError;
 
 // -------------------- Produced Energy Component
@@ -48,9 +48,9 @@ pub struct ProducedEnergy {
     pub id: i32,
     /// Carrier name
     pub carrier: Carrier,
-    /// Energy origin
+    /// Energy source
     /// - `INSITU` or `COGENERACION` for generated energy component types
-    pub origin: ProdOrigin,
+    pub source: ProdSource,
     /// List of produced energy values, one value for each timestep. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
@@ -79,7 +79,7 @@ impl fmt::Display for ProducedEnergy {
         write!(
             f,
             "{}, {}, PRODUCCION, {}, {}{}",
-            self.id, self.carrier, self.origin, valuelist, comment
+            self.id, self.carrier, self.source, valuelist, comment
         )
     }
 }
@@ -88,7 +88,7 @@ impl str::FromStr for ProducedEnergy {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<ProducedEnergy, Self::Err> {
-        use self::ProdOrigin::*;
+        use self::ProdSource::*;
         use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
 
         // Split comment from the rest of fields
@@ -96,7 +96,7 @@ impl str::FromStr for ProducedEnergy {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (carrier + type + origin + 1 value)
+        // Minimal possible length (carrier + type + source + 1 value)
         if items.len() < 4 {
             return Err(EpbdError::ParseError(s.into()));
         };
@@ -108,10 +108,10 @@ impl str::FromStr for ProducedEnergy {
 
         let carrier: Carrier = items[baseidx].parse()?;
         let ctype = items[baseidx + 1];
-        let origin: ProdOrigin = items[baseidx + 2].parse()?;
+        let source: ProdSource = items[baseidx + 2].parse()?;
 
         // Check coherence of ctype and csubtype
-        let subtype_belongs_to_type = match origin {
+        let subtype_belongs_to_type = match source {
             INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
             COGENERACION => carrier == ELECTRICIDAD,
         };
@@ -131,7 +131,7 @@ impl str::FromStr for ProducedEnergy {
         Ok(ProducedEnergy {
             id,
             carrier,
-            origin,
+            source,
             values,
             comment,
         })
@@ -151,7 +151,7 @@ mod tests {
         let component2 = ProducedEnergy {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
-            origin: "INSITU".parse().unwrap(),
+            source: "INSITU".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],

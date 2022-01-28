@@ -146,7 +146,7 @@ impl Factors {
     /// Realiza los siguientes pasos:
     /// - asegura definición de factores de producción in situ
     /// - asegura definición de factores desde la red para todos los vectores
-    /// - asegura que factor paso A para suministro de cogeneración es 0.0 (se considera en vector original)
+    /// - asegura que factor paso A para suministro de cogeneración es 0.0 (se considera en vector sourceal)
     /// - asegura definición de factores a la red para vectores con exportación
     /// - asegura que existe RED1 | RED2 en suministro
     ///

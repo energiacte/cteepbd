@@ -77,7 +77,7 @@ fn get_ctefp_peninsula() -> Factors {
 }
 
 fn get_energydatalist() -> Components {
-    use ProdOrigin::*;
+    use ProdSource::*;
     use Carrier::*;
 
     //3 PV BdC_normativo
@@ -99,7 +99,7 @@ fn get_energydatalist() -> Components {
                     1.13, 1.42, 1.99, 2.84, 4.82, 5.39, 5.67, 5.11, 4.54, 3.40, 2.27, 1.42,
                 ],
                 carrier: ELECTRICIDAD,
-                origin: INSITU,
+                source: INSITU,
                 comment: "".into(),
             }),
             EnergyData::UsedEnergy(UsedEnergy {
@@ -117,7 +117,7 @@ fn get_energydatalist() -> Components {
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
                 carrier: MEDIOAMBIENTE,
-                origin: INSITU,
+                source: INSITU,
                 comment: "".into(),
             }),
         ],
@@ -1018,7 +1018,7 @@ fn new_format_with_system_id() {
     let balance_el = &bal.balance_cr[&Carrier::ELECTRICIDAD];
     // NEPB used energy
     assert_eq!("10.000", format!("{:.3}", balance_el.used_nEPB_an));
-    // Produced energy from all origins and used for EPB services
+    // Produced energy from all sources and used for EPB services
     assert_eq!("300.000", format!("{:.3}", balance_el.produced_used_EPus_an));
     // Exported energy to non EPB uses
     assert_eq!("5.000", format!("{:.3}", balance_el.exported_nEPB_an));

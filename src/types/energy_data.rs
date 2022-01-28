@@ -27,7 +27,7 @@ use std::{fmt, str};
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Carrier, HasValues, ProdOrigin, ProducedEnergy, Service, UsedEnergy};
+use crate::types::{Carrier, HasValues, ProdSource, ProducedEnergy, Service, UsedEnergy};
 
 /// Componentes de energía generada o consumida
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,12 +55,12 @@ impl EnergyData {
         }
     }
 
-    /// Get production origin (INSITU / COGEN) for this component
-    pub fn origin(&self) -> ProdOrigin {
+    /// Get production source (INSITU / COGEN) for this component
+    pub fn source(&self) -> ProdSource {
         match self {
             // TODO: eliminar este método
             EnergyData::UsedEnergy(_) => unreachable!(),
-            EnergyData::ProducedEnergy(e) => e.origin,
+            EnergyData::ProducedEnergy(e) => e.source,
         }
     }
 
@@ -108,7 +108,7 @@ impl EnergyData {
     pub fn is_onsite_pr(&self) -> bool {
         match self {
             EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.origin == ProdOrigin::INSITU,
+            EnergyData::ProducedEnergy(e) => e.source == ProdSource::INSITU,
         }
     }
 
@@ -116,7 +116,7 @@ impl EnergyData {
     pub fn is_cogen_pr(&self) -> bool {
         match self {
             EnergyData::UsedEnergy(_) => false,
-            EnergyData::ProducedEnergy(e) => e.origin == ProdOrigin::COGENERACION,
+            EnergyData::ProducedEnergy(e) => e.source == ProdSource::COGENERACION,
         }
     }
 

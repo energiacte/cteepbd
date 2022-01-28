@@ -31,25 +31,26 @@ use serde::{Deserialize, Serialize};
 use super::{HasValues, Service};
 use crate::error::EpbdError;
 
-// -------------------- System Energy Needs Component
-// Define basic Zone Energy Needs Component type
-// This component is used to express energy needs of this zone to provide service X (for zone i with i=0 for the whole building) (Q_X_nd_i)
+// -------------------- System Energy Output Component
+// Define basic System Energy Needs Component type
+// This component is used to express energy output of this system to provide service X (for zone i with i=0 for the whole building) (E_X_gen_i_out_t)
 
-/// Componente de zona.
+/// Componente de sistema.
 ///
-/// Componente de demanda de las zonas del edificio
+/// Componente de demanda de los sistemas pertenecientes al subsistema de generación del edificio
 ///
 /// Se serializa como: `id, SISTEMA, DEMANDA, servicio, vals... # comentario`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SystemNeeds {
-    /// Zone id
+    /// System id
+    /// 
     /// This identifies the system linked to this component.
     /// By default, id=0 means an hypothetical whole building system (encompassing all services)
     /// Negative numbers should represent ficticious elements (ficticious systems, such as the reference ones)
     pub id: i32,
     /// End use
     pub service: Service,
-    /// List of timestep output or absorbed energy by system Y to provide service X, Q_X_Y_out. kWh
+    /// Timestep energy output or absorbed energy values by system i to provide service X, E_X_gen_i_out_t. kWh
     /// Negative values means absorbed energy (e.g. by a chiller) and positive values means delivered energy (e.g. heat from a boiler) by the system. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string

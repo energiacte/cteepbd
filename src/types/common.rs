@@ -40,7 +40,7 @@ use crate::error::EpbdError;
 pub enum Carrier {
     /// Electricity
     ELECTRICIDAD,
-    /// Environment thermal energy or from solar origin
+    /// Environment thermal energy or from solar source
     MEDIOAMBIENTE,
     /// Biofuel
     BIOCARBURANTE,
@@ -96,26 +96,26 @@ impl std::fmt::Display for Carrier {
 /// Origen de la energía producida
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ProdOrigin {
+pub enum ProdSource {
     /// On site energy source
     INSITU,
     /// Cogeneration energy source
     COGENERACION,
 }
 
-impl str::FromStr for ProdOrigin {
+impl str::FromStr for ProdSource {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<ProdOrigin, Self::Err> {
+    fn from_str(s: &str) -> Result<ProdSource, Self::Err> {
         match s {
-            "INSITU" => Ok(ProdOrigin::INSITU),
-            "COGENERACION" => Ok(ProdOrigin::COGENERACION),
+            "INSITU" => Ok(ProdSource::INSITU),
+            "COGENERACION" => Ok(ProdSource::COGENERACION),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
 
-impl std::fmt::Display for ProdOrigin {
+impl std::fmt::Display for ProdSource {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
     }

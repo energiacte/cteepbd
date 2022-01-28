@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{Carrier, ProdOrigin};
+use super::{Carrier, ProdSource};
 use crate::{error::EpbdError, types::RenNrenCo2};
 
 // ==================== Weighting factors
@@ -66,11 +66,11 @@ impl std::fmt::Display for Source {
     }
 }
 
-impl From<ProdOrigin> for Source {
-    fn from(subtype: ProdOrigin) -> Self {
+impl From<ProdSource> for Source {
+    fn from(subtype: ProdSource) -> Self {
         match subtype {
-            ProdOrigin::INSITU => Self::INSITU,
-            ProdOrigin::COGENERACION => Self::COGENERACION,
+            ProdSource::INSITU => Self::INSITU,
+            ProdSource::COGENERACION => Self::COGENERACION,
         }
     }
 }

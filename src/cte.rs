@@ -758,7 +758,7 @@ fn produced_to_xml(e: &ProducedEnergy) -> String {
     let ProducedEnergy {
         id,
         carrier,
-        origin,
+        source,
         values,
         comment,
     } = e;
@@ -766,7 +766,7 @@ fn produced_to_xml(e: &ProducedEnergy) -> String {
         "<Produccion><Id>{}</Id><Vector>{}</Vector><Origen>{}</Origen><Valores>{}</Valores><Comentario>{}</Comentario></Produccion>",
         id,
         carrier,
-        origin,
+        source,
         format_values_2f(values),
         escape_xml(comment)
     )
