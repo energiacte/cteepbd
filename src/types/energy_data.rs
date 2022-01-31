@@ -32,36 +32,38 @@ use crate::types::{Carrier, GenAux, GenCrIn, GenProd, HasValues, Service, Source
 /// Componentes de energía generada o consumida
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EnergyData {
-    /// Energía usada (consumida). E_X;Y;in;cr,j;t
+    /// Energía usada (consumida) en los sistemas de generación y almacenamiento. E_X;gen,i;in;cr,j;t
     ///
     /// Representa el consumo de energía del vector energético j
-    /// para el servicio X en el subsistema Y (e.g. generador i, id=i), para los distintos pasos de cálculo t,
-    /// a lo largo del periodo de cálculo. Por ejemplo, E_X;gen,i;in;cr,j;t
+    /// para el servicio X en el subsistema Y (generación y almacenamiento) sistema i, (id=i),
+    /// para los distintos pasos de cálculo t, a lo largo del periodo de cálculo. E_X;Y;in;cr,j;t
     ///
     /// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
     /// Subsistema: generación + almacenamiento
     GenCrIn(GenCrIn),
-    /// Energía generada (producida). E_pr;cr,i;t
+    /// Energía generada (producida). E_pr,j;cr,i;t
     ///
     /// Representa la producción de energía del vector energético j (con origen dado en el sistema j)
-    /// para los pasos de cálculo t, a lo largo del periodo de cálculo. Por ejemplo, E_pr,j;cr,i;t
+    /// para los pasos de cálculo t, a lo largo del periodo de cálculo. E_pr,j;cr,i;t
     /// Subsistema: generación + almacenamiento
     GenProd(GenProd),
-    /// Energía auxiliar (consumida). W_X;Y;aux;t
+    /// Energía auxiliar (consumida) en los sistemas de generación y almacenamiento. W_X;gen_i;aux;t
     ///
     /// Representa el consumo de energía (eléctrica) para usos auxiliares
-    /// del servicio X en el subsistema Y (gen, dis, em, alm), para los distintos
-    /// pasos de cálculo. Por ejemplo, W_X;gen_i;aux;t
+    /// del servicio X en el subsistema Y (gen + alm) y sistema i (id=i),
+    /// para los distintos pasos de cálculo. W_X;Y;aux;t
     /// Subsistema: generación + almacenamiento
     GenAux(GenAux),
-    // TODO: Energía saliente (entregada o absorbida). Q_X;Y;out
+    // TODO: Energía saliente (entregada o absorbida) en los sistemas de generación y almacenamiento. Q_X;gen,i;out
     //
     // Representa la energía entregada o absorbida para el servicio X por los sistemas i
-    // pertenecientes al subsistema Y del edificio. Por ejemplo, Q_X_gen_i_out
+    // pertenecientes al subsistema Y (generación y almacenamiento) del edificio. Q_X;Y;out
     // Subsistema: generación + almacenamiento
-    // GenOut(xxx)
+    // GenOut(GenOut)
 
-    // TODO: Pérdidas térmicas no recuperadas Q_X;Y;ls,nrvd (Q_X;Y;ls,nrvd = Q_X;Y;ls - Q_X;Y;ls,rvd)
+    // TODO: Pérdidas térmicas no recuperadas en el sistema de generación y almacenamiento. Q_X;gen,i;ls,nrvd
+    //
+    // Q_X;Y;ls,nrvd = Q_X;Y;ls - Q_X;Y;ls,rvd (15316-1:2018 (3))
     //
     // Permite calcular la energía entrante al sistema i para el servicio X en el subsistema Y
     // a partir de la energía saliente Q_X;Y;out
@@ -71,11 +73,17 @@ pub enum EnergyData {
 
     // Subsistemas de distribución y emisión, sin identificación de sistema?
 
+    // Energía saliente (entregada o absorbida) en los sistemas de emisión. Q_X;em,i;out
     // EmOut(xxx)
+    // Energía auxiliar empleada en los sistemas de emisión. W_X;em,i;aux;t
     // EmAux(xxx)
+    // Pérdidas térmicas no recuperadas en el sistema de emisión. kWh
     // EmLsNrvd(xxx)
+    // Energía saliente (entregada o absorbida) en la distribución. Q_X;dis,i;out
     // DisOut(xxx)
+    // Energía auxiliar empleada en la distribución. W_X;dis,i;aux;t
     // DisAux(xxx)
+    // Pérdidas térmicas no recuperadas en la distribución. kWh
     // DisLsNrvd(xxx)
 }
 
