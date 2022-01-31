@@ -16,23 +16,33 @@
 
 - epbd:
 
+  - EDIFICIO (Ver EN 52000-1, 12.1 informe)
+    - EDIFICIO, DEMANDA, CAL / REF, meses
+    - EDIFICIO, TEMPERATURA, EXT / INT, meses
+    - EDIFICIO, RADIACION, HOR, meses
+    - EDIFICIO, TRANSFERENCIA, TRANSMISION, meses
+    - EDIFICIO, TRANSFERENCIA, VENTILACION, meses
+    - EDIFICIO, GANANCIAS, SOLARES, meses
+    - EDIFICIO, GANANCIAS, INTERNAS, meses
   - How to identify subsystems (generation, distribution, emission, storage) wrt energy use and production?
-    - Necsitamos calcular eficiencias por subsistemas (ver más abajo el cálculo) y para eso hay que diferenciarlos
+    - Necesitamos calcular eficiencias por subsistemas (ver más abajo el cálculo) y para eso hay que diferenciarlos
     - Use new format, with id, subsystem, type, source / service, values # comment
-      - subsystem (Y): GEN, DIS, EM, STO + otro subsistema de ZONE
+      - subsystem (Y): GEN+STO, DIS, EM
         - We can define new object types for distribution, emission and storage, as we don't use them yet.
         - Pensar cómo encaja distribución y almacenamiento? StoIn, StoOut, StoAux, DisIn, DisOut, DisAux, EmIn, EmOut, EmAux
           - Bastaría con indicar las pérdidas y consumos auxiliares en consumo, distribución+almacenamiento y emisión para calcular rendimientos (simplificando Dis+Sto)?
-      - type: CONSUMO (Use), PRODUCCION (Prod), CARGA (Out), AUXILIAR (Aux) + DEMANDA (Needs) de ZONE
-        - El CONSUMO_AUX se trata igual que el consumo a efectos de balance pero no a efectos de cálculo de los rendimientos por subsistemas eff_i
+      - type: CONSUMO (Use), PRODUCCION (Prod), CARGA (Out), AUX (Aux)
+        - El consumo AUX se trata igual que el consumo eléctrico a efectos de balance pero no a efectos de cálculo de los rendimientos por subsistemas eff_i
+        - Se imputa a nivel de subsistema (gen, dis, em, sto -> GEN + CONSUMO, DIS + CONSUMO, EM + CONSUMO, ALM + CONSUMO
       - Llevar GEN_OUT a cdata y renombrar a cdata a gen
     - Llevar Zone, Gen, Sto, Dis, Em a tipos, y tener Use, Prod, Out, Aux, Needs... (ZoneNeeds y *Out tienen los mismos datos)
   - Compute system efficiencies (cal, ref?, acs) (and subsystems (generation, distribution, emission, storage))
     - Generic system balance (15613-1, (3)): Q_X_Y_in = Q_X_Y_out + Q_X_ls - Q_X_Y_ls_rvd
-      - Q_X_Y_ls_rvd are recovered losses
+      - Q_X_Y_ls_rvd are recovered losses, Q_X_Y_nrvd = Q_X_ls - Q_X_Y_ls_rvd
     - Generic energy efficiency (15613-1 (33)): eff_i = (Q_i_out + f_i · E_el_i_out) / (Q_i_in + f_i · W_i_aux);
       - A conventional weighting factor, f_i=2,5 is used to add up heat and electricity (for comparability reasons)
       - Q_i_in doesn't include heat captured in the evaporator from the heat source for heap pumps -> we get annual COP
+      - i = gen, dis, em, sto
     - System balance for heat pumps (15613-4-2, (1), DWH (cal + acs)):
       - E_X_Y_in \* COP = Q_X_Y_out + Q_X_ls_tot - Q_X_Y_in (ambiente) - f_Y;aux;ls;rvd · W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
       - Energy_use \* COP = Energy_out + Energy_losses - (Energy_from_heat_source_input + Energy_from_recovered_aux_energy_not_accounted_for_in_COP_input)
@@ -48,6 +58,8 @@
       - PERDIDAS
     - Recovered energy losses linked to service X and subsystem Y (Q_X_Y_ls_rvd)
       - RECUPERADA
+    - Non recoverable losses linked to service X and subsystem Y (Q_X_Y_nrvd)
+      - PERDIDAS_NOREC
     - Number of hours where temperature shedule limits are not met (CAL, REF)
       - HORASFUERACONSIGNA
   - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
