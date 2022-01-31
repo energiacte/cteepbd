@@ -34,15 +34,15 @@ use crate::error::EpbdError;
 // -------------------- Used Energy Component
 // Define basic Used Energy Component type
 
-/// Componente de energía usada (consumos).
+/// Componente de energía usada (consumos). E_X;gen,i;in;cr,j;t
 ///
-/// Representa el consumo de energía en los distintos pasos de cálculo,
-/// a lo largo del periodo de cálculo, para cada vector energético, servicio y tipo de uso de la energía.
-/// 
-/// Las cantidades de energía para combustibles son en relación al poder calorífico superior.
+/// Representa el consumo de energía del vector energético j
+/// para el servicio X en el generador i, para los distintos pasos de cálculo t,
+///
+/// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenCrIn {
-    /// System or part id
+    /// System or part id (generator i)
     /// This can identify the system linked to this energy use.
     /// By default, id=0 means the whole building systems.
     /// Negative numbers should represent ficticious systems (such as the reference ones)
@@ -82,8 +82,8 @@ impl fmt::Display for GenCrIn {
 
         write!(
             f,
-            "{}, {}, CONSUMO, {}, {}{}",
-            self.id, self.carrier, self.service, valuelist, comment
+            "{}, CONSUMO, {}, {}, {}{}",
+            self.id, self.service, self.carrier, valuelist, comment
         )
     }
 }
@@ -107,10 +107,8 @@ impl str::FromStr for GenCrIn {
             Err(_) => (0, 0_i32),
         };
 
-        let carrier: Carrier = items[baseidx].parse()?;
-        
         // Check type
-        let ctype = items[baseidx + 1];
+        let ctype = items[baseidx];
         if ctype != "CONSUMO" {
             return Err(EpbdError::ParseError(format!(
                 "Componente de energía consumida con formato incorrecto: {}",
@@ -119,13 +117,15 @@ impl str::FromStr for GenCrIn {
         }
 
         // Check service field. May be missing in legacy versions
-        let service = items[baseidx + 2].parse()?;
+        let service = items[baseidx + 1].parse()?;
+
+        let carrier: Carrier = items[baseidx + 2].parse()?;
 
         // Collect energy values from the service field on
-        let values = items[baseidx + 3..]
+        let values: Vec<_> = items[baseidx + 3..]
             .iter()
             .map(|v| v.parse::<f32>())
-            .collect::<Result<Vec<f32>, _>>()?;
+            .collect::<Result<_, _>>()?;
 
         Ok(GenCrIn {
             id,
@@ -156,12 +156,19 @@ mod tests {
             ],
             comment: "Comentario cons 1".into(),
         };
-        let component1str = "0, ELECTRICIDAD, CONSUMO, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1str = "0, CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1strlegacy = "CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string
         assert_eq!(
             component1str.parse::<GenCrIn>().unwrap().to_string(),
+            component1str
+        );
+
+        // roundtrip building from/to legacy string
+        assert_eq!(
+            component1strlegacy.parse::<GenCrIn>().unwrap().to_string(),
             component1str
         );
     }

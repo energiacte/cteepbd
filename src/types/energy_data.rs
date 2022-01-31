@@ -32,10 +32,52 @@ use crate::types::{Carrier, GenProd, GenCrIn, HasValues, Service, Source};
 /// Componentes de energía generada o consumida
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EnergyData {
-    /// Energía consumida
+    /// Energía usada (consumida). E_X;Y;in;cr,j;t
+    /// 
+    /// Representa el consumo de energía del vector energético j 
+    /// para el servicio X en el subsistema Y (e.g. generador i, id=i), para los distintos pasos de cálculo t,
+    /// a lo largo del periodo de cálculo. Por ejemplo, E_X;gen,i;in;cr,j;t
+    /// 
+    /// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
+    /// Subsistema: generación + almacenamiento
     GenCrIn(GenCrIn),
-    /// Energía generada
+    /// Energía generada (producida). E_pr;cr,i;t
+    ///
+    /// Representa la producción de energía del vector energético j (con origen dado en el sistema j)
+    /// para los pasos de cálculo t, a lo largo del periodo de cálculo. Por ejemplo, E_pr,j;cr,i;t
+    /// Subsistema: generación + almacenamiento
     GenProd(GenProd),
+    // TODO: Energía auxiliar (consumida). W_X;Y;aux;t
+    //
+    // Representa el consumo de energía (eléctrica) para usos auxiliares
+    // del servicio X en el subsistema Y (gen, dis, em, alm), para los distintos
+    // pasos de cálculo. Por ejemplo, W_X;gen_i;aux;t
+    // Subsistema: generación + almacenamiento
+    // GenAux(xxx)
+
+    // TODO: Energía saliente (entregada o absorbida). Q_X;Y;out
+    // 
+    // Representa la energía entregada o absorbida para el servicio X por los sistemas i
+    // pertenecientes al subsistema Y del edificio. Por ejemplo, Q_X_gen_i_out
+    // Subsistema: generación + almacenamiento
+    // GenOut(xxx)
+
+    // TODO: Pérdidas térmicas no recuperadas Q_X;Y;ls,nrvd (Q_X;Y;ls,nrvd = Q_X;Y;ls - Q_X;Y;ls,rvd)
+    // 
+    // Permite calcular la energía entrante al sistema i para el servicio X en el subsistema Y
+    // a partir de la energía saliente Q_X;Y;out
+    // como (EN 15316-1, (3)) Q_X;Y;in = Q_X;Y;out + Q_X;Y;ls,nrvd
+    // Subsistema: generación + almacenamiento
+    // LsNrvd(xxx)
+
+    // Subsistemas de distribución y emisión, sin identificación de sistema?
+
+    // EmOut(xxx)
+    // EmAux(xxx)
+    // EmLsNrvd(xxx)
+    // DisOut(xxx)
+    // DisAux(xxx)
+    // DisLsNrvd(xxx)
 }
 
 impl EnergyData {
@@ -123,7 +165,7 @@ impl EnergyData {
     pub fn is_cogen_pr(&self) -> bool {
         match self {
             EnergyData::GenCrIn(_) => false,
-            EnergyData::GenProd(e) => e.source == Source::COGENERACION,
+            EnergyData::GenProd(e) => e.source == Source::COGEN,
         }
     }
 

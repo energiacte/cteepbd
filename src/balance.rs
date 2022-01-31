@@ -214,17 +214,17 @@ pub struct BalanceForCarrier {
     pub produced: Vec<f32>,
     /// Produced energy (from all sources)
     pub produced_an: f32,
-    /// Produced energy in each timestep by source (COGENERACION / INSITU)
+    /// Produced energy in each timestep by source (COGEN / INSITU)
     pub produced_by_source: HashMap<Source, Vec<f32>>,
-    /// Produced energy by source (COGENERACION / INSITU)
+    /// Produced energy by source (COGEN / INSITU)
     pub produced_by_source_an: HashMap<Source, f32>,
     /// Produced energy from all sources and used for EPB services in each timestep
     pub produced_used_EPus: Vec<f32>,
     /// Produced energy from all sources and used for EPB services
     pub produced_used_EPus_an: f32,
-    /// Produced energy used for EPB services in each timestep by source (COGENERACION / INSITU)
+    /// Produced energy used for EPB services in each timestep by source (COGEN / INSITU)
     pub produced_used_EPus_by_source: HashMap<Source, Vec<f32>>,
-    /// Produced energy used for EPB services by source (COGENERACION / INSITU)
+    /// Produced energy used for EPB services by source (COGEN / INSITU)
     pub produced_used_EPus_by_source_an: HashMap<Source, f32>,
     /// Load matching factor
     pub f_match: Vec<f32>,
@@ -232,9 +232,9 @@ pub struct BalanceForCarrier {
     pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
     /// Exported energy to the grid and non EPB uses
     pub exported_an: f32,
-    /// Exported energy to the grid and non EPB uses in each timestep, by source (INSITU, COGENERACION)
+    /// Exported energy to the grid and non EPB uses in each timestep, by source (INSITU, COGEN)
     pub exported_by_source: HashMap<Source, Vec<f32>>,
-    /// Exported energy to the grid and non EPB uses, by source (INSITU, COGENERACION)
+    /// Exported energy to the grid and non EPB uses, by source (INSITU, COGEN)
     pub exported_by_source_an: HashMap<Source, f32>,
     /// Exported energy to the grid in each timestep
     pub exported_grid: Vec<f32>,
@@ -330,7 +330,7 @@ fn balance_for_carrier(
     let mut E_EPus_cr_t = vec![0.0; num_steps];
     // * Energy used by technical systems for non-EPB services, for each time step
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
-    // * Produced on-site energy and inside the assessment boundary, by subsystem j (INSITU or COGENERACION)
+    // * Produced on-site energy and inside the assessment boundary, by subsystem j (INSITU or COGEN)
     let mut E_pr_cr_j_t = HashMap::<Source, Vec<f32>>::new();
 
     // Accumulate for all components
@@ -349,10 +349,10 @@ fn balance_for_carrier(
         }
     }
 
-    // List of produced energy sources (ProdOrigin::INSITU or ProdOrigin::COGENERACION)
-    let prod_sources: Vec<Source> = E_pr_cr_j_t.keys().cloned().collect(); // INSITU, COGENERACION
+    // List of produced energy sources (ProdOrigin::INSITU or ProdOrigin::COGEN)
+    let prod_sources: Vec<Source> = E_pr_cr_j_t.keys().cloned().collect(); // INSITU, COGEN
 
-    // Annually produced on-site energy from subsystem j (INSITU, COGENERACION)
+    // Annually produced on-site energy from subsystem j (INSITU, COGEN)
     let mut E_pr_cr_j_an = HashMap::<Source, f32>::new();
     for source in &prod_sources {
         E_pr_cr_j_an.insert(*source, vecsum(&E_pr_cr_j_t[source]));
@@ -400,7 +400,7 @@ fn balance_for_carrier(
 
     // Exported energy by source j (9.6.6.2)
     // Implementation WITHOUT priorities on energy use
-    // We are doing this computations using sources, j (INSITU, COGENERACION) not generator ids (i).
+    // We are doing this computations using sources, j (INSITU, COGEN) not generator ids (i).
 
     // * Produced energy from source j and used for EPB services (formula 15)
     let mut E_pr_cr_j_used_EPus_t = HashMap::<Source, Vec<f32>>::new();
@@ -567,7 +567,7 @@ fn balance_for_carrier(
     let E_nEPus_cr_an = vecsum(&E_nEPus_cr_t);
     // Annually produced energy used in EPB uses
     let E_pr_cr_used_EPus_an = vecsum(&E_pr_cr_used_EPus_t);
-    // Annually produced energy used in EPB uses by source (INSITU, COGENERACION)
+    // Annually produced energy used in EPB uses by source (INSITU, COGEN)
     let E_pr_cr_i_used_EPus_an: HashMap<Source, f32> = E_pr_cr_j_used_EPus_t
         .iter()
         .map(|(source, values)| (*source, vecsum(values)))
@@ -647,7 +647,7 @@ fn compute_factors_by_use_cr(cr_list: &[EnergyData]) -> HashMap<Service, f32> {
 /// Find weighting factor for 'step' of energy exported to 'dest' from the given energy 'source'.
 ///
 /// * `fp_cr` - weighting factor list for a given energy carrier where search is done
-/// * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
+/// * `source` - match this energy source (`RED`, `INSITU`, `COGEN`)
 /// * `dest` - match this energy destination (use)
 /// * `step` - match this calculation step
 fn fp_find(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<RenNrenCo2> {

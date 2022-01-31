@@ -87,7 +87,7 @@ boxrule=0pt,boxsep=0pt,breakable}
 \lstdefinelanguage{ctepebd}
 {
 morekeywords={ELECTRICIDAD,BIOCARBURANTE,BIOMASA,CARBON,GASNATURAL,GASOLEO,GLP,MEDIOAMBIENTE,BIOMASADENSIFICADA,RED1,RED2},
-morekeywords={[2]PRODUCCION,CONSUMO,EPB,NEPB,RED,INSITU,A,B,COGENERACION,SUMINISTRO,A_RED,A_NEPB,ACS,CAL,REF,VEN,HU,DHU,ILU,NDEF},
+morekeywords={[2]PRODUCCION,CONSUMO,EPB,NEPB,RED,INSITU,A,B,COGEN,SUMINISTRO,A_RED,A_NEPB,ACS,CAL,REF,VEN,HU,DHU,ILU,NDEF},
 sensitive=false,
 morecomment=[l][\color{mygray}]{\#},
 morecomment=[l][\color{Coral4}]{\#META}
@@ -517,7 +517,7 @@ Dependiendo del tipo de componente puede definir el el origen de la energía pro
 \item Para componentes de \textbf{producción} de energía puede adoptar los valores:
 \begin{itemize}
 \item \texttt{INSITU}, para vectores producidos \textit{in situ} (energía térmica o electricidad de procedencia solar, electricidad generada con el viento o energía térmica extraída del medioambiente con bombas geotérmicas, aerotérmicas o hidrotérmicas);
-\item \texttt{COGENERACION} para la electricidad procedente de sistemas de cogeneración.
+\item \texttt{COGEN} para la electricidad procedente de sistemas de cogeneración.
 \end{itemize} 
 
 \item Para componentes de \textbf{consumo} de energía el subtipo puede tomar los valores:
@@ -600,7 +600,7 @@ Los factores de paso tienen la siguiente estructura de columnas (valores separad
 
 \begin{itemize}
 \item campo \texttt{vector}, con el nombre del vector energético, y que puede tener los mismos valores que los vectores definidos para los componentes energéticos (ver sección \nameref{sec:componentesenergeticos});
-\item campo \texttt{origen}, que define el origen de la energía: la red de suministro (\texttt{RED}), producción \textit{in situ} (\texttt{INSITU}) o cogeneración (\texttt{COGENERACION});
+\item campo \texttt{origen}, que define el origen de la energía: la red de suministro (\texttt{RED}), producción \textit{in situ} (\texttt{INSITU}) o cogeneración (\texttt{COGEN});
 \item campo \texttt{destino}, que identifica el destino de la energía: suministro al edificio (\texttt{input}), usos no EPB (\texttt{to\_nEPB}) o la red de suministro (\texttt{to\_grid});
 \item campo \texttt{paso}, que identifica los recursos evaluados: los recursos empleados para obtener una unidad del vector energético (paso \texttt{A}), o el impacto en la red al emplear el vector energético en lugar de usar el vector energético desde la red de suministro (paso \texttt{B});
 \item campos \texttt{parte renovable}, el factor de paso desde energía final a la parte renovable de la energía primaria utilizada;

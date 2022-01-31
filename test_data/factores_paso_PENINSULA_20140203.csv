@@ -16,9 +16,9 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para sum
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
 ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
 ELECTRICIDAD, INSITU, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
-ELECTRICIDAD, COGENERACION, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
+ELECTRICIDAD, COGEN, SUMINISTRO, A, 0.000, 0.000, 0.000 # Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)
 # Factores no normativos
-ELECTRICIDAD, COGENERACION, A_RED, A, 0.000, 2.500, 0.3 # Recursos usados para producir la electricidad cogenerada y exportada a la red (ver EN ISO 52000-1 9.6.6.2.3)(Valor predefinido)
-ELECTRICIDAD, COGENERACION, A_RED, B, 0.414, 1.954, 0.3 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+ELECTRICIDAD, COGEN, A_RED, A, 0.000, 2.500, 0.3 # Recursos usados para producir la electricidad cogenerada y exportada a la red (ver EN ISO 52000-1 9.6.6.2.3)(Valor predefinido)
+ELECTRICIDAD, COGEN, A_RED, B, 0.414, 1.954, 0.3 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
 RED1, RED, SUMINISTRO, A, 0.000, 1.300, 0.3 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
 RED2, RED, SUMINISTRO, A, 0.000, 1.300, 0.3 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)

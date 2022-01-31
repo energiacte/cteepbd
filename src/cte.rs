@@ -107,7 +107,7 @@ pub static CTE_LOCWF_RITE2014: Lazy<HashMap<&'static str, Factors>> = Lazy::new(
             Factor::new(GASOLEO, RED, SUMINISTRO, A, (0.003, 1.179, 0.311).into(), "Recursos usados para suministrar el vector desde la red"),
             Factor::new(GLP, RED, SUMINISTRO, A, (0.003, 1.201, 0.254).into(), "Recursos usados para suministrar el vector desde la red"),
             Factor::new(ELECTRICIDAD, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para producir electricidad in situ"),
-            Factor::new(ELECTRICIDAD, COGENERACION, SUMINISTRO, A, (0.000, 0.000, 0.000).into(), "Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)"),
+            Factor::new(ELECTRICIDAD, COGEN, SUMINISTRO, A, (0.000, 0.000, 0.000).into(), "Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)"),
             // Factor::new(ELECTRICIDAD, RED, SUMINISTRO, A, (ren, nren, co2), "Recursos usados para el suministro desde la red")
         ]};
     let mut wfpen = wf.clone();
@@ -202,7 +202,7 @@ pub fn wfactors_from_loc(
 
 /// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
 ///
-/// Los elementos que tiene origen en la RED (!= INSITU, != COGENERACION)
+/// Los elementos que tiene origen en la RED (!= INSITU, != COGEN)
 /// y no están en la lista CTE_NRBY cambian sus factores de paso
 /// de forma que ren' = 0 y nren' = ren + nren.
 /// **ATENCIÓN**: ¡¡La producción eléctrica de la cogeneración entra con (factores ren:0, nren:0)!!
@@ -212,7 +212,7 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
 
     for f in wfactors.wdata.iter().cloned() {
         if f.source == Source::INSITU
-            || f.source == Source::COGENERACION
+            || f.source == Source::COGEN
             || CTE_NRBY.contains(&f.carrier)
         {
             wdata.push(f)

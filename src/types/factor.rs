@@ -43,7 +43,7 @@ use crate::{error::EpbdError, types::RenNrenCo2};
 pub struct Factor {
     /// Energy carrier
     pub carrier: Carrier,
-    /// Carrier source (`RED`, `INSITU` or `COGENERACION`)
+    /// Carrier source (`RED`, `INSITU` or `COGEN`)
     pub source: Source,
     /// Destination use of the energy (`SUMINISTRO`, `A_RED`, `A_NEPB`)
     pub dest: Dest,

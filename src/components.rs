@@ -44,8 +44,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        Carrier, EnergyData, HasValues, Meta, MetaVec, Source, GenProd, Service,
-        GenOut, GenCrIn, ZoneNeeds,
+        Carrier, EnergyData, GenCrIn, GenOut, GenProd, HasValues, Meta, MetaVec, Service, Source,
+        ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
@@ -120,7 +120,7 @@ impl str::FromStr for Components {
         let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "ZONA", "GEN"];
 
         for line in datalines {
-            let tags: Vec<_> = line.splitn(4, ',').map(str::trim).skip(1).take(2).collect();
+            let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
             let tag1 = tags.get(0).unwrap_or(&"");
             let tag2 = tags.get(1).unwrap_or(&"");
             let tag = if ctypes_tag_list.contains(tag1) {
@@ -135,8 +135,8 @@ impl str::FromStr for Components {
                 "GEN" => systems.push(line.parse()?),
                 _ => {
                     return Err(EpbdError::ParseError(format!(
-                        "ERROR: No se reconoce el componente de la línea: {}",
-                        line
+                        "ERROR: No se reconoce el componente de la línea: {} {}",
+                        line, tag
                     )))
                 }
             }
@@ -387,40 +387,40 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     const TCOMPS1: &str = "#META CTE_AREAREF: 100.5
-0, ELECTRICIDAD, PRODUCCION, INSITU, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
-0, ELECTRICIDAD, CONSUMO, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, ELECTRICIDAD, CONSUMO, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, MEDIOAMBIENTE, CONSUMO, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
+0, PRODUCCION, INSITU, ELECTRICIDAD, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
+0, CONSUMO, REF, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, CONSUMO, CAL, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
 
     // Se han puesto las producciones eléctricas a servicio NDEF y compensado consumos de MEDIOAMBIENTE
     const TCOMPSRES1: &str = "#META CTE_AREAREF: 100.5
-0, ELECTRICIDAD, PRODUCCION, INSITU, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
-0, ELECTRICIDAD, CONSUMO, REF, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, ELECTRICIDAD, CONSUMO, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, MEDIOAMBIENTE, CONSUMO, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
-0, MEDIOAMBIENTE, PRODUCCION, INSITU, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
+0, PRODUCCION, INSITU, ELECTRICIDAD, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
+0, CONSUMO, REF, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, CONSUMO, CAL, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
+0, PRODUCCION, INSITU, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
 
     // La producción se debe repartir al 50% entre los usos EPB
     const TCOMPSRES2: &str = "#META CTE_AREAREF: 100.5
 #META CTE_SERVICIO: CAL
-0, ELECTRICIDAD, CONSUMO, CAL, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, MEDIOAMBIENTE, CONSUMO, CAL, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
-0, MEDIOAMBIENTE, PRODUCCION, INSITU, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
-0, ELECTRICIDAD, PRODUCCION, INSITU, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción eléctrica reasignada al servicio";
+0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
+0, CONSUMO, CAL, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
+0, PRODUCCION, INSITU, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
+0, PRODUCCION, INSITU, ELECTRICIDAD, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción eléctrica reasignada al servicio";
 
     // La producción se debe repartir al 50% entre los usos EPB y sin excesos
     const TCOMPS2: &str = "#META CTE_AREAREF: 1.0
-0, ELECTRICIDAD, PRODUCCION, INSITU, 2.00, 6.00, 2.00
-0, ELECTRICIDAD, CONSUMO, REF, 1.00, 1.00, 1.00
-0, ELECTRICIDAD, CONSUMO, CAL, 1.00, 2.00, 1.00
-0, MEDIOAMBIENTE, CONSUMO, CAL, 2.00, 2.00, 2.00";
+0, PRODUCCION, INSITU, ELECTRICIDAD, 2.00, 6.00, 2.00
+0, CONSUMO, REF, ELECTRICIDAD, 1.00, 1.00, 1.00
+0, CONSUMO, CAL, ELECTRICIDAD, 1.00, 2.00, 1.00
+0, CONSUMO, CAL, MEDIOAMBIENTE, 2.00, 2.00, 2.00";
 
     const TCOMPSRES3: &str = "#META CTE_AREAREF: 1.0
 #META CTE_SERVICIO: CAL
-0, ELECTRICIDAD, CONSUMO, CAL, 1.00, 2.00, 1.00
-0, MEDIOAMBIENTE, CONSUMO, CAL, 2.00, 2.00, 2.00
-0, MEDIOAMBIENTE, PRODUCCION, INSITU, 2.00, 2.00, 2.00 # Equilibrado de consumo sin producción declarada
-0, ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 1.00 #  Producción eléctrica reasignada al servicio";
+0, CONSUMO, CAL, ELECTRICIDAD, 1.00, 2.00, 1.00
+0, CONSUMO, CAL, MEDIOAMBIENTE, 2.00, 2.00, 2.00
+0, PRODUCCION, INSITU, MEDIOAMBIENTE, 2.00, 2.00, 2.00 # Equilibrado de consumo sin producción declarada
+0, PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 1.00 #  Producción eléctrica reasignada al servicio";
 
     #[test]
     fn tcomponents_parse() {
@@ -460,18 +460,18 @@ mod tests {
     #[test]
     fn normalize() {
         let comps = "# Bomba de calor 1
-            1,ELECTRICIDAD,CONSUMO,ACS,100 # BdC 1
-            1,MEDIOAMBIENTE,CONSUMO,ACS,150 # BdC 1
+            1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC 1
+            1,CONSUMO,ACS,MEDIOAMBIENTE,150 # BdC 1
             # Bomba de calor 2
-            2,ELECTRICIDAD,CONSUMO,CAL,200 # BdC 2
-            2,MEDIOAMBIENTE,CONSUMO,CAL,300 # BdC 2
+            2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC 2
+            2,CONSUMO,CAL,MEDIOAMBIENTE,300 # BdC 2
             # Producción fotovoltaica in situ
-            1,ELECTRICIDAD,PRODUCCION,INSITU,50 # PV
-            2,ELECTRICIDAD,PRODUCCION,INSITU,100 # PV
+            1,PRODUCCION,INSITU,ELECTRICIDAD,50 # PV
+            2,PRODUCCION,INSITU,ELECTRICIDAD,100 # PV
             # Producción de energía ambiente dada por el usuario
-            0,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
-            1,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-            2,MEDIOAMBIENTE,PRODUCCION,INSITU,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
+            0,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+            1,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+            2,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
             # Compensación de energía ambiente a completar por CteEPBD"
             .parse::<Components>()
             .unwrap()
@@ -511,10 +511,10 @@ mod tests {
             0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
             1, GEN, CARGA, REF, -3.0 # Demanda ref. EER 3
             2, GEN, CARGA, CAL, 3.0 # Demanda cal. COP 3
-            1, ELECTRICIDAD, PRODUCCION, INSITU, 2.00 # Producción PV
-            2, ELECTRICIDAD, CONSUMO, REF, 1.00 # BdC modo refrigeración
-            2, ELECTRICIDAD, CONSUMO, CAL, 1.00 # BdC modo calefacción
-            2, MEDIOAMBIENTE, CONSUMO, CAL, 2.00 # BdC modo calefacción
+            1, PRODUCCION, INSITU, ELECTRICIDAD, 2.00 # Producción PV
+            2, CONSUMO, REF, ELECTRICIDAD, 1.00 # BdC modo refrigeración
+            2, CONSUMO, CAL, ELECTRICIDAD, 1.00 # BdC modo calefacción
+            2, CONSUMO, CAL, MEDIOAMBIENTE, 2.00 # BdC modo calefacción
             "
         .parse::<Components>()
         .unwrap();

@@ -102,7 +102,7 @@ pub enum Source {
     /// Insitu generation source
     INSITU,
     /// Cogeneration source
-    COGENERACION,
+    COGEN,
 }
 
 impl str::FromStr for Source {
@@ -112,7 +112,7 @@ impl str::FromStr for Source {
         match s {
             "RED" => Ok(Source::RED),
             "INSITU" => Ok(Source::INSITU),
-            "COGENERACION" => Ok(Source::COGENERACION),
+            "COGEN" => Ok(Source::COGEN),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -198,11 +198,8 @@ impl str::FromStr for Service {
     fn from_str(s: &str) -> Result<Service, Self::Err> {
         match s {
             "ACS" => Ok(Service::ACS),
-            "WATERSYSTEMS" => Ok(Service::ACS),
             "CAL" => Ok(Service::CAL),
-            "HEATING" => Ok(Service::CAL),
             "REF" => Ok(Service::REF),
-            "COOLING" => Ok(Service::REF),
             "VEN" => Ok(Service::VEN),
             "FANS" => Ok(Service::VEN),
             "ILU" => Ok(Service::ILU),

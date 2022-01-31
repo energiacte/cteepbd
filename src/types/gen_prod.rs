@@ -28,16 +28,16 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{Source, Carrier, HasValues};
+use super::{Carrier, HasValues, Source};
 use crate::error::EpbdError;
 
 // -------------------- Produced Energy Component
 // Define basic Produced Energy Component type
 
-/// Componente de energía generada.
+/// Componente de energía generada (producción). E_pr,i;cr,j;t
 ///
-/// Representa la producción de energía para cada paso de cálculo,
-/// a lo largo del periodo de cálculo, para cada tipo de producción de energía.
+/// Representa la producción de energía con el vector energético j del sistema i
+/// para cada paso de cálculo t, a lo largo del periodo de cálculo.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenProd {
     /// System or part id
@@ -49,7 +49,7 @@ pub struct GenProd {
     /// Carrier name
     pub carrier: Carrier,
     /// Energy source
-    /// - `INSITU` or `COGENERACION` for generated energy component types
+    /// - `INSITU` or `COGEN` for generated energy component types
     pub source: Source,
     /// List of produced energy values, one value for each timestep. kWh
     pub values: Vec<f32>,
@@ -78,8 +78,8 @@ impl fmt::Display for GenProd {
         };
         write!(
             f,
-            "{}, {}, PRODUCCION, {}, {}{}",
-            self.id, self.carrier, self.source, valuelist, comment
+            "{}, PRODUCCION, {}, {}, {}{}",
+            self.id, self.source, self.carrier, valuelist, comment
         )
     }
 }
@@ -88,8 +88,8 @@ impl str::FromStr for GenProd {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<GenProd, Self::Err> {
-        use self::Source::*;
         use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
+        use self::Source::*;
 
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
@@ -106,19 +106,26 @@ impl str::FromStr for GenProd {
             Err(_) => (0, 0_i32),
         };
 
-        let carrier: Carrier = items[baseidx].parse()?;
-        let ctype = items[baseidx + 1];
-        let source: Source = items[baseidx + 2].parse()?;
-
-        // Check coherence of ctype and csubtype
-        let subtype_belongs_to_type = match source {
-            INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
-            COGENERACION => carrier == ELECTRICIDAD,
-            _ => false
-        };
-        if !(ctype == "PRODUCCION" && subtype_belongs_to_type) {
+        let ctype = items[baseidx];
+        if ctype != "PRODUCCION" {
             return Err(EpbdError::ParseError(format!(
                 "Componente de energía generada con formato incorrecto: {}",
+                s
+            )));
+        }
+
+        let source: Source = items[baseidx + 1].parse()?;
+        let carrier: Carrier = items[baseidx + 2].parse()?;
+
+        // Check coherence of ctype and source
+        let source_belongs_to_type = match source {
+            INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
+            COGEN => carrier == ELECTRICIDAD,
+            _ => false,
+        };
+        if !source_belongs_to_type {
+            return Err(EpbdError::ParseError(format!(
+                "Componente de energía generada con origen inconsistente: {}",
                 s
             )));
         }
@@ -158,8 +165,8 @@ mod tests {
             ],
             comment: "Comentario prod 1".into(),
         };
-        let component2str = "0, ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
-        let component2strlegacy = "ELECTRICIDAD, PRODUCCION, INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let component2str = "0, PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let component2strlegacy = "PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
         assert_eq!(component2.to_string(), component2str);
 
         // roundtrip building from/to string
