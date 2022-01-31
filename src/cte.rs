@@ -711,6 +711,7 @@ fn components_to_xml(c: &Components) -> String {
         .map(|c| match c {
             EnergyData::GenCrIn(e) => used_to_xml(e),
             EnergyData::GenProd(e) => produced_to_xml(e),
+            EnergyData::GenAux(e) => aux_to_xml(e),
         })
         .collect::<Vec<String>>()
         .join("\n");
@@ -785,6 +786,23 @@ fn used_to_xml(e: &GenCrIn) -> String {
         "<Consumo><Id>{}</Id><Vector>{}</Vector><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></Consumo>",
         id,
         carrier,
+        service,
+        format_values_2f(values),
+        escape_xml(comment)
+    )
+}
+
+/// Convierte componente de energía auxiliar a XML
+fn aux_to_xml(e: &GenAux) -> String {
+    let GenAux {
+        id,
+        service,
+        values,
+        comment,
+    } = e;
+    format!(
+        "<Aux><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></Aux>",
+        id,
         service,
         format_values_2f(values),
         escape_xml(comment)

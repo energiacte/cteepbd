@@ -990,6 +990,7 @@ fn new_format_with_system_id() {
     let comps = "# Bomba de calor 1
     1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC 1
     1,CONSUMO,ACS,MEDIOAMBIENTE,150 # BdC 1
+    1,AUX,ACS,5 # Auxiliares ACS
     2,CONSUMO,NEPB,ELECTRICIDAD,10 # Ascensores
     # Bomba de calor 2
     2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC 2
@@ -997,7 +998,7 @@ fn new_format_with_system_id() {
     # Producción fotovoltaica in situ
     1,PRODUCCION,INSITU,ELECTRICIDAD,200 # PV
     2,PRODUCCION,INSITU,ELECTRICIDAD,100 # PV
-    3,PRODUCCION,INSITU,ELECTRICIDAD,5 # PV
+    3,PRODUCCION,INSITU,ELECTRICIDAD,15 # PV
     # Producción de energía ambiente dada por el usuario
     0,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
     1,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
@@ -1009,9 +1010,9 @@ fn new_format_with_system_id() {
     let bal = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
-            ren: 7.525,
-            nren: -0.10,
-            co2: -0.021,
+            ren: 7.600,
+            nren: -0.20,
+            co2: -0.042,
         },
         bal.balance_m2.B
     ));
@@ -1019,7 +1020,7 @@ fn new_format_with_system_id() {
     // NEPB used energy
     assert_eq!("10.000", format!("{:.3}", balance_el.used_nEPB_an));
     // Produced energy from all sources and used for EPB services
-    assert_eq!("300.000", format!("{:.3}", balance_el.produced_used_EPus_an));
+    assert_eq!("305.000", format!("{:.3}", balance_el.produced_used_EPus_an));
     // Exported energy to non EPB uses
-    assert_eq!("5.000", format!("{:.3}", balance_el.exported_nEPB_an));
+    assert_eq!("10.000", format!("{:.3}", balance_el.exported_nEPB_an));
 }

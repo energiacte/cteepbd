@@ -38,6 +38,7 @@ use crate::error::EpbdError;
 ///
 /// Representa la producción de energía con el vector energético j del sistema i
 /// para cada paso de cálculo t, a lo largo del periodo de cálculo.
+/// Subsistema: generacion + almacenamiento
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenProd {
     /// System or part id

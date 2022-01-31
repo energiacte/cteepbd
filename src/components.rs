@@ -117,7 +117,7 @@ impl str::FromStr for Components {
         let mut systems = Vec::new();
 
         // Tipos disponibles
-        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "ZONA", "GEN"];
+        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "ZONA", "GEN"];
 
         for line in datalines {
             let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
@@ -131,6 +131,7 @@ impl str::FromStr for Components {
             match *tag {
                 "CONSUMO" => cdata.push(EnergyData::GenCrIn(line.parse::<GenCrIn>()?)),
                 "PRODUCCION" => cdata.push(EnergyData::GenProd(line.parse()?)),
+                "AUX" => cdata.push(EnergyData::GenAux(line.parse()?)),
                 "ZONA" => zones.push(line.parse()?),
                 "GEN" => systems.push(line.parse()?),
                 _ => {
@@ -515,6 +516,9 @@ mod tests {
             2, CONSUMO, REF, ELECTRICIDAD, 1.00 # BdC modo refrigeración
             2, CONSUMO, CAL, ELECTRICIDAD, 1.00 # BdC modo calefacción
             2, CONSUMO, CAL, MEDIOAMBIENTE, 2.00 # BdC modo calefacción
+            2, CONSUMO, ACS, ELECTRICIDAD, 1.0 # BdC modo ACS
+            2, CONSUMO, ACS, MEDIOAMBIENTE, 2.0 # BdC modo ACS
+            2, AUX, ACS, 0.5 # Auxiliares ACS BdC
             "
         .parse::<Components>()
         .unwrap();

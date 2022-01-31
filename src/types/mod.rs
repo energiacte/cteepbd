@@ -34,19 +34,21 @@ Definición de tipos básicos para el cálculo de la eficiencia energética.
 mod common;
 mod energy_data;
 mod factor;
+mod gen_aux;
+mod gen_cr_in;
+mod gen_out;
 mod gen_prod;
 mod rennrenco2;
-mod gen_out;
 mod tmeta;
-mod gen_cr_in;
 mod zone_needs;
 
 pub use common::*;
 pub use energy_data::*;
 pub use factor::*;
+pub use gen_aux::*;
+pub use gen_cr_in::*;
+pub use gen_out::*;
 pub use gen_prod::*;
 pub use rennrenco2::*;
-pub use gen_out::*;
 pub use tmeta::*;
-pub use gen_cr_in::*;
 pub use zone_needs::*;

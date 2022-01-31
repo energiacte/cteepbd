@@ -335,7 +335,7 @@ fn balance_for_carrier(
 
     // Accumulate for all components
     for c in &cr_list {
-        if c.is_used() {
+        if c.is_used() || c.is_aux() {
             if c.is_epb_use() {
                 E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, c.values())
             } else {

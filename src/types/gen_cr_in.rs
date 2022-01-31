@@ -40,6 +40,7 @@ use crate::error::EpbdError;
 /// para el servicio X en el generador i, para los distintos pasos de cálculo t,
 ///
 /// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
+/// Subsistema: generacion + almacenamiento
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GenCrIn {
     /// System or part id (generator i)
