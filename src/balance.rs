@@ -302,6 +302,9 @@ pub struct BalanceForCarrier {
 ///   y, si implementamos el soporte generador a generador, habría que revisar esto. En particular,
 ///   cómo se calcula f_pr_cr_j.
 /// - Implementar factor de reparto de carga f_match_t
+///   Ver ISO_DIS_52000-1_SS_2015_05_13.xlsm
+///     - si pr/us <=0; f_match_t = 1
+///     - si pr/us > 0; f_match_t = (pr/us + 1/pr/us - 1) / (pr/us + 1/pr/us)
 #[allow(non_snake_case)]
 fn balance_for_carrier(
     carrier: Carrier,

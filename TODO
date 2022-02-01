@@ -16,8 +16,12 @@
 
 - epbd:
 
-  - Renombrar a cdata a energia
-  - EDIFICIO (Ver EN 52000-1, 12.1 informe)
+  - Ventilación e iluminación se consideran en la energía auxiliar (ver ISO_DIS_52000-1_SS_2015_05_13.xlsm hoja de Method_input) de no generación (ngen)
+  - Diferenciar vectores renovables: SOL, PV y ENV y electricidad cogenerada ECGN  (ver hoja de ejemplo ISO_DIS_52000-1_SS_2015_05_13.xlsm)?
+    - Nos permite priorizar consumos eléctricos según origen
+    - Ver qué queremos...
+  - Renombrar a cdata a energia o a data?
+  - Datos de EDIFICIO (Ver EN 52000-1, 12.1 informe)
     - Components.edificio:
       - EDIFICIO, DEMANDA, CAL / REF, meses
       - EDIFICIO, TEMPERATURA, EXT / INT, meses
@@ -29,27 +33,10 @@
       - Number of hours where temperature shedule limits are not met (CAL, REF)
         - EDIFICIO, HORASFC, TOT / CAL / REF
       - Consumo sistemas de referencia (id=???)
-  - How to identify subsystems (generation, distribution, emission, storage) wrt energy use and production?
-    - Necesitamos calcular eficiencias por subsistemas (ver más abajo el cálculo) y para eso hay que diferenciarlos
-      - subsystem (Y): GEN+STO, DIS, EM
-        - We can define new object types for distribution and emission, as we don't use them yet.
-        - Pensar cómo encaja distribución y almacenamiento? DisIn, DisOut, DisAux, EmIn, EmOut, EmAux
-      - GEN+ALM: CONSUMO (GenCrIn), PRODUCCION (GenProd), CARGA (GenOut), AUX (GenAux)
-        - El consumo AUX se trata igual que el consumo eléctrico a efectos de balance pero no a efectos de cálculo de los rendimientos por subsistemas eff_i
-  - Compute system efficiencies (cal, ref?, acs) (and subsystems (generation+storage, distribution, emission))
-    - Generic energy efficiency (EN 15613-1:2018 (33)):
-      - eff_i = (Q_i_out + f_i · E_el_i_out) / (Q_i_in + f_i · W_i_aux);
-        - A conventional weighting factor, f_i=2,5 is used to add up heat and electricity (for comparability reasons)
-        - Q_i_in doesn't include heat captured in the evaporator from the heat source for heap pumps -> we get annual COP
-        - i = gen+sto, dis, em
-      - Generic system balance (15613-1, (3)): Q_X_Y_in = Q_X_Y_out + Q_X_ls - Q_X_Y_ls_rvd
-        - Q_X_Y_ls_rvd are recovered losses, Q_X_Y_nrvd = Q_X_ls - Q_X_Y_ls_rvd
-      - System balance for heat pumps (15613-4-2, (1), DWH (cal + acs)):
-        - E_X_Y_in \* COP = Q_X_Y_out + Q_X_ls_tot - Q_X_Y_in (ambiente) - f_Y;aux;ls;rvd · W_X_Y_aux (EN 15316-4-2:2019, formula 1, DHW, HEATING)
-        - Energy_use \* COP = Energy_out + Energy_losses - (Energy_from_heat_source_input + Energy_from_recovered_aux_energy_not_accounted_for_in_COP_input)
-        - This is: electr. o combustible \* COP = energía entregada + pérdidas - energía aportada medioambiente (fuente de calor) - pérdidas recuperables
-        - Q_X_Y_in = E_X_Y_in \* COP en términos de la EN 15316-1 (1). No considera energía ambiente capturada por la bomba.
-        - Para refrigeración ver UNE EN 14825=2016
+  - Datos de SISTEMA
+    - No calculamos las eficiencias de sistemas sino que las recogemos como entradas
+    - SISTEMA, GEN, id, COP, EER, COP_dhw, SCOP, SEER, SCOP_dhw, SPF_h, SPF_c, SPF_dhw, comentario
+    - SISTEMA, NGEN (DIS + EM), id, ???
   - define GEN as a new (nonEPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)
     - Used to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).

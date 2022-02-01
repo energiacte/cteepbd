@@ -69,7 +69,7 @@ pub enum EnergyData {
     // a partir de la energía saliente Q_X;Y;out
     // como (EN 15316-1, (3)) Q_X;Y;in = Q_X;Y;out + Q_X;Y;ls,nrvd
     // Subsistema: generación + almacenamiento
-    // LsNrvd(xxx)
+    // NrvdLs(xxx)
 
     // Subsistemas de distribución y emisión, sin identificación de sistema?
 
@@ -78,13 +78,13 @@ pub enum EnergyData {
     // Energía auxiliar empleada en los sistemas de emisión. W_X;em,i;aux;t
     // EmAux(xxx)
     // Pérdidas térmicas no recuperadas en el sistema de emisión. kWh
-    // EmLsNrvd(xxx)
+    // EmNrvdLs(xxx)
     // Energía saliente (entregada o absorbida) en la distribución. Q_X;dis,i;out
     // DisOut(xxx)
     // Energía auxiliar empleada en la distribución. W_X;dis,i;aux;t
     // DisAux(xxx)
     // Pérdidas térmicas no recuperadas en la distribución. kWh
-    // DisLsNrvd(xxx)
+    // DisNrvdLs(xxx)
 }
 
 impl EnergyData {
