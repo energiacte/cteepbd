@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        Carrier, EnergyData, GenCrIn, GenOut, GenProd, HasValues, Meta, MetaVec, Service, Source,
+        Carrier, EnergyData, GenProd, HasValues, Meta, MetaVec, Service, Source,
         ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
@@ -63,10 +63,10 @@ pub struct Components {
     pub cmeta: Vec<Meta>,
     /// Used or produced energy data
     pub cdata: Vec<EnergyData>,
-    /// Zone data
+    /// Building data
     pub zones: Vec<ZoneNeeds>,
-    /// System data
-    pub systems: Vec<GenOut>,
+    // System data
+    // pub systems: Vec<SystemData>,
 }
 
 impl MetaVec for Components {
@@ -113,11 +113,11 @@ impl str::FromStr for Components {
             .collect::<Result<Vec<Meta>, _>>()?;
 
         let mut cdata = Vec::new();
-        let mut zones = Vec::new();
-        let mut systems = Vec::new();
+        let mut building = Vec::new();
+        // let mut systems = None;
 
         // Tipos disponibles
-        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "ZONA", "GEN"];
+        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "SALIDA", "ZONA", "SISTEMA"];
 
         for line in datalines {
             let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
@@ -129,11 +129,12 @@ impl str::FromStr for Components {
                 tag2
             };
             match *tag {
-                "CONSUMO" => cdata.push(EnergyData::GenCrIn(line.parse::<GenCrIn>()?)),
+                "CONSUMO" => cdata.push(EnergyData::GenCrIn(line.parse()?)),
                 "PRODUCCION" => cdata.push(EnergyData::GenProd(line.parse()?)),
                 "AUX" => cdata.push(EnergyData::GenAux(line.parse()?)),
-                "ZONA" => zones.push(line.parse()?),
-                "GEN" => systems.push(line.parse()?),
+                "SALIDA" => cdata.push(EnergyData::GenOut(line.parse()?)),
+                "ZONA" => building.push(line.parse()?),
+                "SISTEMA" => unimplemented!(),
                 _ => {
                     return Err(EpbdError::ParseError(format!(
                         "ERROR: No se reconoce el componente de la línea: {} {}",
@@ -156,8 +157,7 @@ impl str::FromStr for Components {
         Ok(Components {
             cmeta,
             cdata,
-            zones,
-            systems,
+            zones: building,
         })
     }
 }
@@ -287,7 +287,6 @@ impl Components {
             cmeta,
             cdata: cdata_srv,
             zones: self.zones.clone(),
-            systems: self.systems.clone(),
         };
         newcomponents.set_meta("CTE_SERVICIO", &service.to_string());
 
@@ -510,15 +509,16 @@ mod tests {
         "#META CTE_AREAREF: 1.0
             0, ZONA, DEMANDA, REF, -3.0 # Demanda ref. edificio
             0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
-            1, GEN, CARGA, REF, -3.0 # Demanda ref. EER 3
-            2, GEN, CARGA, CAL, 3.0 # Demanda cal. COP 3
             1, PRODUCCION, INSITU, ELECTRICIDAD, 2.00 # Producción PV
-            2, CONSUMO, REF, ELECTRICIDAD, 1.00 # BdC modo refrigeración
             2, CONSUMO, CAL, ELECTRICIDAD, 1.00 # BdC modo calefacción
             2, CONSUMO, CAL, MEDIOAMBIENTE, 2.00 # BdC modo calefacción
+            2, SALIDA, CAL, 3.0 # Energía entregada por el equipo de calefacción con COP 3
             2, CONSUMO, ACS, ELECTRICIDAD, 1.0 # BdC modo ACS
             2, CONSUMO, ACS, MEDIOAMBIENTE, 2.0 # BdC modo ACS
+            2, SALIDA, ACS, 3.0 # Energía entregada por el equipo de acs con COP_dhw 3
             2, AUX, ACS, 0.5 # Auxiliares ACS BdC
+            3, CONSUMO, REF, ELECTRICIDAD, 1.00 # BdC modo refrigeración
+            3, SALIDA, REF, -3.0 # Energía absorbida por el equipo de refrigeración con EER 3
             "
         .parse::<Components>()
         .unwrap();

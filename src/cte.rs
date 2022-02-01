@@ -211,9 +211,7 @@ pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
     let mut wdata: Vec<Factor> = Vec::new();
 
     for f in wfactors.wdata.iter().cloned() {
-        if f.source == Source::INSITU
-            || f.source == Source::COGEN
-            || CTE_NRBY.contains(&f.carrier)
+        if f.source == Source::INSITU || f.source == Source::COGEN || CTE_NRBY.contains(&f.carrier)
         {
             wdata.push(f)
         } else {
@@ -699,7 +697,6 @@ fn components_to_xml(c: &Components) -> String {
         cmeta,
         cdata,
         zones,
-        systems,
     } = &c;
     let cmetastring = cmeta
         .iter()
@@ -712,17 +709,13 @@ fn components_to_xml(c: &Components) -> String {
             EnergyData::GenCrIn(e) => used_to_xml(e),
             EnergyData::GenProd(e) => produced_to_xml(e),
             EnergyData::GenAux(e) => aux_to_xml(e),
+            EnergyData::GenOut(e) => out_to_xml(e),
         })
         .collect::<Vec<String>>()
         .join("\n");
     let zonesdatastring = zones
         .iter()
-        .map(zoneneeds_to_xml)
-        .collect::<Vec<String>>()
-        .join("\n");
-    let systemsdatastring = systems
-        .iter()
-        .map(systemneeds_to_xml)
+        .map(needs_to_xml)
         .collect::<Vec<String>>()
         .join("\n");
     format!(
@@ -730,9 +723,8 @@ fn components_to_xml(c: &Components) -> String {
     {}
     {}
     {}
-    {}
 </Componentes>",
-        cmetastring, cdatastring, zonesdatastring, systemsdatastring
+        cmetastring, cdatastring, zonesdatastring
     )
 }
 
@@ -809,6 +801,23 @@ fn aux_to_xml(e: &GenAux) -> String {
     )
 }
 
+/// Convierte componente de energía auxiliar a XML
+fn out_to_xml(e: &GenOut) -> String {
+    let GenOut {
+        id,
+        service,
+        values,
+        comment,
+    } = e;
+    format!(
+        "<Salida><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></Salida>",
+        id,
+        service,
+        format_values_2f(values),
+        escape_xml(comment)
+    )
+}
+
 /// Convierte metadato a XML
 fn meta_to_xml(m: &Meta) -> String {
     format!(
@@ -818,8 +827,8 @@ fn meta_to_xml(m: &Meta) -> String {
     )
 }
 
-/// Convierte componente de demanda de zona a XML
-fn zoneneeds_to_xml(e: &ZoneNeeds) -> String {
+/// Convierte elementos de demanda a XML
+fn needs_to_xml(e: &ZoneNeeds) -> String {
     let ZoneNeeds {
         id,
         service,
@@ -828,23 +837,6 @@ fn zoneneeds_to_xml(e: &ZoneNeeds) -> String {
     } = e;
     format!(
         "<DemandaZona><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></DemandaZona>",
-        id,
-        service,
-        format_values_2f(values),
-        escape_xml(comment)
-    )
-}
-
-/// Convierte componente de energía consumida a XML
-fn systemneeds_to_xml(e: &GenOut) -> String {
-    let GenOut {
-        id,
-        service,
-        values,
-        comment,
-    } = e;
-    format!(
-        "<DemandaSistema><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></DemandaSistema>",
         id,
         service,
         format_values_2f(values),

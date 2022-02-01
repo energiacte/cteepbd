@@ -27,64 +27,37 @@ use std::{fmt, str};
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Carrier, GenAux, GenCrIn, GenProd, HasValues, Service, Source};
+use crate::types::{Carrier, GenAux, GenCrIn, GenOut, GenProd, HasValues, Service, Source};
 
 /// Componentes de energía generada o consumida
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EnergyData {
-    /// Energía usada (consumida) en los sistemas de generación y almacenamiento. E_X;gen,i;in;cr,j;t
+    /// Energía usada (consumida). E_X;Y;in;cr,j;t
     ///
     /// Representa el consumo de energía del vector energético j
-    /// para el servicio X en el subsistema Y (generación y almacenamiento) sistema i, (id=i),
-    /// para los distintos pasos de cálculo t, a lo largo del periodo de cálculo. E_X;Y;in;cr,j;t
+    /// para el servicio X en el subsistema Y y sistema i, (id=i),
+    /// para los distintos pasos de cálculo t,
+    /// a lo largo del periodo de cálculo. Ej. E_X;gen,i;in;cr,j;t
     ///
     /// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
-    /// Subsistema: generación + almacenamiento
     GenCrIn(GenCrIn),
-    /// Energía generada (producida). E_pr,j;cr,i;t
+    /// Energía generada (producida). E_pr;cr,i;t
     ///
-    /// Representa la producción de energía del vector energético j (con origen dado en el sistema j)
-    /// para los pasos de cálculo t, a lo largo del periodo de cálculo. E_pr,j;cr,i;t
-    /// Subsistema: generación + almacenamiento
+    /// Representa la producción de energía del vector energético j
+    /// (con origen dado en el sistema j) para los pasos de cálculo t,
+    /// a lo largo del periodo de cálculo. Ej. E_pr,j;cr,i;t
     GenProd(GenProd),
-    /// Energía auxiliar (consumida) en los sistemas de generación y almacenamiento. W_X;gen_i;aux;t
+    /// Energía auxiliar (consumida). W_X;Y;aux;t
     ///
     /// Representa el consumo de energía (eléctrica) para usos auxiliares
-    /// del servicio X en el subsistema Y (gen + alm) y sistema i (id=i),
-    /// para los distintos pasos de cálculo. W_X;Y;aux;t
-    /// Subsistema: generación + almacenamiento
+    /// del servicio X en el subsistema Y y sistema i (id=i),
+    /// para los distintos pasos de cálculo. Ej. W_X;gen_i;aux;t
     GenAux(GenAux),
-    // TODO: Energía saliente (entregada o absorbida) en los sistemas de generación y almacenamiento. Q_X;gen,i;out
-    //
-    // Representa la energía entregada o absorbida para el servicio X por los sistemas i
-    // pertenecientes al subsistema Y (generación y almacenamiento) del edificio. Q_X;Y;out
-    // Subsistema: generación + almacenamiento
-    // GenOut(GenOut)
-
-    // TODO: Pérdidas térmicas no recuperadas en el sistema de generación y almacenamiento. Q_X;gen,i;ls,nrvd
-    //
-    // Q_X;Y;ls,nrvd = Q_X;Y;ls - Q_X;Y;ls,rvd (15316-1:2018 (3))
-    //
-    // Permite calcular la energía entrante al sistema i para el servicio X en el subsistema Y
-    // a partir de la energía saliente Q_X;Y;out
-    // como (EN 15316-1, (3)) Q_X;Y;in = Q_X;Y;out + Q_X;Y;ls,nrvd
-    // Subsistema: generación + almacenamiento
-    // NrvdLs(xxx)
-
-    // Subsistemas de distribución y emisión, sin identificación de sistema?
-
-    // Energía saliente (entregada o absorbida) en los sistemas de emisión. Q_X;em,i;out
-    // EmOut(xxx)
-    // Energía auxiliar empleada en los sistemas de emisión. W_X;em,i;aux;t
-    // EmAux(xxx)
-    // Pérdidas térmicas no recuperadas en el sistema de emisión. kWh
-    // EmNrvdLs(xxx)
-    // Energía saliente (entregada o absorbida) en la distribución. Q_X;dis,i;out
-    // DisOut(xxx)
-    // Energía auxiliar empleada en la distribución. W_X;dis,i;aux;t
-    // DisAux(xxx)
-    // Pérdidas térmicas no recuperadas en la distribución. kWh
-    // DisNrvdLs(xxx)
+    /// Energía saliente (entregada o absorbida). Q_X;Y;out
+    ///
+    /// Representa la energía entregada o absorbida para el servicio X por los sistemas i
+    /// pertenecientes al subsistema Y  del edificio. Ej. Q_X;gen,i;out
+    GenOut(GenOut),
 }
 
 impl EnergyData {
@@ -94,6 +67,7 @@ impl EnergyData {
             EnergyData::GenCrIn(e) => e.id,
             EnergyData::GenProd(e) => e.id,
             EnergyData::GenAux(e) => e.id,
+            EnergyData::GenOut(e) => e.id,
         }
     }
 
@@ -103,13 +77,16 @@ impl EnergyData {
             EnergyData::GenCrIn(e) => e.carrier,
             EnergyData::GenProd(e) => e.carrier,
             EnergyData::GenAux(_) => Carrier::ELECTRICIDAD,
+            EnergyData::GenOut(_) => unreachable!(),
         }
     }
 
     /// Get production source (INSITU / COGEN) for this component
     pub fn source(&self) -> Source {
         match self {
-            EnergyData::GenCrIn(_) | EnergyData::GenAux(_) => unreachable!(),
+            EnergyData::GenCrIn(_) | EnergyData::GenAux(_) | EnergyData::GenOut(_) => {
+                unreachable!()
+            }
             EnergyData::GenProd(e) => e.source,
         }
     }
@@ -120,6 +97,7 @@ impl EnergyData {
             EnergyData::GenCrIn(e) => e.service,
             EnergyData::GenAux(e) => e.service,
             EnergyData::GenProd(_) => unreachable!(),
+            EnergyData::GenOut(e) => e.service,
         }
     }
 
@@ -129,6 +107,7 @@ impl EnergyData {
             EnergyData::GenCrIn(e) => &e.comment,
             EnergyData::GenProd(e) => &e.comment,
             EnergyData::GenAux(e) => &e.comment,
+            EnergyData::GenOut(e) => &e.comment,
         }
     }
 
@@ -138,6 +117,7 @@ impl EnergyData {
             EnergyData::GenCrIn(_) => true,
             EnergyData::GenProd(_) => false,
             EnergyData::GenAux(_) => false,
+            EnergyData::GenOut(_) => false,
         }
     }
 
@@ -147,6 +127,7 @@ impl EnergyData {
             EnergyData::GenCrIn(_) => false,
             EnergyData::GenProd(_) => true,
             EnergyData::GenAux(_) => false,
+            EnergyData::GenOut(_) => false,
         }
     }
 
@@ -156,6 +137,17 @@ impl EnergyData {
             EnergyData::GenCrIn(_) => false,
             EnergyData::GenProd(_) => false,
             EnergyData::GenAux(_) => true,
+            EnergyData::GenOut(_) => false,
+        }
+    }
+
+    /// Is this energy of the output energy kind?
+    pub fn is_out(&self) -> bool {
+        match self {
+            EnergyData::GenCrIn(_) => false,
+            EnergyData::GenProd(_) => false,
+            EnergyData::GenAux(_) => false,
+            EnergyData::GenOut(_) => true,
         }
     }
 
@@ -165,6 +157,7 @@ impl EnergyData {
             EnergyData::GenCrIn(e) => e.service.is_epb(),
             EnergyData::GenProd(_) => false,
             EnergyData::GenAux(e) => e.service.is_epb(),
+            EnergyData::GenOut(_) => false,
         }
     }
 
@@ -174,6 +167,7 @@ impl EnergyData {
             EnergyData::GenCrIn(e) => e.service.is_nepb(),
             EnergyData::GenProd(_) => false,
             EnergyData::GenAux(e) => e.service.is_nepb(),
+            EnergyData::GenOut(_) => false,
         }
     }
 
@@ -183,6 +177,7 @@ impl EnergyData {
             EnergyData::GenCrIn(_) => false,
             EnergyData::GenProd(e) => e.source == Source::INSITU,
             EnergyData::GenAux(_) => false,
+            EnergyData::GenOut(_) => false,
         }
     }
 
@@ -192,6 +187,7 @@ impl EnergyData {
             EnergyData::GenCrIn(_) => false,
             EnergyData::GenProd(e) => e.source == Source::COGEN,
             EnergyData::GenAux(_) => false,
+            EnergyData::GenOut(_) => false,
         }
     }
 
@@ -222,6 +218,7 @@ impl std::fmt::Display for EnergyData {
             EnergyData::GenCrIn(e) => e.fmt(f),
             EnergyData::GenProd(e) => e.fmt(f),
             EnergyData::GenAux(e) => e.fmt(f),
+            EnergyData::GenOut(e) => e.fmt(f),
         }
     }
 }
@@ -232,6 +229,7 @@ impl HasValues for EnergyData {
             EnergyData::GenCrIn(e) => e.values(),
             EnergyData::GenProd(e) => e.values(),
             EnergyData::GenAux(e) => e.values(),
+            EnergyData::GenOut(e) => e.values(),
         }
     }
 }

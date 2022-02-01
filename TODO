@@ -15,26 +15,15 @@
     o documentar que no se introducen los no EPB como tales cuando corresponda (p.e. iluminación en residencial) (Poner en manual como nota)
 
 - epbd:
-
-  - Ventilación e iluminación se consideran en la energía auxiliar (ver ISO_DIS_52000-1_SS_2015_05_13.xlsm hoja de Method_input) de no generación (ngen)
+  - Renombrar GenCrIn a CrIn, GenProd a Prod, GenAux a Aux, y GenOut a Out, y gen\_ -> element\_
   - Diferenciar vectores renovables: SOL, PV y ENV y electricidad cogenerada ECGN  (ver hoja de ejemplo ISO_DIS_52000-1_SS_2015_05_13.xlsm)?
     - Nos permite priorizar consumos eléctricos según origen
     - Ver qué queremos...
   - Renombrar a cdata a energia o a data?
-  - Datos de EDIFICIO (Ver EN 52000-1, 12.1 informe)
-    - Components.edificio:
-      - EDIFICIO, DEMANDA, CAL / REF, meses
-      - EDIFICIO, TEMPERATURA, EXT / INT, meses
-      - EDIFICIO, RADIACION, HOR, meses
-      - EDIFICIO, TRANSFERENCIA, TRANSMISION, meses
-      - EDIFICIO, TRANSFERENCIA, VENTILACION, meses
-      - EDIFICIO, GANANCIAS, SOLARES, meses
-      - EDIFICIO, GANANCIAS, INTERNAS, meses
-      - Number of hours where temperature shedule limits are not met (CAL, REF)
-        - EDIFICIO, HORASFC, TOT / CAL / REF
-      - Consumo sistemas de referencia (id=???)
+  - Datos de ZONA completar con EN 52000-1, 12.1 informe
   - Datos de SISTEMA
-    - No calculamos las eficiencias de sistemas sino que las recogemos como entradas
+    - Eficiencias de sistemas (no las calculamos sino que son datos)
+    - Ver para qué sistemas (cal, ref, acs, ven?, ??)
     - SISTEMA, GEN, id, COP, EER, COP_dhw, SCOP, SEER, SCOP_dhw, SPF_h, SPF_c, SPF_dhw, comentario
     - SISTEMA, NGEN (DIS + EM), id, ???
   - define GEN as a new (nonEPB) service for energy used for cogeneration (see Module M11 in EN 15316)

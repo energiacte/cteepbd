@@ -77,8 +77,8 @@ fn get_ctefp_peninsula() -> Factors {
 }
 
 fn get_energydatalist() -> Components {
-    use Source::*;
     use Carrier::*;
+    use Source::*;
 
     //3 PV BdC_normativo
     Components {
@@ -122,7 +122,6 @@ fn get_energydatalist() -> Components {
             }),
         ],
         zones: vec![],
-        systems: vec![],
     }
 }
 
@@ -1020,7 +1019,10 @@ fn new_format_with_system_id() {
     // NEPB used energy
     assert_eq!("10.000", format!("{:.3}", balance_el.used_nEPB_an));
     // Produced energy from all sources and used for EPB services
-    assert_eq!("305.000", format!("{:.3}", balance_el.produced_used_EPus_an));
+    assert_eq!(
+        "305.000",
+        format!("{:.3}", balance_el.produced_used_EPus_an)
+    );
     // Exported energy to non EPB uses
     assert_eq!("10.000", format!("{:.3}", balance_el.exported_nEPB_an));
 }

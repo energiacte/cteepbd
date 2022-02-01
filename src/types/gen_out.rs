@@ -78,7 +78,7 @@ impl fmt::Display for GenOut {
         };
         write!(
             f,
-            "{}, GEN, CARGA, {}, {}{}",
+            "{}, SALIDA, {}, {}{}",
             self.id, self.service, valuelist, comment
         )
     }
@@ -93,15 +93,15 @@ impl str::FromStr for GenOut {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (id + GEN + CARGA + 1 value)
+        // Minimal possible length (id + GEN + SALIDA + 1 value)
         if items.len() < 4 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
         // Check GEN and CARGA marker fields;
-        if items[1] != "GEN" || items[2] != "CARGA" {
+        if items[1] != "SALIDA" {
             return Err(EpbdError::ParseError(format!(
-                "No se reconoce el formato como componente de Carga sobre el Sistema: {}",
+                "No se reconoce el formato como elemento de Salida del sistema: {}",
                 s
             )));
         }
@@ -111,17 +111,17 @@ impl str::FromStr for GenOut {
             Ok(id) => id,
             Err(_) => {
                 return Err(EpbdError::ParseError(format!(
-                    "Id erróneo en componente de Carga sobre el Sistema: {}",
+                    "Id erróneo en elemento de Salida del sistema: {}",
                     s
                 )))
             }
         };
 
         // Check service field
-        let service = items[3].parse()?;
+        let service = items[2].parse()?;
 
         // Collect energy values from the service field on
-        let values = items[4..]
+        let values = items[3..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
@@ -153,7 +153,7 @@ mod tests {
             ],
             comment: "Comentario carga sobre sistema 0".into(),
         };
-        let component1str = "0, GEN, CARGA, REF, -1.00, -2.00, -3.00, -4.00, -5.00, -6.00, -7.00, -8.00, -9.00, -10.00, -11.00, -12.00 # Comentario carga sobre sistema 0";
+        let component1str = "0, SALIDA, REF, -1.00, -2.00, -3.00, -4.00, -5.00, -6.00, -7.00, -8.00, -9.00, -10.00, -11.00, -12.00 # Comentario carga sobre sistema 0";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string

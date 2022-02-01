@@ -37,9 +37,21 @@ use crate::error::EpbdError;
 
 /// Componente de zona.
 ///
-/// Componente de demanda de las zonas del edificio
+/// Componente de datos de zonas del edificio
 ///
 /// Se serializa como: `id, ZONA, DEMANDA, servicio, vals... # comentario`
+/// 
+/// - ZONA, DEMANDA, CAL / REF, meses
+/// TODO: otros datos de ZONA (Ver EN 52000-1, 12.1 informe)
+///
+/// - ZONA, TEMPERATURA, EXT / INT, meses
+/// - ZONA, RADIACION, HOR, meses
+/// - ZONA, TRANSFERENCIA, TRANSMISION, meses
+/// - ZONA, TRANSFERENCIA, VENTILACION, meses
+/// - ZONA, GANANCIAS, SOLARES, meses
+/// - ZONA, GANANCIAS, INTERNAS, meses
+/// - Number of hours where temperature shedule limits are not met (CAL, REF)
+/// - ZONA, HORASFC, TOT / CAL / REF
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ZoneNeeds {
     /// Zone id
@@ -100,7 +112,7 @@ impl str::FromStr for ZoneNeeds {
         // Check ZONA and DEMANDA marker fields;
         if items[1] != "ZONA" || items[2] != "DEMANDA" {
             return Err(EpbdError::ParseError(format!(
-                "No se reconoce el formato como componente de Demanda de Zona: {}",
+                "No se reconoce el formato como elemento de Demanda: {}",
                 s
             )));
         }
@@ -110,7 +122,7 @@ impl str::FromStr for ZoneNeeds {
             Ok(id) => id,
             Err(_) => {
                 return Err(EpbdError::ParseError(format!(
-                    "Id erróneo en componente de Demanda de Zona: {}",
+                    "Id erróneo en elemento de Demanda: {}",
                     s
                 )))
             }

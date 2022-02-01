@@ -147,9 +147,9 @@ pub enum Service {
     VEN,
     /// Lighting (only when considered as EPB)
     ILU,
-    /// Humidification
+    /// Humidification, when not included in Heating
     HU,
-    /// Dehumidification
+    /// Dehumidification, when not included in Cooling
     DHU,
     /// Building automation and control
     BAC,
