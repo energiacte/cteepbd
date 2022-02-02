@@ -4,6 +4,7 @@
 .vscode/
 test_data/output/**
 docs/auto/**
+info*/**
 
 Cargo.lock
 *.tmp
