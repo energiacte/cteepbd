@@ -17,33 +17,46 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 ### Novedades
 
-- Nuevo vector energético SOLAR para identificar energía solar térmica procedente de captadores
-- Nuevo vector energético AMBIENTE para identificar la energía ambiente capturada por las bombas de calor
-- Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en AMBIENTE y SOLAR)
-- Nuevo elemento de datos de zona
-  - Permite introducir datos de demanda de zona (id=i) en cada paso de cálculo y para cada servicio
-  - La zona 0 remite al conjunto del edificio
-- Nuevo elemento de descripción de sistemas / equipos
-  - Permite indicar el subsistema al que pertenecen, así como sus rendimientos para los distintos servicios (SPF, COP/EER, SCOP/SEER, EFF)
-- Nuevo elemento de energía saliente
+- Cambios en el componente energético para energía usada (CONSUMO)
+  - Añadido identificador del sistema asociado al componente (id)
+  - Eliminación de los subtipos EPB, NEPB, pasando a ser NEPB un servicio y, el resto, servicios EPB (o GEN)
+- Cambios en el componente energético para energía producida (PRODUCCION)
+  - Añadido identificador del sistema asociado al componente (id)
+- Nuevo componente energético para energía saliente (SALIDA)
   - Indica la energía absorbida (p.e. refrigeración) o entregada (p.e. calor) en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
-- Nuevo elemento de consumo auxiliar
+  - Incluye un identificador de sistema asociado (id), servicio, valores para los pasos de cálculo y un comentario.
+- Nuevo componente energético para consumo auxiliar (AUX)
   - Indica la energía consumida para usos auxiliares en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
-  - Sustituye a los consumos con anotación CTEEPBD_EXCLUYE_AUX_ACS, que deja de estar soportada
-- Nuevo identificador de los elementos de componente energético (consumo, producción, saliente, auxiliar) y de elementos de zona.
-  - Identifica de forma única una zona
-  - Identifica de forma única un sistema y lo vincula a los componentes energéticos
-  - El Id=0 se utiliza para identificar sistemas globales o el conjunto del edificio
-  - Los valores negativos identifican equipos o zonas ficticias (p.e. equipos de referencia con -999)??
-  - La compensación automática de consumos de energía ambiente se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
-- Nuevo servicio NEPB para consumo destinado a usos no EPB
-  - Simplifica la descripción de elementos al eliminar el subtipo de consumo
-- Nuevo servicio GEN para consumos destinados a la producción eléctrica por cogeneración
-  - Es un consumo que no pertenece ni a usos EPB ni a usos no EPB, ya que la energía que incorpora se traslada a los factores de paso de la electricidad cogenerada
-- Nuevos resultados disponibles en la salida JSON
-- Cambio de nombre de sufijos "_bygen" a "_by_source" y "_byuse" a "_by_service" en la salida JSON
+  - Incluye un identificador de sistema asociado (id), servicio, valores para los pasos de cálculo y un comentario.
+  - Nota: este componente sustituye la anotación de consumos en el comentario con CTEEPBD_EXCLUYE_AUX_ACS, que deja de estar soportada
+- Nuevo elemento de datos de demanda de zona (ZONA, DEMANDA)
+  - Permite introducir datos de demanda asociados a una zona z (id=z)
+  - La zona con id=0 remite al conjunto del edificio (p.e. demandas de edificio)
+  - Incluye el identificador de zona, el tipo (DEMANDA), el servicio, los datos de demanda para cada paso de cálculo y un comentario
+- Nuevo elemento de descripción de sistemas / equipos (SISTEMA)
+  - Permite indicar el subsistema al que pertenecen, así como sus rendimientos para los distintos servicios (SPF, COP/EER, SCOP/SEER, EFF)
+  - Incluye un identificador (id) de equipo que permite vincularlos a los componentes energéticos
+  - Permite señalar los equipos de referencia (valores id negativos)
+  - TODO: formato a definir
+- Nuevo vector energético SOLAR
+  - Identifica la energía solar térmica procedente de captadores
+  - La compensación automática de consumos de SOLAR se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
+- Nuevo vector energético AMBIENTE
+  - Identificar la energía ambiente capturada por las bombas de calor
+  - La compensación automática de consumos de AMBIENTE se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
+- Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en AMBIENTE y SOLAR)
+- Nuevo servicio NEPB
+  - Para consumos destinados a usos no EPB
+- Nuevo servicio GEN
+  - Para consumos destinados a la producción eléctrica por cogeneración
+  - Estos consumos no pertenece ni a usos EPB ni a usos no EPB
+  - Permite el cálculo de los factores de paso de la electricidad cogenerada
 - Nueva salida XML
-- Eliminada la opción --acsnrb para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
+- Salida JSON:
+  - Nuevos resultados disponibles
+  - Cambio de nombre de sufijos "_bygen" a "_by_source" y "_byuse" a "_by_service" en la salida JSON
+- Ejecutable cteepbd:
+  - Eliminada la opción --acsnrb para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
 
 ### Incompatibilidades
 

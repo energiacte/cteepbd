@@ -15,7 +15,6 @@
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
     - Describe default method to find used energy from electrical efficiency of cogeneration.
-  - Implement battery support (EN 52000-1)
   - Datos de ZONA completar con EN 52000-1, 12.1 informe
   - Datos de SISTEMA
     - Eficiencias de sistemas (no las calculamos sino que son datos)
@@ -24,6 +23,7 @@
     - SISTEMA, GEN, id, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - SISTEMA, NGEN (DIS + EM), id, ???
   - Implement load matching factor computation (see formula 32, B.32, with k=1, n=1 for EPB uses)
+  - Implement battery support (see EN 52000-1 example spreadsheet for example)
 
 - tests:
 
