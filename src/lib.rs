@@ -120,7 +120,6 @@ extern crate pretty_assertions;
 
 mod balance;
 mod components;
-mod efficiencies;
 mod vecops;
 mod wfactors;
 
@@ -130,7 +129,6 @@ pub mod types;
 
 pub use balance::*;
 pub use components::*;
-pub use efficiencies::*;
 pub use wfactors::*;
 
 /// Número de versión de la librería
