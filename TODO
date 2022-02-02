@@ -21,7 +21,7 @@
     - Eficiencias de sistemas (no las calculamos sino que son datos)
     - Ver para qué sistemas (cal, ref, acs, ven?, ??)
     - Indicar qué tipo de sistema es
-    - SISTEMA, GEN, id, COP, EER, COP_dhw, SCOP, SEER, SCOP_dhw, SPF_h, SPF_c, SPF_dhw, comentario
+    - SISTEMA, GEN, id, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - SISTEMA, NGEN (DIS + EM), id, ???
   - Implement load matching factor computation (see formula 32, B.32, with k=1, n=1 for EPB uses)
 
