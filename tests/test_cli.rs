@@ -143,21 +143,6 @@ fn ejemplo_testcarriers_loc() {
 }
 
 #[test]
-fn ejemplo_testcarriers_loc_nearby() {
-    assert_cli::Assert::main_binary()
-        .with_args(&[
-            "-c",
-            "test_data/cte_test_carriers.csv",
-            "-l",
-            "PENINSULA",
-            "--acs_nearby",
-        ])
-        .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 9.2, nren = 4.7, tot = 13.9, RER = 0.66")
-        .unwrap();
-}
-
-#[test]
 fn ejemplo_acs_demanda_ren_con_nepb() {
     assert_cli::Assert::main_binary()
         .with_args(&[
