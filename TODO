@@ -11,8 +11,6 @@
   - Move balance::find_fp to Factors and take Factors, balance::{cr_list, fp_cr} to filter_by_cr in Components and Factors
 
 - epbd:
-  - Diferenciar vectores renovables SOL y ENV (ver hoja de ejemplo ISO_DIS_52000 que también diferencia PV y ECGN, pero estos orígenes ya los tenemos detectados)?
-    - Nos permite mostrar mejor las fuentes de energía
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
