@@ -23,13 +23,10 @@
 //            Daniel Jiménez González <dani@ietcc.csic.es>,
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-use std::fmt;
-use std::str;
-
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Carrier, HasValues, Service};
 use crate::error::EpbdError;
+use crate::types::{Carrier, HasValues, Service};
 
 // -------------------- EUsed Energy Component
 // Define basic EUsed Energy Component type
@@ -67,8 +64,8 @@ impl HasValues for EUsed {
     }
 }
 
-impl fmt::Display for EUsed {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for EUsed {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let valuelist = self
             .values
             .iter()
@@ -89,7 +86,7 @@ impl fmt::Display for EUsed {
     }
 }
 
-impl str::FromStr for EUsed {
+impl std::str::FromStr for EUsed {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<EUsed, Self::Err> {

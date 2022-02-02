@@ -351,17 +351,11 @@ impl Factors {
         // Mantenemos factores para todos los vectores usados
         self.wdata.retain(|f| wf_carriers.contains(&f.carrier));
         // Mantenemos factores para cogeneración sólo si hay cogeneración
-        let has_cogen = components
-            .cdata
-            .iter()
-            .any(|c| c.is_cogen_pr());
+        let has_cogen = components.cdata.iter().any(|c| c.is_cogen_pr());
         self.wdata
             .retain(|f| f.source != Source::COGEN || has_cogen);
         // Mantenemos factores a usos no EPB si hay uso de no EPB
-        let has_nepb = components
-            .cdata
-            .iter()
-            .any(|c| c.is_nepb_use());
+        let has_nepb = components.cdata.iter().any(|c| c.is_nepb_use());
         self.wdata.retain(|f| f.dest != Dest::A_NEPB || has_nepb);
         // Mantenemos factores de electricidad in situ si no hay producción de ese tipo
         let has_elec_onsite = components

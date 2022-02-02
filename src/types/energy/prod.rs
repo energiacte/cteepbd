@@ -23,13 +23,10 @@
 //            Daniel Jiménez González <dani@ietcc.csic.es>,
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-use std::fmt;
-use std::str;
-
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Carrier, HasValues, Source};
 use crate::error::EpbdError;
+use crate::types::{Carrier, HasValues, Source};
 
 // -------------------- Produced Energy Component
 // Define basic Produced Energy Component type
@@ -64,8 +61,8 @@ impl HasValues for EProd {
     }
 }
 
-impl fmt::Display for EProd {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for EProd {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let valuelist = self
             .values
             .iter()
@@ -85,7 +82,7 @@ impl fmt::Display for EProd {
     }
 }
 
-impl str::FromStr for EProd {
+impl std::str::FromStr for EProd {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<EProd, Self::Err> {
@@ -177,10 +174,7 @@ mod tests {
         );
         // roundtrip building from/to string for legacy format
         assert_eq!(
-            component2strlegacy
-                .parse::<EProd>()
-                .unwrap()
-                .to_string(),
+            component2strlegacy.parse::<EProd>().unwrap().to_string(),
             component2str
         );
     }

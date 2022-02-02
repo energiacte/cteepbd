@@ -51,12 +51,12 @@ use std::str::FromStr;
 use cteepbd::{
     cte, energy_performance,
     types::{MetaVec, RenNrenCo2, Service},
-    Balance, Components, UserWF,
+    AsCtePlain, AsCteXml, Balance, Components, UserWF,
 };
 
 const APP_TITLE: &str = r#"CteEPBD"#;
 const APP_DESCRIPTION: &str = r#"
-Copyright (c) 2018-2020 Ministerio de Fomento,
+Copyright (c) 2018-2022 Ministerio de Fomento,
               Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
@@ -68,7 +68,7 @@ Licencia: Publicado bajo licencia MIT.
 "#;
 const APP_ABOUT: &str = r#"CteEpbd - Eficiencia energética de los edificios (CTE DB-HE)."#;
 const APP_LICENSE: &str = r#"
-Copyright (c) 2018-2020 Ministerio de Fomento
+Copyright (c) 2018-2022 Ministerio de Fomento
               Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -606,7 +606,7 @@ fn main() {
             if verbosity > 0 {
                 println!("Resultados en formato XML: {:?}", path);
             }
-            let xml = cte::balance_to_xml(&balance);
+            let xml = &balance.to_xml();
             writefile(&path, xml.as_bytes());
         }
         // Mostrar siempre en formato de texto plano
@@ -615,7 +615,7 @@ fn main() {
         } else {
             println!("** Balance energético");
         }
-        let plain = cte::balance_to_plain(&balance);
+        let plain = balance.to_plain();
         println!("{}", plain);
 
         // Guardar balance en formato de texto plano

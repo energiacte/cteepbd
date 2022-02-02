@@ -40,7 +40,7 @@ use crate::error::EpbdError;
 /// Componente de datos de zonas del edificio
 ///
 /// Se serializa como: `id, ZONA, DEMANDA, servicio, vals... # comentario`
-/// 
+///
 /// - ZONA, DEMANDA, CAL / REF, meses
 /// TODO: otros datos de ZONA (Ver EN 52000-1, 12.1 informe)
 ///

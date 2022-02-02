@@ -107,7 +107,7 @@ let arearef = 200.0; // superficie de referencia [m2]
 let balance = energy_performance(&components, &fp, kexp, arearef).unwrap();
 
 // Visualización compacta
-println!("{}", cte::balance_to_plain(&balance));
+println!("{}", &balance.to_plain());
 ```
 
 */
@@ -118,6 +118,8 @@ println!("{}", cte::balance_to_plain(&balance));
 #[macro_use]
 extern crate pretty_assertions;
 
+mod asctexml;
+mod asplain;
 mod balance;
 mod components;
 mod vecops;
@@ -127,6 +129,8 @@ pub mod cte;
 pub mod error;
 pub mod types;
 
+pub use asctexml::*;
+pub use asplain::*;
 pub use balance::*;
 pub use components::*;
 pub use wfactors::*;

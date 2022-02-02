@@ -28,8 +28,8 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{HasValues, Service};
 use crate::error::EpbdError;
+use crate::types::{HasValues, Service};
 
 // -------------------- Auxiliary Energy Component
 // Define basic Auxiliary Energy Component type
@@ -101,7 +101,7 @@ impl str::FromStr for EAux {
             Ok(id) => (1, id),
             Err(_) => (0, 0_i32),
         };
-      
+
         // Check type
         let ctype = items[baseidx];
         if ctype != "AUX" {

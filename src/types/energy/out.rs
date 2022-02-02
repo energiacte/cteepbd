@@ -28,8 +28,8 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{HasValues, Service};
 use crate::error::EpbdError;
+use crate::types::{HasValues, Service};
 
 // -------------------- System Energy Output Component
 // Define basic System Energy Needs Component type
@@ -43,7 +43,7 @@ use crate::error::EpbdError;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EOut {
     /// System id
-    /// 
+    ///
     /// This identifies the system linked to this component.
     /// By default, id=0 means an hypothetical whole building system (encompassing all services)
     /// Negative numbers should represent ficticious elements (ficticious systems, such as the reference ones)
