@@ -12,11 +12,10 @@
   - Sacar energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
   - Debemos cambiar la definición de servicios EPB dependiendo de si es residencial o no?
     o documentar que no se introducen los no EPB como tales cuando corresponda (p.e. iluminación en residencial) (Poner en manual como nota)
-  - Split XML output, generated from JSON results
+  - Split TEXT and XML output as traits of Energy & Factors
 
 - epbd:
   - Add battery support (EN 52000-1)
-  - Renombrar GenCrIn a CrIn, GenProd a Prod, GenAux a Aux, y GenOut a Out, y gen\_ -> element\_
   - Diferenciar vectores renovables: SOL, PV y ENV y electricidad cogenerada ECGN  (ver hoja de ejemplo ISO_DIS_52000)?
     - Nos permite priorizar consumos eléctricos según origen
     - Ver qué queremos...
@@ -29,7 +28,7 @@
     - SISTEMA, NGEN (DIS + EM), id, ???
   - define GEN as a new (nonEPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
-    - Used to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
+    - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
     - Describe default method to find used energy from electrical efficiency of cogeneration.
   - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
   - Review JSON output naming

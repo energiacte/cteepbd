@@ -84,7 +84,7 @@ fn get_energydatalist() -> Components {
     Components {
         cmeta: vec![],
         cdata: vec![
-            EnergyData::GenCrIn(GenCrIn {
+            Energy::Used(EUsed {
                 id: 0,
                 values: vec![
                     9.67, 7.74, 4.84, 4.35, 2.42, 2.9, 3.87, 3.39, 2.42, 3.87, 5.8, 7.74,
@@ -93,7 +93,7 @@ fn get_energydatalist() -> Components {
                 service: Service::NDEF,
                 comment: "".into(),
             }),
-            EnergyData::GenProd(GenProd {
+            Energy::Prod(EProd {
                 id: 0,
                 values: vec![
                     1.13, 1.42, 1.99, 2.84, 4.82, 5.39, 5.67, 5.11, 4.54, 3.40, 2.27, 1.42,
@@ -102,7 +102,7 @@ fn get_energydatalist() -> Components {
                 source: INSITU,
                 comment: "".into(),
             }),
-            EnergyData::GenCrIn(GenCrIn {
+            Energy::Used(EUsed {
                 id: 0,
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
@@ -111,7 +111,7 @@ fn get_energydatalist() -> Components {
                 service: Service::NDEF,
                 comment: "".into(),
             }),
-            EnergyData::GenProd(GenProd {
+            Energy::Prod(EProd {
                 id: 0,
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,

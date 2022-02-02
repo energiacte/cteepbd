@@ -23,24 +23,14 @@
 //            Daniel Jiménez González <dani@ietcc.csic.es>,
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-/*!
-Tipos de datos (types)
-======================
+mod aux;
+mod used;
+mod out;
+mod prod;
+mod elements;
 
-Definición de tipos básicos para el cálculo de la eficiencia energética.
-
-*/
-
-mod common;
-mod energy;
-mod factor;
-mod rennrenco2;
-mod tmeta;
-mod zones;
-
-pub use common::*;
-pub use energy::*;
-pub use factor::*;
-pub use rennrenco2::*;
-pub use tmeta::*;
-pub use zones::*;
+pub use aux::*;
+pub use used::*;
+pub use out::*;
+pub use prod::*;
+pub use elements::*;

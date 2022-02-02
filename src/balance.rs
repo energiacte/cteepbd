@@ -40,7 +40,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::{EpbdError, Result},
     types::HasValues,
-    types::{Carrier, Dest, EnergyData, Factor, RenNrenCo2, Service, Source, Step},
+    types::{Carrier, Dest, Energy, Factor, RenNrenCo2, Service, Source, Step},
     vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
     Components, Factors,
 };
@@ -206,7 +206,7 @@ pub struct BalanceForCarrier {
     pub used_EPB: Vec<f32>,
     /// Energy used for EPB uses, by use
     pub used_EPB_an_by_service: HashMap<Service, f32>,
-    /// Used energy for non EPB uses in each timestep
+    /// EUsed energy for non EPB uses in each timestep
     pub used_nEPB: Vec<f32>,
     /// Energy used for non EPB uses
     pub used_nEPB_an: f32,
@@ -312,7 +312,7 @@ fn balance_for_carrier(
     wfactors: &Factors,
     k_exp: f32,
 ) -> Result<BalanceForCarrier> {
-    let cr_list: Vec<EnergyData> = components
+    let cr_list: Vec<Energy> = components
         .cdata
         .iter()
         .filter(|e| e.has_carrier(carrier))
@@ -548,14 +548,14 @@ fn balance_for_carrier(
     // Annual energy use for carrier
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
 
-    // Used (final) and Weighted energy for each use item (for EPB services)
+    // EUsed (final) and Weighted energy for each use item (for EPB services)
     let mut E_Epus_cr_an_by_service: HashMap<Service, f32> = HashMap::new();
     let mut E_we_cr_an_A_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
     let mut E_we_cr_an_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
     for service in &Service::SERVICES_ALL {
         let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {
-            // Used energy
+            // EUsed energy
             E_Epus_cr_an_by_service.insert(*service, E_EPus_cr_an * f_us_k_cr);
             // Step A
             E_we_cr_an_A_by_service.insert(*service, E_we_cr_an_A * f_us_k_cr);
@@ -624,7 +624,7 @@ fn balance_for_carrier(
 /// It uses the reverse calculation method (E.3.6)
 /// * `cr_list` - components list for the selected carrier i
 ///
-fn compute_factors_by_use_cr(cr_list: &[EnergyData]) -> HashMap<Service, f32> {
+fn compute_factors_by_use_cr(cr_list: &[Energy]) -> HashMap<Service, f32> {
     let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
     // Energy use components (EPB uses) for current carrier i
     let cr_use_list = cr_list.iter().filter(|c| c.is_epb_use());

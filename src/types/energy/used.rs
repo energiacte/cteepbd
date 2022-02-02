@@ -28,43 +28,46 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{Carrier, HasValues, Source};
+use crate::types::{Carrier, HasValues, Service};
 use crate::error::EpbdError;
 
-// -------------------- Produced Energy Component
-// Define basic Produced Energy Component type
+// -------------------- EUsed Energy Component
+// Define basic EUsed Energy Component type
 
-/// Componente de energía generada (producción). E_pr,i;cr,j;t
+/// Componente de energía usada (consumos). E_X;gen,i;in;cr,j;t
 ///
-/// Representa la producción de energía con el vector energético j del sistema i
-/// para cada paso de cálculo t, a lo largo del periodo de cálculo.
+/// Representa el consumo de energía del vector energético j
+/// para el servicio X en el generador i, para los distintos pasos de cálculo t,
+///
+/// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
 /// Subsistema: generacion + almacenamiento
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GenProd {
-    /// System or part id
-    /// This can identify the system linked to this component.
-    /// By default, id=0 means a system attending the whole building
-    /// Negative numbers should represent ficticious elements (such as reference systems)
-    /// A value greater than 0 identies a specific energy generation system
+pub struct EUsed {
+    /// System or part id (generator i)
+    /// This can identify the system linked to this energy use.
+    /// By default, id=0 means the whole building systems.
+    /// Negative numbers should represent ficticious systems (such as the reference ones)
+    /// A value greater than 0 identifies a specific system that is using some energy
     pub id: i32,
     /// Carrier name
     pub carrier: Carrier,
-    /// Energy source
-    /// - `INSITU` or `COGEN` for generated energy component types
-    pub source: Source,
-    /// List of produced energy values, one value for each timestep. kWh
+    /// End use
+    pub service: Service,
+    /// List of timestep energy use for the current carrier and service. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
+    /// This can also be used to label a component as auxiliary energy use
+    /// by including in this field the "CTEEPBD_AUX" tag
     pub comment: String,
 }
 
-impl HasValues for GenProd {
+impl HasValues for EUsed {
     fn values(&self) -> &[f32] {
         &self.values
     }
 }
 
-impl fmt::Display for GenProd {
+impl fmt::Display for EUsed {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let valuelist = self
             .values
@@ -77,27 +80,25 @@ impl fmt::Display for GenProd {
         } else {
             "".to_owned()
         };
+
         write!(
             f,
-            "{}, PRODUCCION, {}, {}, {}{}",
-            self.id, self.source, self.carrier, valuelist, comment
+            "{}, CONSUMO, {}, {}, {}{}",
+            self.id, self.service, self.carrier, valuelist, comment
         )
     }
 }
 
-impl str::FromStr for GenProd {
+impl str::FromStr for EUsed {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<GenProd, Self::Err> {
-        use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
-        use self::Source::*;
-
+    fn from_str(s: &str) -> Result<EUsed, Self::Err> {
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (carrier + type + source + 1 value)
+        // Minimal possible length (carrier + type + subtype + 1 value)
         if items.len() < 4 {
             return Err(EpbdError::ParseError(s.into()));
         };
@@ -107,40 +108,30 @@ impl str::FromStr for GenProd {
             Err(_) => (0, 0_i32),
         };
 
+        // Check type
         let ctype = items[baseidx];
-        if ctype != "PRODUCCION" {
+        if ctype != "CONSUMO" {
             return Err(EpbdError::ParseError(format!(
-                "Componente de energía generada con formato incorrecto: {}",
+                "Componente de energía consumida con formato incorrecto: {}",
                 s
             )));
         }
 
-        let source: Source = items[baseidx + 1].parse()?;
+        // Check service field. May be missing in legacy versions
+        let service = items[baseidx + 1].parse()?;
+
         let carrier: Carrier = items[baseidx + 2].parse()?;
 
-        // Check coherence of ctype and source
-        let source_belongs_to_type = match source {
-            INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
-            COGEN => carrier == ELECTRICIDAD,
-            _ => false,
-        };
-        if !source_belongs_to_type {
-            return Err(EpbdError::ParseError(format!(
-                "Componente de energía generada con origen inconsistente: {}",
-                s
-            )));
-        }
-
         // Collect energy values from the service field on
-        let values = items[baseidx + 3..]
+        let values: Vec<_> = items[baseidx + 3..]
             .iter()
             .map(|v| v.parse::<f32>())
-            .collect::<Result<Vec<f32>, _>>()?;
+            .collect::<Result<_, _>>()?;
 
-        Ok(GenProd {
+        Ok(EUsed {
             id,
             carrier,
-            source,
+            service,
             values,
             comment,
         })
@@ -155,33 +146,31 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn produced_energy_component() {
-        // produced energy component
-        let component2 = GenProd {
+    fn components_used_energy() {
+        // EUsed energy component
+        let component1 = EUsed {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
-            source: "INSITU".parse().unwrap(),
+            service: "NDEF".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
-            comment: "Comentario prod 1".into(),
+            comment: "Comentario cons 1".into(),
         };
-        let component2str = "0, PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
-        let component2strlegacy = "PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
-        assert_eq!(component2.to_string(), component2str);
+        let component1str = "0, CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1strlegacy = "CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string
         assert_eq!(
-            component2str.parse::<GenProd>().unwrap().to_string(),
-            component2str
+            component1str.parse::<EUsed>().unwrap().to_string(),
+            component1str
         );
-        // roundtrip building from/to string for legacy format
+
+        // roundtrip building from/to legacy string
         assert_eq!(
-            component2strlegacy
-                .parse::<GenProd>()
-                .unwrap()
-                .to_string(),
-            component2str
+            component1strlegacy.parse::<EUsed>().unwrap().to_string(),
+            component1str
         );
     }
 }

@@ -27,11 +27,18 @@ use std::{fmt, str};
 
 use serde::{Deserialize, Serialize};
 
-use crate::types::{Carrier, GenAux, GenCrIn, GenOut, GenProd, HasValues, Service, Source};
+use super::{EUsed, EAux, EOut, EProd};
+use crate::types::{Carrier, HasValues, Service, Source};
 
-/// Componentes de energía generada o consumida
+/// Componentes de energía generada, consumida, auxiliar o saliente (entregada/absorbida)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum EnergyData {
+pub enum Energy {
+    /// Energía generada (producida). E_pr;cr,i;t
+    ///
+    /// Representa la producción de energía del vector energético j
+    /// (con origen dado en el sistema j) para los pasos de cálculo t,
+    /// a lo largo del periodo de cálculo. Ej. E_pr,j;cr,i;t
+    Prod(EProd),
     /// Energía usada (consumida). E_X;Y;in;cr,j;t
     ///
     /// Representa el consumo de energía del vector energético j
@@ -40,154 +47,148 @@ pub enum EnergyData {
     /// a lo largo del periodo de cálculo. Ej. E_X;gen,i;in;cr,j;t
     ///
     /// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
-    GenCrIn(GenCrIn),
-    /// Energía generada (producida). E_pr;cr,i;t
-    ///
-    /// Representa la producción de energía del vector energético j
-    /// (con origen dado en el sistema j) para los pasos de cálculo t,
-    /// a lo largo del periodo de cálculo. Ej. E_pr,j;cr,i;t
-    GenProd(GenProd),
+    Used(EUsed),
     /// Energía auxiliar (consumida). W_X;Y;aux;t
     ///
     /// Representa el consumo de energía (eléctrica) para usos auxiliares
     /// del servicio X en el subsistema Y y sistema i (id=i),
     /// para los distintos pasos de cálculo. Ej. W_X;gen_i;aux;t
-    GenAux(GenAux),
+    Aux(EAux),
     /// Energía saliente (entregada o absorbida). Q_X;Y;out
     ///
-    /// Representa la energía entregada o absorbida para el servicio X por los sistemas i
+    /// Representa la energía térmica entregada o absorbida para el servicio X por los sistemas i
     /// pertenecientes al subsistema Y  del edificio. Ej. Q_X;gen,i;out
-    GenOut(GenOut),
+    Out(EOut),
 }
 
-impl EnergyData {
+impl Energy {
     /// Get id for this service
     pub fn id(&self) -> i32 {
         match self {
-            EnergyData::GenCrIn(e) => e.id,
-            EnergyData::GenProd(e) => e.id,
-            EnergyData::GenAux(e) => e.id,
-            EnergyData::GenOut(e) => e.id,
+            Energy::Prod(e) => e.id,
+            Energy::Used(e) => e.id,
+            Energy::Aux(e) => e.id,
+            Energy::Out(e) => e.id,
         }
     }
 
     /// Get carrier for this component
     pub fn carrier(&self) -> Carrier {
         match self {
-            EnergyData::GenCrIn(e) => e.carrier,
-            EnergyData::GenProd(e) => e.carrier,
-            EnergyData::GenAux(_) => Carrier::ELECTRICIDAD,
-            EnergyData::GenOut(_) => unreachable!(),
+            Energy::Prod(e) => e.carrier,
+            Energy::Used(e) => e.carrier,
+            Energy::Aux(_) => Carrier::ELECTRICIDAD,
+            Energy::Out(_) => unreachable!(),
         }
     }
 
     /// Get production source (INSITU / COGEN) for this component
     pub fn source(&self) -> Source {
         match self {
-            EnergyData::GenCrIn(_) | EnergyData::GenAux(_) | EnergyData::GenOut(_) => {
+            Energy::Prod(e) => e.source,
+            Energy::Used(_) | Energy::Aux(_) | Energy::Out(_) => {
                 unreachable!()
             }
-            EnergyData::GenProd(e) => e.source,
         }
     }
 
     /// Get service for this component
     pub fn service(&self) -> Service {
         match self {
-            EnergyData::GenCrIn(e) => e.service,
-            EnergyData::GenAux(e) => e.service,
-            EnergyData::GenProd(_) => unreachable!(),
-            EnergyData::GenOut(e) => e.service,
+            Energy::Prod(_) => unreachable!(),
+            Energy::Used(e) => e.service,
+            Energy::Aux(e) => e.service,
+            Energy::Out(e) => e.service,
         }
     }
 
     /// Get comment for this component
     pub fn comment(&self) -> &str {
         match self {
-            EnergyData::GenCrIn(e) => &e.comment,
-            EnergyData::GenProd(e) => &e.comment,
-            EnergyData::GenAux(e) => &e.comment,
-            EnergyData::GenOut(e) => &e.comment,
+            Energy::Prod(e) => &e.comment,
+            Energy::Used(e) => &e.comment,
+            Energy::Aux(e) => &e.comment,
+            Energy::Out(e) => &e.comment,
         }
     }
 
     /// Is this of kind UsedEnergy?
     pub fn is_used(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(_) => true,
-            EnergyData::GenProd(_) => false,
-            EnergyData::GenAux(_) => false,
-            EnergyData::GenOut(_) => false,
+            Energy::Prod(_) => false,
+            Energy::Used(_) => true,
+            Energy::Aux(_) => false,
+            Energy::Out(_) => false,
         }
     }
 
     /// Is this energy of the produced energy kind?
     pub fn is_generated(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(_) => false,
-            EnergyData::GenProd(_) => true,
-            EnergyData::GenAux(_) => false,
-            EnergyData::GenOut(_) => false,
+            Energy::Prod(_) => true,
+            Energy::Used(_) => false,
+            Energy::Aux(_) => false,
+            Energy::Out(_) => false,
         }
     }
 
     /// Is this energy of the auxiliary energy kind?
     pub fn is_aux(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(_) => false,
-            EnergyData::GenProd(_) => false,
-            EnergyData::GenAux(_) => true,
-            EnergyData::GenOut(_) => false,
+            Energy::Prod(_) => false,
+            Energy::Used(_) => false,
+            Energy::Aux(_) => true,
+            Energy::Out(_) => false,
         }
     }
 
     /// Is this energy of the output energy kind?
     pub fn is_out(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(_) => false,
-            EnergyData::GenProd(_) => false,
-            EnergyData::GenAux(_) => false,
-            EnergyData::GenOut(_) => true,
+            Energy::Prod(_) => false,
+            Energy::Used(_) => false,
+            Energy::Aux(_) => false,
+            Energy::Out(_) => true,
         }
     }
 
     /// Is this of kind UsedEnergy and destination is an EPB service?
     pub fn is_epb_use(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(e) => e.service.is_epb(),
-            EnergyData::GenProd(_) => false,
-            EnergyData::GenAux(e) => e.service.is_epb(),
-            EnergyData::GenOut(_) => false,
+            Energy::Prod(_) => false,
+            Energy::Used(e) => e.service.is_epb(),
+            Energy::Aux(e) => e.service.is_epb(),
+            Energy::Out(_) => false,
         }
     }
 
     /// Is this of kind UsedEnergy and destination is a non EPB service (but not GEN)?
     pub fn is_nepb_use(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(e) => e.service.is_nepb(),
-            EnergyData::GenProd(_) => false,
-            EnergyData::GenAux(e) => e.service.is_nepb(),
-            EnergyData::GenOut(_) => false,
+            Energy::Prod(_) => false,
+            Energy::Used(e) => e.service.is_nepb(),
+            Energy::Aux(e) => e.service.is_nepb(),
+            Energy::Out(_) => false,
         }
     }
 
     /// Is this energy of the onsite produced kind?
     pub fn is_onsite_pr(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(_) => false,
-            EnergyData::GenProd(e) => e.source == Source::INSITU,
-            EnergyData::GenAux(_) => false,
-            EnergyData::GenOut(_) => false,
+            Energy::Prod(e) => e.source == Source::INSITU,
+            Energy::Used(_) => false,
+            Energy::Aux(_) => false,
+            Energy::Out(_) => false,
         }
     }
 
     /// Is this energy of the cogeneration produced kind?
     pub fn is_cogen_pr(&self) -> bool {
         match self {
-            EnergyData::GenCrIn(_) => false,
-            EnergyData::GenProd(e) => e.source == Source::COGEN,
-            EnergyData::GenAux(_) => false,
-            EnergyData::GenOut(_) => false,
+            Energy::Prod(e) => e.source == Source::COGEN,
+            Energy::Used(_) => false,
+            Energy::Aux(_) => false,
+            Energy::Out(_) => false,
         }
     }
 
@@ -212,24 +213,24 @@ impl EnergyData {
     }
 }
 
-impl std::fmt::Display for EnergyData {
+impl std::fmt::Display for Energy {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EnergyData::GenCrIn(e) => e.fmt(f),
-            EnergyData::GenProd(e) => e.fmt(f),
-            EnergyData::GenAux(e) => e.fmt(f),
-            EnergyData::GenOut(e) => e.fmt(f),
+            Energy::Prod(e) => e.fmt(f),
+            Energy::Used(e) => e.fmt(f),
+            Energy::Aux(e) => e.fmt(f),
+            Energy::Out(e) => e.fmt(f),
         }
     }
 }
 
-impl HasValues for EnergyData {
+impl HasValues for Energy {
     fn values(&self) -> &[f32] {
         match self {
-            EnergyData::GenCrIn(e) => e.values(),
-            EnergyData::GenProd(e) => e.values(),
-            EnergyData::GenAux(e) => e.values(),
-            EnergyData::GenOut(e) => e.values(),
+            Energy::Prod(e) => e.values(),
+            Energy::Used(e) => e.values(),
+            Energy::Aux(e) => e.values(),
+            Energy::Out(e) => e.values(),
         }
     }
 }

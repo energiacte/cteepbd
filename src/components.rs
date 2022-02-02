@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::EpbdError,
     types::{
-        Carrier, EnergyData, GenProd, HasValues, Meta, MetaVec, Service, Source,
+        Carrier, Energy, EProd, HasValues, Meta, MetaVec, Service, Source,
         ZoneNeeds,
     },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
@@ -61,8 +61,8 @@ use crate::{
 pub struct Components {
     /// Metadata
     pub cmeta: Vec<Meta>,
-    /// Used or produced energy data
-    pub cdata: Vec<EnergyData>,
+    /// EUsed or produced energy data
+    pub cdata: Vec<Energy>,
     /// Building data
     pub zones: Vec<ZoneNeeds>,
     // System data
@@ -129,10 +129,10 @@ impl str::FromStr for Components {
                 tag2
             };
             match *tag {
-                "CONSUMO" => cdata.push(EnergyData::GenCrIn(line.parse()?)),
-                "PRODUCCION" => cdata.push(EnergyData::GenProd(line.parse()?)),
-                "AUX" => cdata.push(EnergyData::GenAux(line.parse()?)),
-                "SALIDA" => cdata.push(EnergyData::GenOut(line.parse()?)),
+                "CONSUMO" => cdata.push(Energy::Used(line.parse()?)),
+                "PRODUCCION" => cdata.push(Energy::Prod(line.parse()?)),
+                "AUX" => cdata.push(Energy::Aux(line.parse()?)),
+                "SALIDA" => cdata.push(Energy::Out(line.parse()?)),
                 "ZONA" => building.push(line.parse()?),
                 "SISTEMA" => unimplemented!(),
                 _ => {
@@ -260,7 +260,7 @@ impl Components {
             // ya que la habíamos excluido en el filtrado incial
             for mut E_pr_el_i in E_pr_el_t.cloned() {
                 let pr_component = match E_pr_el_i {
-                    EnergyData::GenProd(ref mut c) => c,
+                    Energy::Prod(ref mut c) => c,
                     _ => continue,
                 };
 
@@ -366,7 +366,7 @@ impl Components {
                 };
 
                 // Si hay desequilibrio agregamos un componente de producción
-                balancecomps.push(EnergyData::GenProd(GenProd {
+                balancecomps.push(Energy::Prod(EProd {
                     id,
                     carrier: Carrier::MEDIOAMBIENTE,
                     source: Source::INSITU,
@@ -485,7 +485,7 @@ mod tests {
         let ma_prod_1: f32 = ma_prod
             .clone()
             .filter(|c| c.has_id(1))
-            .map(EnergyData::values_sum)
+            .map(Energy::values_sum)
             .sum();
         assert_eq!(format!("{:.1}", ma_prod_1), "150.0");
 
@@ -493,12 +493,12 @@ mod tests {
         let ma_prod_2: f32 = ma_prod
             .clone()
             .filter(|c| c.has_id(2))
-            .map(EnergyData::values_sum)
+            .map(Energy::values_sum)
             .sum();
         assert_eq!(format!("{:.1}", ma_prod_2), "300.0");
         // En total, se añaden 200 + 50 a los 300kWh declarados, para un total de 550kWh
         // Hay 100kWh declarados para sistema 0 que no se consumen
-        let ma_prod_tot: f32 = ma_prod.clone().map(EnergyData::values_sum).sum();
+        let ma_prod_tot: f32 = ma_prod.clone().map(Energy::values_sum).sum();
         assert_eq!(format!("{:.1}", ma_prod_tot), "550.0");
     }
 

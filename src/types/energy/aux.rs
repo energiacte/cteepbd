@@ -28,46 +28,40 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{Carrier, HasValues, Service};
+use crate::types::{HasValues, Service};
 use crate::error::EpbdError;
 
-// -------------------- Used Energy Component
-// Define basic Used Energy Component type
+// -------------------- Auxiliary Energy Component
+// Define basic Auxiliary Energy Component type
 
-/// Componente de energía usada (consumos). E_X;gen,i;in;cr,j;t
+/// Componente de energía auxiliar (consumida). W_X,Y;aux,t
 ///
-/// Representa el consumo de energía del vector energético j
-/// para el servicio X en el generador i, para los distintos pasos de cálculo t,
-///
-/// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
+/// Representa el consumo de energía (eléctrica) para usos auxiliares
+/// del servicio X en el subsistema Y, para los distintos pasos de cálculo,
 /// Subsistema: generacion + almacenamiento
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GenCrIn {
+pub struct EAux {
     /// System or part id (generator i)
     /// This can identify the system linked to this energy use.
-    /// By default, id=0 means the whole building systems.
+    /// By default, id=0 means whole building systems.
     /// Negative numbers should represent ficticious systems (such as the reference ones)
     /// A value greater than 0 identifies a specific system that is using some energy
     pub id: i32,
-    /// Carrier name
-    pub carrier: Carrier,
     /// End use
     pub service: Service,
     /// List of timestep energy use for the current carrier and service. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
-    /// This can also be used to label a component as auxiliary energy use
-    /// by including in this field the "CTEEPBD_AUX" tag
     pub comment: String,
 }
 
-impl HasValues for GenCrIn {
+impl HasValues for EAux {
     fn values(&self) -> &[f32] {
         &self.values
     }
 }
 
-impl fmt::Display for GenCrIn {
+impl fmt::Display for EAux {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let valuelist = self
             .values
@@ -83,23 +77,23 @@ impl fmt::Display for GenCrIn {
 
         write!(
             f,
-            "{}, CONSUMO, {}, {}, {}{}",
-            self.id, self.service, self.carrier, valuelist, comment
+            "{}, AUX, {}, {}{}",
+            self.id, self.service, valuelist, comment
         )
     }
 }
 
-impl str::FromStr for GenCrIn {
+impl str::FromStr for EAux {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<GenCrIn, Self::Err> {
+    fn from_str(s: &str) -> Result<EAux, Self::Err> {
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (carrier + type + subtype + 1 value)
-        if items.len() < 4 {
+        // Minimal possible length (type + service + 1 value)
+        if items.len() < 3 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
@@ -107,12 +101,12 @@ impl str::FromStr for GenCrIn {
             Ok(id) => (1, id),
             Err(_) => (0, 0_i32),
         };
-
+      
         // Check type
         let ctype = items[baseidx];
-        if ctype != "CONSUMO" {
+        if ctype != "AUX" {
             return Err(EpbdError::ParseError(format!(
-                "Componente de energía consumida con formato incorrecto: {}",
+                "Componente de energía auxiliar con formato incorrecto: {}",
                 s
             )));
         }
@@ -120,17 +114,14 @@ impl str::FromStr for GenCrIn {
         // Check service field. May be missing in legacy versions
         let service = items[baseidx + 1].parse()?;
 
-        let carrier: Carrier = items[baseidx + 2].parse()?;
-
         // Collect energy values from the service field on
-        let values: Vec<_> = items[baseidx + 3..]
+        let values = items[baseidx + 2..]
             .iter()
             .map(|v| v.parse::<f32>())
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<Vec<f32>, _>>()?;
 
-        Ok(GenCrIn {
+        Ok(EAux {
             id,
-            carrier,
             service,
             values,
             comment,
@@ -147,29 +138,21 @@ mod tests {
 
     #[test]
     fn components_used_energy() {
-        // Used energy component
-        let component1 = GenCrIn {
+        // Auxiliary energy component
+        let component1 = EAux {
             id: 0,
-            carrier: "ELECTRICIDAD".parse().unwrap(),
             service: "NDEF".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
-            comment: "Comentario cons 1".into(),
+            comment: "Comentario auxiliar 1".into(),
         };
-        let component1str = "0, CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
-        let component1strlegacy = "CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1str = "0, AUX, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario auxiliar 1";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string
         assert_eq!(
-            component1str.parse::<GenCrIn>().unwrap().to_string(),
-            component1str
-        );
-
-        // roundtrip building from/to legacy string
-        assert_eq!(
-            component1strlegacy.parse::<GenCrIn>().unwrap().to_string(),
+            component1str.parse::<EAux>().unwrap().to_string(),
             component1str
         );
     }

@@ -260,7 +260,7 @@ fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError>
 /// Podemos obtener la parte renovable, con la fracción que supone su factor de paso ren respecto al total y
 /// suponiendo que la conversión de consumo a demanda es con rendimiento 1.0 (de modo que demanda = consumo para estos vectores)
 fn Q_district_and_env_an(
-    cr_list: &[&EnergyData],
+    cr_list: &[&Energy],
     wfactors: &Factors,
 ) -> Result<(f32, f32), EpbdError> {
     use Carrier::{MEDIOAMBIENTE, RED1, RED2};
@@ -285,7 +285,7 @@ fn Q_district_and_env_an(
 }
 
 /// Vectores energéticos consumidos
-fn get_used_carriers(cr_list: &[&EnergyData]) -> Vec<Carrier> {
+fn get_used_carriers(cr_list: &[&Energy]) -> Vec<Carrier> {
     let mut used_carriers = cr_list
         .iter()
         .filter(|c| c.is_used())
@@ -338,7 +338,7 @@ pub fn fraccion_renovable_acs_nrb(
 
     // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
     let components = &components.filter_by_epb_service(Service::ACS);
-    let cr_list: &Vec<&EnergyData> = &components
+    let cr_list: &Vec<&Energy> = &components
         .cdata
         .iter()
         .filter(|c| {
@@ -706,10 +706,10 @@ fn components_to_xml(c: &Components) -> String {
     let cdatastring = cdata
         .iter()
         .map(|c| match c {
-            EnergyData::GenCrIn(e) => used_to_xml(e),
-            EnergyData::GenProd(e) => produced_to_xml(e),
-            EnergyData::GenAux(e) => aux_to_xml(e),
-            EnergyData::GenOut(e) => out_to_xml(e),
+            Energy::Used(e) => used_to_xml(e),
+            Energy::Prod(e) => produced_to_xml(e),
+            Energy::Aux(e) => aux_to_xml(e),
+            Energy::Out(e) => out_to_xml(e),
         })
         .collect::<Vec<String>>()
         .join("\n");
@@ -747,8 +747,8 @@ fn factor_to_xml(f: &Factor) -> String {
 }
 
 /// Convierte componente de energía producida a XML
-fn produced_to_xml(e: &GenProd) -> String {
-    let GenProd {
+fn produced_to_xml(e: &EProd) -> String {
+    let EProd {
         id,
         carrier,
         source,
@@ -766,8 +766,8 @@ fn produced_to_xml(e: &GenProd) -> String {
 }
 
 /// Convierte componente de energía consumida a XML
-fn used_to_xml(e: &GenCrIn) -> String {
-    let GenCrIn {
+fn used_to_xml(e: &EUsed) -> String {
+    let EUsed {
         id,
         carrier,
         service,
@@ -785,15 +785,15 @@ fn used_to_xml(e: &GenCrIn) -> String {
 }
 
 /// Convierte componente de energía auxiliar a XML
-fn aux_to_xml(e: &GenAux) -> String {
-    let GenAux {
+fn aux_to_xml(e: &EAux) -> String {
+    let EAux {
         id,
         service,
         values,
         comment,
     } = e;
     format!(
-        "<Aux><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></Aux>",
+        "<EAux><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></EAux>",
         id,
         service,
         format_values_2f(values),
@@ -802,8 +802,8 @@ fn aux_to_xml(e: &GenAux) -> String {
 }
 
 /// Convierte componente de energía auxiliar a XML
-fn out_to_xml(e: &GenOut) -> String {
-    let GenOut {
+fn out_to_xml(e: &EOut) -> String {
+    let EOut {
         id,
         service,
         values,
