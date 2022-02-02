@@ -17,11 +17,9 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 ### Novedades
 
-- Nuevo identificador de zona y de componente energético
-  - Identifica de forma única una zona o un sistema
-  - El Id=0 se utiliza para identificar sistemas globales o el conjunto del edificio.
-  - Los valores negativos identifican equipos o zonas ficticias (p.e. equipos de referencia con -999)??
-  - La compensación automática de consumos de energía ambiente se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
+- Nuevo vector energético SOLAR para identificar energía solar térmica procedente de captadores
+- Nuevo vector energético AMBIENTE para identificar la energía ambiente capturada por las bombas de calor
+- Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en AMBIENTE y SOLAR)
 - Nuevo elemento de datos de zona
   - Permite introducir datos de demanda de zona (id=i) en cada paso de cálculo y para cada servicio
   - La zona 0 remite al conjunto del edificio
@@ -29,14 +27,23 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Permite indicar el subsistema al que pertenecen, así como sus rendimientos para los distintos servicios (SPF, COP/EER, SCOP/SEER, EFF)
 - Nuevo elemento de energía saliente
   - Indica la energía absorbida (p.e. refrigeración) o entregada (p.e. calor) en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
+- Nuevo elemento de consumo auxiliar
+  - Indica la energía consumida para usos auxiliares en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
+  - Sustituye a los consumos con anotación CTEEPBD_EXCLUYE_AUX_ACS, que deja de estar soportada
+- Nuevo identificador de los elementos de componente energético (consumo, producción, saliente, auxiliar) y de elementos de zona.
+  - Identifica de forma única una zona
+  - Identifica de forma única un sistema y lo vincula a los componentes energéticos
+  - El Id=0 se utiliza para identificar sistemas globales o el conjunto del edificio
+  - Los valores negativos identifican equipos o zonas ficticias (p.e. equipos de referencia con -999)??
+  - La compensación automática de consumos de energía ambiente se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
 - Nuevo servicio NEPB para consumo destinado a usos no EPB
   - Simplifica la descripción de elementos al eliminar el subtipo de consumo
 - Nuevo servicio GEN para consumos destinados a la producción eléctrica por cogeneración
   - Es un consumo que no pertenece ni a usos EPB ni a usos no EPB, ya que la energía que incorpora se traslada a los factores de paso de la electricidad cogenerada
-- Cambio de nombre de sufijos "_bygen" a "_by_source" y "_byuse" a "_by_service" en la salida JSON
-- Eliminada la opción --acsnrb para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
 - Nuevos resultados disponibles en la salida JSON
+- Cambio de nombre de sufijos "_bygen" a "_by_source" y "_byuse" a "_by_service" en la salida JSON
 - Nueva salida XML
+- Eliminada la opción --acsnrb para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
 
 ### Incompatibilidades
 
