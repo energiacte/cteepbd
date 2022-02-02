@@ -118,7 +118,10 @@ impl str::FromStr for EAux {
         let values = items[baseidx + 2..]
             .iter()
             .map(|v| v.parse::<f32>())
-            .collect::<Result<Vec<f32>, _>>()?;
+            .collect::<Result<Vec<f32>, _>>()
+            .map_err(|_| {
+                EpbdError::ParseError(format!("se esperaban valores numéricos en línea `{}`", s))
+            })?;
 
         Ok(EAux {
             id,

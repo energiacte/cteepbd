@@ -123,7 +123,10 @@ impl std::str::FromStr for EUsed {
         let values: Vec<_> = items[baseidx + 3..]
             .iter()
             .map(|v| v.parse::<f32>())
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<_, _>>()
+            .map_err(|_| {
+                EpbdError::ParseError(format!("se esperaban valores numéricos en línea `{}`", s))
+            })?;
 
         Ok(EUsed {
             id,

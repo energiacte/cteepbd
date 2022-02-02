@@ -132,7 +132,10 @@ impl std::str::FromStr for EProd {
         let values = items[baseidx + 3..]
             .iter()
             .map(|v| v.parse::<f32>())
-            .collect::<Result<Vec<f32>, _>>()?;
+            .collect::<Result<Vec<f32>, _>>()
+            .map_err(|_| {
+                EpbdError::ParseError(format!("se esperaban valores numéricos en línea `{}`", s))
+            })?;
 
         Ok(EProd {
             id,
