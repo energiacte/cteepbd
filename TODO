@@ -5,19 +5,19 @@
 
 - cte
 
-  - Test XML output and fix XML indentation
-  - remove obsolete `acsnrb` option (fraccion_renovable_acs is unconditionally computed and added to JSON)
   - wfactors.normalize(defaults): ver si quitamos de aquí los valores por defecto y así podemos generar de forma más ergonómica los factores de paso sin usar wfactors_from_loc
     `CTE_LOCWF_RITE2014.get(loc)?.set_user_wfactors(&user_wf).normalize(&default_user_wf);`
-  - Sacar energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
   - Documentar que el uso ILU solamente se introduce cuando se considera EPB (Poner en manual como nota)
   - Move balance::find_fp to Factors and take Factors, balance::{cr_list, fp_cr} to filter_by_cr in Components and Factors
 
 - epbd:
-  - Add battery support (EN 52000-1)
-  - Diferenciar vectores renovables: SOL, PV y ENV y electricidad cogenerada ECGN  (ver hoja de ejemplo ISO_DIS_52000)?
-    - Nos permite priorizar consumos eléctricos según origen
-    - Ver qué queremos...
+  - Diferenciar vectores renovables SOL y ENV (ver hoja de ejemplo ISO_DIS_52000 que también diferencia PV y ECGN, pero estos orígenes ya los tenemos detectados)?
+    - Nos permite mostrar mejor las fuentes de energía
+  - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
+    - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
+    - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
+    - Describe default method to find used energy from electrical efficiency of cogeneration.
+  - Implement battery support (EN 52000-1)
   - Datos de ZONA completar con EN 52000-1, 12.1 informe
   - Datos de SISTEMA
     - Eficiencias de sistemas (no las calculamos sino que son datos)
@@ -25,19 +25,16 @@
     - Indicar qué tipo de sistema es
     - SISTEMA, GEN, id, COP, EER, COP_dhw, SCOP, SEER, SCOP_dhw, SPF_h, SPF_c, SPF_dhw, comentario
     - SISTEMA, NGEN (DIS + EM), id, ???
-  - define GEN as a new (nonEPB) service for energy used for cogeneration (see Module M11 in EN 15316)
-    - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
-    - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
-    - Describe default method to find used energy from electrical efficiency of cogeneration.
-  - allow using load matching factor values (or functions) that are not 1 (formula 32, B.32)
-  - Review JSON output naming
-  - JSON input
+  - Implement load matching factor computation (see formula 32, B.32, with k=1, n=1 for EPB uses)
 
 - tests:
 
   - cte: check non matching computation modes in component metadata and weighting factors metadata
 
-- output:
+- input / output:
+  - Test XML output and fix XML indentation
+  - Review JSON output naming
+  - JSON input
   - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data
     - Energy needs (with annual totals)
     - System efficiencies / indicators
@@ -49,6 +46,7 @@
     - demanda por servicios y total (¿y demanda de referencia si la hay?)
     - valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
     - e.final
+      - Sacar consumo de energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
       - De todos los servicios y desglosado por servicio
     - balance B, balance A, AB: ren, nren, tot, emisiones.
       - De todos los servicios y desglosado por servicio
