@@ -12,6 +12,7 @@
   - Sacar energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
   - Debemos cambiar la definición de servicios EPB dependiendo de si es residencial o no?
     o documentar que no se introducen los no EPB como tales cuando corresponda (p.e. iluminación en residencial) (Poner en manual como nota)
+  - Split XML output, generated from JSON results
 
 - epbd:
   - Add battery support (EN 52000-1)
@@ -55,7 +56,6 @@
       - De todos los servicios y desglosado por servicio
     - emisiones, desglose eléctrico y no eléctrico
     - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
-  - Split XML output, generated from JSON results
 
 ## Wishlist
 
