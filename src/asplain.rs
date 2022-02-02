@@ -79,17 +79,18 @@ impl AsCtePlain for Balance {
         b_by_service.sort();
 
         let out = format!(
-            "Area_ref = {:.2} [m2]
-    k_exp = {:.2}
-    C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
-    E_CO2 [kg_CO2e/m2.an]: {:.2}
-    
-    ** Energía final (todos los vectores) [kWh/m2.an]:
-    {}
-    
-    ** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
-    {}
-    ",
+            "** Balance energético
+Area_ref = {:.2} [m2]
+k_exp = {:.2}
+C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
+E_CO2 [kg_CO2e/m2.an]: {:.2}
+
+** Energía final (todos los vectores) [kWh/m2.an]:
+{}
+
+** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
+{}
+",
             arearef,
             k_exp,
             ren,

@@ -50,7 +50,7 @@ use std::str::FromStr;
 
 use cteepbd::{
     cte, energy_performance,
-    types::{MetaVec, RenNrenCo2, Service},
+    types::{MetaVec, RenNrenCo2},
     AsCtePlain, AsCteXml, Balance, Components, UserWF,
 };
 
@@ -333,12 +333,6 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .long("demanda_anual_acs")
             .value_name("DEM_ACS")
             .help("Demanda anual de ACS [kWh]"))
-        .arg(Arg::with_name("acsnrb") // Obsoleto
-            .short("N")
-            .long("acs_nearby")
-            .hidden(true)
-            .requires("archivo_componentes")
-            .help("Realiza el balance considerando solo el servicio de ACS y el perímetro nearby"))
         // Simplificación de factores
         .arg(Arg::with_name("nosimplificafps")
             .short("F")
@@ -380,11 +374,6 @@ fn main() {
 
     // Componentes energéticos ---------------------------------------------------------------------
     let mut components = get_components(matches.value_of("archivo_componentes"));
-
-    // Cálculo para servicio de ACS en nearby
-    if matches.is_present("acsnrb") {
-        components = components.filter_by_epb_service(Service::ACS);
-    }
 
     if verbosity > 1 && !components.cmeta.is_empty() {
         println!("Metadatos de componentes:");
@@ -468,12 +457,6 @@ fn main() {
                 fpdata.wdata.len()
             );
         }
-    }
-
-    // Transformación a factores de paso en nearby
-    if matches.is_present("acsnrb") {
-        // Estamos en cálculo de ACS en nearby
-        fpdata = cte::wfactors_to_nearby(&fpdata);
     }
 
     // Área de referencia -------------------------------------------------------------------------
@@ -610,11 +593,6 @@ fn main() {
             writefile(&path, xml.as_bytes());
         }
         // Mostrar siempre en formato de texto plano
-        if matches.is_present("acsnrb") {
-            println!("** Balance energético (servicio de ACS, perímetro próximo)");
-        } else {
-            println!("** Balance energético");
-        }
         let plain = balance.to_plain();
         println!("{}", plain);
 

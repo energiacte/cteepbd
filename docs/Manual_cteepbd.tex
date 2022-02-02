@@ -292,10 +292,6 @@ Alternativamente, estos factores de paso pueden definirse mediante una localizac
 
 Este argumento indica los factores de paso para el cálculo de la eficiencia energética a partir de una localización. Puede tomar los valores \texttt{PENINSULA}, \texttt{CANARIAS}, \texttt{BALEARES} o \texttt{CEUTAMELILLA} para generar los factores de paso reglamentarios correspondientes a dichas zonas \footnote{El \textit{Documento Reconocido del Reglamento de Instalaciones Térmicas en los Edificios (RITE) Factores de emisión de CO2 y coeficientes de paso a energía primaria de diferentes fuentes de energía final consumidas en el sector de edificios en España} del 20/07/2014 y de aplicación desde el 14/01/2016 contiene los valores aplicables en cada uno de los casos.}.
 
-%\textbf{\texttt{-N, -{}-acs\_nearby}}
-%
-%Este argumento indica que el balance tendrá en consideración únicamente los componentes asociados al servicio de ACS y unos factores de paso definidos para el perímetro próximo (\textit{nearby}).
-
 \textbf{\texttt{-{}-cogen COGEN\_ren COGEN\_nren COGEN\_co2}}
 
 Este argumento indica los 3 factores de exportación a la red (parte renovable, parte no renovable y emisiones) de la electricidad cogenerada. Estos factores no necesariamente se definen reglamentariamente y no se pueden deducir de la localización sino que dependen de las características técnicas de la instalación de cogeneración y, por tanto, deben ser definidos por el usuario. Las unidades son $kWh/kWh_f$ y $kg_{CO2e}/kWh_f$ para energía primaria y emisiones, respectivamente.
