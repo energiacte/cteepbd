@@ -1,10 +1,10 @@
 #META CTE_FUENTE: RITE2014
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del RITE de 20/07/2014
 #META CTE_LOCALIZACION: PENINSULA
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
-MEDIOAMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
-MEDIOAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+AMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)
+AMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)
+AMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
+AMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))
 BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018 # Recursos usados para suministrar el vector desde la red
 BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.028, 0.085, 0.018 # Recursos usados para suministrar el vector desde la red

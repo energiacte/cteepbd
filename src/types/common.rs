@@ -38,10 +38,8 @@ use crate::error::EpbdError;
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum Carrier {
-    /// Electricity
-    ELECTRICIDAD,
-    /// Environment thermal energy or from solar source
-    MEDIOAMBIENTE,
+    /// Environment thermal energy (from heat pumps and other)
+    AMBIENTE,
     /// Biofuel
     BIOCARBURANTE,
     /// Biomass
@@ -50,6 +48,8 @@ pub enum Carrier {
     BIOMASADENSIFICADA,
     /// Coal
     CARBON,
+    /// Electricity
+    ELECTRICIDAD,
     /// Natural gas
     GASNATURAL,
     /// Diesel oil
@@ -60,6 +60,8 @@ pub enum Carrier {
     RED1,
     /// Generic energy carrier 2
     RED2,
+    /// Thermal energy from solar collectors
+    SOLAR,
 }
 
 impl str::FromStr for Carrier {
@@ -67,17 +69,18 @@ impl str::FromStr for Carrier {
 
     fn from_str(s: &str) -> Result<Carrier, Self::Err> {
         match s {
-            "ELECTRICIDAD" => Ok(Carrier::ELECTRICIDAD),
-            "MEDIOAMBIENTE" => Ok(Carrier::MEDIOAMBIENTE),
+            "AMBIENTE" => Ok(Carrier::AMBIENTE),
             "BIOCARBURANTE" => Ok(Carrier::BIOCARBURANTE),
             "BIOMASA" => Ok(Carrier::BIOMASA),
             "BIOMASADENSIFICADA" => Ok(Carrier::BIOMASADENSIFICADA),
             "CARBON" => Ok(Carrier::CARBON),
+            "ELECTRICIDAD" => Ok(Carrier::ELECTRICIDAD),
             "GASNATURAL" => Ok(Carrier::GASNATURAL),
             "GASOLEO" => Ok(Carrier::GASOLEO),
             "GLP" => Ok(Carrier::GLP),
             "RED1" => Ok(Carrier::RED1),
             "RED2" => Ok(Carrier::RED2),
+            "SOLAR" => Ok(Carrier::SOLAR),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -145,7 +148,7 @@ pub enum Service {
     REF,
     /// Ventilation, including heat recovery
     VEN,
-    /// Lighting (only when considered as EPB)
+    /// Lighting (only when considered as EPB use)
     ILU,
     /// Humidification, when not included in Heating
     HU,

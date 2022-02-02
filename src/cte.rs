@@ -61,12 +61,13 @@ pub const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELI
 // CTE_LOCALIZACION -> str
 
 /// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
-pub const CTE_NRBY: [Carrier; 5] = [
+pub const CTE_NRBY: [Carrier; 6] = [
     Carrier::BIOMASA,
     Carrier::BIOMASADENSIFICADA,
     Carrier::RED1,
     Carrier::RED2,
-    Carrier::MEDIOAMBIENTE,
+    Carrier::AMBIENTE,
+    Carrier::SOLAR,
 ]; // Ver B.23. Solo biomasa sólida
 
 /// Factores de paso definibles por el usuario usados por defecto
@@ -94,8 +95,10 @@ pub static CTE_LOCWF_RITE2014: Lazy<HashMap<&'static str, Factors>> = Lazy::new(
             Meta::new("CTE_FUENTE_COMENTARIO", "Factores de paso (kWh/kWh_f,kWh/kWh_f,kg_CO2/kWh_f) del documento reconocido del RITE de 20/07/2014")
         ],
         wdata: vec![
-            Factor::new(MEDIOAMBIENTE, RED, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para suministrar energía térmica del medioambiente (red de suministro ficticia)"),
-            Factor::new(MEDIOAMBIENTE, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para generar in situ energía térmica del medioambiente (vector renovable)"),
+            Factor::new(AMBIENTE, RED, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para suministrar energía ambiente (red de suministro ficticia)"),
+            Factor::new(AMBIENTE, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para generar in situ energía ambiente (vector renovable)"),
+            Factor::new(SOLAR, RED, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para suministrar energía solar térmica (red de suministro ficticia)"),
+            Factor::new(SOLAR, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para generar in situ energía solar térmica (vector renovable)"),
             Factor::new(BIOCARBURANTE, RED, SUMINISTRO, A, (1.028, 0.085, 0.018).into(), "Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))"),
             Factor::new(BIOMASA, RED, SUMINISTRO, A, (1.003, 0.034, 0.018).into(), "Recursos usados para suministrar el vector desde la red"),
             Factor::new(BIOMASADENSIFICADA, RED, SUMINISTRO, A, (1.028, 0.085, 0.018).into(), "Recursos usados para suministrar el vector desde la red"),
@@ -252,21 +255,21 @@ fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError>
 }
 
 #[allow(non_snake_case)]
-/// Demanda total y renovable de los consumos de ACS de RED1, RED2 o MEDIOAMBIENTE
+/// Demanda total y renovable de los consumos de ACS de RED1, RED2 o AMBIENTE
 ///
 /// Podemos obtener la parte renovable, con la fracción que supone su factor de paso ren respecto al total y
 /// suponiendo que la conversión de consumo a demanda es con rendimiento 1.0 (de modo que demanda = consumo para estos vectores)
-fn Q_district_and_env_an(
-    cr_list: &[&Energy],
-    wfactors: &Factors,
-) -> Result<(f32, f32), EpbdError> {
-    use Carrier::{MEDIOAMBIENTE, RED1, RED2};
+fn Q_district_and_env_an(cr_list: &[&Energy], wfactors: &Factors) -> Result<(f32, f32), EpbdError> {
+    use Carrier::{AMBIENTE, RED1, RED2, SOLAR};
 
     let value = cr_list
         .iter()
         .filter(|c| {
             c.is_used()
-                && (c.has_carrier(RED1) || c.has_carrier(RED2) || c.has_carrier(MEDIOAMBIENTE))
+                && (c.has_carrier(RED1)
+                    || c.has_carrier(RED2)
+                    || c.has_carrier(AMBIENTE)
+                    || c.has_carrier(SOLAR))
         })
         .map(|c| {
             let tot = c.values_sum();
@@ -302,11 +305,11 @@ fn get_used_carriers(cr_list: &[&Energy]) -> Vec<Carrier> {
 /// 2. no se permite el consumo de electricidad cogenerada para producir ACS (solo la parte térmica) aunque podría provenir de BIOMASA / BIOMASADENSIFICADA
 ///     Si se pudiese usar electricidad y existiese cogeneración tendríamos 2 vectores no insitu (BIOMASA, ELECTRICIDAD)
 ///     y, si no se usase la parte térmica, no sabríamos si tiene procedencia renovable o no.
-/// 3. el rendimiento térmico de la contribución renovable de vectores RED1, RED2 y MEDIOAMBIENTE es 1.0. (demanda == consumo)
-/// 4. las únicas aportaciones nearby son biomasa (cualquiera), RED1, RED2, ELECTRICIDAD insitu y MEDIOAMBIENTE (insitu)
+/// 3. el rendimiento térmico de la contribución renovable de vectores RED1, RED2 y AMBIENTE es 1.0. (demanda == consumo)
+/// 4. las únicas aportaciones nearby son biomasa (cualquiera), RED1, RED2, ELECTRICIDAD insitu y AMBIENTE (insitu)
 ///
 /// Se pueden excluir consumos eléctricos auxiliares con la etiqueta CTEEPBD_EXCLUYE_AUX_ACS o CTEEPBD_AUX en el comentario del componente de consumo y vector ELECTRICIDAD
-/// Se pueden excluir producciones renovables para equipos con SCOP < 2,5 con la etiqueta CTEEPBD_EXCLUYE_SCOP_ACS en el comentario del componente de vector MEDIOAMBIENTE
+/// Se pueden excluir producciones renovables para equipos con SCOP < 2,5 con la etiqueta CTEEPBD_EXCLUYE_SCOP_ACS en el comentario del componente de vector AMBIENTE
 ///
 /// Casos que no podemos calcular:
 /// - Cuando hay electricidad cogenerada
@@ -331,7 +334,7 @@ pub fn fraccion_renovable_acs_nrb(
     wfactors: &Factors,
     demanda_anual_acs: f32,
 ) -> Result<f32, EpbdError> {
-    use Carrier::{BIOMASA, BIOMASADENSIFICADA, ELECTRICIDAD, MEDIOAMBIENTE, RED1, RED2};
+    use Carrier::{BIOMASA, BIOMASADENSIFICADA, AMBIENTE, RED1, RED2, SOLAR};
 
     // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
     let components = &components.filter_by_epb_service(Service::ACS);
@@ -339,9 +342,9 @@ pub fn fraccion_renovable_acs_nrb(
         .cdata
         .iter()
         .filter(|c| {
-            !((c.has_carrier(ELECTRICIDAD) && c.comment().contains("CTEEPBD_EXCLUYE_AUX_ACS"))
-                || (c.has_carrier(MEDIOAMBIENTE)
-                    && c.comment().contains("CTEEPBD_EXCLUYE_SCOP_ACS")))
+            // XXX: This is still here due to compatibility with legacy format. Remove
+            !(c.is_aux()
+                || (c.has_carrier(AMBIENTE) && c.comment().contains("CTEEPBD_EXCLUYE_SCOP_ACS")))
         })
         .collect();
 
@@ -377,7 +380,7 @@ pub fn fraccion_renovable_acs_nrb(
 
     // Comprobaremos las condiciones para poder calcular las aportaciones renovables a la demanda
     //
-    // 1. Las aportaciones de redes de distrito RED1 y RED2 y MEDIOAMBIENTE son aportaciones renovables según sus factores de paso (fp_ren / fp_tot)
+    // 1. Las aportaciones de redes de distrito RED1 y RED2 y AMBIENTE son aportaciones renovables según sus factores de paso (fp_ren / fp_tot)
     // 2. La biomasa (o biomasa densificada)
     //  - si solo se consume uno de esos vectores o vectores insitu o de distrito, y se cubre el 100% de la demanda podemos calcular
     //  - si tenemos el porcentaje de demanda cubierto por la biomasa o biomasa in situ, podemos calcular la demanda renovable.
@@ -385,7 +388,7 @@ pub fn fraccion_renovable_acs_nrb(
     // 3. La ELECTRICIDAD consumida en ACS y producida in situ se toma como renovable en un 100% (rendimiento térmico == 1 y demanda == consumo).
 
     // 1. == Energía ambiente y distrito ==
-    // Demanda total y renovable de los consumos de ACS de RED1, RED2 o MEDIOAMBIENTE (demanda == consumo)
+    // Demanda total y renovable de los consumos de ACS de RED1, RED2 o AMBIENTE (demanda == consumo)
     let (Q_district_and_env_an_tot, Q_district_and_env_acs_an_ren) =
         Q_district_and_env_an(cr_list, wfactors)?;
 
@@ -398,7 +401,12 @@ pub fn fraccion_renovable_acs_nrb(
     let has_only_one_type_of_biomass =
         (has_biomass || has_dens_biomass) && !(has_biomass && has_dens_biomass);
     let has_only_biomass_or_onsite_or_district = !used_carriers.iter().any(|&c| {
-        c != MEDIOAMBIENTE && c != RED1 && c != RED2 && c != BIOMASA && c != BIOMASADENSIFICADA
+        c != SOLAR
+            && c != AMBIENTE
+            && c != RED1
+            && c != RED2
+            && c != BIOMASA
+            && c != BIOMASADENSIFICADA
     });
 
     let Q_biomass_an_ren = if has_only_one_type_of_biomass && has_only_biomass_or_onsite_or_district

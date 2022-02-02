@@ -160,25 +160,46 @@ impl Factors {
         // Vectores existentes
         let wf_carriers: HashSet<_> = self.wdata.iter().map(|f| f.carrier).collect();
 
-        // Asegura que existe MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.0, 0.0
+        // Asegura que existe AMBIENTE, INSITU, SUMINISTRO, A, 1.0, 0.0
         self.update_wfactor(
-            MEDIOAMBIENTE,
+            AMBIENTE,
             INSITU,
             SUMINISTRO,
             A,
             RenNrenCo2::new(1.0, 0.0, 0.0),
-            "Recursos usados para obtener energía térmica del medioambiente",
+            "Recursos usados para obtener energía ambiente",
         );
 
-        // Asegura que existe MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.0, 0.0
+        // Asegura que existe AMBIENTE, RED, SUMINISTRO, A, 1.0, 0.0
         self.update_wfactor(
-            MEDIOAMBIENTE,
+            AMBIENTE,
             RED,
             SUMINISTRO,
             A,
             RenNrenCo2::new(1.0, 0.0, 0.0),
-            "Recursos usados para obtener energía térmica del medioambiente (red ficticia)",
+            "Recursos usados para obtener energía ambiente (red ficticia)",
         );
+
+        // Asegura que existe SOLAR, INSITU, SUMINISTRO, A, 1.0, 0.0
+        self.update_wfactor(
+            SOLAR,
+            INSITU,
+            SUMINISTRO,
+            A,
+            RenNrenCo2::new(1.0, 0.0, 0.0),
+            "Recursos usados para obtener energía solar térmica",
+        );
+
+        // Asegura que existe SOLAR, RED, SUMINISTRO, A, 1.0, 0.0
+        self.update_wfactor(
+            SOLAR,
+            RED,
+            SUMINISTRO,
+            A,
+            RenNrenCo2::new(1.0, 0.0, 0.0),
+            "Recursos usados para obtener energía solar térmica (red ficticia)",
+        );
+
 
         // Asegura que existe ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.0, 0.0 si hay ELECTRICIDAD
         if wf_carriers.contains(&ELECTRICIDAD) {
@@ -221,7 +242,8 @@ impl Factors {
         let exp_carriers = [
             (Carrier::ELECTRICIDAD, Source::INSITU),
             (Carrier::ELECTRICIDAD, Source::COGEN),
-            (Carrier::MEDIOAMBIENTE, Source::INSITU),
+            (Carrier::AMBIENTE, Source::INSITU),
+            (Carrier::SOLAR, Source::INSITU),
         ];
         for (c, s) in &exp_carriers {
             if *s != Source::COGEN {
@@ -489,8 +511,10 @@ ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para 
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
-MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía térmica del medioambiente
-MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía térmica del medioambiente (red ficticia)
+AMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía ambiente
+AMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía ambiente (red ficticia)
+SOLAR, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica
+SOLAR, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica (red ficticia)
 ELECTRICIDAD, COGEN, SUMINISTRO, A, 0.000, 0.000, 0.000 # Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)
 ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red\nELECTRICIDAD, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
 ELECTRICIDAD, INSITU, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
@@ -499,10 +523,14 @@ ELECTRICIDAD, COGEN, A_RED, A, 0.000, 2.500, 0.300 # Recursos usados para produc
 ELECTRICIDAD, COGEN, A_NEPB, A, 0.000, 2.500, 0.300 # Recursos usados para producir la energía exportada a usos no EPB. Valor predefinido
 ELECTRICIDAD, COGEN, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
 ELECTRICIDAD, COGEN, A_NEPB, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
-MEDIOAMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
-MEDIOAMBIENTE, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
-MEDIOAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
-MEDIOAMBIENTE, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
+AMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
+AMBIENTE, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
+AMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+AMBIENTE, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
+SOLAR, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
+SOLAR, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
+SOLAR, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+SOLAR, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
 RED1, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
 RED2, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)";
         let tcomps = "CONSUMO, NDEF, ELECTRICIDAD, 1 # Solo consume electricidad de red"

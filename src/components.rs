@@ -171,12 +171,15 @@ impl Components {
 
     /// Corrige los componentes de consumo y producción
     ///
-    /// - Asegura que la energía MEDIOAMBIENTE consumida tiene su producción correspondiente
+    /// - Asegura que la energía AMBIENTE consumida tiene su producción correspondiente
+    /// - Asegura que la energía SOLAR consumida tiene su producción correspondiente
     /// - Asegura que la energía eléctrica producida no tiene un uso que no sea NDEF
     ///
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
     pub fn normalize(mut self) -> Self {
-        self.compensate_env_use();
+        // Compensa consumos no respaldados por producción
+        self.compensate_cr_use(Carrier::AMBIENTE);
+        self.compensate_cr_use(Carrier::SOLAR);
         self
     }
 
@@ -187,7 +190,7 @@ impl Components {
     /// 3. Reparte las producciones eléctricas en proporción al consumo del servicio elegido respecto al consumo EPB
     ///
     /// *Nota*: los componentes deben estar normalizados (ver método normalize) para asegurar que:
-    /// - los consumos de MEDIOAMBIENTE de un servicio ya están equilibrados
+    /// - los consumos de AMBIENTE de un servicio ya están equilibrados
     /// - las producciones eléctricas no pueden ser asignadas a un servicio (siempre son a NDEF)
     /// - la producción eléctrica o de energía ambiente no distingue entre sistemas y
     ///   se considera que siempre forman un pool con reparto según consumos.
@@ -290,11 +293,12 @@ impl Components {
         newcomponents
     }
 
-    /// Asegura que la energía MEDIOAMBIENTE consumida está equilibrada por una producción in situ
+    /// Compensa los consumos declarados de energía insitu no equilibrada por producción
     ///
-    /// Completa el balance de las producciones in situ de energía procedente del medioambiente
+    /// Afecta a los vectores AMBIENTE y SOLAR
+    ///
     /// cuando el consumo de esos vectores supera la producción.
-    /// Evita tener que declarar las producciones de MEDIOAMBIENTE, basta con los consumos.
+    /// Evita tener que declarar las producciones de AMBIENTE y SOLAR, basta con los consumos.
     /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción entre sistemas.
     ///
     /// Esto significa que, para cada sistema (j=id) y servicio a servicio:
@@ -303,27 +307,21 @@ impl Components {
     /// 3) se genera una producción que completa las cantidades no satisfechas para el sistema
     ///
     /// Las producciones declaradas para un sistema, que no se consuman, no se trasvasan a otros.
-    fn compensate_env_use(&mut self) {
-        // Localiza componentes de energía procedente del medioambiente
+    fn compensate_cr_use(&mut self, carrier: Carrier) {
+        // Localiza componentes pertenecientes al vector
         let envcomps: Vec<_> = self
             .cdata
             .iter()
             .cloned()
-            .filter(|c| c.has_carrier(Carrier::MEDIOAMBIENTE))
+            .filter(|c| c.has_carrier(carrier))
             .collect();
-
-        // Componentes de MEDIOAMBIENTE que vamos a añadir
         let mut balancecomps = Vec::new();
-
         let ids: HashSet<_> = envcomps.iter().map(|c| c.id()).collect();
-
-        // Identifica servicios en componentes de consumo
         let services: HashSet<_> = envcomps
             .iter()
             .filter(|c| c.is_used())
             .map(|c| c.service())
             .collect();
-
         for id in ids {
             // Componentes para el sistema dado
             let components_for_id = envcomps.iter().filter(|c| c.has_id(id));
@@ -365,15 +363,13 @@ impl Components {
                 // Si hay desequilibrio agregamos un componente de producción
                 balancecomps.push(Energy::Prod(EProd {
                     id,
-                    carrier: Carrier::MEDIOAMBIENTE,
+                    carrier,
                     source: Source::INSITU,
                     values: unbalanced_values,
                     comment: "Equilibrado de consumo sin producción declarada".into(),
                 }));
             }
         }
-
-        // Agrega componentes no compensados
         self.cdata.append(&mut balancecomps);
     }
 }
@@ -387,22 +383,22 @@ mod tests {
 0, PRODUCCION, INSITU, ELECTRICIDAD, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
 0, CONSUMO, REF, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, CONSUMO, CAL, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
+0, CONSUMO, CAL, AMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
 
-    // Se han puesto las producciones eléctricas a servicio NDEF y compensado consumos de MEDIOAMBIENTE
+    // Se han puesto las producciones eléctricas a servicio NDEF y compensado consumos de AMBIENTE
     const TCOMPSRES1: &str = "#META CTE_AREAREF: 100.5
 0, PRODUCCION, INSITU, ELECTRICIDAD, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
 0, CONSUMO, REF, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, CONSUMO, CAL, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
-0, PRODUCCION, INSITU, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
+0, CONSUMO, CAL, AMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
+0, PRODUCCION, INSITU, AMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
 
     // La producción se debe repartir al 50% entre los usos EPB
     const TCOMPSRES2: &str = "#META CTE_AREAREF: 100.5
 #META CTE_SERVICIO: CAL
 0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, CONSUMO, CAL, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
-0, PRODUCCION, INSITU, MEDIOAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
+0, CONSUMO, CAL, AMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
+0, PRODUCCION, INSITU, AMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada
 0, PRODUCCION, INSITU, ELECTRICIDAD, 4.10, 3.28, 2.05, 1.85, 1.02, 1.23, 1.64, 1.43, 1.02, 1.64, 2.46, 3.28 #  Producción eléctrica reasignada al servicio";
 
     // La producción se debe repartir al 50% entre los usos EPB y sin excesos
@@ -410,13 +406,13 @@ mod tests {
 0, PRODUCCION, INSITU, ELECTRICIDAD, 2.00, 6.00, 2.00
 0, CONSUMO, REF, ELECTRICIDAD, 1.00, 1.00, 1.00
 0, CONSUMO, CAL, ELECTRICIDAD, 1.00, 2.00, 1.00
-0, CONSUMO, CAL, MEDIOAMBIENTE, 2.00, 2.00, 2.00";
+0, CONSUMO, CAL, AMBIENTE, 2.00, 2.00, 2.00";
 
     const TCOMPSRES3: &str = "#META CTE_AREAREF: 1.0
 #META CTE_SERVICIO: CAL
 0, CONSUMO, CAL, ELECTRICIDAD, 1.00, 2.00, 1.00
-0, CONSUMO, CAL, MEDIOAMBIENTE, 2.00, 2.00, 2.00
-0, PRODUCCION, INSITU, MEDIOAMBIENTE, 2.00, 2.00, 2.00 # Equilibrado de consumo sin producción declarada
+0, CONSUMO, CAL, AMBIENTE, 2.00, 2.00, 2.00
+0, PRODUCCION, INSITU, AMBIENTE, 2.00, 2.00, 2.00 # Equilibrado de consumo sin producción declarada
 0, PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 1.00 #  Producción eléctrica reasignada al servicio";
 
     #[test]
@@ -453,22 +449,22 @@ mod tests {
     }
 
     /// Componentes con id de sistema diferenciados
-    /// e imputación de producción no compensada de MEDIOAMBIENTE a los id correspondientes
+    /// e imputación de producción no compensada de AMBIENTE a los id correspondientes
     #[test]
     fn normalize() {
         let comps = "# Bomba de calor 1
             1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC 1
-            1,CONSUMO,ACS,MEDIOAMBIENTE,150 # BdC 1
+            1,CONSUMO,ACS,AMBIENTE,150 # BdC 1
             # Bomba de calor 2
             2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC 2
-            2,CONSUMO,CAL,MEDIOAMBIENTE,300 # BdC 2
+            2,CONSUMO,CAL,AMBIENTE,300 # BdC 2
             # Producción fotovoltaica in situ
             1,PRODUCCION,INSITU,ELECTRICIDAD,50 # PV
             2,PRODUCCION,INSITU,ELECTRICIDAD,100 # PV
             # Producción de energía ambiente dada por el usuario
-            0,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
-            1,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-            2,PRODUCCION,INSITU,MEDIOAMBIENTE,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
+            0,PRODUCCION,INSITU,AMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+            1,PRODUCCION,INSITU,AMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+            2,PRODUCCION,INSITU,AMBIENTE,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
             # Compensación de energía ambiente a completar por CteEPBD"
             .parse::<Components>()
             .unwrap()
@@ -476,7 +472,7 @@ mod tests {
         let ma_prod = comps
             .cdata
             .iter()
-            .filter(|c| c.is_generated() && c.has_carrier(Carrier::MEDIOAMBIENTE));
+            .filter(|c| c.is_generated() && c.has_carrier(Carrier::AMBIENTE));
 
         // Se añaden 50kWh a los 100kWh declarados para compensar consumo en ACS (150kWh)
         let ma_prod_1: f32 = ma_prod
@@ -508,10 +504,10 @@ mod tests {
             0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
             1, PRODUCCION, INSITU, ELECTRICIDAD, 2.00 # Producción PV
             2, CONSUMO, CAL, ELECTRICIDAD, 1.00 # BdC modo calefacción
-            2, CONSUMO, CAL, MEDIOAMBIENTE, 2.00 # BdC modo calefacción
+            2, CONSUMO, CAL, AMBIENTE, 2.00 # BdC modo calefacción
             2, SALIDA, CAL, 3.0 # Energía entregada por el equipo de calefacción con COP 3
             2, CONSUMO, ACS, ELECTRICIDAD, 1.0 # BdC modo ACS
-            2, CONSUMO, ACS, MEDIOAMBIENTE, 2.0 # BdC modo ACS
+            2, CONSUMO, ACS, AMBIENTE, 2.0 # BdC modo ACS
             2, SALIDA, ACS, 3.0 # Energía entregada por el equipo de acs con COP_dhw 3
             2, AUX, ACS, 0.5 # Auxiliares ACS BdC
             3, CONSUMO, REF, ELECTRICIDAD, 1.00 # BdC modo refrigeración

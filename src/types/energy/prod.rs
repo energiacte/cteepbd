@@ -86,7 +86,7 @@ impl std::str::FromStr for EProd {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<EProd, Self::Err> {
-        use self::Carrier::{ELECTRICIDAD, MEDIOAMBIENTE};
+        use self::Carrier::{AMBIENTE, ELECTRICIDAD, SOLAR};
         use self::Source::*;
 
         // Split comment from the rest of fields
@@ -117,7 +117,7 @@ impl std::str::FromStr for EProd {
 
         // Check coherence of ctype and source
         let source_belongs_to_type = match source {
-            INSITU => carrier == ELECTRICIDAD || carrier == MEDIOAMBIENTE,
+            INSITU => carrier == ELECTRICIDAD || carrier == AMBIENTE || carrier == SOLAR,
             COGEN => carrier == ELECTRICIDAD,
             _ => false,
         };

@@ -50,7 +50,7 @@ impl fmt::Display for EpbdError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use EpbdError::*;
         match self {
-            ParseError(v) => write!(f, "No se ha podido interpretar {}", v),
+            ParseError(v) => write!(f, "Error de formato: {}", v),
             WrongInput(v) => write!(f, "Valor de entrada incorrecto: {}", v),
             MissingFactor(v) => write!(f, "Factor de paso no encontrado: {}", v),
         }
