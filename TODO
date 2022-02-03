@@ -3,11 +3,9 @@
 - maybe bug: see why emissions for ACS for the manual's example change
   depending on whether nearby factors are used or not.
 
-- cte
-
-  - Documentar que el uso ILU solamente se introduce cuando se considera EPB (Poner en manual como nota)
 
 - epbd:
+  - compute cogen electricity factors from used energy for GEN service
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
