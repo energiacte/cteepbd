@@ -255,21 +255,22 @@ fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError>
 }
 
 #[allow(non_snake_case)]
-/// Demanda total y renovable de los consumos de ACS de RED1, RED2 o AMBIENTE
+/// Demanda total y renovable de los consumos de ACS cubierto por vectores nearby que no sean biomasa
+/// (AMBIENTE, RED1, RED2 o SOLAR)
 ///
 /// Podemos obtener la parte renovable, con la fracción que supone su factor de paso ren respecto al total y
 /// suponiendo que la conversión de consumo a demanda es con rendimiento 1.0 (de modo que demanda = consumo para estos vectores)
-fn Q_district_and_env_an(cr_list: &[&Energy], wfactors: &Factors) -> Result<(f32, f32), EpbdError> {
-    use Carrier::{AMBIENTE, RED1, RED2, SOLAR};
+/// En el caso de la biomasa la conversión depende del rendimiento del sistema
+fn Q_nrb_non_biomass_an(cr_list: &[&Energy], wfactors: &Factors) -> Result<(f32, f32), EpbdError> {
+    use Carrier::{BIOMASA, BIOMASADENSIFICADA};
 
     let value = cr_list
         .iter()
         .filter(|c| {
             c.is_used()
-                && (c.has_carrier(RED1)
-                    || c.has_carrier(RED2)
-                    || c.has_carrier(AMBIENTE)
-                    || c.has_carrier(SOLAR))
+                && CTE_NRBY.contains(&c.carrier())
+                && !c.has_carrier(BIOMASA)
+                && !c.has_carrier(BIOMASADENSIFICADA)
         })
         .map(|c| {
             let tot = c.values_sum();
@@ -334,22 +335,21 @@ pub fn fraccion_renovable_acs_nrb(
     wfactors: &Factors,
     demanda_anual_acs: f32,
 ) -> Result<f32, EpbdError> {
-    use Carrier::{BIOMASA, BIOMASADENSIFICADA, AMBIENTE, RED1, RED2, SOLAR};
+    use Carrier::{AMBIENTE, BIOMASA, BIOMASADENSIFICADA};
 
     // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
     let components = &components.filter_by_epb_service(Service::ACS);
-    let cr_list: &Vec<&Energy> = &components
+    let cr_list_dhw: &Vec<&Energy> = &components
         .cdata
         .iter()
         .filter(|c| {
-            // XXX: This is still here due to compatibility with legacy format. Remove
             !(c.is_aux()
                 || (c.has_carrier(AMBIENTE) && c.comment().contains("CTEEPBD_EXCLUYE_SCOP_ACS")))
         })
         .collect();
 
     // Casos sin consumo (o producción) de ACS
-    if cr_list.is_empty() {
+    if cr_list_dhw.is_empty() {
         return Ok(0.0);
     };
 
@@ -371,7 +371,7 @@ pub fn fraccion_renovable_acs_nrb(
     //   hora del reparto de electricidad, si se ha marcado el consumo de combustible como destinado a cogeneración eléctrica CTEEPBD_DESTINO_COGEN y uso NDEF.
     //   Habría que pensar qué ocurre si una parte no se consume y se exporta.
     // - Habría que ver cómo se imputa (prioridad) el consumo de electricidad in situ y cogenerada.
-    let has_el_cgn = cr_list.iter().any(|c| c.is_cogen_pr());
+    let has_el_cgn = cr_list_dhw.iter().any(|c| c.is_cogen_pr());
     if has_el_cgn {
         return Err(EpbdError::WrongInput(
             "Uso de electricidad cogenerada".to_string(),
@@ -389,31 +389,24 @@ pub fn fraccion_renovable_acs_nrb(
 
     // 1. == Energía ambiente y distrito ==
     // Demanda total y renovable de los consumos de ACS de RED1, RED2 o AMBIENTE (demanda == consumo)
-    let (Q_district_and_env_an_tot, Q_district_and_env_acs_an_ren) =
-        Q_district_and_env_an(cr_list, wfactors)?;
+    let (Q_nrb_non_biomass_an_tot, Q_nrb_non_biomass_an_ren) =
+        Q_nrb_non_biomass_an(cr_list_dhw, wfactors)?;
 
     // 2. == Biomasa ==
     // Vectores energéticos consumidos
-    let used_carriers = get_used_carriers(cr_list);
+    let used_carriers = get_used_carriers(cr_list_dhw);
     let has_biomass = used_carriers.contains(&BIOMASA);
     let has_dens_biomass = used_carriers.contains(&BIOMASADENSIFICADA);
     let has_any_biomass = has_biomass || has_dens_biomass;
     let has_only_one_type_of_biomass =
         (has_biomass || has_dens_biomass) && !(has_biomass && has_dens_biomass);
-    let has_only_biomass_or_onsite_or_district = !used_carriers.iter().any(|&c| {
-        c != SOLAR
-            && c != AMBIENTE
-            && c != RED1
-            && c != RED2
-            && c != BIOMASA
-            && c != BIOMASADENSIFICADA
-    });
+    let has_only_nearby = used_carriers.iter().all(|&c| CTE_NRBY.contains(&c));
 
-    let Q_biomass_an_ren = if has_only_one_type_of_biomass && has_only_biomass_or_onsite_or_district
-    {
+    let Q_biomass_an_ren = if has_only_one_type_of_biomass && has_only_nearby {
         // Solo hay un tipo de biomasa y no hay otros vectores que no sean de distrito o energía ambiente
         // entonces podemos calcular el % de la demanda de ACS abastecida por la biomasa
-        let Q_any_biomass_acs_an = demanda_anual_acs - Q_district_and_env_an_tot;
+        // ya que es toda la no cubierta por el resto de vectores
+        let Q_any_biomass_acs_an = demanda_anual_acs - Q_nrb_non_biomass_an_tot;
         // Parte renovable: Q_any_biomass_acs_an_ren
         if has_biomass {
             Q_any_biomass_acs_an * get_fp_ren_fraction(BIOMASA, wfactors)?
@@ -421,7 +414,8 @@ pub fn fraccion_renovable_acs_nrb(
             Q_any_biomass_acs_an * get_fp_ren_fraction(BIOMASADENSIFICADA, wfactors)?
         }
     } else if has_any_biomass {
-        // Además de biomasa hay otros vectores que no son de distrito o insitu y necesitamos saber qué cantidad de ACS produce la biomasa
+        // Cuando además de biomasa hay otros vectores que no son de distrito o insitu
+        // necesitamos saber qué cantidad de ACS produce la biomasa para poder calcular
         let Q_biomass_an_ren = if has_biomass {
             let fp_ren_fraction_biomass = get_fp_ren_fraction(BIOMASA, wfactors)?;
             let Q_biomass_an_pct = components
@@ -452,20 +446,21 @@ pub fn fraccion_renovable_acs_nrb(
         };
         Q_biomass_an_ren + Q_dens_biomass_an_ren
     } else {
+        // No hay ningún tipo de biomasa
         0.0
     };
 
     // 3. === Electricidad producida in situ ===
     // Consumo de electricidad "renovable" (consumo == demanda)
-    let num_steps = cr_list[0].num_steps();
+    let num_steps = cr_list_dhw[0].num_steps();
 
     // a. Total de consumo de electricidad para ACS, de cualquier origen
-    let E_EPus_el_t = cr_list
+    let E_EPus_el_t = cr_list_dhw
         .iter()
         .filter(|c| c.is_electricity() && c.is_epb_use())
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, c.values()));
     // b. Total de producción de electricidad in situ asignada, en principio, a ACS
-    let E_pr_el_onsite_t = cr_list
+    let E_pr_el_onsite_t = cr_list_dhw
         .iter()
         .filter(|c| c.is_electricity() && c.is_onsite_pr())
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, c.values()));
@@ -473,7 +468,7 @@ pub fn fraccion_renovable_acs_nrb(
     let Q_el_an_ren: f32 = vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();
 
     // === Total de demanda renovable ==
-    let Q_an_ren = Q_district_and_env_acs_an_ren + Q_biomass_an_ren + Q_el_an_ren;
+    let Q_an_ren = Q_nrb_non_biomass_an_ren + Q_biomass_an_ren + Q_el_an_ren;
 
     Ok(Q_an_ren / demanda_anual_acs)
 }
