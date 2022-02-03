@@ -3,7 +3,6 @@
 - maybe bug: see why emissions for ACS for the manual's example change
   depending on whether nearby factors are used or not.
 
-
 - epbd:
   - compute cogen electricity factors from used energy for GEN service
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
@@ -40,7 +39,7 @@
     - valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
     - e.final
       - Sacar consumo de energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
-      - De todos los servicios y desglosado por servicio
+      - EPB de todos los servicios y desglosado por servicio
     - balance B, balance A, AB: ren, nren, tot, emisiones.
       - De todos los servicios y desglosado por servicio
     - emisiones, desglose eléctrico y no eléctrico

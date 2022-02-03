@@ -139,7 +139,7 @@ pub fn energy_performance(
         // Weighted energy for each use item (EPB services)
         for &service in &Service::SERVICES_ALL {
             // Energy use
-            if let Some(value) = bal_cr.used_EPB_an_by_service.get(&service) {
+            if let Some(value) = bal_cr.used_EPB_by_service_an.get(&service) {
                 *balance.used_EPB_by_service.entry(service).or_default() += *value
             }
             // Step A
@@ -207,7 +207,7 @@ pub struct BalanceForCarrier {
     /// Energy used for EPB uses in each timestep
     pub used_EPB_an: f32,
     /// Energy used for EPB uses, by use
-    pub used_EPB_an_by_service: HashMap<Service, f32>,
+    pub used_EPB_by_service_an: HashMap<Service, f32>,
     /// EUsed energy for non EPB uses in each timestep
     pub used_nEPB: Vec<f32>,
     /// Energy used for non EPB uses
@@ -573,7 +573,7 @@ fn balance_for_carrier(
         carrier,
         used_EPB: E_EPus_cr_t,
         used_EPB_an: E_EPus_cr_an,
-        used_EPB_an_by_service: E_EPus_cr_an_by_service,
+        used_EPB_by_service_an: E_EPus_cr_an_by_service,
         used_nEPB: E_nEPus_cr_t,
         used_nEPB_an: E_nEPus_cr_an,
         produced: E_pr_cr_t,
