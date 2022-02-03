@@ -156,7 +156,7 @@ para su aplicación al CTE DB-HE (procedimiento EN ISO 52000-1) y formatos de da
 %\newcommand{\tipo}{BORRADOR}%{Documento preliminar} % Tipo documento: PRELIMINAR, FINAL, ETC.
 \newdateformat{mydate}{\monthname[\THEMONTH] \THEYEAR}
 \newcommand{\fecha}{\mydate\today} % Fecha DD/MM/AAAA o \today para hoy
-\newcommand{\version}{1.0}
+\newcommand{\version}{2.0}
 %% FIN DATOS DEL INFORME ******************************************************
 
 \begin{document}
@@ -424,25 +424,25 @@ El programa admite distintos componentes energéticos:
 
 Cada uno de estos componentes energéticos se lee a partir de una estructura de columnas (valores separados por comas):
 
-Componente de consumo:
+\textit{Componente de consumo:}
 
 \begin{lstlisting}
 id, CONSUMO, servicio, vector, valores... # comentario
 \end{lstlisting}
 
-Componente de consumo auxiliar:
+\textit{Componente de consumo auxiliar:}
 
 \begin{lstlisting}
 id, AUX, servicio, vector, valores... # comentario
 \end{lstlisting}
 
-Componente de producción:
+\textit{Componente de producción:}
 
 \begin{lstlisting}
 id, PRODUCCION, origen, vector, valores... # comentario
 \end{lstlisting}
 
-Componente de energía saliente:
+\textit{Componente de energía saliente:}
 
 \begin{lstlisting}
 id, SALIDA, servicio, valores... # comentario
@@ -533,16 +533,16 @@ La lista de vectores energéticos posibles es la siguiente:
 
 Los vectores \texttt{RED1} y \texttt{RED2} están representan vectores energéticos genéricos, cuyos factores de paso están definidas por el suministrador, y corresponden a redes de distrito de frío y/o calor.
 
-\textit{Tipos (\texttt{tipo})}
-
 \textit{Origen (\texttt{origen})}
 
-Para componentes de \textbf{producción} de energía puede adoptar los valores:
+El origen de la energía producida puede adoptar los valores:
 
 \begin{itemize}
-    \item \texttt{INSITU}, para vectores producidos \textit{in situ} (energía térmica o electricidad de procedencia solar, electricidad generada con el viento o energía térmica extraída del medioambiente con bombas geotérmicas, aerotérmicas o hidrotérmicas);
+    \item \texttt{INSITU}, para vectores producidos \textit{in situ} (energía térmica o electricidad de procedencia solar, electricidad generada con el viento o energía ambiente extraída con bombas de calor, sean geotérmicas, aerotérmicas o hidrotérmicas);
     \item \texttt{COGEN} para la electricidad procedente de sistemas de cogeneración.
 \end{itemize}
+
+Para el correcto cálculo de 
 
 \textit{Servicio atendido (\texttt{servicio})}
 
@@ -561,9 +561,13 @@ El servicio al que se destina la energía puede tomar los siguientes valores:
 \item \texttt{NEPB} - Uso no EPB genérico (sin servicio de destino definido)
 \end{itemize}
 
+\begin{myquote}\small
 \textbf{Nota:} Para el caso de la producción del vector energético \texttt{ELECTRICIDAD}, por las características de su distribución, no se contempla en la versión actual la posibilidad de asignar un servicio específico, tomándose siempre como servicio de destino \texttt{NDEF}, que adjudica la producción a los distintos servicios en función del porcentaje que representan respecto al consumo total de \texttt{ELECTRICIDAD}.
+
 \textbf{Nota:} En algunos casos, los consumos de algunos servicios pueden estar combinados. Por ejemplo, el consumo de humidificación puede estar incluido en el de calefacción, el de deshumidificación en el de refrigeración o el de ventilación en los de calefacción y/o refrigeración.
+
 \textbf{Nota:} El consumo de los usos de iluminación, cuando no se compute el servicio como EPB debe asignarse al servicio NEPB.
+\end{myquote}
 
 \textit{Valores (\texttt{valor})}
 
@@ -575,7 +579,10 @@ Todos los registros deben emplear número igual de pasos de tiempo.
 
 Este campo, con valor descriptivo, no está delimitado por un signo de coma previo sino precedido por un signo de almohadilla (\texttt{\#}) y puede contener un texto arbitrario, que no se tiene en cuenta en el cálculo.
 
+\begin{myquote}\small
 \textbf{Nota:} En el caso de que el comentario incluya la cadena \texttt{CTEEPBD\_EXCLUYE\_SCOP\_ACS} el componente es descartado para el cálculo de la fracción renovable de la demanda de ACS. Esto permite descartar los consumos (eléctricos y de energía ambiente, respectivamente) en la contribución a la demanda de ACS. Esto permite, por un lado, el cálculo de más casos con generación renovable de ACS (diferente de la electricidad), para los que no se cumpliría la restricción para el cálculo de la fracción renovable de la demanda de ACS de que no se empleen más de dos vectores energéticos con procedencia en la red, y, por otro lado, excluir las aportaciones de energía ambiente de equipos con un SCOP inferior al mínimo para ser considerada una aportación renovable.
+\end{myquote}
+
 
 \clearpage
 \newpage
@@ -711,19 +718,22 @@ El \textbf{balance energético por vector energético} (\texttt{balance\_cr}) in
 \begin{itemize}
 \item \texttt{carrier} - el nombre del vector energético;
 \item \texttt{used\_EPB} - la energía destinada a usos EPB, para cada intervalo;
-\item \texttt{used\_EPB\_an\-byuse} - la energía destinada a usos EPB, por servicio y en total anual;
+\item \texttt{used\_EPB\_by\_service\_an} - total anual de energía destinada a usos EPB, por servicio;
 \item \texttt{used\_nEPB} - la energía destinada a usos no EPB, para cada intervalo;
+\item \texttt{used\_nEPB\_an} - energía anual destinada a usos no EPB;
 \item \texttt{produced} - la energía producida, para cada intervalo;
 \item \texttt{produced\_an} - la energía producida, en total anual;
-\item \texttt{produced\_by_source} - la energía producida, por origen y para cada intervalo;
-\item \texttt{produced\_by_source\_an} - la energía producida, por origen y en total anual;
+\item \texttt{produced\_by\_source} - la energía producida, por origen y para cada intervalo;
+\item \texttt{produced\_by\_source\_an} - la energía producida, por origen y en total anual;
 \item \texttt{produced\_used\_EPus} - la energía producida y usada en usos EPB, para cada intervalo;
-\item \texttt{produced\_used\_EPus\_by_source} - la energía producida y usada en usos EPB, por origen y para cada intervalo;
+\item \texttt{produced\_used\_EPus\_an} - energía anual producida y usada en usos EPB;
+\item \texttt{produced\_used\_EPus\_by\_source} - la energía producida y usada en usos EPB, por origen y para cada intervalo;
+\item \texttt{produced\_used\_EPus\_by\_source\_an} - energía anual producida y usada en usos EPB, por origen;
 \item \texttt{f\_match} - el factor de coincidencia de cargas (producción y consumo);
 \item \texttt{exported} - la energía exportada, para cada intervalo;
 \item \texttt{exported\_an} - la energía exportada anualmente, en total anual;
-\item \texttt{exported\_by_source} - la energía exportada, por origen y para cada intervalo;
-\item \texttt{exported\_by_source\_an} - la energía exportada, por origen, en total anual;
+\item \texttt{exported\_by\_source} - la energía exportada, por origen y para cada intervalo;
+\item \texttt{exported\_by\_source\_an} - la energía exportada, por origen, en total anual;
 \item \texttt{exported\_grid} - la energía exportada a la red, para cada intervalo;
 \item \texttt{exported\_grid\_an} - la energía exportada a la red, en total anual;
 \item \texttt{exported\_nEPB} - la exportada a usos no EPB, para cada intervalo;
@@ -739,32 +749,30 @@ El \textbf{balance energético por vector energético} (\texttt{balance\_cr}) in
 \item \texttt{we\_exported\_an\_AB} - la energía ponderada exportada en el paso AB, en total anual;
 \item \texttt{we\_exported\_an} - la energía ponderada exportada en el paso B, en total anual;
 \item \texttt{we\_an\_A} - la energía ponderada en el paso A, en total anual;
-\item \texttt{we\_an\_A\_by_service} - la energía ponderada en el paso A, por servicio EPB y en total anual;
+\item \texttt{we\_an\_A\_by\_service} - la energía ponderada en el paso A, por servicio EPB y en total anual;
 \item \texttt{we\_an} - la energía ponderada en el paso B, en total anual;
-\item \texttt{we\_an\_by_service} - la energía ponderada en el paso B, por servicio EPB y en total anual.
+\item \texttt{we\_an\_by\_service} - la energía ponderada en el paso B, por servicio EPB y en total anual.
 \end{itemize}
 
 \begin{myquote}\small
-Esta salida permite, por ejemplo, calcular la energía eléctrica producida y autoconsumida como:
-\\
+La energía usada, producida, exportada y suministrada no ponderada es energía final.
+\end{myquote}
 
-\texttt{balance\_cr.ELECTRICIDAD.produced\_an - balance\_cr\_i.ELECTRICIDAD.exported\_grid\_an}
-\\
+\begin{myquote}\small
 
-o, como suma de los valores de los valores de los intervalos mensuales en:
-\\
+Esta salida permite, por ejemplo, obtener la energía eléctrica producida y autoconsumida como:\\
 
-\texttt{balance\_cr.ELECTRICIDAD.produced\_used\_EPus}
+\texttt{balance\_cr.ELECTRICIDAD.produced\_used\_EPus\_an}
 \end{myquote}
 
 El \textbf{balance global} (\texttt{balance}) y el \textbf{balance global repercutido por superficie} \texttt{balance\_m2} contiene la siguiente información, obtenida de la agregación de los resultados parciales de cada vector energético:
 
 \begin{itemize}
-\item \texttt{used\_EPB\_by_service} - Energía usada para servicios EPB, por servicio, en total anual
+\item \texttt{used\_EPB\_by\_service} - Energía usada para servicios EPB, por servicio, en total anual
 \item \texttt{A} - Energía ponderada en el paso A, en total anual
-\item \texttt{A\_by_service} - Energía ponderada en el paso A, por servicio EPB y en total anual
+\item \texttt{A\_by\_service} - Energía ponderada en el paso A, por servicio EPB y en total anual
 \item \texttt{B} - Energía ponderada en el paso A+B, en total anual
-\item \texttt{B\_by_service} - Energía ponderada en el paso B, por servicio EPB y en total anual
+\item \texttt{B\_by\_service} - Energía ponderada en el paso B, por servicio EPB y en total anual
 \item \texttt{we\_del} - Energía ponderada suministrada, en total anual
 \item \texttt{we\_exp\_A} - Energía ponderada exportada en el paso A, en total anual
 \item \texttt{we\_exp} - Energía ponderada exportada en el paso A+B, en total anual
@@ -953,7 +961,7 @@ En los siguientes subapartados se muestra cómo obtener información sobre los i
 
 El consumo de energía primaria no renovable, en $kWh/m^2$ se obtiene como resultado directo:
 
-$C_{ep,ren} [kWh/m^2] = \texttt{balance\_m2.B.ren}$
+$$C_{ep,ren} [kWh/m^2] = \texttt{balance\_m2.B.ren}$$
 
 Mientras que el consumo de energía primaria total se obtiene a partir de la suma del la parte renovable y no renovable del consumo:
 
@@ -963,13 +971,13 @@ $C_{ep,tot} [kWh/m^2] = C_{ep,ren} + C_{ep,nren} = \texttt{balance\_m2.B.ren} + 
 
 El consumo de energía final usada en servicios (sólo servicios EPB) se localiza en el objeto:
 
-$\texttt{balance\_m2.used\_EPB\_by_service}$
+$\texttt{balance\_m2.used\_EPB\_by\_service}$
 
 donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$.
 
 Así, el consumo de energía final del servicio de calefacción se localizaría en:
 
-$\texttt{balance\_m2.used\_EPB\_by_service.CAL}$
+$\texttt{balance\_m2.used\_EPB\_by\_service.CAL}$
 
 \textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo
 
@@ -977,23 +985,21 @@ $\texttt{balance\_m2.used\_EPB\_by_service.CAL}$
 
 El consumo de energía primaria, desagregada por servicios (sólo servicios EPB), se localiza en el objeto:
 
-$\texttt{balance\_m2.B\_by_service}$
+$\texttt{balance\_m2.B\_by\_service}$
 
 donde cada clave indica el servicio y el valor asociado a la clave, el consumo de energía final de dicho servicio, expresado en $kWh/m^2$, y en sus componentes renovable y no renovable.
 
 Así, el consumo de energía primaria no renovable del servicio de calefacción se localizaría en:
 
-$\texttt{balance\_m2.B\_by_service.CAL.nren}$
+$\texttt{balance\_m2.B\_by\_service.CAL.nren}$
 
 \textbf{NOTA:} Debe tenerse en cuenta que únicamente se recogen los servicios para los que existe algún consumo.
 
 \subsection{Obtención de la energía eléctrica generada y autoconsumida}
 
-La energía eléctrica generada in situ y autoconsumida (sólo en servicios EPB) se puede obtener a partir del balance para el vector energético \texttt{ELECTRICIDAD}, en la clave de energía consumida en usos EPB:
+La energía eléctrica generada in situ y autoconsumida (sólo en servicios EPB) se puede obtener a partir del balance para el vector energético \texttt{ELECTRICIDAD}, en la clave de energía anual consumida en usos EPB:
 
-$\texttt{balance\_cr.ELECTRICIDAD.used\_EPB}$
-
-Dicha clave contiene los valores para cada paso de cálculo de la energía eléctrica usada en servicios EPB, de modo que el valor total anual se obtiene como suma de los valores mensuales.
+$\texttt{balance\_cr.ELECTRICIDAD.produced\_used\_EPus\_an}$
 
 \subsection{Obtención de las emisiones de CO2 y de las emisiones por servicio}
 
@@ -1007,11 +1013,11 @@ $E_{CO2e} [kg_{CO2_e}/m^2] = \texttt{balance\_m2.B.co2}$
 
 Al igual que en el caso del consumo, es posible obtener los valores desagregados por servicios EPB en los objetos:
 
-$\texttt{balance.B\_by_service}$
+$\texttt{balance.B\_by\_service}$
 
 o, para valores repercutidos por la superficie útil:
 
-$\texttt{balance\_m2.B\_by_service}$
+$\texttt{balance\_m2.B\_by\_service}$
 
 \subsection{Obtención del porcentaje de la demanda con origen renovable, calculada para el perímetro próximo}
 
