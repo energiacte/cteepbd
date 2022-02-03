@@ -6,7 +6,6 @@
 - cte
 
   - Documentar que el uso ILU solamente se introduce cuando se considera EPB (Poner en manual como nota)
-  - Move balance::find_fp to Factors and take Factors, balance::{cr_list, fp_cr} to filter_by_cr in Components and Factors
 
 - epbd:
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)

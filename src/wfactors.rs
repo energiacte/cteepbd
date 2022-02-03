@@ -38,7 +38,7 @@ use std::str;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::EpbdError,
+    error::{EpbdError, Result},
     types::{Carrier, Dest, Factor, Meta, MetaVec, RenNrenCo2, Source, Step},
     Components,
 };
@@ -57,6 +57,22 @@ pub struct Factors {
 }
 
 impl Factors {
+    /// Find weighting factor
+    ///
+    /// * `fp_cr` - weighting factor list for a given energy carrier where search is done
+    /// * `source` - match this energy source (`RED`, `INSITU`, `COGEN`)
+    /// * `dest` - match this energy destination (use)
+    /// * `step` - match this calculation step
+    pub fn find(&self, cr: Carrier, source: Source, dest: Dest, step: Step) -> Result<RenNrenCo2> {
+        self.wdata
+            .iter()
+            .find(|fp| fp.carrier == cr && fp.source == source && fp.dest == dest && fp.step == step)
+            .map(|fp| fp.factors())
+            .ok_or_else(|| {
+                EpbdError::MissingFactor(format!("'{}, {}, {}, {}'", cr, source, dest, step))
+            })
+    }
+
     /// Actualiza o establece valores de un factor de paso
     pub fn update_wfactor(
         &mut self,
@@ -144,7 +160,7 @@ impl Factors {
     /// - asegura que existe RED1 | RED2 en suministro
     ///
     /// TODO: se deberían separar algunos de estos pasos como métodos de CteFactorsExt
-    pub fn normalize(mut self, defaults: &UserWF<RenNrenCo2>) -> Result<Self, EpbdError> {
+    pub fn normalize(mut self, defaults: &UserWF<RenNrenCo2>) -> Result<Self> {
         use Carrier::*;
         use Dest::*;
         use Source::*;
@@ -445,7 +461,7 @@ impl fmt::Display for Factors {
 impl str::FromStr for Factors {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<Factors, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Factors, Self::Err> {
         let lines: Vec<&str> = s.lines().map(str::trim).collect();
         let metalines = lines
             .iter()
@@ -455,10 +471,10 @@ impl str::FromStr for Factors {
             .filter(|l| !(l.starts_with('#') || l.starts_with("vector,") || l.is_empty()));
         let wmeta = metalines
             .map(|e| e.parse())
-            .collect::<Result<Vec<Meta>, _>>()?;
+            .collect::<Result<Vec<Meta>>>()?;
         let wdata = datalines
             .map(|e| e.parse())
-            .collect::<Result<Vec<Factor>, _>>()?;
+            .collect::<Result<Vec<Factor>>>()?;
         Ok(Factors { wmeta, wdata })
     }
 }

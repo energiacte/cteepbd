@@ -40,7 +40,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     error::{EpbdError, Result},
     types::HasValues,
-    types::{Carrier, Dest, Energy, Factor, RenNrenCo2, Service, Source, Step},
+    types::{Carrier, Dest, Energy, RenNrenCo2, Service, Source, Step},
     vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
     Components, Factors,
 };
@@ -296,11 +296,6 @@ pub struct BalanceForCarrier {
 /// * Missing weighting factors for a carrier, source type, destination or calculation step
 ///
 /// TODO:
-/// - Ahora mismo nosotros consideramos únicamente la existencia de dos orígenes de generación:
-///   insitu y cogeneración, sin diferenciar generadores individuales. Es decir, consideramos que hay
-///   dos generadores como mucho. La norma hace el reparto de la energía producida (14) por generador i
-///   y, si implementamos el soporte generador a generador, habría que revisar esto. En particular,
-///   cómo se calcula f_pr_cr_j.
 /// - Implementar factor de reparto de carga f_match_t
 ///   Ver ISO_DIS_52000-1_SS_2015_05_13.xlsm
 ///     - si pr/us <=0; f_match_t = 1
@@ -316,13 +311,6 @@ fn balance_for_carrier(
         .cdata
         .iter()
         .filter(|e| e.has_carrier(carrier))
-        .cloned()
-        .collect();
-
-    let fp_cr: Vec<Factor> = wfactors
-        .wdata
-        .iter()
-        .filter(|e| e.carrier == carrier)
         .cloned()
         .collect();
 
@@ -439,14 +427,15 @@ fn balance_for_carrier(
     // NOTE: This allows using annual quantities and not timestep expressions
 
     // * Weighted energy for delivered energy: the cost of producing that energy
-    let fpA_grid = fp_find(&fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
+    let fpA_grid = wfactors.find(carrier, Source::RED, Dest::SUMINISTRO, Step::A)?;
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid; // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources (source j)
     let E_we_del_cr_onsite_an = E_pr_cr_j_an
         .get(&Source::INSITU)
         .and_then(|E_pr_cr_i| {
-            fp_find(&fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
+            wfactors
+                .find(carrier, Source::INSITU, Dest::SUMINISTRO, Step::A)
                 .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i)
                 .ok()
         })
@@ -477,7 +466,7 @@ fn balance_for_carrier(
         let f_we_exp_cr_compute = |dest: Dest, step: Step| -> Result<RenNrenCo2> {
             let mut result = RenNrenCo2::default();
             for (source, E_exp_cr_gen_an) in &E_exp_cr_j_an {
-                let fp_j = fp_find(&fp_cr, *source, dest, step)?;
+                let fp_j = wfactors.find(carrier, *source, dest, step)?;
                 result += fp_j * (E_exp_cr_gen_an / E_exp_cr_an);
             }
             Ok(result)
@@ -645,23 +634,4 @@ fn compute_factors_by_use_cr(cr_list: &[Energy]) -> HashMap<Service, f32> {
         }
     }
     factors_us_k
-}
-
-/// Find weighting factor for 'step' of energy exported to 'dest' from the given energy 'source'.
-///
-/// * `fp_cr` - weighting factor list for a given energy carrier where search is done
-/// * `source` - match this energy source (`RED`, `INSITU`, `COGEN`)
-/// * `dest` - match this energy destination (use)
-/// * `step` - match this calculation step
-fn fp_find(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<RenNrenCo2> {
-    fp_cr
-        .iter()
-        .find(|fp| fp.source == source && fp.dest == dest && fp.step == step)
-        .map(|fp| fp.factors())
-        .ok_or_else(|| {
-            EpbdError::MissingFactor(format!(
-                "'{}, {}, {}, {}'",
-                fp_cr[0].carrier, source, dest, step
-            ))
-        })
 }
