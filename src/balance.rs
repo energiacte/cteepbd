@@ -204,6 +204,8 @@ pub struct BalanceForCarrier {
     pub carrier: Carrier,
     /// Energy used for EPB uses in each timestep
     pub used_EPB: Vec<f32>,
+    /// Energy used for EPB uses in each timestep
+    pub used_EPB_an: f32,
     /// Energy used for EPB uses, by use
     pub used_EPB_an_by_service: HashMap<Service, f32>,
     /// EUsed energy for non EPB uses in each timestep
@@ -538,14 +540,14 @@ fn balance_for_carrier(
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
 
     // EUsed (final) and Weighted energy for each use item (for EPB services)
-    let mut E_Epus_cr_an_by_service: HashMap<Service, f32> = HashMap::new();
+    let mut E_EPus_cr_an_by_service: HashMap<Service, f32> = HashMap::new();
     let mut E_we_cr_an_A_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
     let mut E_we_cr_an_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
     for service in &Service::SERVICES_ALL {
         let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {
             // EUsed energy
-            E_Epus_cr_an_by_service.insert(*service, E_EPus_cr_an * f_us_k_cr);
+            E_EPus_cr_an_by_service.insert(*service, E_EPus_cr_an * f_us_k_cr);
             // Step A
             E_we_cr_an_A_by_service.insert(*service, E_we_cr_an_A * f_us_k_cr);
             // Step B (E.2.6)
@@ -555,6 +557,8 @@ fn balance_for_carrier(
 
     // === Other aggregated values ===
 
+    // Annual energy use for carrier for all EPB uses
+    let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
     // Annual energy use for carrier for non EPB uses
     let E_nEPus_cr_an = vecsum(&E_nEPus_cr_t);
     // Annually produced energy used in EPB uses
@@ -568,7 +572,8 @@ fn balance_for_carrier(
     Ok(BalanceForCarrier {
         carrier,
         used_EPB: E_EPus_cr_t,
-        used_EPB_an_by_service: E_Epus_cr_an_by_service,
+        used_EPB_an: E_EPus_cr_an,
+        used_EPB_an_by_service: E_EPus_cr_an_by_service,
         used_nEPB: E_nEPus_cr_t,
         used_nEPB_an: E_nEPus_cr_an,
         produced: E_pr_cr_t,
