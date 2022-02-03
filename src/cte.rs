@@ -33,7 +33,6 @@ Utilidades para el manejo de balances energéticos para el CTE:
 - generación y transformación de factores de paso
     - wfactors_from_str
     - wfactors_from_loc
-    - wfactors_to_nearby
 */
 
 use once_cell::sync::Lazy;
@@ -198,36 +197,6 @@ pub fn wfactors_from_loc(
         .clone()
         .set_user_wfactors(user)
         .normalize(&userdefaults)
-}
-
-/// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
-///
-/// Los elementos que tiene origen en la RED (!= INSITU, != COGEN)
-/// y no están en la lista CTE_NRBY cambian sus factores de paso
-/// de forma que ren' = 0 y nren' = ren + nren.
-/// **ATENCIÓN**: ¡¡La producción eléctrica de la cogeneración entra con (factores ren:0, nren:0)!!
-pub fn wfactors_to_nearby(wfactors: &Factors) -> Factors {
-    let wmeta = wfactors.wmeta.clone();
-    let mut wdata: Vec<Factor> = Vec::new();
-
-    for f in wfactors.wdata.iter().cloned() {
-        if f.source == Source::INSITU || f.source == Source::COGEN || CTE_NRBY.contains(&f.carrier)
-        {
-            wdata.push(f)
-        } else {
-            wdata.push(Factor::new(
-                f.carrier,
-                f.source,
-                f.dest,
-                f.step,
-                RenNrenCo2::new(0.0, f.ren + f.nren, f.co2), // ¿Esto es lo que tiene más sentido?
-                format!("Perímetro nearby: {}", f.comment),
-            ))
-        }
-    }
-    let mut factors = Factors { wmeta, wdata };
-    factors.set_meta("CTE_PERIMETRO", "NEARBY");
-    factors
 }
 
 /*

@@ -57,13 +57,6 @@ pub struct Factors {
 }
 
 impl Factors {
-    /// Elimina factores no EPB de la lista de factores
-    ///
-    /// Remove non EPB weighting factors from the factor list
-    pub fn strip_nepb(&mut self) {
-        self.wdata.retain(|e| e.dest != Dest::A_NEPB);
-    }
-
     /// Actualiza o establece valores de un factor de paso
     pub fn update_wfactor(
         &mut self,
@@ -199,7 +192,6 @@ impl Factors {
             RenNrenCo2::new(1.0, 0.0, 0.0),
             "Recursos usados para obtener energía solar térmica (red ficticia)",
         );
-
 
         // Asegura que existe ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.0, 0.0 si hay ELECTRICIDAD
         if wf_carriers.contains(&ELECTRICIDAD) {
@@ -388,6 +380,38 @@ impl Factors {
             f.carrier != Carrier::ELECTRICIDAD || f.source != Source::INSITU || has_elec_onsite
         });
         self
+    }
+
+    /// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
+    ///
+    /// Los elementos que tiene origen en la RED (!= INSITU, != COGEN)
+    /// y no están en la lista CTE_NRBY cambian sus factores de paso
+    /// de forma que ren' = 0 y nren' = ren + nren.
+    /// **ATENCIÓN**: ¡¡La producción eléctrica de la cogeneración entra con (factores ren:0, nren:0)!!
+    pub fn to_nearby(&self, nearby_list: &[Carrier]) -> Self {
+        let wmeta = self.wmeta.clone();
+        let mut wdata: Vec<Factor> = Vec::new();
+
+        for f in self.wdata.iter().cloned() {
+            if f.source == Source::INSITU
+                || f.source == Source::COGEN
+                || nearby_list.contains(&f.carrier)
+            {
+                wdata.push(f)
+            } else {
+                wdata.push(Factor::new(
+                    f.carrier,
+                    f.source,
+                    f.dest,
+                    f.step,
+                    RenNrenCo2::new(0.0, f.ren + f.nren, f.co2), // ¿Esto es lo que tiene más sentido?
+                    format!("Perímetro nearby: {}", f.comment),
+                ))
+            }
+        }
+        let mut factors = Factors { wmeta, wdata };
+        factors.set_meta("CTE_PERIMETRO", "NEARBY");
+        factors
     }
 }
 

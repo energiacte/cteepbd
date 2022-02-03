@@ -5,8 +5,6 @@
 
 - cte
 
-  - wfactors.normalize(defaults): ver si quitamos de aquí los valores por defecto y así podemos generar de forma más ergonómica los factores de paso sin usar wfactors_from_loc
-    `CTE_LOCWF_RITE2014.get(loc)?.set_user_wfactors(&user_wf).normalize(&default_user_wf);`
   - Documentar que el uso ILU solamente se introduce cuando se considera EPB (Poner en manual como nota)
   - Move balance::find_fp to Factors and take Factors, balance::{cr_list, fp_cr} to filter_by_cr in Components and Factors
 
