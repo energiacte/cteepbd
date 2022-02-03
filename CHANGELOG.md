@@ -18,10 +18,11 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 ### Novedades
 
 - Cambios en el componente energético para energía usada (CONSUMO)
-  - Añadido identificador del sistema asociado al componente (id)
-  - Eliminación de los subtipos EPB, NEPB, pasando a ser NEPB un servicio y, el resto, servicios EPB (o GEN)
+  - Añadido un identificador (un número entero) del sistema asociado al componente (id)
+  - Eliminación de los subtipos EPB, NEPB
+  - Los usos no EPB se identifican usando un nuevo servicio llamado NEPB. El resto, salvo el GEN, son siempre servicios EPB.
 - Cambios en el componente energético para energía producida (PRODUCCION)
-  - Añadido identificador del sistema asociado al componente (id)
+  - Añadido un identificador (un númro entero) del sistema asociado al componente (id)
 - Nuevo componente energético para energía saliente (SALIDA)
   - Indica la energía absorbida (p.e. refrigeración) o entregada (p.e. calor) en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
   - Incluye un identificador de sistema asociado (id), servicio, valores para los pasos de cálculo y un comentario.
