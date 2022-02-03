@@ -207,7 +207,8 @@ Porcentaje renovable de la demanda de ACS en el perímetro próximo
 // Funciones auxiliares ----------
 
 /// Cálculo de la fracción que supone el factor de paso a energía primaria renovable respecto a la energía primaria total
-fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError> {
+#[allow(non_snake_case)]
+fn get_fpA_del_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError> {
     // El origen es la red, salvo para la electricidad producida in situ
     let src = match c {
         Carrier::ELECTRICIDAD => Source::INSITU,
@@ -216,7 +217,9 @@ fn get_fp_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError>
     wfactors
         .wdata
         .iter()
-        .find(|f| f.carrier == c && f.source == src)
+        .find(|f| {
+            f.carrier == c && f.source == src && f.dest == Dest::SUMINISTRO && f.step == Step::A
+        })
         .ok_or_else(|| {
             EpbdError::WrongInput(format!("No se encuentra el factor de paso para \"{}\"", c))
         })
@@ -243,7 +246,7 @@ fn Q_nrb_non_biomass_an(cr_list: &[&Energy], wfactors: &Factors) -> Result<(f32,
         })
         .map(|c| {
             let tot = c.values_sum();
-            let ren = tot * get_fp_ren_fraction(c.carrier(), wfactors)?;
+            let ren = tot * get_fpA_del_ren_fraction(c.carrier(), wfactors)?;
             Ok((tot, ren))
         })
         .collect::<Result<Vec<(f32, f32)>, EpbdError>>()?
@@ -378,15 +381,15 @@ pub fn fraccion_renovable_acs_nrb(
         let Q_any_biomass_acs_an = demanda_anual_acs - Q_nrb_non_biomass_an_tot;
         // Parte renovable: Q_any_biomass_acs_an_ren
         if has_biomass {
-            Q_any_biomass_acs_an * get_fp_ren_fraction(BIOMASA, wfactors)?
+            Q_any_biomass_acs_an * get_fpA_del_ren_fraction(BIOMASA, wfactors)?
         } else {
-            Q_any_biomass_acs_an * get_fp_ren_fraction(BIOMASADENSIFICADA, wfactors)?
+            Q_any_biomass_acs_an * get_fpA_del_ren_fraction(BIOMASADENSIFICADA, wfactors)?
         }
     } else if has_any_biomass {
         // Cuando además de biomasa hay otros vectores que no son de distrito o insitu
         // necesitamos saber qué cantidad de ACS produce la biomasa para poder calcular
         let Q_biomass_an_ren = if has_biomass {
-            let fp_ren_fraction_biomass = get_fp_ren_fraction(BIOMASA, wfactors)?;
+            let fp_ren_fraction_biomass = get_fpA_del_ren_fraction(BIOMASA, wfactors)?;
             let Q_biomass_an_pct = components
                 .get_meta_f32("CTE_DEMANDA_ACS_PCT_BIOMASA")
                 .ok_or_else(|| {
@@ -400,7 +403,8 @@ pub fn fraccion_renovable_acs_nrb(
             0.0
         };
         let Q_dens_biomass_an_ren = if has_dens_biomass {
-            let fp_ren_fraction_dens_biomass = get_fp_ren_fraction(BIOMASADENSIFICADA, wfactors)?;
+            let fp_ren_fraction_dens_biomass =
+                get_fpA_del_ren_fraction(BIOMASADENSIFICADA, wfactors)?;
             let Q_dens_biomass_an_pct = components
                 .get_meta_f32("CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA")
                 .ok_or_else(|| {
