@@ -270,9 +270,9 @@ pub struct BalanceForCarrier {
     pub we_an_A: RenNrenCo2,
     /// Weighted energy for calculation step A, by service (for EPB services)
     pub we_an_A_by_service: HashMap<Service, RenNrenCo2>,
-    /// Weighted energy
+    /// Weighted energy, considering impact of exportation
     pub we_an: RenNrenCo2,
-    /// Weighted energy, by service (for EPB services)
+    /// Weighted energy, considering impact of exportation, by service (for EPB services)
     pub we_an_by_service: HashMap<Service, RenNrenCo2>,
 }
 

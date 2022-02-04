@@ -4,6 +4,10 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
+  - pensar posibilidad de vector electricidad generada en las cercanías ELECTR_PROXs
+    - sería de origen en la RED?
+    - ver relación con producción INSITU
+    - no tiene la interacción de la producción insitu con f_match_t ni con el almacenamiento en baterías.
   - compute cogen electricity factors from used energy for GEN service
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
@@ -40,8 +44,6 @@
     - e.final
       - Sacar consumo de energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
       - EPB de todos los servicios y desglosado por servicio
-    - balance B, balance A, AB: ren, nren, tot, emisiones.
-      - De todos los servicios y desglosado por servicio
     - emisiones, desglose eléctrico y no eléctrico
     - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
 
