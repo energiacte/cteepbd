@@ -202,51 +202,51 @@ pub fn energy_performance(
 pub struct BalanceForCarrier {
     /// Energy carrier
     pub carrier: Carrier,
-    /// Energy used for EPB uses in each timestep
+    /// Energy used for EPB services at each time step
     pub used_EPB: Vec<f32>,
-    /// Energy used for EPB uses in each timestep
+    /// Energy used for EPB services at each time step
     pub used_EPB_an: f32,
-    /// Energy used for EPB uses, by use
+    /// Energy used for EPB services, by use
     pub used_EPB_by_service_an: HashMap<Service, f32>,
-    /// EUsed energy for non EPB uses in each timestep
+    /// EUsed energy for non EPB uses at each time step
     pub used_nEPB: Vec<f32>,
     /// Energy used for non EPB uses
     pub used_nEPB_an: f32,
-    /// Produced energy in each timestep
+    /// Produced energy at each time step
     pub produced: Vec<f32>,
     /// Produced energy (from all sources)
     pub produced_an: f32,
-    /// Produced energy in each timestep by source (COGEN / INSITU)
+    /// Produced energy at each time step by source (COGEN / INSITU)
     pub produced_by_source: HashMap<Source, Vec<f32>>,
     /// Produced energy by source (COGEN / INSITU)
     pub produced_by_source_an: HashMap<Source, f32>,
-    /// Produced energy from all sources and used for EPB services in each timestep
+    /// Produced energy from all sources and used for EPB services at each time step
     pub produced_used_EPus: Vec<f32>,
     /// Produced energy from all sources and used for EPB services
     pub produced_used_EPus_an: f32,
-    /// Produced energy used for EPB services in each timestep by source (COGEN / INSITU)
+    /// Produced energy used for EPB services at each time step by source (COGEN / INSITU)
     pub produced_used_EPus_by_source: HashMap<Source, Vec<f32>>,
     /// Produced energy used for EPB services by source (COGEN / INSITU)
     pub produced_used_EPus_by_source_an: HashMap<Source, f32>,
     /// Load matching factor
     pub f_match: Vec<f32>,
-    /// Exported energy to the grid and non EPB uses in each timestep
+    /// Exported energy to the grid and non EPB uses at each time step
     pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
     /// Exported energy to the grid and non EPB uses
     pub exported_an: f32,
-    /// Exported energy to the grid and non EPB uses in each timestep, by source (INSITU, COGEN)
+    /// Exported energy to the grid and non EPB uses at each time step, by source (INSITU, COGEN)
     pub exported_by_source: HashMap<Source, Vec<f32>>,
     /// Exported energy to the grid and non EPB uses, by source (INSITU, COGEN)
     pub exported_by_source_an: HashMap<Source, f32>,
-    /// Exported energy to the grid in each timestep
+    /// Exported energy to the grid at each time step
     pub exported_grid: Vec<f32>,
     /// Exported energy to the grid
     pub exported_grid_an: f32,
-    /// Exported energy to non EPB uses in each timestep
+    /// Exported energy to non EPB uses at each time step
     pub exported_nEPB: Vec<f32>,
     /// Exported energy to non EPB uses
     pub exported_nEPB_an: f32,
-    /// Delivered energy by the grid in each timestep
+    /// Delivered energy by the grid at each time step
     pub delivered_grid: Vec<f32>,
     /// Delivered energy by the grid
     pub delivered_grid_an: f32,
@@ -268,11 +268,11 @@ pub struct BalanceForCarrier {
     pub we_exported_an: RenNrenCo2,
     /// Weighted energy for calculation step A
     pub we_an_A: RenNrenCo2,
-    /// Weighted energy for calculation step A, by use (for EPB services)
+    /// Weighted energy for calculation step A, by service (for EPB services)
     pub we_an_A_by_service: HashMap<Service, RenNrenCo2>,
     /// Weighted energy
     pub we_an: RenNrenCo2,
-    /// Weighted energy, by use (for EPB services)
+    /// Weighted energy, by service (for EPB services)
     pub we_an_by_service: HashMap<Service, RenNrenCo2>,
 }
 
@@ -297,11 +297,12 @@ pub struct BalanceForCarrier {
 ///
 /// * Missing weighting factors for a carrier, source type, destination or calculation step
 ///
-/// TODO:
-/// - Implementar factor de reparto de carga f_match_t
-///   Ver ISO_DIS_52000-1_SS_2015_05_13.xlsm
-///     - si pr/us <=0; f_match_t = 1
-///     - si pr/us > 0; f_match_t = (pr/us + 1/pr/us - 1) / (pr/us + 1/pr/us)
+/// TODO: Implement load matching factor, f_match_t, with k=1, n=1 for EPB uses
+///   f_match_t = if pr/us <=0 {
+///     1.0
+///   } else {
+///     (pr/us + 1/pr/us - 1) / (pr/us + 1/pr/us)
+///   }
 #[allow(non_snake_case)]
 fn balance_for_carrier(
     carrier: Carrier,
@@ -319,9 +320,9 @@ fn balance_for_carrier(
     // We know all carriers have the same timesteps (see FromStr for Components)
     let num_steps = cr_list[0].num_steps();
 
-    // * Energy used by technical systems for EPB services, for each time step
+    // * Energy used by technical systems for EPB services, at each time step
     let mut E_EPus_cr_t = vec![0.0; num_steps];
-    // * Energy used by technical systems for non-EPB services, for each time step
+    // * Energy used by technical systems for non-EPB services, at each time step
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
     // * Produced on-site energy and inside the assessment boundary, by subsystem j (INSITU or COGEN)
     let mut E_pr_cr_j_t = HashMap::<Source, Vec<f32>>::new();
@@ -358,20 +359,20 @@ fn balance_for_carrier(
     }
     let E_pr_cr_an = vecsum(&E_pr_cr_t);
 
-    // * Produced energy from all sources for EPB services for each time step (formula 31)
+    // * Produced energy from all sources for EPB services at each time step (formula 31)
     // TODO: f_match_t constant for electricity (formula 32)
     // TODO: let f_match_t = fmatch(E_pr_cr_t / E_EPus_cr_t)
     let f_match_t = vec![1.0; num_steps];
 
     let E_pr_cr_used_EPus_t = vecvecmul(&f_match_t, &vecvecmin(&E_EPus_cr_t, &E_pr_cr_t));
 
-    // * Exported energy for each time step (produced energy not consumed in EPB uses) (formula 33)
+    // * Exported energy at each time step (produced energy not consumed in EPB uses) (formula 33)
     // E_pr_cr_t = E_pr_cr_used_EPus_t + E_exp_cr_used_nEPus_t + E_exp_cr_grid_t
     // E_exp_cr_t = E_exp_cr_used_nEPus_t + E_exp_cr_grid_t
     // -> E_exp_cr_t = E_pr_cr_t - E_pr_cr_used_EPus_t
     let E_exp_cr_t = vecvecdif(&E_pr_cr_t, &E_pr_cr_used_EPus_t);
 
-    // * Exported energy used for non-EPB uses for each time step (formula 34)
+    // * Exported energy used for non-EPB uses at each time step (formula 34)
     let E_exp_cr_used_nEPus_t = vecvecmin(&E_exp_cr_t, &E_nEPus_cr_t);
 
     // * Annualy exported energy used for non-EPB uses for carrier
