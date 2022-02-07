@@ -55,6 +55,16 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 - Nueva salida XML
 - Salida JSON:
   - Nuevos resultados disponibles
+  - Nuevos resultados en balance y balance_m2:
+    - used_EPB: energía final consumida en servicios EPB
+    - used_nEPB: energía final consumida en servicios no EPB
+    - produced: energía final producida
+    - produced_by_source: energía final producida, por origen
+    - produced_by_carrier: energía final producida, por vector
+    - delivered: energía final suministrada
+    - exported: energía final exportada
+    - exported_grid: energía final exportada a la red
+    - exported_nEPB: energía final exportada a usos no EPB
   - Cambio de nombre de sufijos "_bygen" a "_by_source" y "_byuse" a "_by_service" en la salida JSON
 - Ejecutable cteepbd:
   - Eliminada la opción --acsnrb para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)

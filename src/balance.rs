@@ -74,8 +74,26 @@ pub struct Balance {
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BalanceTotal {
-    /// Global energy use for EPB uses, by use
+    /// Energy use for EPB uses
+    pub used_EPB: f32,
+    /// Energy use for non EPB uses
+    pub used_nEPB: f32,
+    /// Energy use for EPB uses, by use
     pub used_EPB_by_service: HashMap<Service, f32>,
+    /// Produced energy
+    pub produced: f32,
+    /// Produced energy by source (COGEN / INSITU)
+    pub produced_by_source: HashMap<Source, f32>,
+    /// Produced energy by carrier
+    pub produced_by_carrier: HashMap<Carrier, f32>,
+    /// Delivered  (from the grid)
+    pub delivered: f32,
+    /// Exported energy (to the grid or nEPB uses)
+    pub exported: f32,
+    /// Exported energy to the grid
+    pub exported_grid: f32,
+    /// Exported energy to nEPB uses
+    pub exported_nEPB: f32,
     /// Balance result for calculation step A
     pub A: RenNrenCo2,
     /// Weighted energy for calculation step A, by use (for EPB services)
@@ -127,6 +145,18 @@ pub fn energy_performance(
         // Compute balance for this carrier ---
         let bal_cr = balance_for_carrier(*cr, components, wfactors, k_exp)?;
 
+        // Used energy
+        balance.used_EPB += bal_cr.used_EPB_an;
+        balance.used_nEPB += bal_cr.used_nEPB_an;
+        // Produced energy
+        balance.produced += bal_cr.produced_an;
+        // Delivered energy
+        balance.delivered += bal_cr.delivered_grid_an;
+        // Exported energy
+        balance.exported += bal_cr.exported_an;
+        balance.exported_nEPB += bal_cr.exported_nEPB_an;
+        balance.exported_grid += bal_cr.exported_grid_an;
+
         // Modify global balance using this carrier balance ---
         // E_we_an =  E_we_del_an - E_we_exp_an; // formula 2 step A
         balance.A += bal_cr.we_an_A;
@@ -136,8 +166,9 @@ pub fn energy_performance(
         balance.we_del += bal_cr.we_delivered_an;
         balance.we_exp_A += bal_cr.we_exported_an_A;
         balance.we_exp += bal_cr.we_exported_an;
-        // Weighted energy for each use item (EPB services)
-        for &service in &Service::SERVICES_ALL {
+
+        // Aggregation by EPB service
+        for &service in &Service::SERVICES_EPB {
             // Energy use
             if let Some(value) = bal_cr.used_EPB_by_service_an.get(&service) {
                 *balance.used_EPB_by_service.entry(service).or_default() += *value
@@ -152,14 +183,31 @@ pub fn energy_performance(
             }
         }
 
+        // Aggregation by energy source
+        for (source, produced) in &bal_cr.produced_by_source_an {
+            *balance.produced_by_source.entry(*source).or_default() += produced;
+        }
+
+        // Aggregation by carrier
+        if bal_cr.produced_an != 0.0 {
+            *balance.produced_by_carrier.entry(*cr).or_default() += &bal_cr.produced_an;
+        }
+
         // Append to the map of balances by carrier ---
         balance_cr.insert(*cr, bal_cr);
     }
 
     // Compute area weighted total balance
     let k_area = 1.0 / arearef;
+
     let mut used_EPB_by_service = balance.used_EPB_by_service.clone();
     used_EPB_by_service.values_mut().for_each(|v| *v *= k_area);
+
+    let mut produced_by_source = balance.produced_by_source.clone();
+    produced_by_source.values_mut().for_each(|v| *v *= k_area);
+
+    let mut produced_by_carrier = balance.produced_by_carrier.clone();
+    produced_by_carrier.values_mut().for_each(|v| *v *= k_area);
 
     let mut A_by_service = balance.A_by_service.clone();
     A_by_service.values_mut().for_each(|v| *v *= k_area);
@@ -168,7 +216,16 @@ pub fn energy_performance(
     B_by_service.values_mut().for_each(|v| *v *= k_area);
 
     let balance_m2 = BalanceTotal {
+        used_EPB: k_area * balance.used_EPB,
+        used_nEPB: k_area * balance.used_nEPB,
         used_EPB_by_service,
+        produced: k_area * balance.produced,
+        produced_by_source,
+        produced_by_carrier,
+        delivered: k_area * balance.delivered,
+        exported: k_area * balance.exported,
+        exported_grid: k_area * balance.exported_grid,
+        exported_nEPB: k_area * balance.exported_nEPB,
         A: k_area * balance.A,
         A_by_service,
         B: k_area * balance.B,
@@ -543,7 +600,7 @@ fn balance_for_carrier(
     let mut E_EPus_cr_an_by_service: HashMap<Service, f32> = HashMap::new();
     let mut E_we_cr_an_A_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
     let mut E_we_cr_an_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
-    for service in &Service::SERVICES_ALL {
+    for service in &Service::SERVICES_EPB {
         let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {
             // EUsed energy
@@ -627,7 +684,7 @@ fn compute_factors_by_use_cr(cr_list: &[Energy]) -> HashMap<Service, f32> {
     if q_us_all != 0.0 {
         // No energy use for this carrier!
         // Collect share of step A weighted energy for each use item (service)
-        for us in Service::SERVICES_ALL.iter().cloned() {
+        for us in Service::SERVICES_EPB.iter().cloned() {
             // Energy use for use k
             let q_us_k: f32 = cr_use_list
                 .clone()

@@ -3,7 +3,9 @@ fn ejemplo_j1_loc() {
     assert_cli::Assert::main_binary()
         .with_args(&["-c", "test_data/ejemploJ1_base.csv", "-l", "PENINSULA"])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 41.4, nren = 195.4, tot = 236.8, RER = 0.17")
+        .contains("C_ep [kWh/m2.an]: ren = 41.4, nren = 195.4, tot = 236.8")
+        .stdout()
+        .contains("RER = 0.17")
         .unwrap();
 }
 
@@ -17,7 +19,9 @@ fn ejemplo_j1() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 50.0, nren = 200.0, tot = 250.0, RER = 0.20")
+        .contains("C_ep [kWh/m2.an]: ren = 50.0, nren = 200.0, tot = 250.0")
+        .stdout()
+        .contains("RER = 0.20")
         .unwrap();
 }
 
@@ -31,7 +35,9 @@ fn ejemplo_j2() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 75.0, nren = 100.0, tot = 175.0, RER = 0.43")
+        .contains("C_ep [kWh/m2.an]: ren = 75.0, nren = 100.0, tot = 175.0")
+        .stdout()
+        .contains("RER = 0.43")
         .unwrap();
 }
 
@@ -45,7 +51,9 @@ fn ejemplo_j3() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 100.0, nren = 0.0, tot = 100.0, RER = 1.00")
+        .contains("C_ep [kWh/m2.an]: ren = 100.0, nren = 0.0, tot = 100.0")
+        .stdout()
+        .contains("RER = 1.00")
         .unwrap();
 }
 
@@ -59,7 +67,9 @@ fn ejemplo_j5() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 20.0, nren = 209.0, tot = 229.0, RER = 0.09")
+        .contains("C_ep [kWh/m2.an]: ren = 20.0, nren = 209.0, tot = 229.0")
+        .stdout()
+        .contains("RER = 0.09")
         .unwrap();
 }
 
@@ -73,7 +83,9 @@ fn ejemplo_j6() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 180.5, nren = 38.0, tot = 218.5, RER = 0.83")
+        .contains("C_ep [kWh/m2.an]: ren = 180.5, nren = 38.0, tot = 218.5")
+        .stdout()
+        .contains("RER = 0.83")
         .unwrap();
 }
 
@@ -87,7 +99,9 @@ fn ejemplo_j7() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = -27.4, nren = 283.8, tot = 256.4, RER = -0.11")
+        .contains("C_ep [kWh/m2.an]: ren = -27.4, nren = 283.8, tot = 256.4")
+        .stdout()
+        .contains("RER = -0.11")
         .unwrap();
 }
 
@@ -101,7 +115,9 @@ fn ejemplo_j8() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 146.4, nren = 125.8, tot = 272.2, RER = 0.54")
+        .contains("C_ep [kWh/m2.an]: ren = 146.4, nren = 125.8, tot = 272.2")
+        .stdout()
+        .contains("RER = 0.54")
         .unwrap();
 }
 
@@ -115,7 +131,9 @@ fn ejemplo_j9() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 1009.5, nren = 842.0, tot = 1851.5, RER = 0.55")
+        .contains("C_ep [kWh/m2.an]: ren = 1009.5, nren = 842.0, tot = 1851.5")
+        .stdout()
+        .contains("RER = 0.55")
         .unwrap();
 }
 
@@ -129,7 +147,9 @@ fn ejemplo_testcarriers() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 25.4, nren = 19.4, tot = 44.8, RER = 0.57")
+        .contains("C_ep [kWh/m2.an]: ren = 25.4, nren = 19.4, tot = 44.8")
+        .stdout()
+        .contains("RER = 0.57")
         .unwrap();
 }
 
@@ -138,7 +158,9 @@ fn ejemplo_testcarriers_loc() {
     assert_cli::Assert::main_binary()
         .with_args(&["-c", "test_data/cte_test_carriers.csv", "-l", "PENINSULA"])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 24.6, nren = 18.9, tot = 43.5, RER = 0.57")
+        .contains("C_ep [kWh/m2.an]: ren = 24.6, nren = 18.9, tot = 43.5")
+        .stdout()
+        .contains("RER = 0.57")
         .unwrap();
 }
 

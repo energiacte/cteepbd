@@ -370,7 +370,7 @@ fn main() {
         println!("------------------------------");
     }
 
-    println!("** Datos de entrada");
+    println!("** Datos de entrada\n");
 
     // Componentes energéticos ---------------------------------------------------------------------
     let mut components = get_components(matches.value_of("archivo_componentes"));
@@ -594,7 +594,7 @@ fn main() {
         }
         // Mostrar siempre en formato de texto plano
         let plain = balance.to_plain();
-        println!("{}", plain);
+        println!("\n{}", plain);
 
         // Guardar balance en formato de texto plano
         if matches.is_present("archivo_salida_txt") {

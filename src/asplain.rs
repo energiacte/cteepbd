@@ -41,6 +41,16 @@ pub trait AsCtePlain {
 
 // ================= Implementaciones ====================
 
+/// Convierte resultado RenNrenCo2 a String con2 decimales
+fn rennren2string(v: &RenNrenCo2) -> String {
+    format!(
+        "ren {:.2}, nren {:.2}, tot: {:.2}, co2: {:.2}",
+        v.ren,
+        v.nren,
+        v.tot(),
+        v.co2
+    )
+}
 
 impl AsCtePlain for Balance {
     /// Está mostrando únicamente los resultados
@@ -53,52 +63,112 @@ impl AsCtePlain for Balance {
             ..
         } = self;
 
-        let RenNrenCo2 { ren, nren, co2 } = balance_m2.B;
-        let tot = balance_m2.B.tot();
-        let rer = balance_m2.B.rer();
-
-        // Final
-        let mut use_by_service = balance_m2
+        // Final, por servicios
+        let mut used_by_service = balance_m2
             .used_EPB_by_service
             .iter()
-            .map(|(k, v)| format!("{}: {:.2}", k, v))
+            .map(|(k, v)| format!("- {}: {:.2}", k, v))
             .collect::<Vec<String>>();
-        use_by_service.sort();
+        used_by_service.sort();
+
+        // Producida, por origen
+        let mut produced_by_source = balance_m2
+            .produced_by_source
+            .iter()
+            .map(|(k, v)| format!("- {}: {:.2}", k, v))
+            .collect::<Vec<String>>();
+        produced_by_source.sort();
+
+        // Producida, por vector
+        let mut produced_by_carrier = balance_m2
+            .produced_by_carrier
+            .iter()
+            .map(|(k, v)| format!("- {}: {:.2}", k, v))
+            .collect::<Vec<String>>();
+        produced_by_carrier.sort();
 
         // Ponderada por m2 (por uso)
+        let mut a_by_service = balance_m2
+            .A_by_service
+            .iter()
+            .map(|(k, v)| format!("- {}: {}", k, rennren2string(v)))
+            .collect::<Vec<String>>();
+        a_by_service.sort();
+
         let mut b_by_service = balance_m2
             .B_by_service
             .iter()
-            .map(|(k, v)| {
-                format!(
-                    "{}: ren {:.2}, nren {:.2}, co2: {:.2}",
-                    k, v.ren, v.nren, v.co2
-                )
-            })
+            .map(|(k, v)| format!("- {}: {}", k, rennren2string(v)))
             .collect::<Vec<String>>();
         b_by_service.sort();
 
         let out = format!(
             "** Balance energético
+
 Area_ref = {:.2} [m2]
 k_exp = {:.2}
-C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}, RER = {:.2}
+C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}
 E_CO2 [kg_CO2e/m2.an]: {:.2}
+RER = {:.2}
 
 ** Energía final (todos los vectores) [kWh/m2.an]:
+
+Energía consumida: {:.2}
+
+Consumida en usos EPB: {:.2}
+
 {}
 
+Consumida en usos no EPB: {:.2}
+
+Generada: {:.2}
+
+Generada, por origen:
+
+{}
+
+Generada, por vector:
+
+{}
+
+Suministrada: {:.2}
+
+Exportada: {:.2}
+
+- a la red: {:.2}
+- a usos no EPB: {:.2}
+
 ** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
+
+Recursos utilizados (paso A): {}
+
+{}
+
+Incluyendo el efecto de la energía exportada (paso B): {}
+
 {}
 ",
             arearef,
             k_exp,
-            ren,
-            nren,
-            tot,
-            rer,
-            co2,
-            use_by_service.join("\n"),
+            balance_m2.B.ren,
+            balance_m2.B.nren,
+            balance_m2.B.tot(),
+            balance_m2.B.co2,
+            balance_m2.B.rer(),
+            balance_m2.used_EPB + balance_m2.used_nEPB,
+            balance_m2.used_EPB,
+            used_by_service.join("\n"),
+            balance_m2.used_nEPB,
+            balance_m2.produced,
+            produced_by_source.join("\n"),
+            produced_by_carrier.join("\n"),
+            balance_m2.delivered,
+            balance_m2.exported,
+            balance_m2.exported_grid,
+            balance_m2.exported_nEPB,
+            rennren2string(&balance_m2.A),
+            a_by_service.join("\n"),
+            rennren2string(&balance_m2.B),
             b_by_service.join("\n")
         );
         // Añade parámetros de demanda HE4 si existen
@@ -113,10 +183,11 @@ E_CO2 [kg_CO2e/m2.an]: {:.2}
                 .unwrap_or_else(|| "-".to_string());
             format!(
                 "{}
-    ** Indicadores adicionales
-    Demanda total de ACS: {} [kWh]
-    Porcentaje renovable de la demanda de ACS (perímetro próximo): {} [%]
-    ",
+** Indicadores adicionales
+
+Demanda total de ACS: {} [kWh]
+Porcentaje renovable de la demanda de ACS (perímetro próximo): {} [%]
+",
                 out, demanda, pct_ren
             )
         } else {

@@ -34,16 +34,15 @@
       - ¿Whole building efficiencies by service (non renewable primary energy)?
     - Fraction of energy use covered by renewable sources, by service and by system (id)
       - Calcular % de cobertura renovable (RER_nrb, RER_dst) (consumo EF y demanda) para los distintos servicios
-    - ReduccionEPNR y ReduccionEmisiones
-    - demanda por servicios y total (¿y demanda de referencia si la hay?)
-    - valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
-    - e.final
-      - Sacar consumo de energía final no EPB (ver acs_demanda_ren_con_nepb.csv comentando y descomentando NEPB)
-      - EPB de todos los servicios y desglosado por servicio
-    - balance B, balance A, AB: ren, nren, tot, emisiones.
-      - De todos los servicios y desglosado por servicio
-    - emisiones, desglose eléctrico y no eléctrico
     - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
+    - Demanda por servicios y total (¿y demanda de referencia si la hay?)
+    - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
+    - RER_nrb
+      - separar cálculo de weighted energy a función independiente que devuelve estructura nueva
+      - calcular con wfactors y wfactors.to_nearby()
+      - integrar en balance
+      - mostrar en salida
+    - Emisiones: desglose eléctrico y no eléctrico
 
 ## Wishlist
 

@@ -166,7 +166,7 @@ pub enum Service {
 }
 
 impl Service {
-    /// Lista of available services
+    /// List of all available services
     pub const SERVICES_ALL: [Service; 10] = [
         Service::ACS,
         Service::CAL,
@@ -179,6 +179,19 @@ impl Service {
         Service::NDEF,
         Service::NEPB,
         //Service::GEN,
+    ];
+
+    /// List EPB services
+    pub const SERVICES_EPB: [Service; 9] = [
+        Service::ACS,
+        Service::CAL,
+        Service::REF,
+        Service::VEN,
+        Service::ILU,
+        Service::HU,
+        Service::DHU,
+        Service::BAC,
+        Service::NDEF,
     ];
 
     /// Check if service is an EPB service

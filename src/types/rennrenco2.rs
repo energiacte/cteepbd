@@ -67,11 +67,13 @@ impl RenNrenCo2 {
     }
 
     /// Total renewable + non renewable energy
+    #[inline]
     pub fn tot(self) -> f32 {
         self.ren + self.nren
     }
 
     /// Renewable energy ratio
+    #[inline]
     pub fn rer(self) -> f32 {
         let tot = self.tot();
         if tot == 0.0 {
