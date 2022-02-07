@@ -49,7 +49,7 @@ pub struct EProd {
     /// Energy source
     /// - `INSITU` or `COGEN` for generated energy component types
     pub source: Source,
-    /// List of produced energy values, one value for each timestep. kWh
+    /// List of produced energy values, one value for each time step. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
     pub comment: String,
