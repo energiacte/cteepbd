@@ -110,6 +110,49 @@ pub struct BalanceTotal {
     pub we_exp: RenNrenCo2,
 }
 
+impl BalanceTotal {
+    /// Normalize values using area
+    #[allow(non_snake_case)]
+    pub fn normalize_by_area(&self, area: f32) -> BalanceTotal {
+        let k_area = if area == 0.0 { 0.0 } else { 1.0 / area };
+
+        let mut used_EPB_by_service = self.used_EPB_by_service.clone();
+        used_EPB_by_service.values_mut().for_each(|v| *v *= k_area);
+
+        let mut produced_by_source = self.produced_by_source.clone();
+        produced_by_source.values_mut().for_each(|v| *v *= k_area);
+
+        let mut produced_by_carrier = self.produced_by_carrier.clone();
+        produced_by_carrier.values_mut().for_each(|v| *v *= k_area);
+
+        let mut A_by_service = self.A_by_service.clone();
+        A_by_service.values_mut().for_each(|v| *v *= k_area);
+
+        let mut B_by_service = self.B_by_service.clone();
+        B_by_service.values_mut().for_each(|v| *v *= k_area);
+
+        BalanceTotal {
+            used_EPB: k_area * self.used_EPB,
+            used_nEPB: k_area * self.used_nEPB,
+            used_EPB_by_service,
+            produced: k_area * self.produced,
+            produced_by_source,
+            produced_by_carrier,
+            delivered: k_area * self.delivered,
+            exported: k_area * self.exported,
+            exported_grid: k_area * self.exported_grid,
+            exported_nEPB: k_area * self.exported_nEPB,
+            A: k_area * self.A,
+            A_by_service,
+            B: k_area * self.B,
+            B_by_service,
+            we_del: k_area * self.we_del,
+            we_exp_A: k_area * self.we_exp_A,
+            we_exp: k_area * self.we_exp,
+        }
+    }
+}
+
 /// Calcula enficiencia energética agregando resultados por vector energético
 ///
 /// Compute overall energy performance by aggregating results from all energy carriers.
@@ -197,42 +240,7 @@ pub fn energy_performance(
     }
 
     // Compute area weighted total balance
-    let k_area = 1.0 / arearef;
-
-    let mut used_EPB_by_service = balance.used_EPB_by_service.clone();
-    used_EPB_by_service.values_mut().for_each(|v| *v *= k_area);
-
-    let mut produced_by_source = balance.produced_by_source.clone();
-    produced_by_source.values_mut().for_each(|v| *v *= k_area);
-
-    let mut produced_by_carrier = balance.produced_by_carrier.clone();
-    produced_by_carrier.values_mut().for_each(|v| *v *= k_area);
-
-    let mut A_by_service = balance.A_by_service.clone();
-    A_by_service.values_mut().for_each(|v| *v *= k_area);
-
-    let mut B_by_service = balance.B_by_service.clone();
-    B_by_service.values_mut().for_each(|v| *v *= k_area);
-
-    let balance_m2 = BalanceTotal {
-        used_EPB: k_area * balance.used_EPB,
-        used_nEPB: k_area * balance.used_nEPB,
-        used_EPB_by_service,
-        produced: k_area * balance.produced,
-        produced_by_source,
-        produced_by_carrier,
-        delivered: k_area * balance.delivered,
-        exported: k_area * balance.exported,
-        exported_grid: k_area * balance.exported_grid,
-        exported_nEPB: k_area * balance.exported_nEPB,
-        A: k_area * balance.A,
-        A_by_service,
-        B: k_area * balance.B,
-        B_by_service,
-        we_del: k_area * balance.we_del,
-        we_exp_A: k_area * balance.we_exp_A,
-        we_exp: k_area * balance.we_exp,
-    };
+    let balance_m2 = balance.normalize_by_area(arearef);
 
     // Global data and results
     Ok(Balance {
