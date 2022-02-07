@@ -1021,12 +1021,12 @@ fn new_format_with_system_id() {
     ));
     let balance_el = &bal.balance_cr[&Carrier::ELECTRICIDAD];
     // NEPB used energy
-    assert_eq!("10.000", format!("{:.3}", balance_el.used_nEPB_an));
+    assert_eq!("10.000", format!("{:.3}", balance_el.used.used_nEPB_an));
     // Produced energy from all sources and used for EPB services
     assert_eq!(
         "305.000",
-        format!("{:.3}", balance_el.produced_used_EPus_an)
+        format!("{:.3}", balance_el.prod.prod_used_EPus_an)
     );
     // Exported energy to non EPB uses
-    assert_eq!("10.000", format!("{:.3}", balance_el.exported_nEPB_an));
+    assert_eq!("10.000", format!("{:.3}", balance_el.exp.exp_nEPB_an));
 }
