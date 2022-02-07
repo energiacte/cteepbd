@@ -468,7 +468,7 @@ fn balance_for_carrier(
     }
 
     // Annually produced energy used in EPB uses by source (INSITU, COGEN)
-    let E_pr_cr_i_used_EPus_an: HashMap<Source, f32> = E_pr_cr_j_used_EPus_t
+    let E_pr_cr_j_used_EPus_an: HashMap<Source, f32> = E_pr_cr_j_used_EPus_t
         .iter()
         .map(|(source, values)| (*source, vecsum(values)))
         .collect();
@@ -523,6 +523,16 @@ fn balance_for_carrier(
     }
 
     let E_exp_cr_an = E_exp_cr_used_nEPus_an + E_exp_cr_grid_an;
+
+    // TODO: hacer aquí estructura con balance.... separado de energía ponderada
+
+
+
+
+
+
+
+
 
 
     // -------- Weighted delivered and exported energy (11.6.2.1, 11.6.2.2, 11.6.2.3 + eq 2, 3)
@@ -676,7 +686,7 @@ fn balance_for_carrier(
         produced_used_EPus: E_pr_cr_used_EPus_t,
         produced_used_EPus_an: E_pr_cr_used_EPus_an,
         produced_used_EPus_by_source: E_pr_cr_j_used_EPus_t,
-        produced_used_EPus_by_source_an: E_pr_cr_i_used_EPus_an,
+        produced_used_EPus_by_source_an: E_pr_cr_j_used_EPus_an,
         f_match: f_match_t,   // load matching factor
         exported: E_exp_cr_t, // exp_used_nEPus + exp_grid
         exported_an: E_exp_cr_an,
