@@ -258,54 +258,61 @@ pub fn energy_performance(
 pub struct BalanceForCarrier {
     /// Energy carrier
     pub carrier: Carrier,
-    /// Energy used for EPB uses in each timestep
+    /// Fraction of used energy for each EPB service
+    /// f_us_cr = (used energy for EPB service_i) / (used energy for all EPB services)
+    pub f_us: HashMap<Service, f32>,
+    /// Energy used for EPB uses at each timestep
     pub used_EPB: Vec<f32>,
-    /// Energy used for EPB uses in each timestep
+    /// Energy used for EPB uses at each timestep
     pub used_EPB_an: f32,
     /// Energy used for EPB uses, by use
     pub used_EPB_by_service_an: HashMap<Service, f32>,
-    /// EUsed energy for non EPB uses in each timestep
+    /// EUsed energy for non EPB uses at each timestep
     pub used_nEPB: Vec<f32>,
     /// Energy used for non EPB uses
     pub used_nEPB_an: f32,
-    /// Produced energy in each timestep
+    /// Produced energy at each timestep
     pub produced: Vec<f32>,
     /// Produced energy (from all sources)
     pub produced_an: f32,
-    /// Produced energy in each timestep by source (COGEN / INSITU)
+    /// Produced energy at each timestep by source (COGEN / INSITU)
     pub produced_by_source: HashMap<Source, Vec<f32>>,
     /// Produced energy by source (COGEN / INSITU)
     pub produced_by_source_an: HashMap<Source, f32>,
-    /// Produced energy from all sources and used for EPB services in each timestep
+    /// Produced energy from all sources and used for EPB services at each timestep
     pub produced_used_EPus: Vec<f32>,
     /// Produced energy from all sources and used for EPB services
     pub produced_used_EPus_an: f32,
-    /// Produced energy used for EPB services in each timestep by source (COGEN / INSITU)
+    /// Produced energy used for EPB services at each timestep by source (COGEN / INSITU)
     pub produced_used_EPus_by_source: HashMap<Source, Vec<f32>>,
     /// Produced energy used for EPB services by source (COGEN / INSITU)
     pub produced_used_EPus_by_source_an: HashMap<Source, f32>,
     /// Load matching factor
     pub f_match: Vec<f32>,
-    /// Exported energy to the grid and non EPB uses in each timestep
+    /// Exported energy to the grid and non EPB uses at each timestep
     pub exported: Vec<f32>, // exp_used_nEPus + exp_grid
     /// Exported energy to the grid and non EPB uses
     pub exported_an: f32,
-    /// Exported energy to the grid and non EPB uses in each timestep, by source (INSITU, COGEN)
+    /// Exported energy to the grid and non EPB uses at each timestep, by source (INSITU, COGEN)
     pub exported_by_source: HashMap<Source, Vec<f32>>,
     /// Exported energy to the grid and non EPB uses, by source (INSITU, COGEN)
     pub exported_by_source_an: HashMap<Source, f32>,
-    /// Exported energy to the grid in each timestep
+    /// Exported energy to the grid at each timestep
     pub exported_grid: Vec<f32>,
     /// Exported energy to the grid
     pub exported_grid_an: f32,
-    /// Exported energy to non EPB uses in each timestep
+    /// Exported energy to non EPB uses at each timestep
     pub exported_nEPB: Vec<f32>,
     /// Exported energy to non EPB uses
     pub exported_nEPB_an: f32,
-    /// Delivered energy by the grid in each timestep
+    /// Delivered energy by the grid at each timestep
     pub delivered_grid: Vec<f32>,
     /// Delivered energy by the grid
     pub delivered_grid_an: f32,
+    /// Delivered energy from onsite sources at each timestep
+    pub delivered_onsite: Vec<f32>,
+    /// Delivered energy from onsite sources
+    pub delivered_onsite_an: f32,
     /// Weighted energy
     pub we: WeightedEnergy,
 }
@@ -380,6 +387,11 @@ fn balance_for_carrier(
         .cloned()
         .collect();
 
+    // Compute fraction of used energy for each EPB service:
+    // f_us_cr = (used energy for service_i) / (used energy for all services)
+    let f_us_cr = compute_factors_by_use_cr(&cr_list);
+
+
     // We know all carriers have the same timesteps (see FromStr for Components)
     let num_steps = cr_list[0].num_steps();
 
@@ -411,10 +423,6 @@ fn balance_for_carrier(
     // Annual energy use for carrier for all EPB uses
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
 
-    // Compute fraction of used energy by use (for EPB services):
-    // used energy for service_i / used energy for all services)
-    let f_us_cr = compute_factors_by_use_cr(&cr_list);
-
     // Annual energy use for carrier for each use item (for EPB services)
     let mut E_EPus_cr_an_by_service: HashMap<Service, f32> = HashMap::new();
     for service in &Service::SERVICES_EPB {
@@ -431,7 +439,7 @@ fn balance_for_carrier(
     // List of produced energy sources (ProdOrigin::INSITU or ProdOrigin::COGEN)
     let prod_sources: Vec<Source> = E_pr_cr_j_t.keys().cloned().collect(); // INSITU, COGEN
 
-    // Annually produced on-site energy from subsystem j (INSITU, COGEN)
+    // Annually produced on-site energy from source j (INSITU, COGEN)
     let mut E_pr_cr_j_an = HashMap::<Source, f32>::new();
     for source in &prod_sources {
         E_pr_cr_j_an.insert(*source, vecsum(&E_pr_cr_j_t[source]));
@@ -473,7 +481,7 @@ fn balance_for_carrier(
         .map(|(source, values)| (*source, vecsum(values)))
         .collect();
 
-    // Exported energy -------
+    // Exported and delivered energy -------
 
     // Exported energy by source j (9.6.6.2)
     // Implementation WITHOUT priorities on energy use
@@ -497,15 +505,19 @@ fn balance_for_carrier(
     // * Annualy exported energy to the grid for carrier (formula 36)
     let E_exp_cr_grid_an = vecsum(&E_exp_cr_grid_t);
 
-    // Delivered energy -------
-
     // * Delivered energy (by the grid) for EP uses for each interval (formula 37)
     let E_del_cr_t = vecvecdif(&E_EPus_cr_t, &E_pr_cr_used_EPus_t);
 
     // * Annualy delivered energy (by the grid) for EP uses for carrier (formula 38)
     let E_del_cr_an = vecsum(&E_del_cr_t);
 
-    // ** Weighting depending on energy generator **
+    // Delivered energy from onsite, non cogen, sources (see 11.6.3)
+    let E_del_cr_onsite_t = E_pr_cr_j_t
+        .get(&Source::INSITU)
+        .cloned()
+        .unwrap_or_else(|| vec![0.0_f32; E_del_cr_t.len()]);
+
+    let E_del_cr_onsite_an = vecsum(&E_del_cr_onsite_t);
 
     // * Exported energy from source j (formula 16)
     let mut E_exp_cr_j_t = HashMap::<Source, Vec<f32>>::new();
@@ -526,15 +538,8 @@ fn balance_for_carrier(
 
     // TODO: hacer aquí estructura con balance.... separado de energía ponderada
 
-
-
-
-
-
-
-
-
-
+    // ** Weighting depending on energy generator **
+    //
     // -------- Weighted delivered and exported energy (11.6.2.1, 11.6.2.2, 11.6.2.3 + eq 2, 3)
     // NOTE: All weighting factors have been considered constant through all timesteps
     // NOTE: This allows using annual quantities and not timestep expressions
@@ -544,15 +549,12 @@ fn balance_for_carrier(
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid; // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources (source j)
-    let E_we_del_cr_onsite_an = E_pr_cr_j_an
-        .get(&Source::INSITU)
-        .and_then(|E_pr_cr_i| {
-            wfactors
-                .find(carrier, Source::INSITU, Dest::SUMINISTRO, Step::A)
-                .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i)
-                .ok()
-        })
-        .unwrap_or_default();
+    let fpA_pr_cr_i = if E_del_cr_onsite_an == 0.0 {
+        RenNrenCo2::default()
+    } else {
+        wfactors.find(carrier, Source::INSITU, Dest::SUMINISTRO, Step::A)?
+    };
+    let E_we_del_cr_onsite_an = E_del_cr_onsite_an * fpA_pr_cr_i;
 
     // 3) Total delivered energy: grid + all onsite (but non cogeneration)
     let E_we_del_cr_an = E_we_del_cr_grid_an + E_we_del_cr_onsite_an; // formula 19, 39
@@ -646,8 +648,8 @@ fn balance_for_carrier(
     // Weighted energy for each use item (for EPB services)
     let mut E_we_cr_an_A_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
     let mut E_we_cr_an_by_service: HashMap<Service, RenNrenCo2> = HashMap::new();
-    for (service, E_EPus_cr_an_for_service) in &E_EPus_cr_an_by_service {
-        let f_us_k_cr = E_EPus_cr_an_for_service / E_EPus_cr_an;
+    for service in &Service::SERVICES_EPB {
+        let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
         if f_us_k_cr != 0.0 {
             // Step A
             E_we_cr_an_A_by_service.insert(*service, E_we_cr_an_A * f_us_k_cr);
@@ -674,6 +676,7 @@ fn balance_for_carrier(
 
     Ok(BalanceForCarrier {
         carrier,
+        f_us: f_us_cr,
         used_EPB: E_EPus_cr_t,
         used_EPB_an: E_EPus_cr_an,
         used_EPB_by_service_an: E_EPus_cr_an_by_service,
@@ -698,6 +701,8 @@ fn balance_for_carrier(
         exported_nEPB_an: E_exp_cr_used_nEPus_an,
         delivered_grid: E_del_cr_t,
         delivered_grid_an: E_del_cr_an,
+        delivered_onsite: E_del_cr_onsite_t,
+        delivered_onsite_an: E_del_cr_onsite_an,
         we,
     })
 }
