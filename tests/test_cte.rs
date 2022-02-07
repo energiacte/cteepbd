@@ -18,8 +18,8 @@ ELECTRICIDAD, INSITU, A_NEPB, A, 1.0, 0.0, 0.0
 ELECTRICIDAD, INSITU, A_NEPB, B, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
-AMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
-AMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
+EAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
+EAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 SOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 SOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 ";
@@ -56,8 +56,8 @@ GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
 BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018
 
-AMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
-AMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
+EAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
+EAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 SOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 SOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 
@@ -111,7 +111,7 @@ fn get_energydatalist() -> Components {
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
-                carrier: AMBIENTE,
+                carrier: EAMBIENTE,
                 service: Service::NDEF,
                 comment: "".into(),
             }),
@@ -120,7 +120,7 @@ fn get_energydatalist() -> Components {
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
-                carrier: AMBIENTE,
+                carrier: EAMBIENTE,
                 source: INSITU,
                 comment: "".into(),
             }),
@@ -891,7 +891,7 @@ CONSUMO,ACS,SOLAR,60"
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
-CONSUMO,ACS,AMBIENTE,60
+CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,INSITU,ELECTRICIDAD,10"
         .parse::<Components>()
         .unwrap()
@@ -906,7 +906,7 @@ PRODUCCION,INSITU,ELECTRICIDAD,10"
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_nEPB() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
-CONSUMO,ACS,AMBIENTE,60
+CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,INSITU,ELECTRICIDAD,10
 CONSUMO,NEPB,ELECTRICIDAD,40.0"
         .parse::<Components>()
@@ -923,7 +923,7 @@ CONSUMO,NEPB,ELECTRICIDAD,40.0"
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
-CONSUMO,ACS,AMBIENTE,60
+CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,COGEN,ELECTRICIDAD,10"
         .parse::<Components>()
         .unwrap()
@@ -937,7 +937,7 @@ PRODUCCION,COGEN,ELECTRICIDAD,10"
 #[test]
 fn cte_ACS_demanda_ren_bdc_45ma_25gn() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,30.0
-CONSUMO,ACS,AMBIENTE,45
+CONSUMO,ACS,EAMBIENTE,45
 CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
         .unwrap()
@@ -952,7 +952,7 @@ CONSUMO,ACS,GASNATURAL,27.88"
 #[test]
 fn cte_ACS_demanda_ren_bdc_38ma__25gn_excluye_medioambiente() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,37.5
-CONSUMO,ACS,AMBIENTE,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
+CONSUMO,ACS,EAMBIENTE,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
 CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
         .unwrap()
@@ -967,7 +967,7 @@ CONSUMO,ACS,GASNATURAL,27.88"
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn_y_biomasa() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,30.0
-CONSUMO,ACS,AMBIENTE,45
+CONSUMO,ACS,EAMBIENTE,45
 CONSUMO,ACS,BIOMASA,13.94
 CONSUMO,ACS,GASNATURAL,13.94"
         .parse::<Components>()
@@ -992,20 +992,20 @@ fn cte_ACS_demanda_ren_excluye_aux() {
 fn new_format_with_system_id() {
     let comps = "# Bomba de calor 1
     1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC 1
-    1,CONSUMO,ACS,AMBIENTE,150 # BdC 1
+    1,CONSUMO,ACS,EAMBIENTE,150 # BdC 1
     1,AUX,ACS,5 # Auxiliares ACS
     2,CONSUMO,NEPB,ELECTRICIDAD,10 # Ascensores
     # Bomba de calor 2
     2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC 2
-    2,CONSUMO,CAL,AMBIENTE,300 # BdC 2
+    2,CONSUMO,CAL,EAMBIENTE,300 # BdC 2
     # Producción fotovoltaica in situ
     1,PRODUCCION,INSITU,ELECTRICIDAD,200 # PV
     2,PRODUCCION,INSITU,ELECTRICIDAD,100 # PV
     3,PRODUCCION,INSITU,ELECTRICIDAD,15 # PV
     # Producción de energía ambiente dada por el usuario
-    0,PRODUCCION,INSITU,AMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
-    1,PRODUCCION,INSITU,AMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-    2,PRODUCCION,INSITU,AMBIENTE,100 # Producción declarada de sistema sin consumo de ese servicio (no reduce energía a compensar)
+    0,PRODUCCION,INSITU,EAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+    1,PRODUCCION,INSITU,EAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+    2,PRODUCCION,INSITU,EAMBIENTE,100 # Producción declarada de sistema sin consumo de ese servicio (no reduce energía a compensar)
     # Compensación de energía ambiente a completar por CteEPBD"
         .parse::<Components>()
         .unwrap();

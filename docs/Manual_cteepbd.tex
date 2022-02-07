@@ -86,7 +86,7 @@ boxrule=0pt,boxsep=0pt,breakable}
 
 \lstdefinelanguage{ctepebd}
 {
-morekeywords={AMBIENTE,BIOCARBURANTE,BIOMASA,BIOMASADENSIFICADA,CARBON,ELECTRICIDAD,GASNATURAL,GASOLEO,GLP,RED1,RED2,SOLAR},
+morekeywords={EAMBIENTE,BIOCARBURANTE,BIOMASA,BIOMASADENSIFICADA,CARBON,ELECTRICIDAD,GASNATURAL,GASOLEO,GLP,RED1,RED2,SOLAR},
 morekeywords={[2]PRODUCCION,CONSUMO,AUX,SALIDA,RED,INSITU,A,B,COGEN,SUMINISTRO,A_RED,A_NEPB,ACS,CAL,REF,VEN,HU,DHU,ILU,NDEF,NEPB,GEN},
 sensitive=false,
 morecomment=[l][\color{mygray}]{\#},
@@ -326,7 +326,7 @@ Estos argumentos permiten obtener una salida en archivos de texto del procesado 
 
 \textbf{\texttt{-{}-oc GEN\_ARCHIVO\_COMPONENTES}}
 
-Este argumento indica la ruta de salida del archivo con los componentes preprocesados para realizar el cálculo de la eficiencia energética. El preproceso de los componentes consiste en el completado de los balances definidos implícitamente, tal como la definición de las producciones del vector \texttt{AMBIENTE} que deriven de consumos de ese vector y que no hayan sido definidas explícitamente.
+Este argumento indica la ruta de salida del archivo con los componentes preprocesados para realizar el cálculo de la eficiencia energética. El preproceso de los componentes consiste en el completado de los balances definidos implícitamente, tal como la definición de las producciones del vector \texttt{EAMBIENTE} que deriven de consumos de ese vector y que no hayan sido definidas explícitamente.
 
 \textbf{\texttt{-{}-of GEN\_ARCHIVO\_FACTORES}}
 
@@ -403,8 +403,8 @@ Para el archivo de definición de los componentes energéticos se establecen las
 \item \texttt{CTE\_COGEN}: tres valores numéricos separados por una coma, que indican los factores de paso (energía primaria renovable, no renovable y emisiones) para exportación a la red de electricidad cogenerada;
 \item \texttt{CTE\_RED1}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 1 (vector energético \texttt{RED1});
 \item \texttt{CTE\_RED2}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 2 (vector energético \texttt{RED2});
-\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{AMBIENTE}, \texttt{RED1}, \texttt{RED2} o \texttt{SOLAR};
-\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASADENSIFICADA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASADENSIFICADA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{AMBIENTE}, \texttt{RED1}, \texttt{RED2} o \texttt{SOLAR};
+\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{EAMBIENTE}, \texttt{RED1}, \texttt{RED2} o \texttt{SOLAR};
+\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASADENSIFICADA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASADENSIFICADA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{EAMBIENTE}, \texttt{RED1}, \texttt{RED2} o \texttt{SOLAR};
 \end{itemize}
 
 Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos del archivo de componentes tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
@@ -516,7 +516,7 @@ La lista de vectores energéticos posibles es la siguiente:
 
 \begin{multicols}{3}
 \begin{itemize}
-\item \texttt{AMBIENTE} - Energía ambiente captada por las bombas de calor
+\item \texttt{EAMBIENTE} - Energía ambiente captada por las bombas de calor
 \item \texttt{BIOMASA} - Biomasa
 \item \texttt{BIOMASADENSIFICADA} - Biomasa densificada
 \item \texttt{BIOCARBURANTE} - Biocarburantes

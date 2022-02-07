@@ -39,7 +39,7 @@ use crate::error::EpbdError;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum Carrier {
     /// Environment thermal energy (from heat pumps and other)
-    AMBIENTE,
+    EAMBIENTE,
     /// Biofuel
     BIOCARBURANTE,
     /// Biomass
@@ -69,7 +69,7 @@ impl str::FromStr for Carrier {
 
     fn from_str(s: &str) -> Result<Carrier, Self::Err> {
         match s {
-            "AMBIENTE" => Ok(Carrier::AMBIENTE),
+            "EAMBIENTE" => Ok(Carrier::EAMBIENTE),
             "BIOCARBURANTE" => Ok(Carrier::BIOCARBURANTE),
             "BIOMASA" => Ok(Carrier::BIOMASA),
             "BIOMASADENSIFICADA" => Ok(Carrier::BIOMASADENSIFICADA),

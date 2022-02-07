@@ -42,10 +42,10 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 - Nuevo vector energético SOLAR
   - Identifica la energía solar térmica procedente de captadores
   - La compensación automática de consumos de SOLAR se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
-- Nuevo vector energético AMBIENTE
-  - Identificar la energía ambiente capturada por las bombas de calor
-  - La compensación automática de consumos de AMBIENTE se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
-- Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en AMBIENTE y SOLAR)
+- Nuevo vector energético EAMBIENTE
+  - Identifica la energía ambiente capturada por las bombas de calor
+  - La compensación automática de consumos de EAMBIENTE se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
+- Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en EAMBIENTE y SOLAR)
 - Nuevo servicio NEPB
   - Para consumos destinados a usos no EPB
 - Nuevo servicio GEN
