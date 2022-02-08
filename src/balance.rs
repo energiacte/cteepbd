@@ -67,7 +67,41 @@ pub struct Balance {
     /// Global energy balance results expressed as area ratios
     pub balance_m2: BalanceTotal,
     /// Generic miscelaneous user provided data
-    pub misc: Option<HashMap<String, String>>,
+    pub misc: Option<MiscMap>,
+}
+
+/// Diccionario de valores adicionales
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct MiscMap(pub HashMap<String, String>);
+
+impl MiscMap {
+    /// Get value as a string with 1 digit precision or a dash if value is missing or is not a number
+    pub fn get_str_1d(&self, key: &str) -> String {
+        self.get(key)
+            .and_then(|v| v.parse::<f32>().map(|r| format!("{:.1}", r)).ok())
+            .unwrap_or_else(|| "-".to_string())
+    }
+
+    /// Get value as a string for a value, as a percent with 1 digit precision or a dash if value is missing or is not a number
+    pub fn get_str_pct1d(&self, key: &str) -> String {
+        self.get(key)
+            .and_then(|v| v.parse::<f32>().map(|r| format!("{:.1}", 100.0 * r)).ok())
+            .unwrap_or_else(|| "-".to_string())
+    }
+}
+
+impl std::ops::Deref for MiscMap {
+    type Target = HashMap<String, String>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for MiscMap {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 /// Resultados del balance global (todos los vectores), en valor absoluto o por m2.
@@ -565,10 +599,7 @@ fn compute_exported_delivered(
     let E_del_cr_onsite_an = vecsum(&E_del_cr_onsite_t);
     let mut E_exp_cr_j_t = HashMap::<Source, Vec<f32>>::new();
     for (source, values) in &prod.by_src_t {
-        E_exp_cr_j_t.insert(
-            *source,
-            vecvecdif(values, &prod.used_EPus_by_src_t[source]),
-        );
+        E_exp_cr_j_t.insert(*source, vecvecdif(values, &prod.used_EPus_by_src_t[source]));
     }
     let mut E_exp_cr_j_an = HashMap::<Source, f32>::new();
     for (source, values) in &E_exp_cr_j_t {

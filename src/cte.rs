@@ -452,7 +452,7 @@ pub fn incorpora_demanda_renovable_acs_nrb(
     demanda_anual_acs: Option<f32>,
 ) -> Balance {
     // Añadir a balance.misc un diccionario, si no existe, con datos:
-    let mut map = balance.misc.unwrap_or_else(HashMap::<String, String>::new);
+    let mut map = balance.misc.unwrap_or_default();
     match demanda_anual_acs {
         Some(demanda_anual_acs) => {
             map.insert(
