@@ -164,6 +164,8 @@ fn balance_for_carrier(
 /// Compute used and produced energy data from energy components
 ///
 /// TODO:
+/// - Implementar prioridad de consumos entre producciones insitu
+///     - parte de E_pr_cr_j_t
 /// - Implementar uso de baterías (almacenamiento, sto)
 /// - Implementar factor de reparto de carga f_match_t
 ///   Ver ISO_DIS_52000-1_SS_2015_05_13.xlsm
@@ -193,11 +195,16 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
     }
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
     let E_nEPus_cr_an = vecsum(&E_nEPus_cr_t);
+
     let prod_sources: Vec<Source> = E_pr_cr_j_t.keys().cloned().collect();
+
+    // Generation from each source for all timesteps
     let mut E_pr_cr_j_an = HashMap::<Source, f32>::new();
     for source in &prod_sources {
         E_pr_cr_j_an.insert(*source, vecsum(&E_pr_cr_j_t[source]));
     }
+
+    // Generation for this carrier from all sources j
     let mut E_pr_cr_t = vec![0.0; num_steps];
     for source in &prod_sources {
         E_pr_cr_t = vecvecsum(&E_pr_cr_t, &E_pr_cr_j_t[source])
@@ -209,8 +216,9 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
 
     let E_pr_cr_used_EPus_t = vecvecmul(&f_match_t, &vecvecmin(&E_EPus_cr_t, &E_pr_cr_t));
     let E_pr_cr_used_EPus_an = vecsum(&E_pr_cr_used_EPus_t);
-    let mut E_pr_cr_j_used_EPus_t = HashMap::<Source, Vec<f32>>::new();
 
+    // Generated energy from source j used in EP uses
+    let mut E_pr_cr_j_used_EPus_t = HashMap::<Source, Vec<f32>>::new();
     for source in &prod_sources {
         // * Fraction of produced energy from source j (formula 14)
         // We have grouped by source type (it could be made by generator i, for each one of them)
@@ -226,6 +234,7 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
         .iter()
         .map(|(source, values)| (*source, vecsum(values)))
         .collect();
+
     (
         UsedEnergy {
             epus_t: E_EPus_cr_t,
