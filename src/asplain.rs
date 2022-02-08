@@ -24,8 +24,6 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 use crate::types::*;
-use crate::Balance;
-use crate::BalanceTotal;
 // use crate::Components;
 // use crate::Factors;
 
@@ -66,35 +64,35 @@ impl AsCtePlain for Balance {
         } = self;
 
         let BalanceTotal {
-            A: bal_a,
-            B: bal_b,
-            used_EPB: used_epb,
-            used_nEPB: used_nepb,
+            we_a,
+            we_b,
+            used_epus,
+            used_nepus,
             prod,
             del,
             exp,
             exp_grid,
-            exp_nEPB: exp_nepb,
+            exp_nepus,
             ..
         } = balance_m2;
 
-        let RenNrenCo2 { ren, nren, co2, .. } = bal_b;
-        let tot = bal_b.tot();
-        let rer = bal_b.rer();
+        let RenNrenCo2 { ren, nren, co2, .. } = we_b;
+        let tot = we_b.tot();
+        let rer = we_b.rer();
 
-        let used = used_epb + used_nepb;
+        let used = used_epus + used_nepus;
 
         // Consumos
-        let used_by_srv = list_entries_f32(&balance_m2.used_EPB_by_srv);
+        let used_by_srv = list_entries_f32(&balance_m2.used_epus_by_srv);
         // Generada
         let prod_by_src = list_entries_f32(&balance_m2.prod_by_src);
         // Producida, por vector
         let prod_by_cr = list_entries_f32(&balance_m2.prod_by_cr);
-        let balance_m2_a = rennren2string(bal_a);
+        let balance_m2_a = rennren2string(we_a);
         // Ponderada por m2 (por uso)
-        let a_by_srv = list_entries_rennrenco2(&balance_m2.A_by_srv);
-        let balance_m2_b = rennren2string(bal_b);
-        let b_by_srv = list_entries_rennrenco2(&balance_m2.B_by_srv);
+        let a_by_srv = list_entries_rennrenco2(&balance_m2.we_a_by_srv);
+        let balance_m2_b = rennren2string(we_b);
+        let b_by_srv = list_entries_rennrenco2(&balance_m2.we_b_by_srv);
         // Parámetros de demanda HE4
         let misc_out = if let Some(map) = misc {
             let demanda = map.get_str_1d("demanda_anual_acs");
@@ -119,11 +117,11 @@ RER = {rer:.2}
 
 Energía consumida: {used:.2}
 
-Consumida en usos EPB: {used_epb:.2}
+Consumida en usos EPB: {used_epus:.2}
 
 {used_by_srv}
 
-Consumida en usos no EPB: {used_nepb:.2}
+Consumida en usos no EPB: {used_nepus:.2}
 
 Generada: {prod:.2}
 
@@ -140,7 +138,7 @@ Suministrada: {del:.2}
 Exportada: {exp:.2}
 
 - a la red: {exp_grid:.2}
-- a usos no EPB: {exp_nepb:.2}
+- a usos no EPB: {exp_nepus:.2}
 
 ** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
 

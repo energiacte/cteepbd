@@ -24,7 +24,6 @@
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
 use crate::types::*;
-use crate::Balance;
 use crate::Components;
 use crate::Factors;
 
@@ -74,7 +73,7 @@ impl AsCteXml for Balance {
         } = self;
 
         // Data
-        let RenNrenCo2 { ren, nren, .. } = balance_m2.B;
+        let RenNrenCo2 { ren, nren, .. } = balance_m2.we_b;
 
         // Formatting
         let wfstring = wfactors.to_xml();

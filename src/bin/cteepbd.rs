@@ -50,8 +50,8 @@ use std::str::FromStr;
 
 use cteepbd::{
     cte, energy_performance,
-    types::{MetaVec, RenNrenCo2},
-    AsCtePlain, AsCteXml, Balance, Components, UserWF,
+    types::{MetaVec, RenNrenCo2, Balance},
+    AsCtePlain, AsCteXml, Components, UserWF,
 };
 
 const APP_TITLE: &str = r#"CteEPBD"#;

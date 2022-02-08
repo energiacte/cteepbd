@@ -42,7 +42,7 @@ use crate::{
     error::EpbdError,
     types::*,
     vecops::{vecvecmin, vecvecsum},
-    Balance, Components, Factors, UserWF,
+    Components, Factors, UserWF,
 };
 
 /**
