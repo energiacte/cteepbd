@@ -30,7 +30,6 @@
 
 - input / output:
   - Test XML output and fix XML indentation
-  - Review JSON output naming
   - JSON input
   - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data
     - Energy needs (with annual totals)
