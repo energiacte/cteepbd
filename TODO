@@ -43,7 +43,6 @@
     - Demanda por servicios y total (¿y demanda de referencia si la hay?)
     - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
     - RER_nrb
-      - separar cálculo de weighted energy a función independiente que devuelve estructura nueva
       - calcular con wfactors y wfactors.to_nearby()
       - integrar en balance
       - mostrar en salida
