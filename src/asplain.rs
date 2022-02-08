@@ -25,6 +25,7 @@
 
 use crate::types::*;
 use crate::Balance;
+use crate::BalanceTotal;
 // use crate::Components;
 // use crate::Factors;
 
@@ -55,6 +56,7 @@ fn rennren2string(v: &RenNrenCo2) -> String {
 impl AsCtePlain for Balance {
     /// Está mostrando únicamente los resultados
     fn to_plain(&self) -> String {
+        // Datos generales
         let Balance {
             k_exp,
             arearef,
@@ -63,135 +65,113 @@ impl AsCtePlain for Balance {
             ..
         } = self;
 
-        // Final, por servicios
-        let mut used_by_srv = balance_m2
-            .used_EPB_by_srv
-            .iter()
-            .map(|(k, v)| format!("- {}: {:.2}", k, v))
-            .collect::<Vec<String>>();
-        used_by_srv.sort();
+        let BalanceTotal {
+            A: bal_a,
+            B: bal_b,
+            used_EPB: used_epb,
+            used_nEPB: used_nepb,
+            prod,
+            del,
+            exp,
+            exp_grid,
+            exp_nEPB: exp_nepb,
+            ..
+        } = balance_m2;
 
-        // Producida, por origen
-        let mut prod_by_src = balance_m2
-            .prod_by_src
-            .iter()
-            .map(|(k, v)| format!("- {}: {:.2}", k, v))
-            .collect::<Vec<String>>();
-        prod_by_src.sort();
+        let RenNrenCo2 { ren, nren, co2, .. } = bal_b;
+        let tot = bal_b.tot();
+        let rer = bal_b.rer();
 
+        let used = used_epb + used_nepb;
+
+        // Consumos
+        let used_by_srv = list_entries_f32(&balance_m2.used_EPB_by_srv);
+        // Generada
+        let prod_by_src = list_entries_f32(&balance_m2.prod_by_src);
         // Producida, por vector
-        let mut prod_by_cr = balance_m2
-            .prod_by_cr
-            .iter()
-            .map(|(k, v)| format!("- {}: {:.2}", k, v))
-            .collect::<Vec<String>>();
-        prod_by_cr.sort();
-
+        let prod_by_cr = list_entries_f32(&balance_m2.prod_by_cr);
+        let balance_m2_a = rennren2string(bal_a);
         // Ponderada por m2 (por uso)
-        let mut a_by_srv = balance_m2
-            .A_by_srv
-            .iter()
-            .map(|(k, v)| format!("- {}: {}", k, rennren2string(v)))
-            .collect::<Vec<String>>();
-        a_by_srv.sort();
+        let a_by_srv = list_entries_rennrenco2(&balance_m2.A_by_srv);
+        let balance_m2_b = rennren2string(bal_b);
+        let b_by_srv = list_entries_rennrenco2(&balance_m2.B_by_srv);
+        // Parámetros de demanda HE4
+        let misc_out = if let Some(map) = misc {
+            let demanda = map.get_str_1d("demanda_anual_acs");
+            let pct_ren = map.get_str_pct1d("fraccion_renovable_demanda_acs_nrb");
+            format!("\n** Indicadores adicionales\n
+Demanda total de ACS: {demanda} [kWh]\nPorcentaje renovable de la demanda de ACS (perímetro próximo): {pct_ren} [%]
+"            )
+        } else {
+            String::new()
+        };
 
-        let mut b_by_srv = balance_m2
-            .B_by_srv
-            .iter()
-            .map(|(k, v)| format!("- {}: {}", k, rennren2string(v)))
-            .collect::<Vec<String>>();
-        b_by_srv.sort();
-
-        let out = format!(
+        format!(
             "** Balance energético
 
-Area_ref = {:.2} [m2]
-k_exp = {:.2}
-C_ep [kWh/m2.an]: ren = {:.1}, nren = {:.1}, tot = {:.1}
-E_CO2 [kg_CO2e/m2.an]: {:.2}
-RER = {:.2}
+Area_ref = {arearef:.2} [m2]
+k_exp = {k_exp:.2}
+C_ep [kWh/m2.an]: ren = {ren:.1}, nren = {nren:.1}, tot = {tot:.1}
+E_CO2 [kg_CO2e/m2.an]: {co2:.2}
+RER = {rer:.2}
 
 ** Energía final (todos los vectores) [kWh/m2.an]:
 
-Energía consumida: {:.2}
+Energía consumida: {used:.2}
 
-Consumida en usos EPB: {:.2}
+Consumida en usos EPB: {used_epb:.2}
 
-{}
+{used_by_srv}
 
-Consumida en usos no EPB: {:.2}
+Consumida en usos no EPB: {used_nepb:.2}
 
-Generada: {:.2}
+Generada: {prod:.2}
 
 Generada, por origen:
 
-{}
+{prod_by_src}
 
 Generada, por vector:
 
-{}
+{prod_by_cr}
 
-Suministrada: {:.2}
+Suministrada: {del:.2}
 
-Exportada: {:.2}
+Exportada: {exp:.2}
 
-- a la red: {:.2}
-- a usos no EPB: {:.2}
+- a la red: {exp_grid:.2}
+- a usos no EPB: {exp_nepb:.2}
 
 ** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
 
-Recursos utilizados (paso A): {}
+Recursos utilizados (paso A): {balance_m2_a}
 
-{}
+{a_by_srv}
 
-Incluyendo el efecto de la energía exportada (paso B): {}
+Incluyendo el efecto de la energía exportada (paso B): {balance_m2_b}
 
-{}
-",
-            arearef,
-            k_exp,
-            balance_m2.B.ren,
-            balance_m2.B.nren,
-            balance_m2.B.tot(),
-            balance_m2.B.co2,
-            balance_m2.B.rer(),
-            balance_m2.used_EPB + balance_m2.used_nEPB,
-            balance_m2.used_EPB,
-            used_by_srv.join("\n"),
-            balance_m2.used_nEPB,
-            balance_m2.prod,
-            prod_by_src.join("\n"),
-            prod_by_cr.join("\n"),
-            balance_m2.del,
-            balance_m2.exp,
-            balance_m2.exp_grid,
-            balance_m2.exp_nEPB,
-            rennren2string(&balance_m2.A),
-            a_by_srv.join("\n"),
-            rennren2string(&balance_m2.B),
-            b_by_srv.join("\n")
-        );
-        // Añade parámetros de demanda HE4 si existen
-        if let Some(map) = misc {
-            let demanda = map
-                .get("demanda_anual_acs")
-                .and_then(|v| v.parse::<f32>().map(|r| format!("{:.1}", r)).ok())
-                .unwrap_or_else(|| "-".to_string());
-            let pct_ren = map
-                .get("fraccion_renovable_demanda_acs_nrb")
-                .and_then(|v| v.parse::<f32>().map(|r| format!("{:.1}", r * 100.0)).ok())
-                .unwrap_or_else(|| "-".to_string());
-            format!(
-                "{}
-** Indicadores adicionales
-
-Demanda total de ACS: {} [kWh]
-Porcentaje renovable de la demanda de ACS (perímetro próximo): {} [%]
-",
-                out, demanda, pct_ren
-            )
-        } else {
-            out
-        }
+{b_by_srv}{misc_out}
+"
+        )
     }
+}
+
+fn list_entries_f32<T: std::fmt::Display>(map: &std::collections::HashMap<T, f32>) -> String {
+    let mut entries = map
+        .iter()
+        .map(|(k, v)| format!("- {}: {:.2}", k, v))
+        .collect::<Vec<String>>();
+    entries.sort();
+    entries.join("\n")
+}
+
+fn list_entries_rennrenco2<T: std::fmt::Display>(
+    map: &std::collections::HashMap<T, RenNrenCo2>,
+) -> String {
+    let mut entries = map
+        .iter()
+        .map(|(k, v)| format!("- {}: {}", k, rennren2string(v)))
+        .collect::<Vec<String>>();
+    entries.sort();
+    entries.join("\n")
 }
