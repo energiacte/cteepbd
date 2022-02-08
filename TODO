@@ -4,6 +4,9 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
+  - add ProdSources EAMBIENTE, EL_INSITU, EL_COGEN & SOLAR and eliminate carrier in EProd elements
+    - deduce carrier for wfactor
+    - use carrier to add same carrier sources
   - pensar posibilidad de vector electricidad generada en las cercanías ELECTR_PROXs
     - sería de origen en la RED?
     - ver relación con producción INSITU
