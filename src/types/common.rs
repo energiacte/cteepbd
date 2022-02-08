@@ -102,7 +102,7 @@ impl std::fmt::Display for Carrier {
 pub enum Source {
     /// Grid source
     RED,
-    /// Insitu generation source
+    /// On site generation source
     INSITU,
     /// Cogeneration source
     COGEN,

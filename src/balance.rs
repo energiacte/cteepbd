@@ -165,12 +165,8 @@ fn balance_for_carrier(
 ///
 /// TODO:
 /// - Implementar prioridad de consumos entre producciones insitu
-///     - parte de E_pr_cr_j_t
 /// - Implementar uso de baterías (almacenamiento, sto)
 /// - Implementar factor de reparto de carga f_match_t
-///   Ver ISO_DIS_52000-1_SS_2015_05_13.xlsm
-///     - si pr/us <=0; f_match_t = 1
-///     - si pr/us > 0; f_match_t = (pr/us + 1/pr/us - 1) / (pr/us + 1/pr/us)
 #[allow(non_snake_case)]
 fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, Vec<f32>) {
     // We know all carriers have the same timesteps (see FromStr for Components)
@@ -211,13 +207,18 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
     }
     let E_pr_cr_an = vecsum(&E_pr_cr_t);
 
-    // TODO: implement optional computation of f_match_t
+    // Load matching factor with constant value == 1 (11.6.2.4)
+    // TODO: implement optional computation of f_match_t (using function in B.32):
+    // x = E_pr_cr_t / E_EPus_cr_t (for each timestep)
+    // f_match_t = if x < 0 { 1.0 } else { (x + 1/x - 1) / (x + 1 / n) };
     let f_match_t = vec![1.0; num_steps];
 
     let E_pr_cr_used_EPus_t = vecvecmul(&f_match_t, &vecvecmin(&E_EPus_cr_t, &E_pr_cr_t));
     let E_pr_cr_used_EPus_an = vecsum(&E_pr_cr_used_EPus_t);
 
     // Generated energy from source j used in EP uses
+    // Computation without priority (9.6.6.2.4)
+    // TODO: implement computation using priorities (9.6.62.4)
     let mut E_pr_cr_j_used_EPus_t = HashMap::<Source, Vec<f32>>::new();
     for source in &prod_sources {
         // * Fraction of produced energy from source j (formula 14)
