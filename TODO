@@ -20,9 +20,10 @@
     - Indicar qué tipo de sistema es
     - SISTEMA, GEN, id, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - SISTEMA, NGEN (DIS + EM), id, ???
-  - Implement load matching factor computation (see formula 32, B.32, with k=1, n=1 for EPB uses)
-  - Implement battery support (see EN 52000-1 example spreadsheet for example)
-  - Implement priorities for produced energy (onsite > cogen, for instance)
+  - Implement
+    - load matching factor computation (see formula 32, B.32, with k=1, n=1 for EPB uses) (in compute_used_produced)
+    - battery support (see EN 52000-1 example spreadsheet for example) (in compute_used_produced)
+    - prioritized use of produced energy (onsite > cogen, for instance) (in compute_used_produced)
 
 - tests:
 
