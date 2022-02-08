@@ -721,33 +721,33 @@ El \textbf{balance energético por vector energético} (\texttt{balance\_cr}) in
 \item \texttt{used\_EPB\_by\_service\_an} - total anual de energía destinada a usos EPB, por servicio;
 \item \texttt{used\_nEPB} - la energía destinada a usos no EPB, para cada intervalo;
 \item \texttt{used\_nEPB\_an} - energía anual destinada a usos no EPB;
-\item \texttt{produced} - la energía producida, para cada intervalo;
-\item \texttt{produced\_an} - la energía producida, en total anual;
-\item \texttt{produced\_by\_source} - la energía producida, por origen y para cada intervalo;
-\item \texttt{produced\_by\_source\_an} - la energía producida, por origen y en total anual;
-\item \texttt{produced\_used\_EPus} - la energía producida y usada en usos EPB, para cada intervalo;
-\item \texttt{produced\_used\_EPus\_an} - energía anual producida y usada en usos EPB;
-\item \texttt{produced\_used\_EPus\_by\_source} - la energía producida y usada en usos EPB, por origen y para cada intervalo;
-\item \texttt{produced\_used\_EPus\_by\_source\_an} - energía anual producida y usada en usos EPB, por origen;
+\item \texttt{prod} - la energía producida, para cada intervalo;
+\item \texttt{prod\_an} - la energía producida, en total anual;
+\item \texttt{prod\_by\_source} - la energía producida, por origen y para cada intervalo;
+\item \texttt{prod\_by\_source\_an} - la energía producida, por origen y en total anual;
+\item \texttt{prod\_used\_EPus} - la energía producida y usada en usos EPB, para cada intervalo;
+\item \texttt{prod\_used\_EPus\_an} - energía anual producida y usada en usos EPB;
+\item \texttt{prod\_used\_EPus\_by\_source} - la energía producida y usada en usos EPB, por origen y para cada intervalo;
+\item \texttt{prod\_used\_EPus\_by\_source\_an} - energía anual producida y usada en usos EPB, por origen;
 \item \texttt{f\_match} - el factor de coincidencia de cargas (producción y consumo);
-\item \texttt{exported} - la energía exportada, para cada intervalo;
-\item \texttt{exported\_an} - la energía exportada anualmente, en total anual;
-\item \texttt{exported\_by\_source} - la energía exportada, por origen y para cada intervalo;
-\item \texttt{exported\_by\_source\_an} - la energía exportada, por origen, en total anual;
-\item \texttt{exported\_grid} - la energía exportada a la red, para cada intervalo;
-\item \texttt{exported\_grid\_an} - la energía exportada a la red, en total anual;
-\item \texttt{exported\_nEPB} - la exportada a usos no EPB, para cada intervalo;
-\item \texttt{exported\_nEPB\_an} - la energía exportada a usos no EPB, en total anual;
-\item \texttt{delivered\_grid} - la energía suministrada por la red, para cada intervalo;
-\item \texttt{delivered\_grid\_an} - la energía suministrada por la red, en total anual;
-\item \texttt{we\_delivered\_grid\_an} - la energía ponderada suministrada por la red, en total anual;
-\item \texttt{we\_delivered\_prod\_an} - la energía ponderada suministrada por producción, en total anual;
-\item \texttt{we\_delivered\_an} - la energía ponderada suministrada, en total anual;
-\item \texttt{we\_exported\_an\_A} - la energía ponderada exportada en el paso A, en total anual;
-\item \texttt{we\_exported\_nEPB\_an\_AB} - la energía ponderada exportada para usos no EPB en el paso AB, en total anual;
-\item \texttt{we\_exported\_grid\_an\_AB} - la energía ponderada exportada a la red en el paso AB, en total anual;
-\item \texttt{we\_exported\_an\_AB} - la energía ponderada exportada en el paso AB, en total anual;
-\item \texttt{we\_exported\_an} - la energía ponderada exportada en el paso B, en total anual;
+\item \texttt{exp} - la energía exportada, para cada intervalo;
+\item \texttt{exp\_an} - la energía exportada anualmente, en total anual;
+\item \texttt{exp\_by\_source} - la energía exportada, por origen y para cada intervalo;
+\item \texttt{exp\_by\_source\_an} - la energía exportada, por origen, en total anual;
+\item \texttt{exp\_grid} - la energía exportada a la red, para cada intervalo;
+\item \texttt{exp\_grid\_an} - la energía exportada a la red, en total anual;
+\item \texttt{exp\_nEPB} - la exportada a usos no EPB, para cada intervalo;
+\item \texttt{exp\_nEPB\_an} - la energía exportada a usos no EPB, en total anual;
+\item \texttt{del\_grid} - la energía suministrada por la red, para cada intervalo;
+\item \texttt{del\_grid\_an} - la energía suministrada por la red, en total anual;
+\item \texttt{we\_del\_grid\_an} - la energía ponderada suministrada por la red, en total anual;
+\item \texttt{we\_del\_prod\_an} - la energía ponderada suministrada por producción, en total anual;
+\item \texttt{we\_del\_an} - la energía ponderada suministrada, en total anual;
+\item \texttt{we\_exp\_an\_A} - la energía ponderada exportada en el paso A, en total anual;
+\item \texttt{we\_exp\_nEPB\_an\_AB} - la energía ponderada exportada para usos no EPB en el paso AB, en total anual;
+\item \texttt{we\_exp\_grid\_an\_AB} - la energía ponderada exportada a la red en el paso AB, en total anual;
+\item \texttt{we\_exp\_an\_AB} - la energía ponderada exportada en el paso AB, en total anual;
+\item \texttt{we\_exp\_an} - la energía ponderada exportada en el paso B, en total anual;
 \item \texttt{we\_an\_A} - la energía ponderada en el paso A, en total anual;
 \item \texttt{we\_an\_A\_by\_service} - la energía ponderada en el paso A, por servicio EPB y en total anual;
 \item \texttt{we\_an} - la energía ponderada en el paso B, en total anual;
@@ -762,7 +762,7 @@ La energía usada, producida, exportada y suministrada no ponderada es energía 
 
 Esta salida permite, por ejemplo, obtener la energía eléctrica producida y autoconsumida como:\\
 
-\texttt{balance\_cr.ELECTRICIDAD.produced\_used\_EPus\_an}
+\texttt{balance\_cr.ELECTRICIDAD.prod\_used\_EPus\_an}
 \end{myquote}
 
 El \textbf{balance global} (\texttt{balance}) y el \textbf{balance global repercutido por superficie} \texttt{balance\_m2} contiene la siguiente información, obtenida de la agregación de los resultados parciales de cada vector energético:
@@ -999,7 +999,7 @@ $\texttt{balance\_m2.B\_by\_service.CAL.nren}$
 
 La energía eléctrica generada in situ y autoconsumida (sólo en servicios EPB) se puede obtener a partir del balance para el vector energético \texttt{ELECTRICIDAD}, en la clave de energía anual consumida en usos EPB:
 
-$\texttt{balance\_cr.ELECTRICIDAD.produced\_used\_EPus\_an}$
+$\texttt{balance\_cr.ELECTRICIDAD.prod\_used\_EPus\_an}$
 
 \subsection{Obtención de las emisiones de CO2 y de las emisiones por servicio}
 

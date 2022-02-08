@@ -64,43 +64,43 @@ impl AsCtePlain for Balance {
         } = self;
 
         // Final, por servicios
-        let mut used_by_service = balance_m2
-            .used_EPB_by_service
+        let mut used_by_srv = balance_m2
+            .used_EPB_by_srv
             .iter()
             .map(|(k, v)| format!("- {}: {:.2}", k, v))
             .collect::<Vec<String>>();
-        used_by_service.sort();
+        used_by_srv.sort();
 
         // Producida, por origen
-        let mut produced_by_source = balance_m2
-            .produced_by_source
+        let mut prod_by_src = balance_m2
+            .prod_by_src
             .iter()
             .map(|(k, v)| format!("- {}: {:.2}", k, v))
             .collect::<Vec<String>>();
-        produced_by_source.sort();
+        prod_by_src.sort();
 
         // Producida, por vector
-        let mut produced_by_carrier = balance_m2
-            .produced_by_carrier
+        let mut prod_by_cr = balance_m2
+            .prod_by_cr
             .iter()
             .map(|(k, v)| format!("- {}: {:.2}", k, v))
             .collect::<Vec<String>>();
-        produced_by_carrier.sort();
+        prod_by_cr.sort();
 
         // Ponderada por m2 (por uso)
-        let mut a_by_service = balance_m2
-            .A_by_service
+        let mut a_by_srv = balance_m2
+            .A_by_srv
             .iter()
             .map(|(k, v)| format!("- {}: {}", k, rennren2string(v)))
             .collect::<Vec<String>>();
-        a_by_service.sort();
+        a_by_srv.sort();
 
-        let mut b_by_service = balance_m2
-            .B_by_service
+        let mut b_by_srv = balance_m2
+            .B_by_srv
             .iter()
             .map(|(k, v)| format!("- {}: {}", k, rennren2string(v)))
             .collect::<Vec<String>>();
-        b_by_service.sort();
+        b_by_srv.sort();
 
         let out = format!(
             "** Balance energético
@@ -157,19 +157,19 @@ Incluyendo el efecto de la energía exportada (paso B): {}
             balance_m2.B.rer(),
             balance_m2.used_EPB + balance_m2.used_nEPB,
             balance_m2.used_EPB,
-            used_by_service.join("\n"),
+            used_by_srv.join("\n"),
             balance_m2.used_nEPB,
-            balance_m2.produced,
-            produced_by_source.join("\n"),
-            produced_by_carrier.join("\n"),
-            balance_m2.delivered,
-            balance_m2.exported,
-            balance_m2.exported_grid,
-            balance_m2.exported_nEPB,
+            balance_m2.prod,
+            prod_by_src.join("\n"),
+            prod_by_cr.join("\n"),
+            balance_m2.del,
+            balance_m2.exp,
+            balance_m2.exp_grid,
+            balance_m2.exp_nEPB,
             rennren2string(&balance_m2.A),
-            a_by_service.join("\n"),
+            a_by_srv.join("\n"),
             rennren2string(&balance_m2.B),
-            b_by_service.join("\n")
+            b_by_srv.join("\n")
         );
         // Añade parámetros de demanda HE4 si existen
         if let Some(map) = misc {

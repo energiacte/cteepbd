@@ -342,15 +342,15 @@ impl Components {
                     veclistsum(&consumed.iter().map(|&v| v.values()).collect::<Vec<_>>());
 
                 // Componentes de producción del servicio
-                let produced: Vec<_> = components_for_id
+                let prod: Vec<_> = components_for_id
                     .clone()
                     .filter(|c| c.is_generated())
                     .collect();
                 // Descontamos la producción existente de los consumos
-                if !produced.is_empty() {
-                    let totproduced =
-                        veclistsum(&produced.iter().map(|&v| v.values()).collect::<Vec<_>>());
-                    unbalanced_values = vecvecdif(&unbalanced_values, &totproduced)
+                if !prod.is_empty() {
+                    let totprod =
+                        veclistsum(&prod.iter().map(|&v| v.values()).collect::<Vec<_>>());
+                    unbalanced_values = vecvecdif(&unbalanced_values, &totprod)
                         .iter()
                         .map(|&v| if v > 0.0 { v } else { 0.0 })
                         .collect();

@@ -22,6 +22,7 @@
     - SISTEMA, NGEN (DIS + EM), id, ???
   - Implement load matching factor computation (see formula 32, B.32, with k=1, n=1 for EPB uses)
   - Implement battery support (see EN 52000-1 example spreadsheet for example)
+  - Implement priorities for produced energy (onsite > cogen, for instance)
 
 - tests:
 

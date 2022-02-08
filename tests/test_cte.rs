@@ -740,7 +740,7 @@ fn cte_new_services_format_ACS() {
 }
 
 #[test]
-fn cte_balance_by_service() {
+fn cte_balance_by_srv() {
     let ENERGYDATALIST = get_energydatalist();
     let FP = get_ctefp_peninsula();
     let bal = energy_performance(&ENERGYDATALIST, &FP, TESTKEXP, 1.0).unwrap();
@@ -755,7 +755,7 @@ fn cte_balance_by_service() {
         },
     );
 
-    assert_eq!(result, bal.balance_m2.B_by_service);
+    assert_eq!(result, bal.balance_m2.B_by_srv);
 }
 
 // Tests para demanda renovable de ACS
