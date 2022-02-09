@@ -530,7 +530,33 @@ fn cte_J3_Base_PV_excess_kexp_1() {
 }
 
 #[test]
-fn cte_J4_Base_PV_excess_kexp_0() {
+#[ignore]
+fn cte_J4_cogen_fuel_boiler_kexp_1() {
+    let comps = components_from_file("test_data/ejemploJ4_cogen_fuel_boiler.csv");
+    let FP: Factors = TESTFPJ.parse().unwrap();
+    let bal = energy_performance(&comps, &FP, 1.0, 1.0).unwrap();
+    // EPnren 229, EPtot 215
+    assert!(approx_equal(
+        RenNrenCo2 {
+            ren: 100.0,
+            nren: 0.0,
+            co2: 0.0
+        },
+        bal.balance_m2.we_b
+    ));
+    // EPnren 215, EPtot 215
+    assert!(approx_equal(
+        RenNrenCo2 {
+            ren: 100.0,
+            nren: 0.0,
+            co2: 0.0,
+        },
+        bal.balance_m2.we_a
+    ));
+}
+
+#[test]
+fn cte_J3b_Base_PV_excess_kexp_0() {
     let comps = components_from_file("test_data/ejemploJ3_basePVexcess.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
     let bal = energy_performance(&comps, &FP, 0.0, 1.0).unwrap();

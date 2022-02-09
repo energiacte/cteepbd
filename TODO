@@ -9,6 +9,7 @@
     - compute cogen electricity factors from used energy for GEN service
     - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
     - Describe default method to find used energy from electrical efficiency of cogeneration.
+    - Activate J4_cogen_fuel_boiler test
   - Datos de ZONA completar con EN 52000-1, 12.1 informe
   - Datos de SISTEMA
     - Eficiencias de sistemas (no las calculamos sino que son datos)
@@ -39,7 +40,7 @@
     - Demanda por servicios y total (¿y demanda de referencia si la hay?)
     - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
     - RER_nrb
-      - calcular con wfactors y wfactors.to_nearby()
+      - calcular con wfactors y wfactors.to_nearby()? o Cambiar RenNrenCo2 para tener algún factor más (tot y ren_nrb) -> (ren, nren, tot, ren_nrb, co2)
       - integrar en balance
       - mostrar en salida
     - Emisiones: desglose eléctrico y no eléctrico
