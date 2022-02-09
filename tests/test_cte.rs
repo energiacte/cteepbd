@@ -82,7 +82,6 @@ fn get_ctefp_peninsula() -> Factors {
 
 fn get_energydatalist() -> Components {
     use Carrier::*;
-    use Source::*;
 
     //3 PV BdC_normativo
     Components {
@@ -102,8 +101,7 @@ fn get_energydatalist() -> Components {
                 values: vec![
                     1.13, 1.42, 1.99, 2.84, 4.82, 5.39, 5.67, 5.11, 4.54, 3.40, 2.27, 1.42,
                 ],
-                carrier: ELECTRICIDAD,
-                source: INSITU,
+                source: ProdSource::EL_INSITU,
                 comment: "".into(),
             }),
             Energy::Used(EUsed {
@@ -120,8 +118,7 @@ fn get_energydatalist() -> Components {
                 values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
-                carrier: EAMBIENTE,
-                source: INSITU,
+                source: ProdSource::EAMBIENTE,
                 comment: "".into(),
             }),
         ],
@@ -764,7 +761,7 @@ fn cte_balance_by_srv() {
 #[test]
 fn cte_ACS_demanda_ren_joule_60pv() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,100
-PRODUCCION,INSITU,ELECTRICIDAD,60"
+PRODUCCION,EL_INSITU,60"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -892,7 +889,7 @@ CONSUMO,ACS,SOLAR,60"
 fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
-PRODUCCION,INSITU,ELECTRICIDAD,10"
+PRODUCCION,EL_INSITU,10"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -907,7 +904,7 @@ PRODUCCION,INSITU,ELECTRICIDAD,10"
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_nEPB() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
-PRODUCCION,INSITU,ELECTRICIDAD,10
+PRODUCCION,EL_INSITU,10
 CONSUMO,NEPB,ELECTRICIDAD,40.0"
         .parse::<Components>()
         .unwrap()
@@ -924,7 +921,7 @@ CONSUMO,NEPB,ELECTRICIDAD,40.0"
 fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
-PRODUCCION,COGEN,ELECTRICIDAD,10"
+PRODUCCION,EL_COGEN,10"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -999,13 +996,13 @@ fn new_format_with_system_id() {
     2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC 2
     2,CONSUMO,CAL,EAMBIENTE,300 # BdC 2
     # Producción fotovoltaica in situ
-    1,PRODUCCION,INSITU,ELECTRICIDAD,200 # PV
-    2,PRODUCCION,INSITU,ELECTRICIDAD,100 # PV
-    3,PRODUCCION,INSITU,ELECTRICIDAD,15 # PV
+    1,PRODUCCION,EL_INSITU,200 # PV
+    2,PRODUCCION,EL_INSITU,100 # PV
+    3,PRODUCCION,EL_INSITU,15 # PV
     # Producción de energía ambiente dada por el usuario
-    0,PRODUCCION,INSITU,EAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
-    1,PRODUCCION,INSITU,EAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-    2,PRODUCCION,INSITU,EAMBIENTE,100 # Producción declarada de sistema sin consumo de ese servicio (no reduce energía a compensar)
+    0,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+    1,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
+    2,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema sin consumo de ese servicio (no reduce energía a compensar)
     # Compensación de energía ambiente a completar por CteEPBD"
         .parse::<Components>()
         .unwrap();

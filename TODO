@@ -4,16 +4,13 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
-  - add ProdSources EAMBIENTE, EL_INSITU, EL_COGEN & SOLAR and eliminate carrier in EProd elements
-    - deduce carrier for wfactor
-    - use carrier to add same carrier sources
-  - pensar posibilidad de vector electricidad generada en las cercanías ELECTR_PROXs
+  - pensar posibilidad de vector electricidad generada en las cercanías EL_PROXIMIDAD
     - sería de origen en la RED?
     - ver relación con producción INSITU
     - no tiene la interacción de la producción insitu con f_match_t ni con el almacenamiento en baterías.
-  - compute cogen electricity factors from used energy for GEN service
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
+    - compute cogen electricity factors from used energy for GEN service
     - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
     - Describe default method to find used energy from electrical efficiency of cogeneration.
   - Datos de ZONA completar con EN 52000-1, 12.1 informe

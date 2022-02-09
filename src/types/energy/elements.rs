@@ -28,7 +28,7 @@ use std::{fmt, str};
 use serde::{Deserialize, Serialize};
 
 use super::{EAux, EOut, EProd, EUsed};
-use crate::types::{Carrier, HasValues, Service, Source};
+use crate::types::{Carrier, HasValues, Service, Source, ProdSource};
 
 /// Componentes de energía generada, consumida, auxiliar o saliente (entregada/absorbida)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,7 +75,7 @@ impl Energy {
     /// Get carrier for this component
     pub fn carrier(&self) -> Carrier {
         match self {
-            Energy::Prod(e) => e.carrier,
+            Energy::Prod(e) => e.source.into(),
             Energy::Used(e) => e.carrier,
             Energy::Aux(_) => Carrier::ELECTRICIDAD,
             Energy::Out(_) => unreachable!(),
@@ -85,7 +85,7 @@ impl Energy {
     /// Get production source (INSITU / COGEN) for this component
     pub fn source(&self) -> Source {
         match self {
-            Energy::Prod(e) => e.source,
+            Energy::Prod(e) => e.source.into(),
             Energy::Used(_) | Energy::Aux(_) | Energy::Out(_) => {
                 unreachable!()
             }
@@ -175,7 +175,8 @@ impl Energy {
     /// Is this energy of the onsite produced kind?
     pub fn is_onsite_pr(&self) -> bool {
         match self {
-            Energy::Prod(e) => e.source == Source::INSITU,
+            // TODO: Revisar esto...
+            Energy::Prod(e) => e.source != ProdSource::EL_COGEN,
             Energy::Used(_) => false,
             Energy::Aux(_) => false,
             Energy::Out(_) => false,
@@ -185,7 +186,7 @@ impl Energy {
     /// Is this energy of the cogeneration produced kind?
     pub fn is_cogen_pr(&self) -> bool {
         match self {
-            Energy::Prod(e) => e.source == Source::COGEN,
+            Energy::Prod(e) => e.source == ProdSource::EL_COGEN,
             Energy::Used(_) => false,
             Energy::Aux(_) => false,
             Energy::Out(_) => false,

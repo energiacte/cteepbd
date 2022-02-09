@@ -203,15 +203,13 @@ impl AsCteXml for EProd {
     fn to_xml(&self) -> String {
         let Self {
             id,
-            carrier,
             source,
             values,
             comment,
         } = self;
         format!(
-            "<Produccion><Id>{}</Id><Vector>{}</Vector><Origen>{}</Origen><Valores>{}</Valores><Comentario>{}</Comentario></Produccion>",
+            "<Produccion><Id>{}</Id><Origen>{}</Origen><Valores>{}</Valores><Comentario>{}</Comentario></Produccion>",
             id,
-            carrier,
             source,
             <Self as AsCteXml>::format_values_2f(values),
             <Self as AsCteXml>::escape_xml(comment)

@@ -96,34 +96,59 @@ impl std::fmt::Display for Carrier {
 
 // -------------------- Source
 
-/// Fuente de origen de la energía
+/// Fuente de origen de la energía producida
 #[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Source {
-    /// Grid source
-    RED,
-    /// On site generation source
-    INSITU,
-    /// Cogeneration source
-    COGEN,
+pub enum ProdSource {
+    /// On site generated electricity
+    EL_INSITU,
+    /// On site cogenerated electricity
+    EL_COGEN,
+    /// On site solar thermal
+    TERMOSOLAR,
+    /// On site ambient heat
+    EAMBIENTE
 }
 
-impl str::FromStr for Source {
+impl str::FromStr for ProdSource {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<Source, Self::Err> {
+    fn from_str(s: &str) -> Result<ProdSource, Self::Err> {
         match s {
-            "RED" => Ok(Source::RED),
-            "INSITU" => Ok(Source::INSITU),
-            "COGEN" => Ok(Source::COGEN),
+            "EL_INSITU" => Ok(ProdSource::EL_INSITU),
+            "EL_COGEN" => Ok(ProdSource::EL_COGEN),
+            "TERMOSOLAR" => Ok(ProdSource::TERMOSOLAR),
+            "EAMBIENTE" => Ok(ProdSource::EAMBIENTE),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
 }
 
-impl std::fmt::Display for Source {
+impl std::fmt::Display for ProdSource {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl std::convert::From<ProdSource> for Carrier {
+    fn from(value: ProdSource) -> Self {
+        match value {
+            ProdSource::EL_INSITU => Carrier::ELECTRICIDAD,
+            ProdSource::EL_COGEN => Carrier::ELECTRICIDAD,
+            ProdSource::TERMOSOLAR => Carrier::SOLAR,
+            ProdSource::EAMBIENTE => Carrier::EAMBIENTE,
+        }
+    }
+}
+
+impl std::convert::From<ProdSource> for Source {
+    fn from(value: ProdSource) -> Self {
+        match value {
+            ProdSource::EL_INSITU => Source::INSITU,
+            ProdSource::EL_COGEN => Source::COGEN,
+            ProdSource::TERMOSOLAR => Source::INSITU,
+            ProdSource::EAMBIENTE => Source::INSITU,
+        }
     }
 }
 
@@ -244,6 +269,39 @@ impl Default for Service {
 }
 
 // ================= Weighting Factors =============
+
+// -------------------- Source
+
+/// Fuente de origen de la energía
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Source {
+    /// Grid source
+    RED,
+    /// On site generation source
+    INSITU,
+    /// Cogeneration source
+    COGEN,
+}
+
+impl str::FromStr for Source {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> Result<Source, Self::Err> {
+        match s {
+            "RED" => Ok(Source::RED),
+            "INSITU" => Ok(Source::INSITU),
+            "COGEN" => Ok(Source::COGEN),
+            _ => Err(EpbdError::ParseError(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for Source {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 // -------------------- Dest
 

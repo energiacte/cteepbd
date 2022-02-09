@@ -26,7 +26,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::EpbdError;
-use crate::types::{Carrier, HasValues, Source};
+use crate::types::{HasValues, ProdSource};
 
 // -------------------- Produced Energy Component
 // Define basic Produced Energy Component type
@@ -44,11 +44,9 @@ pub struct EProd {
     /// Negative numbers should represent ficticious elements (such as reference systems)
     /// A value greater than 0 identies a specific energy generation system
     pub id: i32,
-    /// Carrier name
-    pub carrier: Carrier,
     /// Energy source
-    /// - `INSITU` or `COGEN` for generated energy component types
-    pub source: Source,
+    /// - `ELINSITU | EL_COGEN | TERMOSOLAR | EAMBIENTE` for generated energy component types
+    pub source: ProdSource,
     /// List of produced energy values, one value for each time step. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
@@ -76,8 +74,8 @@ impl std::fmt::Display for EProd {
         };
         write!(
             f,
-            "{}, PRODUCCION, {}, {}, {}{}",
-            self.id, self.source, self.carrier, valuelist, comment
+            "{}, PRODUCCION, {}, {}{}",
+            self.id, self.source, valuelist, comment
         )
     }
 }
@@ -86,16 +84,13 @@ impl std::str::FromStr for EProd {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> Result<EProd, Self::Err> {
-        use self::Carrier::{EAMBIENTE, ELECTRICIDAD, SOLAR};
-        use self::Source::*;
-
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (carrier + type + source + 1 value)
-        if items.len() < 4 {
+        // Minimal possible length (type + source + 1 value)
+        if items.len() < 3 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
@@ -112,24 +107,10 @@ impl std::str::FromStr for EProd {
             )));
         }
 
-        let source: Source = items[baseidx + 1].parse()?;
-        let carrier: Carrier = items[baseidx + 2].parse()?;
-
-        // Check coherence of ctype and source
-        let source_belongs_to_type = match source {
-            INSITU => carrier == ELECTRICIDAD || carrier == EAMBIENTE || carrier == SOLAR,
-            COGEN => carrier == ELECTRICIDAD,
-            _ => false,
-        };
-        if !source_belongs_to_type {
-            return Err(EpbdError::ParseError(format!(
-                "Componente de energía generada con origen inconsistente: {}",
-                s
-            )));
-        }
+        let source = items[baseidx + 1].parse()?;
 
         // Collect energy values from the service field on
-        let values = items[baseidx + 3..]
+        let values = items[baseidx + 2..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()
@@ -139,7 +120,6 @@ impl std::str::FromStr for EProd {
 
         Ok(EProd {
             id,
-            carrier,
             source,
             values,
             comment,
@@ -159,15 +139,14 @@ mod tests {
         // produced energy component
         let component2 = EProd {
             id: 0,
-            carrier: "ELECTRICIDAD".parse().unwrap(),
-            source: "INSITU".parse().unwrap(),
+            source: "EL_INSITU".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
             comment: "Comentario prod 1".into(),
         };
-        let component2str = "0, PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
-        let component2strlegacy = "PRODUCCION, INSITU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let component2str = "0, PRODUCCION, EL_INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let component2strlegacy = "PRODUCCION, EL_INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
         assert_eq!(component2.to_string(), component2str);
 
         // roundtrip building from/to string
