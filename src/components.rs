@@ -33,8 +33,8 @@ Los componentes modelizan el uso y producción de energía en el periodo de cál
 
 Hipótesis:
 
-- Se completa automáticamente el consumo de energía procedente del medioambiente con una producción
-- No se permite la producción de electricidad a usos concretos (se asume NDEF) (XXX: se podría eliminar)
+- Se completa automáticamente el consumo de energía procedente del medioambiente o termosolar con una producción
+- El reparto de la electricidad generada es proporcional a los consumos eléctricos
 */
 
 use std::{collections::HashSet, fmt, str};
@@ -173,7 +173,6 @@ impl Components {
     ///
     /// - Asegura que la energía EAMBIENTE consumida tiene su producción correspondiente
     /// - Asegura que la energía TERMOSOLAR consumida tiene su producción correspondiente
-    /// - Asegura que la energía eléctrica producida no tiene un uso que no sea NDEF
     ///
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
     pub fn normalize(mut self) -> Self {
@@ -190,10 +189,9 @@ impl Components {
     /// 3. Reparte las producciones eléctricas en proporción al consumo del servicio elegido respecto al consumo EPB
     ///
     /// *Nota*: los componentes deben estar normalizados (ver método normalize) para asegurar que:
-    /// - los consumos de EAMBIENTE de un servicio ya están equilibrados
-    /// - las producciones eléctricas no pueden ser asignadas a un servicio (siempre son a NDEF)
+    /// - los consumos de EAMBIENTE o TERMOSOLAR de un servicio ya están equilibrados
     /// - la producción eléctrica o de energía ambiente no distingue entre sistemas y
-    ///   se considera que siempre forman un pool con reparto según consumos.
+    ///   se considera que siempre forman un pool con reparto proporcional a los consumos.
     #[allow(non_snake_case)]
     pub fn filter_by_epb_service(&self, service: Service) -> Self {
         let cdata = self.cdata.iter(); // Componentes
@@ -390,7 +388,7 @@ mod tests {
 0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 0, CONSUMO, CAL, EAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
 
-    // Se han puesto las producciones eléctricas a servicio NDEF y compensado consumos de EAMBIENTE
+    // Reparto de producciones eléctricas y compensación de consumos de EAMBIENTE
     const TCOMPSRES1: &str = "#META CTE_AREAREF: 100.5
 0, PRODUCCION, EL_INSITU, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
 0, CONSUMO, REF, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11

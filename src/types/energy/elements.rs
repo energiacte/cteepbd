@@ -28,7 +28,7 @@ use std::{fmt, str};
 use serde::{Deserialize, Serialize};
 
 use super::{EAux, EOut, EProd, EUsed};
-use crate::types::{Carrier, HasValues, Service, Source, ProdSource};
+use crate::types::{Carrier, HasValues, ProdSource, Service, Source};
 
 /// Componentes de energía generada, consumida, auxiliar o saliente (entregada/absorbida)
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -4,6 +4,11 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
+  - Remove NDEF use
+    - Import AUX uses and distribute among services for the same system proportionally to their Q_out (SALIDA) for all EPB services
+    - AUX is always for EPB services (remove is_epb => e.service.is_epb() / is_nepb())
+    - Initially import Aux as AuxTemp (no service) and convert to Aux + service in normalization
+    - Error if no Q_out is defined
   - rename RED1 to RED_CAL, RED2 to RED_REF
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
@@ -16,8 +21,8 @@
     - Eficiencias de sistemas (no las calculamos sino que son datos)
     - Ver para qué sistemas (cal, ref, acs, ven?, ??)
     - Indicar qué tipo de sistema es
-    - SISTEMA, GEN, id, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
-    - SISTEMA, NGEN (DIS + EM), id, ???
+    - id, SISTEMA, GEN, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
+    - id, SISTEMA, NGEN (DIS + EM), ???
   - Implement
     - load matching factor computation ((in compute_used_produced)
     - battery support (in compute_used_produced)
@@ -37,6 +42,7 @@
       - ¿Whole building efficiencies by service (non renewable primary energy)?
     - Fraction of energy use covered by renewable sources, by service and by system (id)
       - Calcular % de cobertura renovable (RER_nrb, RER_dst) (consumo EF y demanda) para los distintos servicios
+    - Consumos de sistemas ficticios (id<=0?) y reales (id>0)
     - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
     - Demanda por servicios y total (¿y demanda de referencia si la hay?)
     - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)

@@ -39,7 +39,7 @@ use crate::types::{HasValues, Service};
 ///
 /// Energía entregada o absorbida por los sistemas pertenecientes al subsistema de generación del edificio, E_X_gen_i_out
 ///
-/// Se serializa como: `id, GEN, CARGA, servicio, vals... # comentario`
+/// Se serializa como: `id, SALIDA, servicio, vals... # comentario`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EOut {
     /// System id
@@ -93,12 +93,12 @@ impl str::FromStr for EOut {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (id + GEN + SALIDA + 1 value)
+        // Minimal possible length (id + SALIDA + servicio + 1 value)
         if items.len() < 4 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        // Check GEN and CARGA marker fields;
+        // Check SALIDA marker field;
         if items[1] != "SALIDA" {
             return Err(EpbdError::ParseError(format!(
                 "No se reconoce el formato como elemento de Salida del sistema: {}",
