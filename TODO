@@ -10,9 +10,9 @@
     - Initially import Aux as AuxTemp (no service) and convert to Aux + service in normalization
     - Error if no Q_out is defined
   - rename RED1 to RED_CAL, RED2 to RED_REF
-  - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
+  - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
-    - compute cogen electricity factors from used energy for GEN service
+    - compute cogen electricity factors from used energy for COGEN service
     - EUsed to attribute carrier use to electricity cogeneration. Check impact in all other computations (could be used to find cogeneration factors).
     - Describe default method to find used energy from electrical efficiency of cogeneration.
     - Activate J4_cogen_fuel_boiler test

@@ -162,12 +162,22 @@ impl Energy {
         }
     }
 
-    /// Is this of kind UsedEnergy and destination is a non EPB service (but not GEN)?
+    /// Is this of kind UsedEnergy and destination is a non EPB service (but not COGEN)?
     pub fn is_nepb_use(&self) -> bool {
         match self {
             Energy::Prod(_) => false,
             Energy::Used(e) => e.service.is_nepb(),
             Energy::Aux(e) => e.service.is_nepb(),
+            Energy::Out(_) => false,
+        }
+    }
+
+    /// Is this of kind UsedEnergy and destination is cogeneration (COGEN)?
+    pub fn is_cogen_use(&self) -> bool {
+        match self {
+            Energy::Prod(_) => false,
+            Energy::Used(e) => e.service.is_cogen(),
+            Energy::Aux(_) => false,
             Energy::Out(_) => false,
         }
     }

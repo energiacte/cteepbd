@@ -20,7 +20,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 - Cambios en el componente energético para energía usada (CONSUMO)
   - Añadido un identificador (un número entero) del sistema asociado al componente (id)
   - Eliminación de los subtipos EPB, NEPB
-  - Los usos no EPB se identifican usando un nuevo servicio llamado NEPB. El resto, salvo el GEN, son siempre servicios EPB.
+  - Los usos no EPB se identifican usando un nuevo servicio llamado NEPB. El resto, salvo el COGEN, son siempre servicios EPB.
 - Cambios en el componente energético para energía producida (PRODUCCION)
   - Añadido un identificador (un número entero) del sistema asociado al componente (id)
   - Se elimina el vector energético
@@ -50,7 +50,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 - Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en EAMBIENTE y TERMOSOLAR)
 - Nuevo servicio NEPB
   - Para consumos destinados a usos no EPB
-- Nuevo servicio GEN
+- Nuevo servicio COGEN
   - Para consumos destinados a la producción eléctrica por cogeneración
   - Estos consumos no pertenece ni a usos EPB ni a usos no EPB
   - Permite el cálculo de los factores de paso de la electricidad cogenerada
