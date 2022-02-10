@@ -4,6 +4,7 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
+  - rename RED1 to RED_CAL, RED2 to RED_REF
   - define GEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - compute cogen electricity factors from used energy for GEN service

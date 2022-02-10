@@ -66,7 +66,7 @@ pub const CTE_NRBY: [Carrier; 6] = [
     Carrier::RED1,
     Carrier::RED2,
     Carrier::EAMBIENTE,
-    Carrier::SOLAR,
+    Carrier::TERMOSOLAR,
 ]; // Ver B.23. Solo biomasa sólida
 
 /// Factores de paso definibles por el usuario usados por defecto
@@ -96,8 +96,8 @@ pub static CTE_LOCWF_RITE2014: Lazy<HashMap<&'static str, Factors>> = Lazy::new(
         wdata: vec![
             Factor::new(EAMBIENTE, RED, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para suministrar energía ambiente (red de suministro ficticia)"),
             Factor::new(EAMBIENTE, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para generar in situ energía ambiente (vector renovable)"),
-            Factor::new(SOLAR, RED, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para suministrar energía solar térmica (red de suministro ficticia)"),
-            Factor::new(SOLAR, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para generar in situ energía solar térmica (vector renovable)"),
+            Factor::new(TERMOSOLAR, RED, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para suministrar energía solar térmica (red de suministro ficticia)"),
+            Factor::new(TERMOSOLAR, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para generar in situ energía solar térmica (vector renovable)"),
             Factor::new(BIOCARBURANTE, RED, SUMINISTRO, A, (1.028, 0.085, 0.018).into(), "Recursos usados para suministrar el vector desde la red (Biocarburante = biomasa densificada (pellets))"),
             Factor::new(BIOMASA, RED, SUMINISTRO, A, (1.003, 0.034, 0.018).into(), "Recursos usados para suministrar el vector desde la red"),
             Factor::new(BIOMASADENSIFICADA, RED, SUMINISTRO, A, (1.028, 0.085, 0.018).into(), "Recursos usados para suministrar el vector desde la red"),
@@ -228,7 +228,7 @@ fn get_fpA_del_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdE
 
 #[allow(non_snake_case)]
 /// Demanda total y renovable de los consumos de ACS cubierto por vectores nearby que no sean biomasa
-/// (EAMBIENTE, RED1, RED2 o SOLAR)
+/// (EAMBIENTE, RED1, RED2 o TERMOSOLAR)
 ///
 /// Podemos obtener la parte renovable, con la fracción que supone su factor de paso ren respecto al total y
 /// suponiendo que la conversión de consumo a demanda es con rendimiento 1.0 (de modo que demanda = consumo para estos vectores)

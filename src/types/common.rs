@@ -61,7 +61,7 @@ pub enum Carrier {
     /// Generic energy carrier 2
     RED2,
     /// Thermal energy from solar collectors
-    SOLAR,
+    TERMOSOLAR,
 }
 
 impl str::FromStr for Carrier {
@@ -80,7 +80,7 @@ impl str::FromStr for Carrier {
             "GLP" => Ok(Carrier::GLP),
             "RED1" => Ok(Carrier::RED1),
             "RED2" => Ok(Carrier::RED2),
-            "SOLAR" => Ok(Carrier::SOLAR),
+            "TERMOSOLAR" => Ok(Carrier::TERMOSOLAR),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -135,7 +135,7 @@ impl std::convert::From<ProdSource> for Carrier {
         match value {
             ProdSource::EL_INSITU => Carrier::ELECTRICIDAD,
             ProdSource::EL_COGEN => Carrier::ELECTRICIDAD,
-            ProdSource::TERMOSOLAR => Carrier::SOLAR,
+            ProdSource::TERMOSOLAR => Carrier::TERMOSOLAR,
             ProdSource::EAMBIENTE => Carrier::EAMBIENTE,
         }
     }

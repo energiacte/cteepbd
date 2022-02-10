@@ -41,13 +41,13 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Incluye un identificador (id) de equipo que permite vincularlos a los componentes energéticos
   - Permite señalar los equipos de referencia (valores id negativos)
   - TODO: formato a definir
-- Nuevo vector energético SOLAR
+- Nuevo vector energético TERMOSOLAR
   - Identifica la energía solar térmica procedente de captadores
-  - La compensación automática de consumos de SOLAR se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
+  - La compensación automática de consumos de TERMOSOLAR se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
 - Nuevo vector energético EAMBIENTE
   - Identifica la energía ambiente capturada por las bombas de calor
   - La compensación automática de consumos de EAMBIENTE se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
-- Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en EAMBIENTE y SOLAR)
+- Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en EAMBIENTE y TERMOSOLAR)
 - Nuevo servicio NEPB
   - Para consumos destinados a usos no EPB
 - Nuevo servicio GEN

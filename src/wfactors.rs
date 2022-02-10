@@ -189,9 +189,9 @@ impl Factors {
             "Recursos usados para obtener energía ambiente (red ficticia)",
         );
 
-        // Asegura que existe SOLAR, INSITU, SUMINISTRO, A, 1.0, 0.0
+        // Asegura que existe TERMOSOLAR, INSITU, SUMINISTRO, A, 1.0, 0.0
         self.update_wfactor(
-            SOLAR,
+            TERMOSOLAR,
             INSITU,
             SUMINISTRO,
             A,
@@ -199,9 +199,9 @@ impl Factors {
             "Recursos usados para obtener energía solar térmica",
         );
 
-        // Asegura que existe SOLAR, RED, SUMINISTRO, A, 1.0, 0.0
+        // Asegura que existe TERMOSOLAR, RED, SUMINISTRO, A, 1.0, 0.0
         self.update_wfactor(
-            SOLAR,
+            TERMOSOLAR,
             RED,
             SUMINISTRO,
             A,
@@ -251,7 +251,7 @@ impl Factors {
             (Carrier::ELECTRICIDAD, Source::INSITU),
             (Carrier::ELECTRICIDAD, Source::COGEN),
             (Carrier::EAMBIENTE, Source::INSITU),
-            (Carrier::SOLAR, Source::INSITU),
+            (Carrier::TERMOSOLAR, Source::INSITU),
         ];
         for (c, s) in &exp_carriers {
             if *s != Source::COGEN {
@@ -553,8 +553,8 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para sum
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
 EAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía ambiente
 EAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía ambiente (red ficticia)
-SOLAR, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica
-SOLAR, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica (red ficticia)
+TERMOSOLAR, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica
+TERMOSOLAR, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica (red ficticia)
 ELECTRICIDAD, COGEN, SUMINISTRO, A, 0.000, 0.000, 0.000 # Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)
 ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red\nELECTRICIDAD, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
 ELECTRICIDAD, INSITU, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
@@ -567,10 +567,10 @@ EAMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir
 EAMBIENTE, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
 EAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
 EAMBIENTE, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
-SOLAR, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
-SOLAR, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
-SOLAR, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
-SOLAR, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
+TERMOSOLAR, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
+TERMOSOLAR, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
+TERMOSOLAR, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
+TERMOSOLAR, INSITU, A_NEPB, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
 RED1, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 1 (definible por el usuario)
 RED2, RED, SUMINISTRO, A, 0.000, 1.300, 0.300 # Recursos usados para suministrar energía de la red de distrito 2 (definible por el usuario)";
         let tcomps = "CONSUMO, NDEF, ELECTRICIDAD, 1 # Solo consume electricidad de red"

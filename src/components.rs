@@ -172,14 +172,14 @@ impl Components {
     /// Corrige los componentes de consumo y producción
     ///
     /// - Asegura que la energía EAMBIENTE consumida tiene su producción correspondiente
-    /// - Asegura que la energía SOLAR consumida tiene su producción correspondiente
+    /// - Asegura que la energía TERMOSOLAR consumida tiene su producción correspondiente
     /// - Asegura que la energía eléctrica producida no tiene un uso que no sea NDEF
     ///
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
     pub fn normalize(mut self) -> Self {
         // Compensa consumos no respaldados por producción
         self.compensate_cr_use(Carrier::EAMBIENTE);
-        self.compensate_cr_use(Carrier::SOLAR);
+        self.compensate_cr_use(Carrier::TERMOSOLAR);
         self
     }
 
@@ -295,10 +295,10 @@ impl Components {
 
     /// Compensa los consumos declarados de energía insitu no equilibrada por producción
     ///
-    /// Afecta a los vectores EAMBIENTE y SOLAR
+    /// Afecta a los vectores EAMBIENTE y TERMOSOLAR
     ///
     /// cuando el consumo de esos vectores supera la producción.
-    /// Evita tener que declarar las producciones de EAMBIENTE y SOLAR, basta con los consumos.
+    /// Evita tener que declarar las producciones de EAMBIENTE y TERMOSOLAR, basta con los consumos.
     /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción entre sistemas.
     ///
     /// Esto significa que, para cada sistema (j=id) y servicio a servicio:
@@ -362,8 +362,8 @@ impl Components {
 
                 let source = match carrier {
                     Carrier::EAMBIENTE => ProdSource::EAMBIENTE,
-                    Carrier::SOLAR => ProdSource::TERMOSOLAR,
-                    _ => panic!("Compensación de vector inesperada, distinta de EAMBIENTE o SOLAR")
+                    Carrier::TERMOSOLAR => ProdSource::TERMOSOLAR,
+                    _ => panic!("Compensación de vector inesperada, distinta de EAMBIENTE o TERMOSOLAR")
                 };
 
                 // Si hay desequilibrio agregamos un componente de producción

@@ -20,8 +20,8 @@ GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
 EAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 EAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
-SOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
-SOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 ";
 
 const TESTFPJ7: &str = "vector, fuente, uso, step, ren, nren, co2
@@ -58,8 +58,8 @@ BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018
 
 EAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 EAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
-SOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
-SOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 
 ELECTRICIDAD, COGEN, SUMINISTRO,   A, 0.0, 0.0, 0.0
 ELECTRICIDAD, COGEN, A_RED, A, 0.0, 2.5, 0.82
@@ -800,7 +800,7 @@ PRODUCCION,EL_INSITU,60"
 #[test]
 fn cte_ACS_demanda_ren_gn_60pst() {
     let comps = "CONSUMO,ACS,GASNATURAL,44.44
-CONSUMO,ACS,SOLAR,60"
+CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -813,7 +813,7 @@ CONSUMO,ACS,SOLAR,60"
 #[test]
 fn cte_ACS_demanda_ren_biomasa_10PST_100() {
     let comps = "CONSUMO,ACS,BIOMASA,100
-CONSUMO,ACS,SOLAR,10"
+CONSUMO,ACS,TERMOSOLAR,10"
         .parse::<Components>()
         .unwrap()
         .normalize();
@@ -901,7 +901,7 @@ CONSUMO,ACS,RED2,50"
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
-CONSUMO,ACS,SOLAR,60"
+CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
         .unwrap()
         .normalize();
