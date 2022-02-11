@@ -205,7 +205,10 @@ impl Energy {
 
     /// Is this a production or use of the electricity carrier?
     pub fn is_electricity(&self) -> bool {
-        self.carrier() == Carrier::ELECTRICIDAD
+        match self {
+            Energy::Aux(_) => true,
+            _ => self.carrier() == Carrier::ELECTRICIDAD
+        }
     }
 
     /// Has this component this service?
