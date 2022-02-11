@@ -169,47 +169,41 @@ fn balance_for_carrier(
 /// - Implementar factor de reparto de carga f_match_t
 #[allow(non_snake_case)]
 fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, Vec<f32>) {
-    // We know all carriers have the same timesteps (see FromStr for Components)
+    // We know all carriers have the same time steps (see FromStr for Components)
     let num_steps = cr_list[0].num_steps();
 
     let mut E_EPus_cr_t = vec![0.0; num_steps];
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
     let mut E_pr_cr_j_t = HashMap::<Source, Vec<f32>>::new();
     for c in &cr_list {
-        if c.is_used() || c.is_aux() {
-            if c.is_epb_use() {
-                E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, c.values())
-            } else {
-                E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, c.values())
-            }
-        } else if c.is_generated() {
+        if c.is_generated() {
             E_pr_cr_j_t
                 .entry(c.source())
                 .and_modify(|e| *e = vecvecsum(e, c.values()))
                 .or_insert_with(|| c.values().to_owned());
+        } else if c.is_epb_use() {
+            E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, c.values())
+        } else {
+            // Non EPB use
+            E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, c.values())
         }
     }
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
     let E_nEPus_cr_an = vecsum(&E_nEPus_cr_t);
 
-    let prod_sources: Vec<Source> = E_pr_cr_j_t.keys().cloned().collect();
-
-    // Generation from each source for all timesteps
-    let mut E_pr_cr_j_an = HashMap::<Source, f32>::new();
-    for source in &prod_sources {
-        E_pr_cr_j_an.insert(*source, vecsum(&E_pr_cr_j_t[source]));
-    }
-
-    // Generation for this carrier from all sources j
+    // Generation for this carrier from all sources j at each timestep
     let mut E_pr_cr_t = vec![0.0; num_steps];
-    for source in &prod_sources {
-        E_pr_cr_t = vecvecsum(&E_pr_cr_t, &E_pr_cr_j_t[source])
+    // Generation for this carrier from each source for all time steps
+    let mut E_pr_cr_j_an = HashMap::<Source, f32>::new();
+    for (source, prod_cr_j) in &E_pr_cr_j_t {
+        E_pr_cr_t = vecvecsum(&E_pr_cr_t, prod_cr_j);
+        E_pr_cr_j_an.insert(*source, vecsum(prod_cr_j));
     }
     let E_pr_cr_an = vecsum(&E_pr_cr_t);
 
     // Load matching factor with constant value == 1 (11.6.2.4)
     // TODO: implement optional computation of f_match_t (using function in B.32):
-    // x = E_pr_cr_t / E_EPus_cr_t (for each timestep)
+    // x = E_pr_cr_t / E_EPus_cr_t (at each time step)
     // f_match_t = if x < 0 { 1.0 } else { (x + 1/x - 1) / (x + 1 / n) };
     let f_match_t = vec![1.0; num_steps];
 
@@ -220,11 +214,11 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
     // Computation without priority (9.6.6.2.4)
     // TODO: implement computation using priorities (9.6.62.4)
     let mut E_pr_cr_j_used_EPus_t = HashMap::<Source, Vec<f32>>::new();
-    for source in &prod_sources {
+    for (source, prod_cr_j_an) in &E_pr_cr_j_an {
         // * Fraction of produced energy from source j (formula 14)
         // We have grouped by source type (it could be made by generator i, for each one of them)
         let f_pr_cr_j = if E_pr_cr_an > 1e-3 {
-            E_pr_cr_j_an[source] / E_pr_cr_an
+            prod_cr_j_an / E_pr_cr_an
         } else {
             0.0
         };
@@ -277,12 +271,12 @@ fn compute_exported_delivered(
         .unwrap_or_else(|| vec![0.0_f32; E_del_cr_t.len()]);
     let E_del_cr_onsite_an = vecsum(&E_del_cr_onsite_t);
     let mut E_exp_cr_j_t = HashMap::<Source, Vec<f32>>::new();
-    for (source, values) in &prod.by_src_t {
-        E_exp_cr_j_t.insert(*source, vecvecdif(values, &prod.used_epus_by_src_t[source]));
+    for (source, prod_src) in &prod.by_src_t {
+        E_exp_cr_j_t.insert(*source, vecvecdif(prod_src, &prod.used_epus_by_src_t[source]));
     }
     let mut E_exp_cr_j_an = HashMap::<Source, f32>::new();
-    for (source, values) in &E_exp_cr_j_t {
-        E_exp_cr_j_an.insert(*source, vecsum(values));
+    for (source, exp_src) in &E_exp_cr_j_t {
+        E_exp_cr_j_an.insert(*source, vecsum(exp_src));
     }
     let E_exp_cr_an = E_exp_cr_used_nEPus_an + E_exp_cr_grid_an;
 
@@ -450,6 +444,7 @@ fn distribute_by_srv(
 /// Calcula fracción de cada uso EPB para un vector energético i
 ///
 /// Compute share of each EPB use for a given carrier i
+/// f_us_cr = (used energy for service_i) / (used energy for all services)
 ///
 /// It uses the reverse calculation method (E.3.6)
 /// * `cr_list` - components list for the selected carrier i
