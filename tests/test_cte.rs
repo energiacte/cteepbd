@@ -42,24 +42,33 @@ ELECTRICIDAD, COGEN, A_RED, B, 0.5, 2.0, 0.42
 ";
 
 const TESTFP: &str = "vector, fuente, uso, step, ren, nren
+# Vectores sin exportación
+GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 
+BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
+BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018
+
+# Vectores con exportación
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
-
 ELECTRICIDAD, INSITU, SUMINISTRO,   A, 1.0, 0.0, 0.0
 ELECTRICIDAD, INSITU, A_RED, A, 1.0, 0.0, 0.0
 ELECTRICIDAD, INSITU, A_NEPB, A, 1.0, 0.0, 0.0
 ELECTRICIDAD, INSITU, A_RED, B, 0.5, 2.0, 0.42
 ELECTRICIDAD, INSITU, A_NEPB, B, 0.5, 2.0, 0.42
 
-GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
-
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018
-
-EAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 EAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
-TERMOSOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
+EAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
+EAMBIENTE, INSITU, A_RED,  A, 1.0, 0.0, 0.0
+EAMBIENTE, INSITU, A_NEPB,  A, 1.0, 0.0, 0.0
+EAMBIENTE, INSITU, A_RED,  B, 1.0, 0.0, 0.0
+EAMBIENTE, INSITU, A_NEPB,  B, 1.0, 0.0, 0.0
+
 TERMOSOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, INSITU, A_RED,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, INSITU, A_NEPB,  A, 1.0, 0.0, 0.0
+TERMOSOLAR, INSITU, A_RED,  B, 1.0, 0.0, 0.0
+TERMOSOLAR, INSITU, A_NEPB,  B, 1.0, 0.0, 0.0
 
 ELECTRICIDAD, COGEN, SUMINISTRO,   A, 0.0, 0.0, 0.0
 ELECTRICIDAD, COGEN, A_RED, A, 0.0, 2.5, 0.82
@@ -1014,7 +1023,7 @@ fn cte_ACS_demanda_ren_excluye_aux() {
 /// La producción declarada de TERMOSOLAR y EAMBIENTE solo se imputa a su sistema (id) si tiene consumo
 /// El consumo no declarado para un sistema se completa automáticamente
 #[test]
-fn new_format_with_system_id() {
+fn global_test_1() {
     let comps = "# Usos generales no , id 0
     0,CONSUMO,NEPB,ELECTRICIDAD,10 # Ascensores
     0,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
@@ -1037,6 +1046,19 @@ fn new_format_with_system_id() {
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let bal = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
+    
+    // Resultados globales
+
+    // Paso A
+    assert!(approx_equal(
+        RenNrenCo2 {
+            ren: 7.6,
+            nren: 0.0,
+            co2: 0.0,
+        },
+        bal.balance_m2.we_a
+    ));
+    // Paso B
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 7.625,
@@ -1045,14 +1067,48 @@ fn new_format_with_system_id() {
         },
         bal.balance_m2.we_b
     ));
+
+    // println!("{:?}", bal.balance.prod_by_cr);
+    // println!("{:?}", bal.balance.prod_by_src);
+    // println!("{:?}", bal.balance.del_grid_by_cr);
+    // println!("{:?}", bal.balance.used_epus_by_cr);
+    // Prod: EAMBIENTE: 100 + 100 + 100 + 250 (autocompletados) + EL: 15+200+100
+    assert_eq!("865.000", format!("{:.3}", bal.balance.prod));
+    // Exp 100 de EAMBIENTE + 5 de ELECTRICIDAD
+    assert_eq!("105.000", format!("{:.3}", bal.balance.exp));
+    // Suministrada: 0, ya que todo se cubre con energía in situ
+    assert_eq!("0.000", format!("{:.3}", bal.balance.del_grid));
+    // Results by service for all carriers
+    assert_eq!(
+        "505.000",
+        format!("{:.3}", bal.balance.used_epus_by_srv[&Service::CAL])
+    );
+    assert_eq!(
+        "255.000",
+        format!("{:.3}", bal.balance.used_epus_by_srv[&Service::ACS])
+    );
+    assert_eq!(
+        "{ ren: 506.653, nren: -6.613, co2: -1.389 }",
+        format!("{}", bal.balance.we_b_by_srv[&Service::CAL])
+    );
+    assert_eq!(
+        "{ ren: 255.847, nren: -3.387, co2: -0.711 }",
+        format!("{}", bal.balance.we_b_by_srv[&Service::ACS])
+    );
+
+    // Balance eléctrico
+
     let balance_el = &bal.balance_cr[&Carrier::ELECTRICIDAD];
     // NEPB used energy
     assert_eq!("10.000", format!("{:.3}", balance_el.used.nepus_an));
     // Produced energy from all sources and used for EPB services
-    assert_eq!(
-        "310.000",
-        format!("{:.3}", balance_el.prod.used_epus_an)
-    );
-    // Exported energy to non EPB uses
+    assert_eq!("310.000", format!("{:.3}", balance_el.prod.used_epus_an));
+    // Exported energy to non EPB uses and to the grid
     assert_eq!("5.000", format!("{:.3}", balance_el.exp.used_nepus_an));
+    assert_eq!("0.000", format!("{:.3}", balance_el.exp.grid_an));
+    // Results by service for electricity
+    assert_eq!(
+        "205.000",
+        format!("{:.3}", balance_el.by_srv.used_epus_an[&Service::CAL])
+    );
 }
