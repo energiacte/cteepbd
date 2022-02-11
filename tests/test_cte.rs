@@ -1028,19 +1028,17 @@ fn global_test_1() {
     0,CONSUMO,NEPB,ELECTRICIDAD,10 # Ascensores
     0,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
     # Bomba de calor, id=1
-    1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC id=1
+    1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC aerotérmica CAL+ACS id=1
     1,CONSUMO,ACS,EAMBIENTE,150 # BdC 1
+    1,CONSUMO,CAL,ELECTRICIDAD,200 # BdC id=1
+    1,CONSUMO,CAL,EAMBIENTE,300 # BdC 2
     1,AUX,ACS,5 # Auxiliares ACS de sistema 1
-    1,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-    # Bomba de calor id=2
-    2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC id=2
-    2,CONSUMO,CAL,EAMBIENTE,300 # BdC 2
-    2,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema con consumo de ese servicio (no reduce energía a compensar)
-    2,AUX,CAL,5 # Auxiliares CAL de sistema 2
+    1,AUX,CAL,5 # Auxiliares CAL de sistema 2
+    1,PRODUCCION,EAMBIENTE,200 # Producción declarada de sistema con consumo (reduce energía a compensar)
     # Producción fotovoltaica in situ
-    3,PRODUCCION,EL_INSITU,15 # PV
-    4,PRODUCCION,EL_INSITU,200 # PV
-    5,PRODUCCION,EL_INSITU,100 # PV
+    2,PRODUCCION,EL_INSITU,15 # PV
+    3,PRODUCCION,EL_INSITU,200 # PV
+    4,PRODUCCION,EL_INSITU,100 # PV
     # Compensación de energía ambiente a completar por CteEPBD"
         .parse::<Components>()
         .unwrap();
@@ -1068,11 +1066,12 @@ fn global_test_1() {
         bal.balance_m2.we_b
     ));
 
+    // println!("{:#?}", bal.components);
     // println!("{:?}", bal.balance.prod_by_cr);
     // println!("{:?}", bal.balance.prod_by_src);
     // println!("{:?}", bal.balance.del_grid_by_cr);
     // println!("{:?}", bal.balance.used_epus_by_cr);
-    // Prod: EAMBIENTE: 100 + 100 + 100 + 250 (autocompletados) + EL: 15+200+100
+    // Prod: EAMBIENTE: 100 (nepb) + 200 (decl.) + 250 (autocompletados) + EL: 15+200+100
     assert_eq!("865.000", format!("{:.3}", bal.balance.prod));
     // Exp 100 de EAMBIENTE + 5 de ELECTRICIDAD
     assert_eq!("105.000", format!("{:.3}", bal.balance.exp));
