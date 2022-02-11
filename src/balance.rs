@@ -71,13 +71,14 @@ pub fn energy_performance(
             arearef
         )));
     };
+    let components = components.clone().normalize();
 
     // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance = BalanceTotal::default();
     let mut balance_cr: HashMap<Carrier, BalanceForCarrier> = HashMap::new();
     for cr in &components.available_carriers() {
         // Compute balance for this carrier ---
-        let bal_cr = balance_for_carrier(*cr, components, wfactors, k_exp)?;
+        let bal_cr = balance_for_carrier(*cr, &components, wfactors, k_exp)?;
         // Add up to the global balance
         balance += &bal_cr;
         // Append to the map of balances by carrier
@@ -89,7 +90,7 @@ pub fn energy_performance(
 
     // Global data and results
     Ok(Balance {
-        components: components.clone(),
+        components,
         wfactors: wfactors.clone(),
         k_exp,
         arearef,

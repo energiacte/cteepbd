@@ -222,7 +222,6 @@ fn get_components(archivo: Option<&str>) -> Components {
                 );
                 exit(exitcode::DATAERR);
             })
-            .normalize()
     } else {
         Components::default()
     }
