@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
-    types::{Carrier, EProd, Energy, HasValues, Meta, MetaVec, Service, ZoneNeeds, ProdSource},
+    types::{Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service, ZoneNeeds},
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
 
@@ -177,8 +177,8 @@ impl Components {
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
     pub fn normalize(mut self) -> Self {
         // Compensa consumos no respaldados por producción
-        self.compensate_cr_use(Carrier::EAMBIENTE);
-        self.compensate_cr_use(Carrier::TERMOSOLAR);
+        self.complete_produced_for_onsite_generated_use(Carrier::EAMBIENTE);
+        self.complete_produced_for_onsite_generated_use(Carrier::TERMOSOLAR);
         self
     }
 
@@ -297,15 +297,24 @@ impl Components {
     ///
     /// cuando el consumo de esos vectores supera la producción.
     /// Evita tener que declarar las producciones de EAMBIENTE y TERMOSOLAR, basta con los consumos.
-    /// La compensación se hace sistema a sistema y servicio a servicio, sin trasvases de producción entre sistemas.
+    /// La compensación se hace sistema a sistema, sin trasvases de producción entre sistemas.
     ///
-    /// Esto significa que, para cada sistema (j=id) y servicio a servicio:
-    /// 1) se calculan las cantidades descompensadas
+    /// Esto significa que, para cada sistema (j=id):
+    /// 1) se calcula el consumo del vector en todos los servicios
+    /// 2) se calculan las cantidades produccidas del vector
     /// 2) se reparte la producción existente para ese sistema
-    /// 3) se genera una producción que completa las cantidades no satisfechas para el sistema
+    /// 3) se genera una producción que completa las cantidades no cubiertas por la producción definida
     ///
     /// Las producciones declaradas para un sistema, que no se consuman, no se trasvasan a otros.
-    fn compensate_cr_use(&mut self, carrier: Carrier) {
+    fn complete_produced_for_onsite_generated_use(&mut self, carrier: Carrier) {
+        let source = match carrier {
+            Carrier::EAMBIENTE => ProdSource::EAMBIENTE,
+            Carrier::TERMOSOLAR => ProdSource::TERMOSOLAR,
+            _ => {
+                panic!("Intento de compensación de vector distinto de EAMBIENTE o TERMOSOLAR")
+            }
+        };
+
         // Localiza componentes pertenecientes al vector
         let envcomps: Vec<_> = self
             .cdata
@@ -313,67 +322,53 @@ impl Components {
             .cloned()
             .filter(|c| c.has_carrier(carrier))
             .collect();
-        let mut balancecomps = Vec::new();
+        if envcomps.is_empty() {
+            return;
+        };
+
         let ids: HashSet<_> = envcomps.iter().map(|c| c.id()).collect();
-        let services: HashSet<_> = envcomps
-            .iter()
-            .filter(|c| c.is_used())
-            .map(|c| c.service())
-            .collect();
         for id in ids {
             // Componentes para el sistema dado
             let components_for_id = envcomps.iter().filter(|c| c.has_id(id));
+            // Componentes de producción del servicio
+            let prod: Vec<_> = components_for_id
+                .clone()
+                .filter(|c| c.is_generated())
+                .collect();
 
-            for service in &services {
-                // Componentes de consumo del servicio
-                let consumed: Vec<_> = components_for_id
-                    .clone()
-                    .filter(|c| c.is_used() && c.has_service(*service))
-                    .collect();
-                // Si no hay consumo que compensar con producción retornamos None
-                if consumed.is_empty() {
-                    continue;
-                };
+            // Componentes de consumo
+            let used: Vec<_> = components_for_id.clone().filter(|c| c.is_used()).collect();
+            // Si no hay consumo que compensar con producción retornamos None
+            if used.is_empty() {
+                continue;
+            };
+            // Consumos no compensados con producción
+            let total_use = veclistsum(&used.iter().map(|&v| v.values()).collect::<Vec<_>>());
 
-                // Consumos no compensados con producción
-                let mut unbalanced_values =
-                    veclistsum(&consumed.iter().map(|&v| v.values()).collect::<Vec<_>>());
+            // Usos no compensados con la producción existente
+            let unbalanced_use = if prod.is_empty() {
+                total_use
+            } else {
+                let avail_prod = veclistsum(&prod.iter().map(|&v| v.values()).collect::<Vec<_>>());
+                vecvecdif(&total_use, &avail_prod)
+                    .iter()
+                    .map(|&v| if v > 0.0 { v } else { 0.0 })
+                    .collect()
+            };
 
-                // Componentes de producción del servicio
-                let prod: Vec<_> = components_for_id
-                    .clone()
-                    .filter(|c| c.is_generated())
-                    .collect();
-                // Descontamos la producción existente de los consumos
-                if !prod.is_empty() {
-                    let totprod =
-                        veclistsum(&prod.iter().map(|&v| v.values()).collect::<Vec<_>>());
-                    unbalanced_values = vecvecdif(&unbalanced_values, &totprod)
-                        .iter()
-                        .map(|&v| if v > 0.0 { v } else { 0.0 })
-                        .collect();
-                }
-                // Si no hay desequilibrio continuamos
-                if unbalanced_values.iter().sum::<f32>() == 0.0 {
-                    continue;
-                };
+            // Si no hay desequilibrio continuamos
+            if unbalanced_use.iter().sum::<f32>() == 0.0 {
+                continue;
+            };
 
-                let source = match carrier {
-                    Carrier::EAMBIENTE => ProdSource::EAMBIENTE,
-                    Carrier::TERMOSOLAR => ProdSource::TERMOSOLAR,
-                    _ => panic!("Compensación de vector inesperada, distinta de EAMBIENTE o TERMOSOLAR")
-                };
-
-                // Si hay desequilibrio agregamos un componente de producción
-                balancecomps.push(Energy::Prod(EProd {
-                    id,
-                    source,
-                    values: unbalanced_values,
-                    comment: "Equilibrado de consumo sin producción declarada".into(),
-                }));
-            }
+            // Si hay desequilibrio agregamos un componente de producción
+            self.cdata.push(Energy::Prod(EProd {
+                id,
+                source,
+                values: unbalanced_use,
+                comment: "Equilibrado de consumo sin producción declarada".into(),
+            }));
         }
-        self.cdata.append(&mut balancecomps);
     }
 }
 
