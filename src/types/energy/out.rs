@@ -118,7 +118,15 @@ impl str::FromStr for EOut {
         };
 
         // Check service field
-        let service = items[2].parse()?;
+        let service: Service = items[2].parse()?;
+
+        // Check that service is an EPB service
+        if !service.is_epb() {
+            return Err(EpbdError::ParseError(format!(
+                "energía entregada o absorbida definida para un uso no EPB `{}`",
+                s
+            )));
+        }
 
         // Collect energy values from the service field on
         let values = items[3..]
