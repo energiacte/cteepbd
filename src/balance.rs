@@ -71,7 +71,7 @@ pub fn energy_performance(
             arearef
         )));
     };
-    let components = components.clone().normalize();
+    let components = components.clone();
 
     // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance = BalanceTotal::default();

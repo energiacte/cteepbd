@@ -155,7 +155,8 @@ impl str::FromStr for Components {
             cmeta,
             cdata,
             zones: building,
-        })
+        }
+        .normalize())
     }
 }
 
@@ -381,7 +382,8 @@ mod tests {
 0, PRODUCCION, EL_INSITU, 8.20, 6.56, 4.10, 3.69, 2.05, 2.46, 3.28, 2.87, 2.05, 3.28, 4.92, 6.56
 0, CONSUMO, REF, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
 0, CONSUMO, CAL, ELECTRICIDAD, 16.39, 13.11, 8.20, 7.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 13.11
-0, CONSUMO, CAL, EAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11";
+0, CONSUMO, CAL, EAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11
+0, PRODUCCION, EAMBIENTE, 6.39, 3.11, 8.20, 17.38, 4.10, 4.92, 6.56, 5.74, 4.10, 6.56, 9.84, 3.11 # Equilibrado de consumo sin producción declarada";
 
     // Reparto de producciones eléctricas y compensación de consumos de EAMBIENTE
     const TCOMPSRES1: &str = "#META CTE_AREAREF: 100.5
@@ -422,7 +424,7 @@ mod tests {
 
     #[test]
     fn tcomponents_normalize() {
-        let tcompsnorm = TCOMPS1.parse::<Components>().unwrap().normalize();
+        let tcompsnorm = TCOMPS1.parse::<Components>().unwrap();
         assert_eq!(tcompsnorm.to_string(), TCOMPSRES1);
     }
 
@@ -431,7 +433,6 @@ mod tests {
         let tcompsnormfilt = TCOMPS1
             .parse::<Components>()
             .unwrap()
-            .normalize()
             .filter_by_epb_service(Service::CAL);
         assert_eq!(tcompsnormfilt.to_string(), TCOMPSRES2);
     }
@@ -441,7 +442,6 @@ mod tests {
         let tcompsnormfilt = TCOMPS2
             .parse::<Components>()
             .unwrap()
-            .normalize()
             .filter_by_epb_service(Service::CAL);
         assert_eq!(tcompsnormfilt.to_string(), TCOMPSRES3);
     }
@@ -449,7 +449,7 @@ mod tests {
     /// Componentes con id de sistema diferenciados
     /// e imputación de producción no compensada de EAMBIENTE a los id correspondientes
     #[test]
-    fn normalize() {
+    fn check_normalized_components() {
         let comps = "# Bomba de calor 1
             1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC 1
             1,CONSUMO,ACS,EAMBIENTE,150 # BdC 1
@@ -465,8 +465,7 @@ mod tests {
             2,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema sin ese servicio consumo (no reduce energía a compensar)
             # Compensación de energía ambiente a completar por CteEPBD"
             .parse::<Components>()
-            .unwrap()
-            .normalize();
+            .unwrap();
         let ma_prod = comps
             .cdata
             .iter()

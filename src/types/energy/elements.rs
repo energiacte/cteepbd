@@ -215,7 +215,10 @@ impl Energy {
 
     /// Has this component this carrier?
     pub fn has_carrier(&self, carrier: Carrier) -> bool {
-        self.carrier() == carrier
+        match self {
+            Energy::Out(_) => false,
+            _ => self.carrier() == carrier
+        }
     }
 
     /// Has this component this id?

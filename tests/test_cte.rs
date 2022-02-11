@@ -140,7 +140,7 @@ fn components_from_file(path: &str) -> Components {
     let mut f = File::open(path).unwrap();
     let mut componentsstring = String::new();
     f.read_to_string(&mut componentsstring).unwrap();
-    componentsstring.parse::<Components>().unwrap().normalize()
+    componentsstring.parse::<Components>().unwrap()
 }
 
 fn wfactors_from_file(path: &str) -> Factors {
@@ -798,8 +798,7 @@ fn cte_ACS_demanda_ren_joule_60pv() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,100
 PRODUCCION,EL_INSITU,60"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
@@ -811,8 +810,7 @@ fn cte_ACS_demanda_ren_gn_60pst() {
     let comps = "CONSUMO,ACS,GASNATURAL,44.44
 CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
@@ -824,8 +822,7 @@ fn cte_ACS_demanda_ren_biomasa_10PST_100() {
     let comps = "CONSUMO,ACS,BIOMASA,100
 CONSUMO,ACS,TERMOSOLAR,10"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.972");
@@ -834,10 +831,7 @@ CONSUMO,ACS,TERMOSOLAR,10"
 /// Biomasa rend 75% (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_100() {
-    let comps = "CONSUMO,ACS,BIOMASA,100"
-        .parse::<Components>()
-        .unwrap()
-        .normalize();
+    let comps = "CONSUMO,ACS,BIOMASA,100".parse::<Components>().unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.967");
@@ -851,8 +845,7 @@ fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
     CONSUMO,ACS,BIOMASA,50
     CONSUMO,ACS,BIOMASADENSIFICADA,50"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let TESTFPEXT = format!(
         "{}\n{}\n{}",
         TESTFP,
@@ -873,8 +866,7 @@ fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
     CONSUMO,ACS,BIOMASA,50
     CONSUMO,ACS,BIOMASADENSIFICADA,50"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let TESTFPEXT = format!(
         "{}\n{}\n{}",
         TESTFP,
@@ -893,8 +885,7 @@ fn cte_ACS_demanda_ren_red1_red2() {
     let comps = "CONSUMO,ACS,RED1,50
 CONSUMO,ACS,RED2,50"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let TESTFPEXT = format!(
         "{}\n{}\n{}",
         TESTFP,
@@ -912,8 +903,7 @@ fn cte_ACS_demanda_ren_bdc_60ma() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
@@ -926,8 +916,7 @@ fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
@@ -942,8 +931,7 @@ CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10
 CONSUMO,NEPB,ELECTRICIDAD,40.0"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
@@ -958,8 +946,7 @@ fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_COGEN,10"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0);
     assert!(fraccion_ren_acs.is_err());
@@ -972,8 +959,7 @@ fn cte_ACS_demanda_ren_bdc_45ma_25gn() {
 CONSUMO,ACS,EAMBIENTE,45
 CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.45");
@@ -987,8 +973,7 @@ fn cte_ACS_demanda_ren_bdc_38ma__25gn_excluye_medioambiente() {
 CONSUMO,ACS,EAMBIENTE,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
 CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.00");
@@ -1003,8 +988,7 @@ CONSUMO,ACS,EAMBIENTE,45
 CONSUMO,ACS,BIOMASA,13.94
 CONSUMO,ACS,GASNATURAL,13.94"
         .parse::<Components>()
-        .unwrap()
-        .normalize();
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0);
     assert!(fraccion_ren_acs.is_err());
@@ -1044,7 +1028,7 @@ fn global_test_1() {
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let bal = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
-    
+
     // Resultados globales
 
     // Paso A
