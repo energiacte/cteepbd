@@ -1,4 +1,4 @@
 #META Ejemplo: J3
 #META Descripcion: Todo eléctrico, con exceso de producción fotovoltaica
-CONSUMO,NDEF,ELECTRICIDAD,100.0
+CONSUMO,CAL,ELECTRICIDAD,100.0
 PRODUCCION,EL_INSITU,140.0

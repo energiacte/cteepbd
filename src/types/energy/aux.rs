@@ -77,8 +77,8 @@ impl fmt::Display for EAux {
 
         write!(
             f,
-            "{}, AUX, {}, {}{}",
-            self.id, self.service, valuelist, comment
+            "{}, AUX, {}{}",
+            self.id, valuelist, comment
         )
     }
 }
@@ -92,8 +92,8 @@ impl str::FromStr for EAux {
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (type + service + 1 value)
-        if items.len() < 3 {
+        // Minimal possible length (type + 1 value)
+        if items.len() < 2 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
@@ -111,11 +111,11 @@ impl str::FromStr for EAux {
             )));
         }
 
-        // Check service field. May be missing in legacy versions
-        let service = items[baseidx + 1].parse()?;
+        // Initial service is NEPB. This is changed when normalizing data
+        let service = Service::NEPB;
 
         // Collect energy values from the service field on
-        let values = items[baseidx + 2..]
+        let values = items[baseidx + 1..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()
@@ -144,13 +144,13 @@ mod tests {
         // Auxiliary energy component
         let component1 = EAux {
             id: 0,
-            service: "NDEF".parse().unwrap(),
+            service: "NEPB".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
             comment: "Comentario auxiliar 1".into(),
         };
-        let component1str = "0, AUX, NDEF, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario auxiliar 1";
+        let component1str = "0, AUX, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario auxiliar 1";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string

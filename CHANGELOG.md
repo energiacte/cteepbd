@@ -29,9 +29,11 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Indica la energía absorbida (p.e. refrigeración) o entregada (p.e. calor) en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
   - Incluye un identificador de sistema asociado (id), servicio, valores para los pasos de cálculo y un comentario.
 - Nuevo componente energético para consumo auxiliar (AUX)
-  - Indica la energía consumida para usos auxiliares en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
-  - Incluye un identificador de sistema asociado (id), servicio, valores para los pasos de cálculo y un comentario.
+  - Indica la energía eléctrica consumida para usos auxiliares de los servicios EPB en cada paso de cálculo, para cada sistema (id=i)
+  - Incluye un identificador de sistema asociado (id), valores para los pasos de cálculo y un comentario.
+  - El reparto de este consumo entre servicios se realiza de forma automática y proporcionalmente a la energía entregada o absorbida por cada servicio EPB
   - Nota: este componente sustituye la anotación de consumos en el comentario con CTEEPBD_EXCLUYE_AUX_ACS, que deja de estar soportada
+  - Cuando se definan consumos auxiliares el sistema debe, bien atender un solo servicio, o bien definir la energía saliente para cada uno de ellos.
 - Nuevo elemento de datos de demanda de zona (ZONA, DEMANDA)
   - Permite introducir datos de demanda asociados a una zona z (id=z)
   - La zona con id=0 remite al conjunto del edificio (p.e. demandas de edificio)
@@ -48,6 +50,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Identifica la energía ambiente capturada por las bombas de calor
   - La compensación automática de consumos de EAMBIENTE se realiza sistema a sistema y servicio a servicio, sin traslado de energía entre ellos.
 - Eliminación del vector energético MEDIOAMBIENTE (que se desdobla en EAMBIENTE y TERMOSOLAR)
+- Eliminación del servicio NDEF
 - Nuevo servicio NEPB
   - Para consumos destinados a usos no EPB
 - Nuevo servicio COGEN

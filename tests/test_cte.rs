@@ -96,15 +96,6 @@ fn get_energydatalist() -> Components {
     Components {
         cmeta: vec![],
         cdata: vec![
-            Energy::Used(EUsed {
-                id: 0,
-                values: vec![
-                    9.67, 7.74, 4.84, 4.35, 2.42, 2.9, 3.87, 3.39, 2.42, 3.87, 5.8, 7.74,
-                ],
-                carrier: ELECTRICIDAD,
-                service: Service::NDEF,
-                comment: "".into(),
-            }),
             Energy::Prod(EProd {
                 id: 0,
                 values: vec![
@@ -116,10 +107,19 @@ fn get_energydatalist() -> Components {
             Energy::Used(EUsed {
                 id: 0,
                 values: vec![
+                    9.67, 7.74, 4.84, 4.35, 2.42, 2.9, 3.87, 3.39, 2.42, 3.87, 5.8, 7.74,
+                ],
+                carrier: ELECTRICIDAD,
+                service: Service::CAL,
+                comment: "".into(),
+            }),
+            Energy::Used(EUsed {
+                id: 0,
+                values: vec![
                     21.48, 17.18, 10.74, 9.66, 5.37, 6.44, 8.59, 7.52, 5.37, 8.59, 12.89, 17.18,
                 ],
                 carrier: EAMBIENTE,
-                service: Service::NDEF,
+                service: Service::CAL,
                 comment: "".into(),
             }),
             Energy::Prod(EProd {
@@ -779,7 +779,7 @@ fn cte_balance_by_srv() {
 
     let mut result: HashMap<Service, RenNrenCo2> = HashMap::new();
     result.insert(
-        Service::NDEF,
+        Service::CAL,
         RenNrenCo2 {
             ren: 178.88016,
             nren: 37.14554,
@@ -1014,20 +1014,28 @@ fn global_test_1() {
     # Bomba de calor, id=1
     1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC aerotérmica CAL+ACS id=1
     1,CONSUMO,ACS,EAMBIENTE,150 # BdC 1
+    1,SALIDA,ACS,250 # Energía entregada por la BdC para ACS
+    1,AUX,5 # Auxiliares ACS de sistema 1
     1,CONSUMO,CAL,ELECTRICIDAD,200 # BdC id=1
-    1,CONSUMO,CAL,EAMBIENTE,300 # BdC 2
-    1,AUX,ACS,5 # Auxiliares ACS de sistema 1
-    1,AUX,CAL,5 # Auxiliares CAL de sistema 2
+    1,CONSUMO,CAL,EAMBIENTE,300 # BdC id=1
+    1,SALIDA,CAL,500 # Energía entregada por la BdC para CAL
+    1,AUX,5 # Auxiliares CAL de sistema BdC id=1
     1,PRODUCCION,EAMBIENTE,200 # Producción declarada de sistema con consumo (reduce energía a compensar)
     # Producción fotovoltaica in situ
     2,PRODUCCION,EL_INSITU,15 # PV
-    3,PRODUCCION,EL_INSITU,200 # PV
-    4,PRODUCCION,EL_INSITU,100 # PV
+    3,PRODUCCION,EL_INSITU,300 # PV
     # Compensación de energía ambiente a completar por CteEPBD"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let bal = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
+
+    // println!("{:#?}", bal.components);
+    // println!("prod_by_cr: {:?}", bal.balance.prod_by_cr);
+    // println!("prod_by_src: {:?}", bal.balance.prod_by_src);
+    // println!("del_grid: {:?}", bal.balance.del_grid_by_cr);
+    // println!("EPus: {:?}", bal.balance.used_epus_by_cr);
+    // println!("nEPus: {:?}", bal.balance.used_nepus);
 
     // Resultados globales
 
@@ -1049,12 +1057,6 @@ fn global_test_1() {
         },
         bal.balance_m2.we_b
     ));
-
-    // println!("{:#?}", bal.components);
-    // println!("{:?}", bal.balance.prod_by_cr);
-    // println!("{:?}", bal.balance.prod_by_src);
-    // println!("{:?}", bal.balance.del_grid_by_cr);
-    // println!("{:?}", bal.balance.used_epus_by_cr);
     // Prod: EAMBIENTE: 100 (nepb) + 200 (decl.) + 250 (autocompletados) + EL: 15+200+100
     assert_eq!("865.000", format!("{:.3}", bal.balance.prod));
     // Exp 100 de EAMBIENTE + 5 de ELECTRICIDAD
@@ -1063,19 +1065,19 @@ fn global_test_1() {
     assert_eq!("0.000", format!("{:.3}", bal.balance.del_grid));
     // Results by service for all carriers
     assert_eq!(
-        "505.000",
+        "506.667",
         format!("{:.3}", bal.balance.used_epus_by_srv[&Service::CAL])
     );
     assert_eq!(
-        "255.000",
+        "253.333",
         format!("{:.3}", bal.balance.used_epus_by_srv[&Service::ACS])
     );
     assert_eq!(
-        "{ ren: 506.653, nren: -6.613, co2: -1.389 }",
+        "{ ren: 508.333, nren: -6.667, co2: -1.400 }",
         format!("{}", bal.balance.we_b_by_srv[&Service::CAL])
     );
     assert_eq!(
-        "{ ren: 255.847, nren: -3.387, co2: -0.711 }",
+        "{ ren: 254.167, nren: -3.333, co2: -0.700 }",
         format!("{}", bal.balance.we_b_by_srv[&Service::ACS])
     );
 
@@ -1091,7 +1093,7 @@ fn global_test_1() {
     assert_eq!("0.000", format!("{:.3}", balance_el.exp.grid_an));
     // Results by service for electricity
     assert_eq!(
-        "205.000",
+        "206.667",
         format!("{:.3}", balance_el.by_srv.used_epus_an[&Service::CAL])
     );
 }

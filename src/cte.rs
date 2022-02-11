@@ -340,7 +340,7 @@ pub fn fraccion_renovable_acs_nrb(
     // TODO: Para poder tenerlo en cuenta tendríamos dos opciones:
     // - Imputar correctamente los factores de paso de electricidad cogenerada, en lugar de 0.0 (y ver cómo se imputa el combustible en la parte térmica)
     // - Imputar el consumo de combustible en función del servicio de destino de la electricidad y de la parte térmica. Esto se podría hacer a la
-    //   hora del reparto de electricidad, si se ha marcado el consumo de combustible como destinado a cogeneración eléctrica CTEEPBD_DESTINO_COGEN y uso NDEF.
+    //   hora del reparto de electricidad, si se ha marcado el consumo de combustible como destinado a cogeneración eléctrica CTEEPBD_DESTINO_COGEN.
     //   Habría que pensar qué ocurre si una parte no se consume y se exporta.
     // - Habría que ver cómo se imputa (prioridad) el consumo de electricidad in situ y cogenerada.
     let has_el_cgn = cr_list_dhw.iter().any(|c| c.is_cogen_pr());

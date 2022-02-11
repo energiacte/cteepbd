@@ -5,11 +5,6 @@
 
 - epbd:
   - Get values by prod_source (not only source)
-  - Remove NDEF use
-    - Import AUX uses and distribute among services for the same system proportionally to their Q_out (SALIDA) for all EPB services
-    - AUX is always for EPB services (remove is_epb => e.service.is_epb() / is_nepb())
-    - Initially import Aux as AuxTemp (no service) and convert to Aux + service in normalization
-    - Error if no Q_out is defined
   - rename RED1 to RED_CAL, RED2 to RED_REF
   - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
@@ -28,6 +23,7 @@
     - load matching factor computation ((in compute_used_produced)
     - battery support (in compute_used_produced)
     - priority in use of produced energy (onsite > cogen, for instance) (in compute_used_produced, compute_exported_delivered, 9.6.6.2.4)
+  - checks: Q_out (SALIDA) services include, at least, those includes in E_in (CONSUMO)
 
 - tests:
 

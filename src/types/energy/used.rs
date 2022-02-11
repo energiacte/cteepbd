@@ -151,14 +151,14 @@ mod tests {
         let component1 = EUsed {
             id: 0,
             carrier: "ELECTRICIDAD".parse().unwrap(),
-            service: "NDEF".parse().unwrap(),
+            service: "ILU".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
             ],
             comment: "Comentario cons 1".into(),
         };
-        let component1str = "0, CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
-        let component1strlegacy = "CONSUMO, NDEF, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1str = "0, CONSUMO, ILU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1strlegacy = "CONSUMO, ILU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string

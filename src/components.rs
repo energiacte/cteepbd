@@ -37,7 +37,10 @@ Hipótesis:
 - El reparto de la electricidad generada es proporcional a los consumos eléctricos
 */
 
-use std::{collections::HashSet, fmt, str};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt, str,
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -151,16 +154,21 @@ impl str::FromStr for Components {
                 ));
             }
         }
-        Ok(Components {
+        Components {
             cmeta,
             cdata,
             zones: building,
         }
-        .normalize())
+        .normalize()
     }
 }
 
 impl Components {
+    /// Number of steps of the first component
+    pub fn num_steps(&self) -> usize {
+        self.cdata.get(0).map(|v| v.num_steps()).unwrap_or(0)
+    }
+
     /// Conjunto de vectores energéticos disponibles en componentes de energía consumida o producida
     pub fn available_carriers(&self) -> HashSet<Carrier> {
         self.cdata
@@ -174,13 +182,16 @@ impl Components {
     ///
     /// - Asegura que la energía EAMBIENTE consumida tiene su producción correspondiente
     /// - Asegura que la energía TERMOSOLAR consumida tiene su producción correspondiente
+    /// - Reparte los consumos auxliares proporcionalmente a los servicios
     ///
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
-    pub fn normalize(mut self) -> Self {
+    pub fn normalize(mut self) -> Result<Self, EpbdError> {
         // Compensa consumos no respaldados por producción
         self.complete_produced_for_onsite_generated_use(Carrier::EAMBIENTE);
         self.complete_produced_for_onsite_generated_use(Carrier::TERMOSOLAR);
-        self
+        self.assign_aux_nepb_to_epb_services()?;
+        self.sort_by_id();
+        Ok(self)
     }
 
     /// Filtra Componentes relacionados con un servicio EPB
@@ -211,14 +222,14 @@ impl Components {
         // 2. Producción eléctrica
         let E_pr_el_t = cdata
             .clone()
-            .filter(|c| c.is_electricity() && c.is_generated());
+            .filter(|c| c.is_generated() && c.is_electricity());
         let E_pr_el_an: f32 = E_pr_el_t.clone().flat_map(|c| c.values().iter()).sum();
 
         // 3. Reparto de la producción electrica en proporción al consumo de usos EPB
         // Energía eléctrica consumida en usos EPB
         let E_EPus_el_t = cdata
             .clone()
-            .filter(|c| c.is_electricity() && c.is_epb_use());
+            .filter(|c| c.is_epb_use() && c.is_electricity());
 
         // Energía eléctrica consumida en el servicio srv
         let E_srv_el_t = E_EPus_el_t.clone().filter(|c| c.has_service(service));
@@ -227,7 +238,7 @@ impl Components {
         // Si hay consumo y producción de electricidad, se reparte el consumo
         if E_srv_el_an > 0.0 && E_pr_el_an > 0.0 {
             // Pasos de cálculo. Sabemos que cdata.len() > 1 porque si no no se podría cumplir el condicional
-            let num_steps = self.cdata[0].num_steps();
+            let num_steps = self.num_steps();
 
             // Energía eléctrica consumida en usos EPB
             let E_EPus_el_t_tot = E_EPus_el_t
@@ -371,6 +382,122 @@ impl Components {
             }));
         }
     }
+
+    /// Asigna servicios EPB a los componentes de energía auxiliar
+    ///
+    /// Los componentes de consumos auxiliares se cargan incialmente con el servicio NEPB
+    /// pero representan solo servicios EPB y debemos asignarlos.
+    ///
+    /// Para hacer esta asignación se actúa sistema a sistema:
+    /// 1) si solamente hay un servicio EPB se asigna el consumo Aux a ese servicio
+    /// 2) si hay más de un servicio EPB se genera un consumo Aux para cada servicio
+    ///    disponible y se asigna a cada servicio un consumo proporcional
+    ///    a la energía saliente de cada servicio en relación a la total saliente
+    ///    para todos los servicios EPB.
+    fn assign_aux_nepb_to_epb_services(&mut self) -> Result<(), EpbdError> {
+        // ids with aux energy use
+        let ids: HashSet<_> = self
+            .cdata
+            .iter()
+            .filter(|c| c.is_aux())
+            .map(Energy::id)
+            .collect();
+        for id in ids {
+            let services_for_uses_with_id = self
+                .cdata
+                .iter()
+                .filter_map(|c| match c {
+                    Energy::Used(e) if e.id == id => Some(e.service),
+                    _ => None,
+                })
+                .collect::<HashSet<_>>();
+
+            // Con un solo servicio en los consumos usamos ese para los auxiliares
+            // sin necesidad de consultar la energía entregada o absorbida
+            if services_for_uses_with_id.len() == 1 {
+                let service = *services_for_uses_with_id.iter().next().unwrap();
+                for c in &mut self.cdata {
+                    if let Energy::Aux(e) = c {
+                        if e.id == id {
+                            e.service = service
+                        }
+                    }
+                }
+                continue;
+            }
+
+            // Con más de un servicio necesitamos repartir la energía auxiliar de forma proporcional
+            // a la energía saliente de cada servicio en relación al total de servicios EPB
+            let aux_tot = veclistsum(
+                &self
+                    .cdata
+                    .iter()
+                    .filter_map(|c| match c {
+                        Energy::Aux(e) if e.id == id => Some(e.values()),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
+            );
+
+            let mut q_out_by_srv: HashMap<Service, Vec<f32>> = HashMap::new();
+            for component in &self.cdata {
+                if let Energy::Out(e) = component {
+                    if e.id == id {
+                        q_out_by_srv
+                            .entry(e.service)
+                            .or_insert_with(|| vec![0.0; self.num_steps()]);
+                        q_out_by_srv
+                            .insert(e.service, vecvecsum(&q_out_by_srv[&e.service], &e.values));
+                    }
+                };
+            }
+
+            let mut q_out_tot = vec![0.0; self.num_steps()];
+            for q_out in q_out_by_srv.values() {
+                q_out_tot = vecvecsum(&*q_out_tot, q_out);
+            }
+
+            if aux_tot.iter().sum::<f32>() > 0.0 && q_out_tot.iter().sum::<f32>() == 0.0 {
+                return Err(EpbdError::WrongInput(format!("Sin datos de energía saliente para hacer el reparto de los consumos auxiliares del sistema {}", id)));
+            };
+
+            // Calculamos la fracción de cada servicio sobre el total
+            let mut q_out_frac_by_srv = q_out_by_srv;
+            let out_services: Vec<Service> = q_out_frac_by_srv.keys().cloned().collect();
+            for service in &out_services {
+                let values = q_out_frac_by_srv[service]
+                    .iter()
+                    .zip(q_out_tot.iter())
+                    .map(|(val, tot)| if tot > &0.0 { val / tot } else { 0.0 })
+                    .collect();
+                q_out_frac_by_srv.insert(*service, values);
+            }
+
+            // Elimina componentes de auxiliares existentes
+            self.cdata.retain(|c| !c.is_aux());
+
+            // Incorpora nuevos auxiliares con reparto calculado por servicios
+            for service in &out_services {
+                let values = q_out_frac_by_srv[service]
+                    .iter()
+                    .zip(aux_tot.iter())
+                    .map(|(q_out_frac, aux_tot_i)| q_out_frac * aux_tot_i)
+                    .collect();
+                self.cdata.push(Energy::Aux(crate::types::EAux {
+                    id,
+                    service: *service,
+                    values,
+                    comment: "Reasignación automática de consumos auxiliares".into(),
+                }));
+            }
+        }
+        Ok(())
+    }
+
+    /// Ordena componentes según el id del sistema
+    fn sort_by_id(&mut self) {
+        self.cdata.sort_by_key(|e| e.id());
+    }
 }
 
 #[cfg(test)]
@@ -506,7 +633,7 @@ mod tests {
             2, CONSUMO, ACS, ELECTRICIDAD, 1.0 # BdC modo ACS
             2, CONSUMO, ACS, EAMBIENTE, 2.0 # BdC modo ACS
             2, SALIDA, ACS, 3.0 # Energía entregada por el equipo de acs con COP_dhw 3
-            2, AUX, ACS, 0.5 # Auxiliares ACS BdC
+            2, AUX, 0.5 # Auxiliares ACS BdC
             3, CONSUMO, REF, ELECTRICIDAD, 1.00 # BdC modo refrigeración
             3, SALIDA, REF, -3.0 # Energía absorbida por el equipo de refrigeración con EER 3
             "

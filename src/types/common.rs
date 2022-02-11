@@ -181,8 +181,6 @@ pub enum Service {
     DHU,
     /// Building automation and control
     BAC,
-    /// Generic EPB use
-    NDEF,
     /// Generic non EPB use
     NEPB,
     /// Energy feeding an electricity cogeneration system
@@ -192,7 +190,7 @@ pub enum Service {
 
 impl Service {
     /// List of all available services
-    pub const SERVICES_ALL: [Service; 11] = [
+    pub const SERVICES_ALL: [Service; 10] = [
         Service::ACS,
         Service::CAL,
         Service::REF,
@@ -201,13 +199,12 @@ impl Service {
         Service::HU,
         Service::DHU,
         Service::BAC,
-        Service::NDEF,
         Service::NEPB,
         Service::COGEN,
     ];
 
     /// List EPB services
-    pub const SERVICES_EPB: [Service; 9] = [
+    pub const SERVICES_EPB: [Service; 8] = [
         Service::ACS,
         Service::CAL,
         Service::REF,
@@ -216,7 +213,6 @@ impl Service {
         Service::HU,
         Service::DHU,
         Service::BAC,
-        Service::NDEF,
     ];
 
     /// Check if service is an EPB service
@@ -251,10 +247,8 @@ impl str::FromStr for Service {
             "HU" => Ok(Service::HU),
             "DHU" => Ok(Service::DHU),
             "BAC" => Ok(Service::BAC),
-            "NDEF" => Ok(Service::NDEF),
             "NEPB" => Ok(Service::NEPB),
             "COGEN" => Ok(Service::COGEN),
-            "" => Ok(Service::default()),
             _ => Err(EpbdError::ParseError(s.into())),
         }
     }
@@ -263,12 +257,6 @@ impl str::FromStr for Service {
 impl std::fmt::Display for Service {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
-    }
-}
-
-impl Default for Service {
-    fn default() -> Service {
-        Service::NDEF
     }
 }
 
