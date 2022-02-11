@@ -93,10 +93,11 @@ impl std::convert::From<(f32, f32, f32)> for RenNrenCo2 {
 
 impl fmt::Display for RenNrenCo2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let decimals = f.precision().unwrap_or(3);
         write!(
             f,
-            "{{ ren: {:.3}, nren: {:.3}, co2: {:.3} }}",
-            self.ren, self.nren, self.co2
+            "{{ ren: {:.*}, nren: {:.*}, co2: {:.*} }}",
+            decimals, self.ren, decimals, self.nren, decimals, self.co2
         )
     }
 }
