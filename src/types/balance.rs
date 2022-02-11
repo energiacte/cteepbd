@@ -110,14 +110,22 @@ pub struct BalanceTotal {
     pub used_nepus: f32,
     /// Energy use for EPB uses, by use
     pub used_epus_by_srv: HashMap<Service, f32>,
+    /// Energy use for EPB uses, by carrier
+    pub used_epus_by_cr: HashMap<Carrier, f32>,
     /// Produced energy
     pub prod: f32,
     /// Produced energy by source (COGEN / INSITU)
     pub prod_by_src: HashMap<Source, f32>,
     /// Produced energy by carrier
     pub prod_by_cr: HashMap<Carrier, f32>,
-    /// Delivered  (from the grid)
+    /// Delivered by the grid or onsite sources
     pub del: f32,
+    /// Delivered by onsite sources
+    pub del_onsite: f32,
+    /// Delivered by the grid
+    pub del_grid: f32,
+    /// Delivered by the grid, by carrier
+    pub del_grid_by_cr: HashMap<Carrier, f32>,
     /// Exported energy (to the grid or nEPB uses)
     pub exp: f32,
     /// Exported energy to the grid
@@ -146,14 +154,20 @@ impl BalanceTotal {
     pub fn normalize_by_area(&self, area: f32) -> BalanceTotal {
         let k_area = if area == 0.0 { 0.0 } else { 1.0 / area };
 
-        let mut used_epb_by_srv = self.used_epus_by_srv.clone();
-        used_epb_by_srv.values_mut().for_each(|v| *v *= k_area);
+        let mut used_epus_by_srv = self.used_epus_by_srv.clone();
+        used_epus_by_srv.values_mut().for_each(|v| *v *= k_area);
+
+        let mut used_epus_by_cr = self.used_epus_by_cr.clone();
+        used_epus_by_cr.values_mut().for_each(|v| *v *= k_area);
 
         let mut prod_by_src = self.prod_by_src.clone();
         prod_by_src.values_mut().for_each(|v| *v *= k_area);
 
         let mut prod_by_cr = self.prod_by_cr.clone();
         prod_by_cr.values_mut().for_each(|v| *v *= k_area);
+
+        let mut del_grid_by_cr = self.del_grid_by_cr.clone();
+        del_grid_by_cr.values_mut().for_each(|v| *v *= k_area);
 
         let mut A_by_srv = self.we_a_by_srv.clone();
         A_by_srv.values_mut().for_each(|v| *v *= k_area);
@@ -164,11 +178,15 @@ impl BalanceTotal {
         BalanceTotal {
             used_epus: k_area * self.used_epus,
             used_nepus: k_area * self.used_nepus,
-            used_epus_by_srv: used_epb_by_srv,
+            used_epus_by_srv,
+            used_epus_by_cr,
             prod: k_area * self.prod,
             prod_by_src,
             prod_by_cr,
             del: k_area * self.del,
+            del_onsite: k_area * self.del_onsite,
+            del_grid: k_area * self.del_grid,
+            del_grid_by_cr,
             exp: k_area * self.exp,
             exp_grid: k_area * self.exp_grid,
             exp_nepus: k_area * self.exp_nepus,
@@ -191,7 +209,9 @@ impl std::ops::AddAssign<&BalanceForCarrier> for BalanceTotal {
         // Produced energy
         self.prod += rhs.prod.an;
         // Delivered energy
-        self.del += rhs.del.grid_an;
+        self.del += rhs.del.an;
+        self.del_onsite += rhs.del.onsite_an;
+        self.del_grid += rhs.del.grid_an;
         // Exported energy
         self.exp += rhs.exp.an;
         self.exp_nepus += rhs.exp.used_nepus_an;
@@ -230,6 +250,12 @@ impl std::ops::AddAssign<&BalanceForCarrier> for BalanceTotal {
         // Aggregation by carrier
         if rhs.prod.an != 0.0 {
             *self.prod_by_cr.entry(rhs.carrier).or_default() += &rhs.prod.an;
+        }
+        if rhs.del.grid_an != 0.0 {
+            *self.del_grid_by_cr.entry(rhs.carrier).or_default() += &rhs.del.grid_an;
+        }
+        if rhs.used.epus_an != 0.0 {
+            *self.used_epus_by_cr.entry(rhs.carrier).or_default() += &rhs.used.epus_an;
         }
     }
 }
@@ -322,6 +348,8 @@ pub struct ExportedEnergy {
 /// Delivered Energy Data and Results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeliveredEnergy {
+    /// Delivered energy from the grid or onsite sources
+    pub an: f32,
     /// Delivered energy by the grid at each timestep
     pub grid_t: Vec<f32>,
     /// Delivered energy by the grid

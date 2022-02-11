@@ -4,6 +4,7 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
+  - Get values by prod_source (not only source)
   - Remove NDEF use
     - Import AUX uses and distribute among services for the same system proportionally to their Q_out (SALIDA) for all EPB services
     - AUX is always for EPB services (remove is_epb => e.service.is_epb() / is_nepb())

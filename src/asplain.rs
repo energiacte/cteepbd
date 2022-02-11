@@ -70,6 +70,8 @@ impl AsCtePlain for Balance {
             used_nepus,
             prod,
             del,
+            del_grid,
+            del_onsite,
             exp,
             exp_grid,
             exp_nepus,
@@ -84,6 +86,7 @@ impl AsCtePlain for Balance {
 
         // Consumos
         let used_by_srv = list_entries_f32(&balance_m2.used_epus_by_srv);
+        let used_epus_by_cr = list_entries_f32(&balance_m2.used_epus_by_cr);
         // Generada
         let prod_by_src = list_entries_f32(&balance_m2.prod_by_src);
         // Producida, por vector
@@ -97,7 +100,7 @@ impl AsCtePlain for Balance {
         let misc_out = if let Some(map) = misc {
             let demanda = map.get_str_1d("demanda_anual_acs");
             let pct_ren = map.get_str_pct1d("fraccion_renovable_demanda_acs_nrb");
-            format!("\n** Indicadores adicionales\n
+            format!("\n\n** Indicadores adicionales\n
 Demanda total de ACS: {demanda} [kWh]\nPorcentaje renovable de la demanda de ACS (perímetro próximo): {pct_ren} [%]
 "            )
         } else {
@@ -119,35 +122,42 @@ Energía consumida: {used:.2}
 
 Consumida en usos EPB: {used_epus:.2}
 
+* por servicio:
 {used_by_srv}
+
+* por vector:
+{used_epus_by_cr}
 
 Consumida en usos no EPB: {used_nepus:.2}
 
 Generada: {prod:.2}
 
-Generada, por origen:
-
+* por origen:
 {prod_by_src}
 
-Generada, por vector:
-
+* por vector:
 {prod_by_cr}
 
-Suministrada: {del:.2}
+Suministrada {del:.2}:
+
+- de red: {del_grid:.2}
+- in situ: {del_onsite:.2}
 
 Exportada: {exp:.2}
 
 - a la red: {exp_grid:.2}
 - a usos no EPB: {exp_nepus:.2}
 
-** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an] por servicios:
+** Energía primaria (ren, nren) [kWh/m2.an] y emisiones [kg_CO2e/m2.an]:
 
 Recursos utilizados (paso A): {balance_m2_a}
 
+* por servicio:
 {a_by_srv}
 
 Incluyendo el efecto de la energía exportada (paso B): {balance_m2_b}
 
+* por servicio:
 {b_by_srv}{misc_out}
 "
         )

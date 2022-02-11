@@ -265,12 +265,14 @@ fn compute_exported_delivered(
     let E_exp_cr_grid_an = vecsum(&E_exp_cr_grid_t);
     let E_del_cr_t = vecvecdif(&used.epus_t, &prod.used_epus_t);
     let E_del_cr_an = vecsum(&E_del_cr_t);
+    
     let E_del_cr_onsite_t = prod
         .by_src_t
         .get(&Source::INSITU)
         .cloned()
         .unwrap_or_else(|| vec![0.0_f32; E_del_cr_t.len()]);
     let E_del_cr_onsite_an = vecsum(&E_del_cr_onsite_t);
+
     let mut E_exp_cr_j_t = HashMap::<Source, Vec<f32>>::new();
     for (source, prod_src) in &prod.by_src_t {
         E_exp_cr_j_t.insert(*source, vecvecdif(prod_src, &prod.used_epus_by_src_t[source]));
@@ -293,6 +295,7 @@ fn compute_exported_delivered(
             used_nepus_an: E_exp_cr_used_nEPus_an,
         },
         DeliveredEnergy {
+            an: E_del_cr_an + E_del_cr_onsite_an,
             grid_t: E_del_cr_t,
             grid_an: E_del_cr_an,
             onsite_t: E_del_cr_onsite_t,
