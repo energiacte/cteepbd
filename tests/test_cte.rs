@@ -1011,24 +1011,27 @@ fn cte_ACS_demanda_ren_excluye_aux() {
 }
 
 /// Componentes con id de sistema explicitados, usos no EPB y exportación a usos nEPB y a la red
+/// La producción declarada de TERMOSOLAR y EAMBIENTE solo se imputa a su sistema (id) si tiene consumo
+/// El consumo no declarado para un sistema se completa automáticamente
 #[test]
 fn new_format_with_system_id() {
-    let comps = "# Bomba de calor 1
-    1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC 1
-    1,CONSUMO,ACS,EAMBIENTE,150 # BdC 1
-    1,AUX,ACS,5 # Auxiliares ACS
-    2,CONSUMO,NEPB,ELECTRICIDAD,10 # Ascensores
-    # Bomba de calor 2
-    2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC 2
-    2,CONSUMO,CAL,EAMBIENTE,300 # BdC 2
-    # Producción fotovoltaica in situ
-    1,PRODUCCION,EL_INSITU,200 # PV
-    2,PRODUCCION,EL_INSITU,100 # PV
-    3,PRODUCCION,EL_INSITU,15 # PV
-    # Producción de energía ambiente dada por el usuario
+    let comps = "# Usos generales no , id 0
+    0,CONSUMO,NEPB,ELECTRICIDAD,10 # Ascensores
     0,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema sin consumo (no reduce energía a compensar)
+    # Bomba de calor, id=1
+    1,CONSUMO,ACS,ELECTRICIDAD,100 # BdC id=1
+    1,CONSUMO,ACS,EAMBIENTE,150 # BdC 1
+    1,AUX,ACS,5 # Auxiliares ACS de sistema 1
     1,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema con consumo (reduce energía a compensar)
-    2,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema sin consumo de ese servicio (no reduce energía a compensar)
+    # Bomba de calor id=2
+    2,CONSUMO,CAL,ELECTRICIDAD,200 # BdC id=2
+    2,CONSUMO,CAL,EAMBIENTE,300 # BdC 2
+    2,PRODUCCION,EAMBIENTE,100 # Producción declarada de sistema con consumo de ese servicio (no reduce energía a compensar)
+    2,AUX,CAL,5 # Auxiliares CAL de sistema 2
+    # Producción fotovoltaica in situ
+    3,PRODUCCION,EL_INSITU,15 # PV
+    4,PRODUCCION,EL_INSITU,200 # PV
+    5,PRODUCCION,EL_INSITU,100 # PV
     # Compensación de energía ambiente a completar por CteEPBD"
         .parse::<Components>()
         .unwrap();
@@ -1036,9 +1039,9 @@ fn new_format_with_system_id() {
     let bal = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
-            ren: 7.600,
-            nren: -0.20,
-            co2: -0.042,
+            ren: 7.625,
+            nren: -0.10,
+            co2: -0.021,
         },
         bal.balance_m2.we_b
     ));
@@ -1047,9 +1050,9 @@ fn new_format_with_system_id() {
     assert_eq!("10.000", format!("{:.3}", balance_el.used.nepus_an));
     // Produced energy from all sources and used for EPB services
     assert_eq!(
-        "305.000",
+        "310.000",
         format!("{:.3}", balance_el.prod.used_epus_an)
     );
     // Exported energy to non EPB uses
-    assert_eq!("10.000", format!("{:.3}", balance_el.exp.used_nepus_an));
+    assert_eq!("5.000", format!("{:.3}", balance_el.exp.used_nepus_an));
 }
