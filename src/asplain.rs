@@ -82,7 +82,8 @@ impl AsCtePlain for EnergyPerformance {
         let we_b = bal.we.b;
         let RenNrenCo2 { ren, nren, co2, .. } = we_b;
         let tot = we_b.tot();
-        let rer = we_b.rer();
+        let rer = self.rer;
+        let rer_nrb = self.rer_nrb;
         let balance_m2_a = rennren2string(&we_a);
         let a_by_srv = list_entries_rennrenco2(&bal.we.a_by_srv);
         let balance_m2_b = rennren2string(&we_b);
@@ -106,6 +107,7 @@ k_exp = {k_exp:.2}
 C_ep [kWh/m2.an]: ren = {ren:.1}, nren = {nren:.1}, tot = {tot:.1}
 E_CO2 [kg_CO2e/m2.an]: {co2:.2}
 RER = {rer:.2}
+RER_nrb = {rer_nrb:.2}
 
 ** Energía final (todos los vectores) [kWh/m2.an]:
 

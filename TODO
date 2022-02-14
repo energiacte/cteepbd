@@ -4,12 +4,9 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
-  - Compute ratio of prod_onsite / used
-  - RER:
-    - move out of WeightedEnergy to BalanceAllCarriers
-    - Compute RER, RER_nrb
-      - RER_nrb adding up we_ren for all nearby + onsite carriers
-
+  - Compute ratio of prod_onst / used
+    - prod_onst_by_srv?
+    - used_by_srv
   - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - compute cogen electricity factors from used energy for COGEN service
@@ -27,7 +24,7 @@
     - load matching factor computation ((in compute_used_produced)
     - battery support (in compute_used_produced)
     - priority in use of produced energy (onsite > cogen, for instance) (in compute_used_produced, compute_exported_delivered, 9.6.6.2.4)
-  - checks: Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO)
+  - checks: Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
 
 - tests:
 
@@ -42,15 +39,12 @@
       - See UNE_EN 15316-1 formula (35). Varies by subsystem type
       - ¿Whole building efficiencies by service (non renewable primary energy)?
     - Fraction of energy use covered by renewable sources, by service and by system (id)
-      - Calcular % de cobertura renovable (RER_nrb, RER_dst) (consumo EF y demanda) para los distintos servicios
+      - Calcular % de cobertura renovable (consumo EF) para los distintos servicios
     - Consumos de sistemas ficticios (id<=0?) y reales (id>0)
     - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
     - Demanda por servicios y total (¿y demanda de referencia si la hay?)
     - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
-    - RER_nrb
-      - calcular con wfactors y wfactors.to_nearby()? o Cambiar RenNrenCo2 para tener algún factor más (tot y ren_nrb) -> (ren, nren, tot, ren_nrb, co2)
-      - integrar en balance
-      - mostrar en salida
+    - Cambiar RenNrenCo2 para tener algún factor más (tot y ren_nrb) -> (ren, nren, tot, co2)
     - Emisiones: desglose eléctrico y no eléctrico
 
 ## Wishlist

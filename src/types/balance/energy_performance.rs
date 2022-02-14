@@ -61,6 +61,12 @@ pub struct EnergyPerformance {
     pub balance: Balance,
     /// Global energy balance results expressed as area ratios
     pub balance_m2: Balance,
+    /// Renewable Energy Ratio considering the distant perimeter
+    /// RER = we_ren / we_tot
+    pub rer: f32,
+    /// Renewable Energy Ratio considering onsite and nearby perimeter
+    /// RER_nrb = we_ren_nrb+onst / we_tot
+    pub rer_nrb: f32,
     /// Generic miscelaneous user provided data
     pub misc: Option<MiscMap>,
 }

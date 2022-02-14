@@ -142,8 +142,6 @@ pub struct WeightedEnergy {
     pub b: RenNrenCo2,
     /// Weighted energy for calculation step A
     pub a: RenNrenCo2,
-    /// RER (we_an_ren / we_an_tot)
-    pub rer: f32,
     /// Weighted delivered energy by the grid and any energy production sources
     pub del: RenNrenCo2,
     /// Weighted delivered energy by the grid

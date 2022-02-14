@@ -88,6 +88,23 @@ pub fn energy_performance(
     // Compute area weighted total balance
     let balance_m2 = balance.normalize_by_area(arearef);
 
+    // Distant RER
+    let rer = balance.we.b.rer();
+
+    // Nearby RER
+    let ren_nrb = balance_cr
+        .iter()
+        .map(|(carrier, bal)| {
+            if carrier.is_nearby() {
+                bal.we.b.ren
+            } else {
+                0.0
+            }
+        })
+        .sum::<f32>();
+    let tot = balance.we.b.tot();
+    let rer_nrb = if tot > 0.0 { ren_nrb / tot } else { 0.0 };
+
     // Energy performance data and results
     Ok(EnergyPerformance {
         components,
@@ -97,6 +114,8 @@ pub fn energy_performance(
         balance_cr,
         balance,
         balance_m2,
+        rer,
+        rer_nrb,
         misc: None,
     })
 }
@@ -404,8 +423,6 @@ fn compute_weighted_energy(
 
     Ok(WeightedEnergy {
         b: E_we_cr_an,
-        rer: E_we_cr_an.rer(),
-
         a: E_we_cr_an_A,
 
         del: E_we_del_cr_an,
