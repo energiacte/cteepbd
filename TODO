@@ -6,6 +6,9 @@
 - epbd:
   - Compute ratio of prod_onst / used
     - prod_onst_by_srv?
+      - En cada paso se calcula el total EPB consumido de cada vector
+      - Se reparte la producción del vector con el uso total EPB según el f_match del vector (y prioridades)
+      - Ver balance.rs:224 y EN 52000-1 9.6.6.2.4
     - used_by_srv
   - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
