@@ -94,7 +94,7 @@ impl std::fmt::Display for Carrier {
 
 // ==================== Energy Components
 
-// -------------------- Source
+// -------------------- ProdSource
 
 /// Fuente de origen de la energía producida
 #[allow(non_camel_case_types)]

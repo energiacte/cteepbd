@@ -104,11 +104,11 @@ impl std::ops::DerefMut for MiscMap {
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct BalanceTotal {
-    /// Energy use for EPB uses
+    /// Energy use for EPB services
     pub used_epus: f32,
-    /// Energy use for non EPB uses
+    /// Energy use for non EPB services
     pub used_nepus: f32,
-    /// Energy use for EPB uses, by use
+    /// Energy use for EPB services, by service
     pub used_epus_by_srv: HashMap<Service, f32>,
     /// Energy use for EPB uses, by carrier
     pub used_epus_by_cr: HashMap<Carrier, f32>,
@@ -126,19 +126,19 @@ pub struct BalanceTotal {
     pub del_grid: f32,
     /// Delivered by the grid, by carrier
     pub del_grid_by_cr: HashMap<Carrier, f32>,
-    /// Exported energy (to the grid or nEPB uses)
+    /// Exported energy (to the grid or non EPB services)
     pub exp: f32,
     /// Exported energy to the grid
     pub exp_grid: f32,
-    /// Exported energy to nEPB uses
+    /// Exported energy to nEPB services
     pub exp_nepus: f32,
     /// Balance result for calculation step A
     pub we_a: RenNrenCo2,
-    /// Weighted energy for calculation step A, by use (for EPB services)
+    /// Weighted energy for calculation step A, by service (for EPB services)
     pub we_a_by_srv: HashMap<Service, RenNrenCo2>,
     /// Balance result for calculation step A+B
     pub we_b: RenNrenCo2,
-    /// Weighted energy, by use (for EPB services)
+    /// Weighted energy, by service (for EPB services)
     pub we_b_by_srv: HashMap<Service, RenNrenCo2>,
     /// Weighted delivered energy
     pub we_del: RenNrenCo2,
@@ -293,13 +293,13 @@ pub struct BalanceForCarrier {
 /// Used Energy Data and Results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UsedEnergy {
-    /// Energy used for EPB uses at each timestep
+    /// Energy used for EPB services at each timestep
     pub epus_t: Vec<f32>,
-    /// Energy used for EPB uses at each timestep
+    /// Energy used for EPB services at each timestep
     pub epus_an: f32,
-    /// Used energy for non EPB uses at each timestep
+    /// Used energy for non EPB services at each timestep
     pub nepus_t: Vec<f32>,
-    /// Energy used for non EPB uses
+    /// Energy used for non EPB services
     pub nepus_an: f32,
 }
 
@@ -327,17 +327,17 @@ pub struct ProducedEnergy {
 /// Exported Energy Data and Results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExportedEnergy {
-    /// Exported energy to the grid and non EPB uses at each timestep
+    /// Exported energy to the grid and non EPB services at each timestep
     pub t: Vec<f32>, // exp_used_nEPus + exp_grid
-    /// Exported energy to the grid and non EPB uses
+    /// Exported energy to the grid and non EPB services
     pub an: f32,
     /// Exported energy to the grid at each timestep
     pub grid_t: Vec<f32>,
     /// Exported energy to the grid
     pub grid_an: f32,
-    /// Exported energy to non EPB uses at each timestep
+    /// Exported energy to non EPB services at each timestep
     pub used_nepus_t: Vec<f32>,
-    /// Exported energy to non EPB uses
+    /// Exported energy to non EPB services
     pub used_nepus_an: f32,
     /// Exported energy to the grid and non EPB uses at each timestep, by source (INSITU, COGEN)
     pub by_src_t: HashMap<Source, Vec<f32>>,
@@ -379,7 +379,7 @@ pub struct WeightedEnergy {
     pub exp_an: RenNrenCo2,
     /// Weighted exported energy for calculation step A
     pub exp_an_a: RenNrenCo2,
-    /// Weighted exported energy for non EPB uses and calculation step AB
+    /// Weighted exported energy for non EPB services and calculation step AB
     pub exp_nepus_an_ab: RenNrenCo2,
     /// Weighted exported energy to the grid and calculation step AB
     pub exp_grid_an_ab: RenNrenCo2,
@@ -390,10 +390,10 @@ pub struct WeightedEnergy {
 /// Used and Weighted Energy results by EPB service
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ByServiceEnergy {
-    /// Energy used for EPB uses, by use
+    /// Energy used for EPB services, by service
     pub used_epus_an: HashMap<Service, f32>,
-    /// Weighted energy for calculation step A, by use (for EPB services)
+    /// Weighted energy for calculation step A, by service (for EPB services)
     pub we_an_a: HashMap<Service, RenNrenCo2>,
-    /// Weighted energy, by use (for EPB services)
+    /// Weighted energy, by service (for EPB services)
     pub we_an: HashMap<Service, RenNrenCo2>,
 }
