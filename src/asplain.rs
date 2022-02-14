@@ -32,7 +32,7 @@ use crate::types::*;
 /// Muestra en formato simple
 ///
 /// Esta función usa un formato simple y compacto para representar la información sobre
-/// eficiencia energética del edificio, su balance y los resultados
+/// eficiencia energética del edificio, datos y balances
 pub trait AsCtePlain {
     /// Get in plan format
     fn to_plain(&self) -> String;
@@ -51,53 +51,44 @@ fn rennren2string(v: &RenNrenCo2) -> String {
     )
 }
 
-impl AsCtePlain for Balance {
+impl AsCtePlain for EnergyPerformance {
     /// Está mostrando únicamente los resultados
     fn to_plain(&self) -> String {
         // Datos generales
-        let Balance {
-            k_exp,
-            arearef,
-            balance_m2,
-            misc,
-            ..
-        } = self;
+        let bal = &self.balance_m2;
+        let k_exp = self.k_exp;
+        let arearef = self.arearef;
 
-        let BalanceTotal {
-            we_a,
-            we_b,
-            used_epus,
-            used_nepus,
-            prod,
-            del,
-            del_grid,
-            del_onsite,
-            exp,
-            exp_grid,
-            exp_nepus,
-            ..
-        } = balance_m2;
-
+        // Consumos
+        let epus = bal.used.epus;
+        let nepus = bal.used.nepus;
+        let used = epus + nepus;
+        let used_by_srv = list_entries_f32(&bal.used.epus_by_srv);
+        let used_epus_by_cr = list_entries_f32(&bal.used.epus_by_cr);
+        // Generada
+        let prod_an = bal.prod.an;
+        let prod_by_src = list_entries_f32(&bal.prod.by_src);
+        let prod_by_cr = list_entries_f32(&bal.prod.by_cr);
+        // Suministrada
+        let del_an = bal.del.an;
+        let del_grid = bal.del.grid;
+        let del_onsite = bal.del.onst;
+        // Exportada
+        let exp_an = bal.exp.an;
+        let exp_grid = bal.exp.grid;
+        let exp_nepus = bal.exp.nepus;
+        // Ponderada por m2 (por uso)
+        let we_a = bal.we.a;
+        let we_b = bal.we.b;
         let RenNrenCo2 { ren, nren, co2, .. } = we_b;
         let tot = we_b.tot();
         let rer = we_b.rer();
-
-        let used = used_epus + used_nepus;
-
-        // Consumos
-        let used_by_srv = list_entries_f32(&balance_m2.used_epus_by_srv);
-        let used_epus_by_cr = list_entries_f32(&balance_m2.used_epus_by_cr);
-        // Generada
-        let prod_by_src = list_entries_f32(&balance_m2.prod_by_src);
-        // Producida, por vector
-        let prod_by_cr = list_entries_f32(&balance_m2.prod_by_cr);
-        let balance_m2_a = rennren2string(we_a);
-        // Ponderada por m2 (por uso)
-        let a_by_srv = list_entries_rennrenco2(&balance_m2.we_a_by_srv);
-        let balance_m2_b = rennren2string(we_b);
-        let b_by_srv = list_entries_rennrenco2(&balance_m2.we_b_by_srv);
+        let balance_m2_a = rennren2string(&we_a);
+        let a_by_srv = list_entries_rennrenco2(&bal.we.a_by_srv);
+        let balance_m2_b = rennren2string(&we_b);
+        let b_by_srv = list_entries_rennrenco2(&bal.we.b_by_srv);
         // Parámetros de demanda HE4
-        let misc_out = if let Some(map) = misc {
+        let misc_out = if let Some(map) = &self.misc {
             let demanda = map.get_str_1d("demanda_anual_acs");
             let pct_ren = map.get_str_pct1d("fraccion_renovable_demanda_acs_nrb");
             format!("\n\n** Indicadores adicionales\n
@@ -108,7 +99,7 @@ Demanda total de ACS: {demanda} [kWh]\nPorcentaje renovable de la demanda de ACS
         };
 
         format!(
-            "** Balance energético
+            "** Eficiencia energética
 
 Area_ref = {arearef:.2} [m2]
 k_exp = {k_exp:.2}
@@ -120,7 +111,7 @@ RER = {rer:.2}
 
 Energía consumida: {used:.2}
 
-Consumida en usos EPB: {used_epus:.2}
+Consumida en usos EPB: {epus:.2}
 
 * por servicio:
 {used_by_srv}
@@ -128,9 +119,9 @@ Consumida en usos EPB: {used_epus:.2}
 * por vector:
 {used_epus_by_cr}
 
-Consumida en usos no EPB: {used_nepus:.2}
+Consumida en usos no EPB: {nepus:.2}
 
-Generada: {prod:.2}
+Generada: {prod_an:.2}
 
 * por origen:
 {prod_by_src}
@@ -138,12 +129,12 @@ Generada: {prod:.2}
 * por vector:
 {prod_by_cr}
 
-Suministrada {del:.2}:
+Suministrada {del_an:.2}:
 
 - de red: {del_grid:.2}
 - in situ: {del_onsite:.2}
 
-Exportada: {exp:.2}
+Exportada: {exp_an:.2}
 
 - a la red: {exp_grid:.2}
 - a usos no EPB: {exp_nepus:.2}

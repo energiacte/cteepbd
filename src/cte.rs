@@ -446,13 +446,13 @@ pub fn fraccion_renovable_acs_nrb(
     Ok(Q_an_ren / demanda_anual_acs)
 }
 
-/// Devuelve balance con datos de demanda renovable de ACS en perímetro próximo incorporados
+/// Devuelve eficiencia energética con datos de demanda renovable de ACS en perímetro próximo incorporados
 pub fn incorpora_demanda_renovable_acs_nrb(
-    mut balance: Balance,
+    mut ep: EnergyPerformance,
     demanda_anual_acs: Option<f32>,
-) -> Balance {
-    // Añadir a balance.misc un diccionario, si no existe, con datos:
-    let mut map = balance.misc.unwrap_or_default();
+) -> EnergyPerformance {
+    // Añadir a EnergyPerformance.misc un diccionario, si no existe, con datos:
+    let mut map = ep.misc.unwrap_or_default();
     match demanda_anual_acs {
         Some(demanda_anual_acs) => {
             map.insert(
@@ -461,8 +461,8 @@ pub fn incorpora_demanda_renovable_acs_nrb(
             );
 
             match fraccion_renovable_acs_nrb(
-                &balance.components,
-                &balance.wfactors,
+                &ep.components,
+                &ep.wfactors,
                 demanda_anual_acs,
             ) {
                 Ok(fraccion_renovable_acs_nrb) => {
@@ -491,6 +491,6 @@ pub fn incorpora_demanda_renovable_acs_nrb(
             );
         }
     }
-    balance.misc = Some(map);
-    balance
+    ep.misc = Some(map);
+    ep
 }

@@ -104,10 +104,10 @@ let kexp = cte::KEXP_DEFAULT; // factor de exportación [-]
 let arearef = 200.0; // superficie de referencia [m2]
 
 // Cálculo del balance global según EN ISO 52000-1:2017
-let balance = energy_performance(&components, &fp, kexp, arearef).unwrap();
+let ep = energy_performance(&components, &fp, kexp, arearef).unwrap();
 
 // Visualización compacta
-println!("{}", &balance.to_plain());
+println!("{}", &ep.to_plain());
 ```
 
 */

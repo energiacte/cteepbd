@@ -5,7 +5,11 @@
 
 - epbd:
   - Compute ratio of prod_onsite / used
-  - RER_nrb
+  - RER:
+    - move out of WeightedEnergy to BalanceAllCarriers
+    - Compute RER, RER_nrb
+      - RER_nrb adding up we_ren for all nearby + onsite carriers
+
   - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - compute cogen electricity factors from used energy for COGEN service

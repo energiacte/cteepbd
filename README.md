@@ -46,7 +46,7 @@ Produce los siguientes resultados por pantalla:
     Área de referencia (metadatos) [m2]: 200.00
     Factor de exportación (metadatos) [-]: 0.0
 
-    ** Balance energético
+    ** Eficiencia energética
 
     Area_ref = 200.00 [m2]
     k_exp = 0.00

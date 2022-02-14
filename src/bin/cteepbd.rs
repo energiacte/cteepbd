@@ -50,7 +50,7 @@ use std::str::FromStr;
 
 use cteepbd::{
     cte, energy_performance,
-    types::{MetaVec, RenNrenCo2, Balance},
+    types::{MetaVec, RenNrenCo2, EnergyPerformance},
     AsCtePlain, AsCteXml, Components, UserWF,
 };
 
@@ -542,60 +542,60 @@ fn main() {
         .or_else(|| components.get_meta_f32("CTE_ACS_DEMANDA_ANUAL"))
         .or(None);
 
-    // Cálculo del balance ------------------------------------------------------------------------
-    let balance: Option<Balance> = if !components.cdata.is_empty() {
-        let balance = energy_performance(&components, &fpdata, kexp, arearef)
+    // Cálculo de la eficiencia energética ------------------------------------------------------------------------
+    let ep: Option<EnergyPerformance> = if !components.cdata.is_empty() {
+        let ep = energy_performance(&components, &fpdata, kexp, arearef)
             .map(|b| cte::incorpora_demanda_renovable_acs_nrb(b, maybe_demanda_anual_acs))
             .unwrap_or_else(|e| {
                 eprintln!(
-                    "ERROR: no se ha podido calcular el balance energético: {}",
+                    "ERROR: no se ha podido calcular la eficiencia energética: {}",
                     e
                 );
                 exit(exitcode::DATAERR);
             });
-        Some(balance)
+        Some(ep)
     } else if matches.is_present("gen_archivos_factores") {
         println!(
-            "No se calcula el balance pero se ha generado el archivo de factores de paso {:?}",
+            "No se calculó la eficiencia energética pero se ha generado el archivo de factores de paso {:?}",
             matches.value_of_os("gen_archivo_factores").unwrap()
         );
         None
     } else {
-        println!("No se han definido datos suficientes para calcular el balance energético. Necesita definir al menos los componentes energéticos y los factores de paso");
+        println!("No se han definido datos suficientes para el cálculo de la eficiencia energética. Necesita definir al menos los componentes energéticos y los factores de paso");
         None
     };
 
     // Salida de resultados -----------------------------------------------------------------------
-    if let Some(balance) = balance {
-        // Guardar balance en formato json
+    if let Some(ep) = ep {
+        // Guardar datos y resultados en formato json
         if matches.is_present("archivo_salida_json") {
             let path = matches.value_of_os("archivo_salida_json").unwrap();
             if verbosity > 0 {
                 println!("Resultados en formato JSON: {:?}", path);
             }
-            let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|e| {
+            let json = serde_json::to_string_pretty(&ep).unwrap_or_else(|e| {
                 eprintln!(
-                    "ERROR: conversión incorrecta del balance energético a JSON: {}",
+                    "ERROR: conversión incorrecta de datos y resultados de eficiencia energética a JSON: {}",
                     e
                 );
                 exit(exitcode::DATAERR);
             });
             writefile(&path, json.as_bytes());
         }
-        // Guardar balance en formato XML
+        // Guardar datos y resultados en formato XML
         if matches.is_present("archivo_salida_xml") {
             let path = matches.value_of_os("archivo_salida_xml").unwrap();
             if verbosity > 0 {
                 println!("Resultados en formato XML: {:?}", path);
             }
-            let xml = &balance.to_xml();
+            let xml = &ep.to_xml();
             writefile(&path, xml.as_bytes());
         }
         // Mostrar siempre en formato de texto plano
-        let plain = balance.to_plain();
+        let plain = ep.to_plain();
         println!("\n{}", plain);
 
-        // Guardar balance en formato de texto plano
+        // Guardar datos y resultados en formato de texto plano
         if matches.is_present("archivo_salida_txt") {
             let path = matches.value_of_os("archivo_salida_txt").unwrap();
             if verbosity > 0 {

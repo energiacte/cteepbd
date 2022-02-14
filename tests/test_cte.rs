@@ -185,7 +185,7 @@ fn cte_balance_from_data() {
             nren: 37.1,
             co2: 6.3,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -200,7 +200,7 @@ fn cte_1_base() {
             nren: 200.0,
             co2: 42.0
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -215,7 +215,7 @@ fn cte_1_base_normativo() {
             nren: 195.4,
             co2: 33.1
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -230,7 +230,7 @@ fn cte_1_PV() {
             nren: 100.0,
             co2: 21.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -245,7 +245,7 @@ fn cte_1_PV_normativo() {
             nren: 97.7,
             co2: 16.5,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -260,7 +260,7 @@ fn cte_1xPV() {
             nren: -80.0,
             co2: -16.8,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -275,7 +275,7 @@ fn cte_1xPV_normativo() {
             nren: -78.2,
             co2: -13.24
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -290,7 +290,7 @@ fn cte_1xPVk0() {
             nren: 0.0,
             co2: 0.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -305,7 +305,7 @@ fn cte_1xPVk0_normativo() {
             nren: 0.0,
             co2: 0.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -320,7 +320,7 @@ fn cte_2xPVgas() {
             nren: 169.0,
             co2: 33.4,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -335,7 +335,7 @@ fn cte_2xPVgas_normativo() {
             nren: 187.0,
             co2: 41.3,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -350,7 +350,7 @@ fn cte_3_PV_BdC() {
             nren: 38.0,
             co2: 8.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -365,7 +365,7 @@ fn cte_3_PV_BdC_normativo() {
             nren: 37.1,
             co2: 6.3,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -380,7 +380,7 @@ fn cte_4_cgn_fosil() {
             nren: 227.8,
             co2: 45.0
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -395,7 +395,7 @@ fn cte_4_cgn_fosil_normativo() {
             nren: 252.4,
             co2: 55.8,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -410,7 +410,7 @@ fn cte_5_cgn_biogas() {
             nren: 69.8,
             co2: 21.3,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -425,7 +425,7 @@ fn cte_5_cgn_biogas_normativo() {
             nren: 77.8,
             co2: 18.8,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -440,7 +440,7 @@ fn cte_6_K3() {
             nren: -662.0,
             co2: -139.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -455,7 +455,7 @@ fn cte_6_K3_wfactors_file() {
             nren: -662.0,
             co2: 176.8,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -463,7 +463,7 @@ fn cte_6_K3_wfactors_file() {
             nren: 842.0,
             co2: 176.8,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -480,7 +480,7 @@ fn cte_J1_Base_kexp_1() {
             nren: 200.0,
             co2: 42.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -488,7 +488,7 @@ fn cte_J1_Base_kexp_1() {
             nren: 200.0,
             co2: 42.0,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -503,7 +503,7 @@ fn cte_J2_Base_PV_kexp_1() {
             nren: 100.0,
             co2: 21.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -511,7 +511,7 @@ fn cte_J2_Base_PV_kexp_1() {
             nren: 100.0,
             co2: 21.0,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -526,7 +526,7 @@ fn cte_J3_Base_PV_excess_kexp_1() {
             nren: -80.0,
             co2: -16.8,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -534,7 +534,7 @@ fn cte_J3_Base_PV_excess_kexp_1() {
             nren: 0.0,
             co2: 0.0,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -551,7 +551,7 @@ fn cte_J4_cogen_fuel_boiler_kexp_1() {
             nren: 0.0,
             co2: 0.0
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     // EPnren 215, EPtot 215
     assert!(approx_equal(
@@ -560,7 +560,7 @@ fn cte_J4_cogen_fuel_boiler_kexp_1() {
             nren: 0.0,
             co2: 0.0,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -575,7 +575,7 @@ fn cte_J3b_Base_PV_excess_kexp_0() {
             nren: 0.0,
             co2: 0.0
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -583,7 +583,7 @@ fn cte_J3b_Base_PV_excess_kexp_0() {
             nren: 0.0,
             co2: 0.0,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -598,7 +598,7 @@ fn cte_J5_Gas_boiler_PV_aux_kexp_1() {
             nren: 169.0,
             co2: 33.4,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -606,7 +606,7 @@ fn cte_J5_Gas_boiler_PV_aux_kexp_1() {
             nren: 209.0,
             co2: 41.8,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -621,7 +621,7 @@ fn cte_J6_Heat_pump_PV_kexp_1() {
             nren: 38.0,
             co2: 8.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -629,7 +629,7 @@ fn cte_J6_Heat_pump_PV_kexp_1() {
             nren: 38.0,
             co2: 8.0,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -644,7 +644,7 @@ fn cte_J7_Co_generator_gas_plus_gas_boiler_kexp_1() {
             nren: 229.0,
             co2: 45.3,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -652,7 +652,7 @@ fn cte_J7_Co_generator_gas_plus_gas_boiler_kexp_1() {
             nren: 215.3,
             co2: 34.3,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -667,7 +667,7 @@ fn cte_J8_Co_generator_biogas_plus_gas_boiler_kexp_1() {
             nren: 71.0,
             co2: 21.6,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -675,7 +675,7 @@ fn cte_J8_Co_generator_biogas_plus_gas_boiler_kexp_1() {
             nren: 119.5,
             co2: 31.1,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -690,7 +690,7 @@ fn cte_J9_electricity_monthly_kexp_1() {
             nren: -662.0,
             co2: -139.0,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
@@ -698,7 +698,7 @@ fn cte_J9_electricity_monthly_kexp_1() {
             nren: 842.0,
             co2: 176.8,
         },
-        bal.balance_m2.we_a
+        bal.balance_m2.we.a
     ));
 }
 
@@ -713,7 +713,7 @@ fn cte_test_carriers_kexp_0() {
             nren: 18.9,
             co2: 3.2,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -734,7 +734,7 @@ fn cte_EPBD() {
             nren: 38.4,
             co2: 8.2,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -750,7 +750,7 @@ fn cte_new_services_format() {
             nren: 38.4,
             co2: 8.2,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -767,7 +767,7 @@ fn cte_new_services_format_ACS() {
             nren: 12.4,
             co2: 2.9,
         },
-        bal.balance_m2.we_b
+        bal.balance_m2.we.b
     ));
 }
 
@@ -787,7 +787,7 @@ fn cte_balance_by_srv() {
         },
     );
 
-    assert_eq!(result, bal.balance_m2.we_b_by_srv);
+    assert_eq!(result, bal.balance_m2.we.b_by_srv);
 }
 
 // Tests para demanda renovable de ACS
@@ -1028,7 +1028,7 @@ fn global_test_1() {
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
 
     // println!("{:#?}", bal.components);
     // println!("prod_by_cr: {:?}", bal.balance.prod_by_cr);
@@ -1046,7 +1046,7 @@ fn global_test_1() {
             nren: 0.0,
             co2: 0.0,
         },
-        bal.balance_m2.we_a
+        ep.balance_m2.we.a
     ));
     // Paso B
     assert!(approx_equal(
@@ -1055,45 +1055,45 @@ fn global_test_1() {
             nren: -0.10,
             co2: -0.021,
         },
-        bal.balance_m2.we_b
+        ep.balance_m2.we.b
     ));
     // Prod: EAMBIENTE: 100 (nepb) + 200 (decl.) + 250 (autocompletados) + EL: 15+200+100
-    assert_eq!("865.000", format!("{:.3}", bal.balance.prod));
+    assert_eq!("865.000", format!("{:.3}", ep.balance.prod.an));
     // Exp 100 de EAMBIENTE + 5 de ELECTRICIDAD
-    assert_eq!("105.000", format!("{:.3}", bal.balance.exp));
+    assert_eq!("105.000", format!("{:.3}", ep.balance.exp.an));
     // Suministrada: 0, ya que todo se cubre con energía in situ
-    assert_eq!("0.000", format!("{:.3}", bal.balance.del_grid));
+    assert_eq!("0.000", format!("{:.3}", ep.balance.del.grid));
     // Results by service for all carriers
     assert_eq!(
         "506.667",
-        format!("{:.3}", bal.balance.used_epus_by_srv[&Service::CAL])
+        format!("{:.3}", ep.balance.used.epus_by_srv[&Service::CAL])
     );
     assert_eq!(
         "253.333",
-        format!("{:.3}", bal.balance.used_epus_by_srv[&Service::ACS])
+        format!("{:.3}", ep.balance.used.epus_by_srv[&Service::ACS])
     );
     assert_eq!(
         "{ ren: 508.333, nren: -6.667, co2: -1.400 }",
-        format!("{}", bal.balance.we_b_by_srv[&Service::CAL])
+        format!("{}", ep.balance.we.b_by_srv[&Service::CAL])
     );
     assert_eq!(
         "{ ren: 254.167, nren: -3.333, co2: -0.700 }",
-        format!("{}", bal.balance.we_b_by_srv[&Service::ACS])
+        format!("{}", ep.balance.we.b_by_srv[&Service::ACS])
     );
 
     // Balance eléctrico
 
-    let balance_el = &bal.balance_cr[&Carrier::ELECTRICIDAD];
+    let balance_el = &ep.balance_cr[&Carrier::ELECTRICIDAD];
     // NEPB used energy
     assert_eq!("10.000", format!("{:.3}", balance_el.used.nepus_an));
     // Produced energy from all sources and used for EPB services
-    assert_eq!("310.000", format!("{:.3}", balance_el.prod.used_epus_an));
+    assert_eq!("310.000", format!("{:.3}", balance_el.prod.epus_an));
     // Exported energy to non EPB uses and to the grid
-    assert_eq!("5.000", format!("{:.3}", balance_el.exp.used_nepus_an));
+    assert_eq!("5.000", format!("{:.3}", balance_el.exp.nepus_an));
     assert_eq!("0.000", format!("{:.3}", balance_el.exp.grid_an));
     // Results by service for electricity
     assert_eq!(
         "206.667",
-        format!("{:.3}", balance_el.by_srv.used_epus_an[&Service::CAL])
+        format!("{:.3}", balance_el.by_srv.epus[&Service::CAL])
     );
 }

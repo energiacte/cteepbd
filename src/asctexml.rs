@@ -61,23 +61,14 @@ pub trait AsCteXml {
 // ================= Implementaciones ====================
 
 
-impl AsCteXml for Balance {
+impl AsCteXml for EnergyPerformance {
     fn to_xml(&self) -> String {
-        let Balance {
-            components,
-            wfactors,
-            k_exp,
-            arearef,
-            balance_m2,
-            ..
-        } = self;
-
         // Data
-        let RenNrenCo2 { ren, nren, .. } = balance_m2.we_b;
+        let RenNrenCo2 { ren, nren, .. } = self.balance_m2.we.b;
 
         // Formatting
-        let wfstring = wfactors.to_xml();
-        let components_string = components.to_xml();
+        let wfstring = self.wfactors.to_xml();
+        let components_string = self.components.to_xml();
 
         // Final assembly
         format!(
@@ -93,8 +84,8 @@ impl AsCteXml for Balance {
     </BalanceEPB>",
             wfstring,
             components_string,
-            k_exp,
-            arearef,
+            self.k_exp,
+            self.arearef,
             ren + nren,
             nren
         )
