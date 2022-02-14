@@ -128,10 +128,10 @@ Se han adoptado las siguientes hipótesis de cálculo y simplificaciones:
 - los factores de paso son constantes a lo largo de los pasos de cálculo
 - no se definen prioridades para la generación energética (f_we_el_stepA promedio)
 - se considera como suministrada toda la energía producida por fuentes distintas a la cogeneración
-- el factor de coincidencia de cargas (f_match_t) se fija igual a 1.0
+- factor de coincidencia de cargas (f_match_t) constante o variable
 - el reparto de energía eléctrica producida entre servicios es proporcional al consumo eléctrico
   servicio respecto al consumo total de servicios EPB
-- los consumos auxiliares de un sistema se asignan a los servicios proporcionados por dicho sistema
-  a la energía entregada o absorbida los dichos servicios EPB que provee.
+- los consumos auxiliares de un sistema se asignan a los servicios proveídos por dicho sistema
+  de forma proporcional a la energía entregada o absorbida los dichos servicios EPB que provee.
 - para el cálculo del porcentaje renovable de la demanda de ACS se considera que el rendimiento
   térmico de las aportaciones renovables distintas a la biomasa es igual a 1.0.

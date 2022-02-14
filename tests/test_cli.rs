@@ -177,6 +177,22 @@ fn ejemplo_acs_demanda_ren_con_nepb() {
         ])
         .stdout()
         .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 77.3 [%]")
+        .stdout()
+        .contains("* generada y usada en servicios EPB, por origen:\n- EAMBIENTE: 26.00\n- EL_INSITU: 4.45")
+        .unwrap();
+
+        assert_cli::Assert::main_binary()
+        .with_args(&[
+            "-c",
+            "test_data/acs_demanda_ren_con_nepb.csv",
+            "-l",
+            "PENINSULA",
+            "--demanda_anual_acs",
+            "1823.8",
+            "--load_matching"
+        ])
+        .stdout()
+        .contains("* generada y usada en servicios EPB, por origen:\n- EAMBIENTE: 13.00\n- EL_INSITU: 2.92")
         .unwrap();
 }
 

@@ -69,6 +69,7 @@ impl AsCtePlain for EnergyPerformance {
         let prod_an = bal.prod.an;
         let prod_by_src = list_entries_f32(&bal.prod.by_src);
         let prod_by_cr = list_entries_f32(&bal.prod.by_cr);
+        let prod_epus_by_src = list_entries_f32(&bal.prod.epus_by_src);
         // Suministrada
         let del_an = bal.del.an;
         let del_grid = bal.del.grid;
@@ -125,11 +126,14 @@ Consumida en usos no EPB: {nepus:.2}
 
 Generada: {prod_an:.2}
 
+* por vector:
+{prod_by_cr}
+
 * por origen:
 {prod_by_src}
 
-* por vector:
-{prod_by_cr}
+* generada y usada en servicios EPB, por origen:
+{prod_epus_by_src}
 
 Suministrada {del_an:.2}:
 

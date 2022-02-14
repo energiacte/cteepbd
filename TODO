@@ -24,7 +24,6 @@
     - id, SISTEMA, GEN, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - id, SISTEMA, NGEN (DIS + EM), ???
   - Implement
-    - load matching factor computation ((in compute_used_produced)
     - battery support (in compute_used_produced)
     - priority in use of produced energy (onsite > cogen, for instance) (in compute_used_produced, compute_exported_delivered, 9.6.6.2.4)
   - checks: Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states

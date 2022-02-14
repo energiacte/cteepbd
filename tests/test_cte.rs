@@ -178,7 +178,7 @@ pub fn approx_equal(expected: RenNrenCo2, got: RenNrenCo2) -> bool {
 fn cte_balance_from_data() {
     let ENERGYDATALIST = get_energydatalist();
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&ENERGYDATALIST, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&ENERGYDATALIST, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 178.9,
@@ -193,7 +193,7 @@ fn cte_balance_from_data() {
 fn cte_1_base() {
     let comps = components_from_file("test_data/extra/ejemplo1base.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 50.0,
@@ -208,7 +208,7 @@ fn cte_1_base() {
 fn cte_1_base_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo1base.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 41.4,
@@ -223,7 +223,7 @@ fn cte_1_base_normativo() {
 fn cte_1_PV() {
     let comps = components_from_file("test_data/extra/ejemplo1PV.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 75.0,
@@ -238,7 +238,7 @@ fn cte_1_PV() {
 fn cte_1_PV_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo1PV.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 70.7,
@@ -253,7 +253,7 @@ fn cte_1_PV_normativo() {
 fn cte_1xPV() {
     let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 120.0,
@@ -268,7 +268,7 @@ fn cte_1xPV() {
 fn cte_1xPV_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 123.4,
@@ -283,7 +283,7 @@ fn cte_1xPV_normativo() {
 fn cte_1xPVk0() {
     let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, 0.0, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, 0.0, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 100.0,
@@ -298,7 +298,7 @@ fn cte_1xPVk0() {
 fn cte_1xPVk0_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo1xPV.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, 0.0, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, 0.0, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 100.0,
@@ -313,7 +313,7 @@ fn cte_1xPVk0_normativo() {
 fn cte_2xPVgas() {
     let comps = components_from_file("test_data/extra/ejemplo2xPVgas.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 30.0,
@@ -328,7 +328,7 @@ fn cte_2xPVgas() {
 fn cte_2xPVgas_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo2xPVgas.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 32.7,
@@ -343,7 +343,7 @@ fn cte_2xPVgas_normativo() {
 fn cte_3_PV_BdC() {
     let comps = components_from_file("test_data/extra/ejemplo3PVBdC.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 180.5,
@@ -358,7 +358,7 @@ fn cte_3_PV_BdC() {
 fn cte_3_PV_BdC_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo3PVBdC.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 178.9,
@@ -373,7 +373,7 @@ fn cte_3_PV_BdC_normativo() {
 fn cte_4_cgn_fosil() {
     let comps = components_from_file("test_data/extra/ejemplo4cgnfosil.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: -14.0,
@@ -388,7 +388,7 @@ fn cte_4_cgn_fosil() {
 fn cte_4_cgn_fosil_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo4cgnfosil.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: -10.3,
@@ -403,7 +403,7 @@ fn cte_4_cgn_fosil_normativo() {
 fn cte_5_cgn_biogas() {
     let comps = components_from_file("test_data/extra/ejemplo5cgnbiogas.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 159.8,
@@ -418,7 +418,7 @@ fn cte_5_cgn_biogas() {
 fn cte_5_cgn_biogas_normativo() {
     let comps = components_from_file("test_data/extra/ejemplo5cgnbiogas.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 151.3,
@@ -433,7 +433,7 @@ fn cte_5_cgn_biogas_normativo() {
 fn cte_6_K3() {
     let comps = components_from_file("test_data/extra/ejemplo6K3.csv");
     let FP: Factors = TESTFP.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 1385.5,
@@ -448,7 +448,7 @@ fn cte_6_K3() {
 fn cte_6_K3_wfactors_file() {
     let comps = components_from_file("test_data/extra/ejemplo6K3.csv");
     let FP: Factors = wfactors_from_file("test_data/factores_paso_test.csv");
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 1385.5,
@@ -473,7 +473,7 @@ fn cte_6_K3_wfactors_file() {
 fn cte_J1_Base_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ1_base.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 50.0,
@@ -496,7 +496,7 @@ fn cte_J1_Base_kexp_1() {
 fn cte_J2_Base_PV_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ2_basePV.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 75.0,
@@ -519,7 +519,7 @@ fn cte_J2_Base_PV_kexp_1() {
 fn cte_J3_Base_PV_excess_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ3_basePVexcess.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 120.0,
@@ -543,7 +543,7 @@ fn cte_J3_Base_PV_excess_kexp_1() {
 fn cte_J4_cogen_fuel_boiler_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ4_cogen_fuel_boiler.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, 1.0, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, 1.0, 1.0, false).unwrap();
     // EPnren 229, EPtot 215
     assert!(approx_equal(
         RenNrenCo2 {
@@ -568,7 +568,7 @@ fn cte_J4_cogen_fuel_boiler_kexp_1() {
 fn cte_J3b_Base_PV_excess_kexp_0() {
     let comps = components_from_file("test_data/ejemploJ3_basePVexcess.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, 0.0, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, 0.0, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 100.0,
@@ -591,7 +591,7 @@ fn cte_J3b_Base_PV_excess_kexp_0() {
 fn cte_J5_Gas_boiler_PV_aux_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ5_gasPV.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 30.0,
@@ -614,7 +614,7 @@ fn cte_J5_Gas_boiler_PV_aux_kexp_1() {
 fn cte_J6_Heat_pump_PV_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ6_HPPV.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 180.5,
@@ -637,7 +637,7 @@ fn cte_J6_Heat_pump_PV_kexp_1() {
 fn cte_J7_Co_generator_gas_plus_gas_boiler_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ7_cogenfuelgasboiler.csv");
     let FP: Factors = TESTFPJ7.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: -13.7,
@@ -660,7 +660,7 @@ fn cte_J7_Co_generator_gas_plus_gas_boiler_kexp_1() {
 fn cte_J8_Co_generator_biogas_plus_gas_boiler_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ8_cogenbiogasboiler.csv");
     let FP: Factors = TESTFPJ8.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 144.3,
@@ -683,7 +683,7 @@ fn cte_J8_Co_generator_biogas_plus_gas_boiler_kexp_1() {
 fn cte_J9_electricity_monthly_kexp_1() {
     let comps = components_from_file("test_data/ejemploJ9_electr.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 1385.5,
@@ -706,7 +706,7 @@ fn cte_J9_electricity_monthly_kexp_1() {
 fn cte_test_carriers_kexp_0() {
     let comps = components_from_file("test_data/cte_test_carriers.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, 0.0, 200.0).unwrap();
+    let bal = energy_performance(&comps, &FP, 0.0, 200.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 24.6,
@@ -727,7 +727,7 @@ fn cte_EPBD() {
         cogen_to_nepb: None,
     };
     let FP = wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, user_wf, CTE_USERWF).unwrap();
-    let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
+    let bal = energy_performance(&comps, &FP, 0.0, 217.4, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 2.2,
@@ -743,7 +743,7 @@ fn cte_new_services_format() {
     // Igual que N_R09, y usamos valores por defecto en función de normalize
     let comps = components_from_file("test_data/newServicesFormat.csv");
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
+    let bal = energy_performance(&comps, &FP, 0.0, 217.4, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 2.2,
@@ -760,7 +760,7 @@ fn cte_new_services_format_ACS() {
     let comps =
         components_from_file("test_data/newServicesFormat.csv").filter_by_epb_service(Service::ACS);
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, 0.0, 217.4).unwrap();
+    let bal = energy_performance(&comps, &FP, 0.0, 217.4, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 0.0,
@@ -775,7 +775,7 @@ fn cte_new_services_format_ACS() {
 fn cte_balance_by_srv() {
     let ENERGYDATALIST = get_energydatalist();
     let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&ENERGYDATALIST, &FP, TESTKEXP, 1.0).unwrap();
+    let bal = energy_performance(&ENERGYDATALIST, &FP, TESTKEXP, 1.0, false).unwrap();
 
     let mut result: HashMap<Service, RenNrenCo2> = HashMap::new();
     result.insert(
@@ -1028,7 +1028,7 @@ fn global_test_1() {
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let ep = energy_performance(&comps, &FP, 1.0, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, 1.0, 100.0, false).unwrap();
 
     // println!("{:#?}", bal.components);
     // println!("prod_by_cr: {:?}", bal.balance.prod_by_cr);

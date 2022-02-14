@@ -50,7 +50,7 @@ use std::str::FromStr;
 
 use cteepbd::{
     cte, energy_performance,
-    types::{MetaVec, RenNrenCo2, EnergyPerformance},
+    types::{EnergyPerformance, MetaVec, RenNrenCo2},
     AsCtePlain, AsCteXml, Components, UserWF,
 };
 
@@ -346,6 +346,10 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .short("v")
             .multiple(true)
             .help("Sets the level of verbosity"))
+        .arg(Arg::with_name("load_matching")
+            .long("load_matching")
+            .takes_value(false)
+            .help("Calcula factor de coincidencia de cargas"))
         .get_matches()
 }
 
@@ -390,6 +394,9 @@ fn main() {
     let arearef_cli = matches
         .value_of("arearef")
         .and_then(|arearefstr| validate_arearef(arearefstr, "usuario"));
+
+    // Método de cálculo del factor de coincidencia de cargas
+    let load_matching = matches.is_present("load_matching");
 
     // Factores de paso ---------------------------------------------------------------------------
 
@@ -544,7 +551,7 @@ fn main() {
 
     // Cálculo de la eficiencia energética ------------------------------------------------------------------------
     let ep: Option<EnergyPerformance> = if !components.cdata.is_empty() {
-        let ep = energy_performance(&components, &fpdata, kexp, arearef)
+        let ep = energy_performance(&components, &fpdata, kexp, arearef, load_matching)
             .map(|b| cte::incorpora_demanda_renovable_acs_nrb(b, maybe_demanda_anual_acs))
             .unwrap_or_else(|e| {
                 eprintln!(

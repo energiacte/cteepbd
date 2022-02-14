@@ -64,6 +64,7 @@ pub fn energy_performance(
     wfactors: &Factors,
     k_exp: f32,
     arearef: f32,
+    load_matching: bool,
 ) -> Result<EnergyPerformance> {
     if arearef < 1e-3 {
         return Err(EpbdError::WrongInput(format!(
@@ -78,7 +79,7 @@ pub fn energy_performance(
     let mut balance_cr: HashMap<Carrier, BalanceCarrier> = HashMap::new();
     for cr in &components.available_carriers() {
         // Compute balance for this carrier ---
-        let bal_cr = balance_for_carrier(*cr, &components, wfactors, k_exp)?;
+        let bal_cr = balance_for_carrier(*cr, &components, wfactors, k_exp, load_matching)?;
         // Add up to the global balance
         balance += &bal_cr;
         // Append to the map of balances by carrier
@@ -146,6 +147,7 @@ fn balance_for_carrier(
     components: &Components,
     wfactors: &Factors,
     k_exp: f32,
+    load_matching: bool,
 ) -> Result<BalanceCarrier> {
     let cr_list: Vec<Energy> = components
         .cdata
@@ -159,7 +161,7 @@ fn balance_for_carrier(
     let f_us_cr = compute_factors_by_use_cr(&cr_list);
 
     // Compute used and produced energy from components
-    let (used, prod, f_match) = compute_used_produced(cr_list);
+    let (used, prod, f_match) = compute_used_produced(cr_list, load_matching);
 
     // Compute exported and delivered energy from used and produced energy data
     let (exp, del) = compute_exported_delivered(&used, &prod);
@@ -186,9 +188,11 @@ fn balance_for_carrier(
 /// TODO:
 /// - Implementar prioridad de consumos entre producciones insitu
 /// - Implementar uso de baterías (almacenamiento, sto)
-/// - Implementar factor de reparto de carga f_match_t
 #[allow(non_snake_case)]
-fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, Vec<f32>) {
+fn compute_used_produced(
+    cr_list: Vec<Energy>,
+    load_matching: bool,
+) -> (UsedEnergy, ProducedEnergy, Vec<f32>) {
     // We know all carriers have the same time steps (see FromStr for Components)
     let num_steps = cr_list[0].num_steps();
 
@@ -221,11 +225,8 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
     }
     let E_pr_cr_an = vecsum(&E_pr_cr_t);
 
-    // Load matching factor with constant value == 1 (11.6.2.4)
-    // TODO: implement optional computation of f_match_t (using function in B.32):
-    // x = E_pr_cr_t / E_EPus_cr_t (at each time step)
-    // f_match_t = if x < 0 { 1.0 } else { (x + 1/x - 1) / (x + 1 / n) };
-    let f_match_t = vec![1.0; num_steps];
+    // Load matching factor (32) (11.6.2.4)
+    let f_match_t = compute_f_match(&E_pr_cr_t, &E_EPus_cr_t, load_matching);
 
     let E_pr_cr_used_EPus_t = vecvecmul(&f_match_t, &vecvecmin(&E_EPus_cr_t, &E_pr_cr_t));
     let E_pr_cr_used_EPus_an = vecsum(&E_pr_cr_used_EPus_t);
@@ -269,6 +270,37 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
         },
         f_match_t,
     )
+}
+
+/// Compute load matching factor (32) (11.6.2.4)
+///
+/// When load_matching is true it computes the statistical load matching factor using the
+/// proposed expression for monthly time steps from table B.32, with k=1 and n=1.
+///
+/// In other cases, it uses a constant factor = 1.0 for all time steps, as the proposed
+/// function for hourly timesteps in table B.32.
+#[allow(non_snake_case)]
+fn compute_f_match(E_pr_cr_t: &[f32], E_EPus_cr_t: &[f32], load_matching: bool) -> Vec<f32> {
+    let num_steps = E_pr_cr_t.len();
+    if load_matching {
+        // x = E_pr_cr_t / E_EPus_cr_t (at each time step)
+        // f_match_t = if x <= 0.0 { 1.0 } else { (x + 1.0/x - 1.0) / (x + 1.0 / x) };
+        E_pr_cr_t
+            .iter()
+            .zip(E_EPus_cr_t.iter())
+            .map(|(produced, used)| if *used > 0.0 { produced / used } else { 0.0 })
+            .map(|x| {
+                if x <= 0.0 {
+                    1.0
+                } else {
+                    (x + 1.0 / x - 1.0) / (x + 1.0 / x)
+                }
+            })
+            .collect()
+    } else {
+        // Load matching factor with constant value == 1 (11.6.2.4)
+        vec![1.0; num_steps]
+    }
 }
 
 /// Compute exported and delivered energy from used and produced energy data
