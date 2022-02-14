@@ -401,7 +401,7 @@ impl Factors {
     /// Convierte factores de paso con perímetro "distant" a factores de paso "nearby".
     ///
     /// Los elementos que tiene origen en la RED (!= INSITU, != COGEN)
-    /// y no están en la lista CTE_NRBY cambian sus factores de paso
+    /// y no están en la lista nearby_list cambian sus factores de paso
     /// de forma que ren' = 0 y nren' = ren + nren.
     /// **ATENCIÓN**: ¡¡La producción eléctrica de la cogeneración entra con (factores ren:0, nren:0)!!
     pub fn to_nearby(&self, nearby_list: &[Carrier]) -> Self {

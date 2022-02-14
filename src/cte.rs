@@ -59,16 +59,6 @@ pub const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELI
 // Valores bien conocidos de metadatos:
 // CTE_LOCALIZACION -> str
 
-/// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
-pub const CTE_NRBY: [Carrier; 6] = [
-    Carrier::BIOMASA,
-    Carrier::BIOMASADENSIFICADA,
-    Carrier::RED1,
-    Carrier::RED2,
-    Carrier::EAMBIENTE,
-    Carrier::TERMOSOLAR,
-]; // Ver B.23. Solo biomasa sólida
-
 /// Factores de paso definibles por el usuario usados por defecto
 pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
     red1: RenNrenCo2::new(0.0, 1.3, 0.3),
@@ -240,7 +230,7 @@ fn Q_nrb_non_biomass_an(cr_list: &[&Energy], wfactors: &Factors) -> Result<(f32,
         .iter()
         .filter(|c| {
             c.is_used()
-                && CTE_NRBY.contains(&c.carrier())
+                && c.carrier().is_nearby()
                 && !c.has_carrier(BIOMASA)
                 && !c.has_carrier(BIOMASADENSIFICADA)
         })
@@ -307,7 +297,7 @@ pub fn fraccion_renovable_acs_nrb(
     wfactors: &Factors,
     demanda_anual_acs: f32,
 ) -> Result<f32, EpbdError> {
-    use Carrier::{EAMBIENTE, BIOMASA, BIOMASADENSIFICADA};
+    use Carrier::{BIOMASA, BIOMASADENSIFICADA, EAMBIENTE};
 
     // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
     let components = &components.filter_by_epb_service(Service::ACS);
@@ -372,7 +362,7 @@ pub fn fraccion_renovable_acs_nrb(
     let has_any_biomass = has_biomass || has_dens_biomass;
     let has_only_one_type_of_biomass =
         (has_biomass || has_dens_biomass) && !(has_biomass && has_dens_biomass);
-    let has_only_nearby = used_carriers.iter().all(|&c| CTE_NRBY.contains(&c));
+    let has_only_nearby = used_carriers.iter().all(|&c| c.is_nearby());
 
     let Q_biomass_an_ren = if has_only_one_type_of_biomass && has_only_nearby {
         // Solo hay un tipo de biomasa y no hay otros vectores que no sean de distrito o energía ambiente
@@ -460,11 +450,7 @@ pub fn incorpora_demanda_renovable_acs_nrb(
                 format!("{:.1}", demanda_anual_acs),
             );
 
-            match fraccion_renovable_acs_nrb(
-                &ep.components,
-                &ep.wfactors,
-                demanda_anual_acs,
-            ) {
+            match fraccion_renovable_acs_nrb(&ep.components, &ep.wfactors, demanda_anual_acs) {
                 Ok(fraccion_renovable_acs_nrb) => {
                     map.insert(
                         "fraccion_renovable_demanda_acs_nrb".to_string(),

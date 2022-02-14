@@ -64,6 +64,23 @@ pub enum Carrier {
     TERMOSOLAR,
 }
 
+impl Carrier {
+    /// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
+    pub const NRBY: [Carrier; 6] = [
+        Carrier::BIOMASA,
+        Carrier::BIOMASADENSIFICADA,
+        Carrier::RED1,
+        Carrier::RED2,
+        Carrier::EAMBIENTE,
+        Carrier::TERMOSOLAR,
+    ]; // Ver B.23. Solo biomasa sólida
+
+    /// Is this a carrier from the nearby perimeter?
+    pub fn is_nearby(&self) -> bool {
+        Carrier::NRBY.contains(self)
+    }
+}
+
 impl str::FromStr for Carrier {
     type Err = EpbdError;
 
@@ -107,7 +124,7 @@ pub enum ProdSource {
     /// On site solar thermal
     TERMOSOLAR,
     /// On site ambient heat
-    EAMBIENTE
+    EAMBIENTE,
 }
 
 impl str::FromStr for ProdSource {
