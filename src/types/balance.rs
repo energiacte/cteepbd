@@ -37,7 +37,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::{Carrier, RenNrenCo2, Service, Source},
+    types::{Carrier, ProdSource, RenNrenCo2, Service},
     Components, Factors,
 };
 
@@ -115,7 +115,9 @@ pub struct BalanceTotal {
     /// Produced energy
     pub prod: f32,
     /// Produced energy by source (COGEN / INSITU)
-    pub prod_by_src: HashMap<Source, f32>,
+    pub prod_by_src: HashMap<ProdSource, f32>,
+    /// Produced energy delivered to EPB services, by source (COGEN / INSITU)
+    pub prod_epus_by_src: HashMap<ProdSource, f32>,
     /// Produced energy by carrier
     pub prod_by_cr: HashMap<Carrier, f32>,
     /// Delivered by the grid or onsite sources
@@ -163,6 +165,9 @@ impl BalanceTotal {
         let mut prod_by_src = self.prod_by_src.clone();
         prod_by_src.values_mut().for_each(|v| *v *= k_area);
 
+        let mut prod_epus_by_src = self.prod_epus_by_src.clone();
+        prod_epus_by_src.values_mut().for_each(|v| *v *= k_area);
+
         let mut prod_by_cr = self.prod_by_cr.clone();
         prod_by_cr.values_mut().for_each(|v| *v *= k_area);
 
@@ -181,6 +186,7 @@ impl BalanceTotal {
             used_epus_by_srv,
             used_epus_by_cr,
             prod: k_area * self.prod,
+            prod_epus_by_src,
             prod_by_src,
             prod_by_cr,
             del: k_area * self.del,
@@ -245,6 +251,9 @@ impl std::ops::AddAssign<&BalanceForCarrier> for BalanceTotal {
         // Aggregation by energy source
         for (source, produced) in &rhs.prod.by_src_an {
             *self.prod_by_src.entry(*source).or_default() += produced;
+        }
+        for (source, produced) in &rhs.prod.used_epus_by_src_an {
+            *self.prod_epus_by_src.entry(*source).or_default() += produced;
         }
 
         // Aggregation by carrier
@@ -315,13 +324,13 @@ pub struct ProducedEnergy {
     /// Produced energy from all sources and used for EPB services
     pub used_epus_an: f32,
     /// Produced energy used for EPB services at each timestep by source (COGEN / INSITU)
-    pub used_epus_by_src_t: HashMap<Source, Vec<f32>>,
+    pub used_epus_by_src_t: HashMap<ProdSource, Vec<f32>>,
     /// Produced energy used for EPB services by source (COGEN / INSITU)
-    pub used_epus_by_src_an: HashMap<Source, f32>,
+    pub used_epus_by_src_an: HashMap<ProdSource, f32>,
     /// Produced energy at each timestep by source (COGEN / INSITU)
-    pub by_src_t: HashMap<Source, Vec<f32>>,
+    pub by_src_t: HashMap<ProdSource, Vec<f32>>,
     /// Produced energy by source (COGEN / INSITU)
-    pub by_src_an: HashMap<Source, f32>,
+    pub by_src_an: HashMap<ProdSource, f32>,
 }
 
 /// Exported Energy Data and Results
@@ -339,10 +348,10 @@ pub struct ExportedEnergy {
     pub used_nepus_t: Vec<f32>,
     /// Exported energy to non EPB services
     pub used_nepus_an: f32,
-    /// Exported energy to the grid and non EPB uses at each timestep, by source (INSITU, COGEN)
-    pub by_src_t: HashMap<Source, Vec<f32>>,
-    /// Exported energy to the grid and non EPB uses, by source (INSITU, COGEN)
-    pub by_src_an: HashMap<Source, f32>,
+    /// Exported energy to the grid and non EPB services at each timestep, by source (INSITU, COGEN)
+    pub by_src_t: HashMap<ProdSource, Vec<f32>>,
+    /// Exported energy to the grid and non EPB services, by source (INSITU, COGEN)
+    pub by_src_an: HashMap<ProdSource, f32>,
 }
 
 /// Delivered Energy Data and Results

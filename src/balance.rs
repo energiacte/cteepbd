@@ -37,7 +37,7 @@ use crate::{
     error::{EpbdError, Result},
     types::{
         Balance, BalanceForCarrier, BalanceTotal, ByServiceEnergy, Carrier, DeliveredEnergy, Dest,
-        Energy, ExportedEnergy, HasValues, ProducedEnergy, RenNrenCo2, Service, Source, Step,
+        Energy, ExportedEnergy, HasValues, ProdSource, ProducedEnergy, RenNrenCo2, Service, Source, Step,
         UsedEnergy, WeightedEnergy,
     },
     vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
@@ -175,11 +175,11 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
 
     let mut E_EPus_cr_t = vec![0.0; num_steps];
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
-    let mut E_pr_cr_j_t = HashMap::<Source, Vec<f32>>::new();
+    let mut E_pr_cr_j_t = HashMap::<ProdSource, Vec<f32>>::new();
     for c in &cr_list {
         if c.is_generated() {
             E_pr_cr_j_t
-                .entry(c.source())
+                .entry(c.prod_source())
                 .and_modify(|e| *e = vecvecsum(e, c.values()))
                 .or_insert_with(|| c.values().to_owned());
         } else if c.is_epb_use() {
@@ -195,7 +195,7 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
     // Generation for this carrier from all sources j at each timestep
     let mut E_pr_cr_t = vec![0.0; num_steps];
     // Generation for this carrier from each source for all time steps
-    let mut E_pr_cr_j_an = HashMap::<Source, f32>::new();
+    let mut E_pr_cr_j_an = HashMap::<ProdSource, f32>::new();
     for (source, prod_cr_j) in &E_pr_cr_j_t {
         E_pr_cr_t = vecvecsum(&E_pr_cr_t, prod_cr_j);
         E_pr_cr_j_an.insert(*source, vecsum(prod_cr_j));
@@ -214,7 +214,7 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
     // Generated energy from source j used in EP uses
     // Computation without priority (9.6.6.2.4)
     // TODO: implement computation using priorities (9.6.62.4)
-    let mut E_pr_cr_j_used_EPus_t = HashMap::<Source, Vec<f32>>::new();
+    let mut E_pr_cr_j_used_EPus_t = HashMap::<ProdSource, Vec<f32>>::new();
     for (source, prod_cr_j_an) in &E_pr_cr_j_an {
         // * Fraction of produced energy from source j (formula 14)
         // We have grouped by source type (it could be made by generator i, for each one of them)
@@ -226,7 +226,7 @@ fn compute_used_produced(cr_list: Vec<Energy>) -> (UsedEnergy, ProducedEnergy, V
 
         E_pr_cr_j_used_EPus_t.insert(*source, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_j));
     }
-    let E_pr_cr_j_used_EPus_an: HashMap<Source, f32> = E_pr_cr_j_used_EPus_t
+    let E_pr_cr_j_used_EPus_an: HashMap<ProdSource, f32> = E_pr_cr_j_used_EPus_t
         .iter()
         .map(|(source, values)| (*source, vecsum(values)))
         .collect();
@@ -266,18 +266,20 @@ fn compute_exported_delivered(
     let E_del_cr_t = vecvecdif(&used.epus_t, &prod.used_epus_t);
     let E_del_cr_an = vecsum(&E_del_cr_t);
     
-    let E_del_cr_onsite_t = prod
-        .by_src_t
-        .get(&Source::INSITU)
-        .cloned()
-        .unwrap_or_else(|| vec![0.0_f32; E_del_cr_t.len()]);
+    let mut E_del_cr_onsite_t = vec![0.0_f32; E_del_cr_t.len()];
+    for (prod_src, prod_values_t) in &prod.by_src_t {
+        if Source::INSITU != (*prod_src).into() {
+            continue
+        }
+        E_del_cr_onsite_t = vecvecsum(&E_del_cr_onsite_t, prod_values_t);
+    }
     let E_del_cr_onsite_an = vecsum(&E_del_cr_onsite_t);
 
-    let mut E_exp_cr_j_t = HashMap::<Source, Vec<f32>>::new();
+    let mut E_exp_cr_j_t = HashMap::<ProdSource, Vec<f32>>::new();
     for (source, prod_src) in &prod.by_src_t {
         E_exp_cr_j_t.insert(*source, vecvecdif(prod_src, &prod.used_epus_by_src_t[source]));
     }
-    let mut E_exp_cr_j_an = HashMap::<Source, f32>::new();
+    let mut E_exp_cr_j_an = HashMap::<ProdSource, f32>::new();
     for (source, exp_src) in &E_exp_cr_j_t {
         E_exp_cr_j_an.insert(*source, vecsum(exp_src));
     }
@@ -340,7 +342,7 @@ fn compute_weighted_energy(
         let f_we_exp_cr_compute = |dest: Dest, step: Step| -> Result<RenNrenCo2> {
             let mut result = RenNrenCo2::default();
             for (source, E_exp_cr_gen_an) in &exp.by_src_an {
-                result += wfactors.find(carrier, *source, dest, step)? * (E_exp_cr_gen_an / exp.an);
+                result += wfactors.find(carrier, (*source).into(), dest, step)? * (E_exp_cr_gen_an / exp.an);
             }
             Ok(result)
         };

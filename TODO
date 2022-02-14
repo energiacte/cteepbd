@@ -4,7 +4,7 @@
   depending on whether nearby factors are used or not.
 
 - epbd:
-  - Compute energy by prod_source (~carrier) for each service and ratio of prod_onsite / used
+  - Compute ratio of prod_onsite / used
   - RER_nrb
   - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?

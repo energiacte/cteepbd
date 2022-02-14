@@ -92,6 +92,16 @@ impl Energy {
         }
     }
 
+    /// Get production source (TERMOSOLAR / EL_INSITU / EL_COGEN / EAMBIENTE) for this component
+    pub fn prod_source(&self) -> ProdSource {
+        match self {
+            Energy::Prod(e) => e.source,
+            Energy::Used(_) | Energy::Aux(_) | Energy::Out(_) => {
+                unreachable!()
+            }
+        }
+    }
+
     /// Get service for this component
     pub fn service(&self) -> Service {
         match self {
@@ -207,7 +217,7 @@ impl Energy {
     pub fn is_electricity(&self) -> bool {
         match self {
             Energy::Aux(_) => true,
-            _ => self.carrier() == Carrier::ELECTRICIDAD
+            _ => self.carrier() == Carrier::ELECTRICIDAD,
         }
     }
 
@@ -220,7 +230,7 @@ impl Energy {
     pub fn has_carrier(&self, carrier: Carrier) -> bool {
         match self {
             Energy::Out(_) => false,
-            _ => self.carrier() == carrier
+            _ => self.carrier() == carrier,
         }
     }
 
