@@ -205,7 +205,7 @@ pub struct BalProd {
     pub an: f32,
     /// Produced energy by source (COGEN / INSITU)
     pub by_src: HashMap<ProdSource, f32>,
-    /// Produced energy delivered to EPB services, by source (COGEN / INSITU)
+    /// Produced energy delivered to EPB services, by production source (EL_INSITU, EL_COGEN, EAMBIENTE, TERMOSOLAR)
     pub epus_by_src: HashMap<ProdSource, f32>,
     /// Produced energy by carrier
     pub by_cr: HashMap<Carrier, f32>,

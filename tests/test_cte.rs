@@ -938,8 +938,8 @@ CONSUMO,NEPB,ELECTRICIDAD,40.0"
 }
 
 /// Bomba de calor (SCOP=2.5) con electricidad cogenerada (100kWh demanda ACS)
-// Caso no cubierto, al definirse cogeneración (solo permitimos la parte térmica)
-// Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
+/// Caso no cubierto, al definirse cogeneración (solo permitimos la parte térmica)
+/// Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
@@ -980,7 +980,7 @@ CONSUMO,ACS,GASNATURAL,27.88"
 }
 
 /// Bomba de calor (SCOP=2.5) y 25% caldera de GN y de BIOMASA (rend. 0.9) (100kWh demanda ACS)
-// Falla al haber BIOMASA y otro suministro de red que no es insitu
+/// Falla al haber BIOMASA y otro suministro de red que no es insitu
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn_y_biomasa() {
     let comps = "CONSUMO,ACS,ELECTRICIDAD,30.0
