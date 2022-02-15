@@ -1097,3 +1097,33 @@ fn global_test_1() {
         format!("{:.3}", balance_el.by_srv.epus[&Service::CAL])
     );
 }
+
+/// Cogeneración (rend_tot = 0.91, rend_el = 0.30) + PV
+/// Consumo de gas para cogen electr = 80 / 0.91 = 
+/// Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
+/// 
+/// Sin prioridades la producción se reparte en proporción a la parte de generación que supone
+/// cada fuente y se distribuye a cada servicio en función de su peso en los servicios EPB.
+/// 
+/// Con prioridades se consume primero la energía EL_INSITU disponible y luego EL_COGEN
+#[test]
+fn cte_prioridades_prod_epus_pv_cogen() {
+    let comps = "CONSUMO,ILU,ELECTRICIDAD,100.0
+    PRODUCCION,EL_INSITU,80
+    #CONSUMO,GEN,GASNATURAL,88 # Consumo gas para cogen_el = 80 / 0.909
+    PRODUCCION,EL_COGEN,80"
+        .parse::<Components>()
+        .unwrap();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let ep = energy_performance(&comps, &FP, 1.0, 100.0, false).unwrap();
+    assert_eq!(
+        "80.000",
+        format!("{:.3}", ep.balance.prod.epus_by_src[&ProdSource::EL_INSITU])
+    );
+    assert_eq!(
+        "20.000",
+        format!("{:.3}", ep.balance.prod.epus_by_src[&ProdSource::EL_COGEN])
+    );
+}
+
+

@@ -40,7 +40,7 @@ use crate::{
         EnergyPerformance, ExportedEnergy, HasValues, ProdSource, ProducedEnergy, RenNrenCo2,
         Service, Source, Step, UsedEnergy, WeightedEnergy,
     },
-    vecops::{veckmul, vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
+    vecops::{vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
     Components, Factors,
 };
 
@@ -186,7 +186,6 @@ fn balance_for_carrier(
 /// Compute used and produced energy data from energy components
 ///
 /// TODO:
-/// - Implementar prioridad de consumos entre producciones insitu
 /// - Implementar uso de baterías (almacenamiento, sto)
 #[allow(non_snake_case)]
 fn compute_used_produced(
@@ -195,6 +194,7 @@ fn compute_used_produced(
 ) -> (UsedEnergy, ProducedEnergy, Vec<f32>) {
     // We know all carriers have the same time steps (see FromStr for Components)
     let num_steps = cr_list[0].num_steps();
+    let carrier = cr_list[0].carrier();
 
     let mut E_EPus_cr_t = vec![0.0; num_steps];
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
@@ -228,24 +228,46 @@ fn compute_used_produced(
     // Load matching factor (32) (11.6.2.4)
     let f_match_t = compute_f_match(&E_pr_cr_t, &E_EPus_cr_t, load_matching);
 
-    let E_pr_cr_used_EPus_t = vecvecmul(&f_match_t, &vecvecmin(&E_EPus_cr_t, &E_pr_cr_t));
+    let mut E_pr_cr_used_EPus_t = vec![0.0; num_steps];
+
+    // Generated energy from source j used in EP
+    // If there is more than one source... it could have priorities
+    // Compute using priorities priorities (9.6.62.4). EL_INSITU > EL_COGEN
+    let (has_priorities, priorities) = ProdSource::get_priorities(carrier);
+
+    let mut E_pr_cr_j_used_EPus_t = HashMap::<ProdSource, Vec<f32>>::new();
+    if has_priorities && priorities.iter().all(|s| E_pr_cr_j_an.contains_key(s)) {
+        // Energy used for that carrier (9)
+        let mut E_EPus_cr_left_t = E_EPus_cr_t.clone();
+        // Priorities: sources with a higher priority are used first
+        for source in priorities {
+            // Max usable production (wrt EP uses) (10)
+            let E_pr_cr_j_usmax_t = vecvecmin(&E_pr_cr_j_t[&source], &E_EPus_cr_left_t);
+            // Energy left for source with next priority (11)
+            E_EPus_cr_left_t = vecvecdif(&E_EPus_cr_left_t, &E_pr_cr_j_usmax_t);
+            // Energy used for this priority (12) & add to total used in EPB services
+            let used = vecvecmul(&E_pr_cr_j_usmax_t, &f_match_t);
+            E_pr_cr_used_EPus_t = vecvecsum(&E_pr_cr_used_EPus_t, &used);
+            E_pr_cr_j_used_EPus_t.insert(source, used);
+            // Add to total produced and used in EPB services
+        }
+    } else {
+        // No priorities: distribution is proportional to the share of produced energy for each source at each time step
+        E_pr_cr_used_EPus_t = vecvecmul(&f_match_t, &vecvecmin(&E_EPus_cr_t, &E_pr_cr_t));
+        for (source, prod_cr_j_t) in &E_pr_cr_j_t {
+            // * Fraction of produced energy from source j (formula 14)
+            // We have grouped by source type (it could be made by generator i, for each one of them)
+            let f_pr_cr_j: Vec<_> =  prod_cr_j_t.iter().zip(E_pr_cr_t.iter()).map(|(pr_j, pr_all)| if *pr_all > 1e-3 {
+                pr_j / pr_all
+            } else {
+                0.0
+            }).collect();
+            E_pr_cr_j_used_EPus_t.insert(*source, vecvecmul(&E_pr_cr_used_EPus_t, &f_pr_cr_j));
+        }
+    }
+
     let E_pr_cr_used_EPus_an = vecsum(&E_pr_cr_used_EPus_t);
 
-    // Generated energy from source j used in EP uses
-    // Computation without priority (9.6.6.2.4)
-    // TODO: implement computation using priorities (9.6.62.4)
-    let mut E_pr_cr_j_used_EPus_t = HashMap::<ProdSource, Vec<f32>>::new();
-    for (source, prod_cr_j_an) in &E_pr_cr_j_an {
-        // * Fraction of produced energy from source j (formula 14)
-        // We have grouped by source type (it could be made by generator i, for each one of them)
-        let f_pr_cr_j = if E_pr_cr_an > 1e-3 {
-            prod_cr_j_an / E_pr_cr_an
-        } else {
-            0.0
-        };
-
-        E_pr_cr_j_used_EPus_t.insert(*source, veckmul(&E_pr_cr_used_EPus_t, f_pr_cr_j));
-    }
     let E_pr_cr_j_used_EPus_an: HashMap<ProdSource, f32> = E_pr_cr_j_used_EPus_t
         .iter()
         .map(|(source, values)| (*source, vecsum(values)))

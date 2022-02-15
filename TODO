@@ -25,7 +25,6 @@
     - id, SISTEMA, NGEN (DIS + EM), ???
   - Implement
     - battery support (in compute_used_produced)
-    - priority in use of produced energy (onsite > cogen, for instance) (in compute_used_produced, compute_exported_delivered, 9.6.6.2.4)
   - checks: Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
 
 - tests:

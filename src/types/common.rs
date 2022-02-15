@@ -127,6 +127,16 @@ pub enum ProdSource {
     EAMBIENTE,
 }
 
+impl ProdSource {
+    /// Priorities for electrical production sources
+    pub fn get_priorities(carrier: Carrier) -> (bool, Vec<Self>) {
+        match carrier {
+            Carrier::ELECTRICIDAD => (true, vec![Self::EL_INSITU, Self::EL_COGEN]),
+            _ => (false, vec![]),
+        }
+    }
+}
+
 impl str::FromStr for ProdSource {
     type Err = EpbdError;
 
