@@ -336,6 +336,7 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
         .arg(Arg::with_name("nosimplificafps")
             .short("F")
             .long("no_simplifica_fps")
+            .hidden(true)
             .help("Evita la simplificación de los factores de paso según los vectores definidos"))
         // Opciones estándar: licencia y nivel de detalle
         .arg(Arg::with_name("showlicense")
