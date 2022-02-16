@@ -17,6 +17,8 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 ### Novedades
 
+- Implementación del factor de coincidencia de cargas con criterio estadístico (se mantiene el factor constante salvo activación con opción --load-matching)
+- Implementación de prioridades en el reparto de la energía producida a consumos EPB, con EL_INSITU > EL_COGEN
 - Cambios en el componente energético para energía usada (CONSUMO)
   - Añadido un identificador (un número entero) del sistema asociado al componente (id)
   - Eliminación de los subtipos EPB, NEPB
@@ -70,7 +72,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
     - exp: energía final exportada
     - exp_grid: energía final exportada a la red
     - exp_nEPB: energía final exportada a usos no EPB
-  - Cambio de nombre de sufijos "_bygen" a "_by_src" y "_byuse" a "_by_srv" en la salida JSON
+  - Cambio de nombre de sufijos "\_bygen" a "\_by_src" y "\_byuse" a "\_by_srv" en la salida JSON
 - Ejecutable cteepbd:
   - Eliminada la opción --acsnrb para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
   - Añadida la opción --load_matching para realizar el cálculo de coincidencia de cargas (en lugar de usar f_match = 1)
