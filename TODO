@@ -3,8 +3,6 @@
 - epbd:
   - cogen produced energy is not treated uniformly (it's excluded in onst structs, but isn't added to delivered energy yet)
     - Fix onsite onst elements to include COGEN
-  - Compute ratio of prod_onst / used
-    - Balance: prod.epus_ratio_by_srv_by_src[src] = prod.epus_by_srv_by_src[src] / used.epus_by_srv[src]
   - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - compute cogen electricity factors from used energy for COGEN service
@@ -18,8 +16,6 @@
     - Indicar qué tipo de sistema es
     - id, SISTEMA, GEN, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - id, SISTEMA, NGEN (DIS + EM), ???
-  - Implement
-    - battery support (in compute_used_produced)
   - checks: Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
 
 - tests:
@@ -27,22 +23,28 @@
   - cte: check non matching computation modes in component metadata and weighting factors metadata
 
 - input / output:
-  - Test XML output and fix XML indentation
   - JSON input
-  - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data
-    - Energy needs (with annual totals)
-    - System efficiencies / indicators
-      - See UNE_EN 15316-1 formula (35). Varies by subsystem type
-      - ¿Whole building efficiencies by service (non renewable primary energy)?
-    - Fraction of energy use covered by renewable sources, by service and by system (id)
-      - Calcular % de cobertura renovable (consumo EF) para los distintos servicios
-    - Consumos de sistemas ficticios (id<=0?) y reales (id>0)
-    - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
-    - Demanda por servicios y total (¿y demanda de referencia si la hay?)
-    - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
-    - Cambiar RenNrenCo2 para tener algún factor más (tot y ren_nrb) -> (ren, nren, tot, co2)
-    - Emisiones: desglose eléctrico y no eléctrico
+  - JSON output
+    - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data
+      - Energy needs (with annual totals)
+      - System efficiencies / indicators
+        - See UNE_EN 15316-1 formula (35). Varies by subsystem type
+        - ¿Whole building efficiencies by service (non renewable primary energy)?
+      - Fraction of energy use covered by renewable sources, by service and by system (id)
+        - Calcular % de cobertura renovable (consumo EF) para los distintos servicios
+      - Consumos de sistemas ficticios (id<=0?) y reales (id>0)
+      - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
+      - Demanda por servicios y total (¿y demanda de referencia si la hay?)
+      - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
+      - Cambiar RenNrenCo2 para tener algún factor más (tot y ren_nrb) -> (ren, nren, tot, co2)
+      - Emisiones: desglose eléctrico y no eléctrico
+  - XML output:
+    - Test XML output
+    - Fix XML indentation
+    - Ratio of prod_onst / used for nearby sources
+      - Balance: prod.epus_ratio_by_srv_by_src[src] = prod.epus_by_srv_by_src[src] / used.epus_by_srv[src]
 
 ## Wishlist
 
 - use templates for output (plain, detailed, ...) depending on cli parameter
+- implement battery support (in compute_used_produced)
