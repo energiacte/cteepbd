@@ -93,7 +93,8 @@ pub fn energy_performance(
     let rer = balance.we.b.rer();
 
     // Nearby RER
-    let ren_nrb = balance_cr
+    // 1. Renewable energy from all nearby carriers (excluding ELECTRICIDAD)
+    let ren_nrb_cr = balance_cr
         .iter()
         .map(|(carrier, bal)| {
             if carrier.is_nearby() {
@@ -103,6 +104,15 @@ pub fn energy_performance(
             }
         })
         .sum::<f32>();
+    // 2. Renewable energy from onsite produced ELECTRICIDAD
+    // This is equivalent to the ren contribution that doesn't come from grid delivered ELECTRICIDAD
+    let ren_nrb_el_nrb = balance_cr
+        .get(&Carrier::ELECTRICIDAD)
+        .map(|cr| cr.we.b.ren - cr.we.del_grid.ren)
+        .unwrap_or(0.0);
+    // 3. Add both contributions
+    let ren_nrb = ren_nrb_cr + ren_nrb_el_nrb;
+
     let tot = balance.we.b.tot();
     let rer_nrb = if tot > 0.0 { ren_nrb / tot } else { 0.0 };
 
@@ -339,6 +349,7 @@ fn compute_exported_delivered(
     let E_del_cr_t = vecvecdif(&used.epus_t, &prod.epus_t);
     let E_del_cr_an = vecsum(&E_del_cr_t);
 
+    // All energy produced onsite is delivered energy, though part of it can be later exported
     let mut E_del_cr_onsite_t = vec![0.0_f32; E_del_cr_t.len()];
     for (prod_src, prod_values_t) in &prod.by_src_t {
         if Source::INSITU != (*prod_src).into() {
