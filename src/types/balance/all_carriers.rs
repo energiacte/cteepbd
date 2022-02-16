@@ -149,15 +149,15 @@ impl std::ops::AddAssign<&BalanceCarrier> for Balance {
         self.we.exp += rhs.we.exp;
 
         // Aggregation by EPB service
-        for (&service, &used_epb_for_service) in &rhs.by_srv.epus {
+        for (&service, &used_epb_for_service) in &rhs.used.epus_by_srv_an {
             // Energy use
             *self.used.epus_by_srv.entry(service).or_default() += used_epb_for_service;
             // Step A
-            if let Some(&value) = rhs.by_srv.we_a.get(&service) {
+            if let Some(&value) = rhs.we.a_by_srv.get(&service) {
                 *self.we.a_by_srv.entry(service).or_default() += value
             }
             // Step B
-            if let Some(&value) = rhs.by_srv.we_b.get(&service) {
+            if let Some(&value) = rhs.we.b_by_srv.get(&service) {
                 *self.we.b_by_srv.entry(service).or_default() += value;
             }
         }

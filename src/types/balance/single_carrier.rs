@@ -46,9 +46,6 @@ use crate::types::{Carrier, ProdSource, RenNrenCo2, Service};
 pub struct BalanceCarrier {
     /// Energy carrier
     pub carrier: Carrier,
-    /// Fraction of used energy for each EPB service
-    /// f_us_cr = (used energy for EPB service_i) / (used energy for all EPB services)
-    pub f_us: HashMap<Service, f32>,
     /// Load matching factor
     pub f_match: Vec<f32>,
     /// Used energy data and results
@@ -61,8 +58,6 @@ pub struct BalanceCarrier {
     pub del: DeliveredEnergy,
     /// Weighted energy data and results
     pub we: WeightedEnergy,
-    /// Used and weighted energy, by service
-    pub by_srv: ByServiceEnergy,
 }
 
 /// Used Energy Data and Results
@@ -70,8 +65,12 @@ pub struct BalanceCarrier {
 pub struct UsedEnergy {
     /// Energy used for EPB services at each timestep
     pub epus_t: Vec<f32>,
+    /// Energy used for EPB services at each timestep, by service
+    pub epus_by_srv_t: HashMap<Service, Vec<f32>>,
     /// Energy used for EPB services at each timestep
     pub epus_an: f32,
+    /// Energy used for EPB services, by service
+    pub epus_by_srv_an: HashMap<Service, f32>,
     /// Used energy for non EPB services at each timestep
     pub nepus_t: Vec<f32>,
     /// Energy used for non EPB services
@@ -140,8 +139,12 @@ pub struct DeliveredEnergy {
 pub struct WeightedEnergy {
     /// Weighted energy for calculation step B
     pub b: RenNrenCo2,
+    /// Weighted energy for calculation step B, by service (for EPB services)
+    pub b_by_srv: HashMap<Service, RenNrenCo2>,
     /// Weighted energy for calculation step A
     pub a: RenNrenCo2,
+    /// Weighted energy for calculation step A, by service (for EPB services)
+    pub a_by_srv: HashMap<Service, RenNrenCo2>,
     /// Weighted delivered energy by the grid and any energy production sources
     pub del: RenNrenCo2,
     /// Weighted delivered energy by the grid
@@ -158,15 +161,4 @@ pub struct WeightedEnergy {
     pub exp_grid_ab: RenNrenCo2,
     /// Weighted exported energy and calculation step AB
     pub exp_ab: RenNrenCo2,
-}
-
-/// Used and Weighted Energy results by EPB service
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ByServiceEnergy {
-    /// Energy used for EPB services, by service
-    pub epus: HashMap<Service, f32>,
-    /// Weighted energy for calculation step A, by service (for EPB services)
-    pub we_a: HashMap<Service, RenNrenCo2>,
-    /// Weighted energy for calculation step B, by service (for EPB services)
-    pub we_b: HashMap<Service, RenNrenCo2>,
 }

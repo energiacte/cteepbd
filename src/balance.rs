@@ -36,9 +36,9 @@ use std::collections::HashMap;
 use crate::{
     error::{EpbdError, Result},
     types::{
-        Balance, BalanceCarrier, ByServiceEnergy, Carrier, DeliveredEnergy, Dest, Energy,
-        EnergyPerformance, ExportedEnergy, HasValues, ProdSource, ProducedEnergy, RenNrenCo2,
-        Service, Source, Step, UsedEnergy, WeightedEnergy,
+        Balance, BalanceCarrier, Carrier, DeliveredEnergy, Dest, Energy, EnergyPerformance,
+        ExportedEnergy, HasValues, ProdSource, ProducedEnergy, RenNrenCo2, Service, Source, Step,
+        UsedEnergy, WeightedEnergy,
     },
     vecops::{vecsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
     Components, Factors,
@@ -166,30 +166,22 @@ fn balance_for_carrier(
         .cloned()
         .collect();
 
-    // Compute fraction of used energy for each EPB service:
-    // f_us_cr = (used energy for service_i) / (used energy for all services)
-    let f_us_cr = compute_factors_by_use_cr(&cr_list);
-
     // Compute used and produced energy from components
     let (used, prod, f_match) = compute_used_produced(cr_list, load_matching);
 
     // Compute exported and delivered energy from used and produced energy data
     let (exp, del) = compute_exported_delivered(&used, &prod);
 
-    let we = compute_weighted_energy(carrier, k_exp, wfactors, &exp, &del)?;
-
-    let by_srv = distribute_by_srv(&used, &we, &f_us_cr);
+    let we = compute_weighted_energy(carrier, k_exp, wfactors, &used, &exp, &del)?;
 
     Ok(BalanceCarrier {
         carrier,
-        f_us: f_us_cr,
         f_match,
         used,
         prod,
         exp,
         del,
         we,
-        by_srv,
     })
 }
 
@@ -207,23 +199,35 @@ fn compute_used_produced(
     let carrier = cr_list[0].carrier();
 
     let mut E_EPus_cr_t = vec![0.0; num_steps];
+    let mut E_EPus_cr_t_by_srv: HashMap<Service, Vec<f32>> = HashMap::new();
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
     let mut E_pr_cr_j_t = HashMap::<ProdSource, Vec<f32>>::new();
     for c in &cr_list {
+        let vals = c.values();
         if c.is_generated() {
             E_pr_cr_j_t
                 .entry(c.prod_source())
-                .and_modify(|e| *e = vecvecsum(e, c.values()))
-                .or_insert_with(|| c.values().to_owned());
+                .and_modify(|e| *e = vecvecsum(e, vals))
+                .or_insert_with(|| vals.to_owned());
         } else if c.is_epb_use() {
-            E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, c.values())
+            E_EPus_cr_t_by_srv
+                .entry(c.service())
+                .and_modify(|e| *e = vecvecsum(e, vals))
+                .or_insert_with(|| vals.to_owned());
+            E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, vals)
         } else {
             // Non EPB use
-            E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, c.values())
+            E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, vals)
         }
     }
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
     let E_nEPus_cr_an = vecsum(&E_nEPus_cr_t);
+
+    // Used energy for this carrier for each service for all timesteps
+    let mut E_EPus_cr_an_by_srv = HashMap::<Service, f32>::new();
+    for (service, epus_srv) in &E_EPus_cr_t_by_srv {
+        E_EPus_cr_an_by_srv.insert(*service, vecsum(epus_srv));
+    }
 
     // Generation for this carrier from all sources j at each timestep
     let mut E_pr_cr_t = vec![0.0; num_steps];
@@ -267,11 +271,11 @@ fn compute_used_produced(
         for (source, prod_cr_j_t) in &E_pr_cr_j_t {
             // * Fraction of produced energy from source j (formula 14)
             // We have grouped by source type (it could be made by generator i, for each one of them)
-            let f_pr_cr_j: Vec<_> =  prod_cr_j_t.iter().zip(E_pr_cr_t.iter()).map(|(pr_j, pr_all)| if *pr_all > 1e-3 {
-                pr_j / pr_all
-            } else {
-                0.0
-            }).collect();
+            let f_pr_cr_j: Vec<_> = prod_cr_j_t
+                .iter()
+                .zip(E_pr_cr_t.iter())
+                .map(|(pr_j, pr_all)| if *pr_all > 1e-3 { pr_j / pr_all } else { 0.0 })
+                .collect();
             E_pr_cr_j_used_EPus_t.insert(*source, vecvecmul(&E_pr_cr_used_EPus_t, &f_pr_cr_j));
         }
     }
@@ -286,7 +290,9 @@ fn compute_used_produced(
     (
         UsedEnergy {
             epus_t: E_EPus_cr_t,
+            epus_by_srv_t: E_EPus_cr_t_by_srv,
             epus_an: E_EPus_cr_an,
+            epus_by_srv_an: E_EPus_cr_an_by_srv,
             nepus_t: E_nEPus_cr_t,
             nepus_an: E_nEPus_cr_an,
         },
@@ -396,6 +402,7 @@ fn compute_weighted_energy(
     carrier: Carrier,
     k_exp: f32,
     wfactors: &Factors,
+    used: &UsedEnergy,
     exp: &ExportedEnergy,
     del: &DeliveredEnergy,
 ) -> Result<WeightedEnergy> {
@@ -486,9 +493,22 @@ fn compute_weighted_energy(
     let E_we_cr_an_A: RenNrenCo2 = E_we_del_cr_an - E_we_exp_cr_an_A;
     let E_we_cr_an: RenNrenCo2 = E_we_del_cr_an - E_we_exp_cr_an;
 
+    // Compute fraction of used energy for each EPB service:
+    // f_us_cr = (used energy for service_i) / (used energy for all services)
+    // This uses the reverse calculation method (E.3.6)
+    let f_us_cr = compute_factors_by_use_cr_an(used);
+    let mut E_we_cr_an_A_by_srv: HashMap<Service, RenNrenCo2> = HashMap::new();
+    let mut E_we_cr_an_by_srv: HashMap<Service, RenNrenCo2> = HashMap::new();
+    for (service, f_us_k_cr) in f_us_cr {
+        E_we_cr_an_A_by_srv.insert(service, E_we_cr_an_A * f_us_k_cr);
+        E_we_cr_an_by_srv.insert(service, E_we_cr_an * f_us_k_cr);
+    }
+
     Ok(WeightedEnergy {
         b: E_we_cr_an,
+        b_by_srv: E_we_cr_an_by_srv,
         a: E_we_cr_an_A,
+        a_by_srv: E_we_cr_an_A_by_srv,
 
         del: E_we_del_cr_an,
         del_grid: E_we_del_cr_grid_an,
@@ -502,34 +522,6 @@ fn compute_weighted_energy(
     })
 }
 
-/// Distribute used and weighted energy data by EPB service
-///
-/// Allocate energy to services proportionally to its fraction of used energy over total used energy
-#[allow(non_snake_case)]
-fn distribute_by_srv(
-    used: &UsedEnergy,
-    we: &WeightedEnergy,
-    f_us_cr: &HashMap<Service, f32>,
-) -> ByServiceEnergy {
-    let mut used_epus_an: HashMap<Service, f32> = HashMap::new();
-    let mut we_an_a: HashMap<Service, RenNrenCo2> = HashMap::new();
-    let mut we_an: HashMap<Service, RenNrenCo2> = HashMap::new();
-    for service in &Service::SERVICES_EPB {
-        let f_us_k_cr = *f_us_cr.get(service).unwrap_or(&0.0f32);
-        if f_us_k_cr != 0.0 {
-            used_epus_an.insert(*service, used.epus_an * f_us_k_cr);
-            we_an_a.insert(*service, we.a * f_us_k_cr);
-            we_an.insert(*service, we.b * f_us_k_cr);
-        }
-    }
-
-    ByServiceEnergy {
-        epus: used_epus_an,
-        we_a: we_an_a,
-        we_b: we_an,
-    }
-}
-
 /// Calcula fracción de cada uso EPB para un vector energético i
 ///
 /// Compute share of each EPB use for a given carrier i
@@ -538,25 +530,16 @@ fn distribute_by_srv(
 /// It uses the reverse calculation method (E.3.6)
 /// * `cr_list` - components list for the selected carrier i
 ///
-fn compute_factors_by_use_cr(cr_list: &[Energy]) -> HashMap<Service, f32> {
+fn compute_factors_by_use_cr_an(used: &UsedEnergy) -> HashMap<Service, f32> {
     let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
-    // Energy use components (EPB uses) for current carrier i
-    let cr_use_list = cr_list.iter().filter(|c| c.is_epb_use());
-    // Energy use for all EPB services and carrier i (Q_Epus_cr)
-    let q_us_all: f32 = cr_use_list.clone().map(HasValues::values_sum).sum();
-    if q_us_all != 0.0 {
-        // No energy use for this carrier!
-        // Collect share of step A weighted energy for each use item (service)
-        for us in Service::SERVICES_EPB.iter().cloned() {
-            // Energy use for use k
-            let q_us_k: f32 = cr_use_list
-                .clone()
-                .filter(|c| c.has_service(us))
-                .map(HasValues::values_sum)
-                .sum();
-            // Factor for use k
-            factors_us_k.insert(us, q_us_k / q_us_all);
-        }
+
+    for (service, used_srv) in &used.epus_by_srv_an {
+        let f = if used.epus_an > 0.0 {
+            used_srv / used.epus_an
+        } else {
+            0.0
+        };
+        factors_us_k.insert(*service, f);
     }
     factors_us_k
 }

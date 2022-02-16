@@ -36,9 +36,8 @@ mod all_carriers;
 mod energy_performance;
 mod single_carrier;
 
-pub use single_carrier::{
-    BalanceCarrier, ByServiceEnergy, DeliveredEnergy, ExportedEnergy, ProducedEnergy, UsedEnergy,
-    WeightedEnergy,
-};
-pub use all_carriers::{Balance, BalUsed, BalProd, BalDel, BalExp};
+pub use all_carriers::{BalDel, BalExp, BalProd, BalUsed, Balance};
 pub use energy_performance::EnergyPerformance;
+pub use single_carrier::{
+    BalanceCarrier, DeliveredEnergy, ExportedEnergy, ProducedEnergy, UsedEnergy, WeightedEnergy,
+};

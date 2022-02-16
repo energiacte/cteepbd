@@ -1094,7 +1094,7 @@ fn global_test_1() {
     // Results by service for electricity
     assert_eq!(
         "206.667",
-        format!("{:.3}", balance_el.by_srv.epus[&Service::CAL])
+        format!("{:.3}", balance_el.used.epus_by_srv_an[&Service::CAL])
     );
 }
 
