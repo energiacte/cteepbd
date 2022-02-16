@@ -74,6 +74,7 @@ pub fn vecvecmul<T: Float>(vec1: &[T], vec2: &[T]) -> Vec<T> {
 }
 
 /// Multiply vector by scalar
+#[allow(dead_code)]
 pub fn veckmul<T, I>(iter: I, k: T) -> Vec<T>
 where
     T: Float,
