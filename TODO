@@ -1,15 +1,10 @@
 # TODO
 
-- maybe bug: see why emissions for ACS for the manual's example change
-  depending on whether nearby factors are used or not.
-
 - epbd:
+  - cogen produced energy is not treated uniformly (it's excluded in onst structs, but isn't added to delivered energy yet)
+    - Fix onsite onst elements to include COGEN
   - Compute ratio of prod_onst / used
-    - prod_onst_by_srv?
-      - En cada paso se calcula el total EPB consumido de cada vector
-      - Se reparte la producción del vector con el uso total EPB según el f_match del vector (y prioridades)
-      - Ver balance.rs:224 y EN 52000-1 9.6.6.2.4
-    - used_by_srv
+    - Balance: prod.epus_ratio_by_srv_by_src[src] = prod.epus_by_srv_by_src[src] / used.epus_by_srv[src]
   - define COGEN as a new (neither EPB nor EPB) service for energy used for cogeneration (see Module M11 in EN 15316)
     - how does it relate to EPB and NEPB services? (where is it accounted for? review filtering in code)?
     - compute cogen electricity factors from used energy for COGEN service
