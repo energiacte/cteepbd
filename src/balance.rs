@@ -287,6 +287,31 @@ fn compute_used_produced(
         .map(|(source, values)| (*source, vecsum(values)))
         .collect();
 
+    // Compute produced energy used for EPB services by source -----
+    // This computes the proportion for each service use for each timestep
+    let f_us_cr_by_srv_t = compute_f_us_cr_by_srv_t(&E_EPus_cr_t, &E_EPus_cr_t_by_srv);
+    // Along with the produced energy from each source fore each timestep we can distribute produced energy by sources
+    let mut E_pr_cr_j_used_EPus_by_srv_by_src_t: HashMap<ProdSource, HashMap<Service, Vec<f32>>> =
+        HashMap::new();
+    let mut E_pr_cr_j_used_EPus_by_srv_by_src_an: HashMap<ProdSource, HashMap<Service, f32>> =
+        HashMap::new();
+    for (source, prod) in &E_pr_cr_j_used_EPus_t {
+        let mut source_prod_by_srv_t = HashMap::new();
+        let mut source_prod_by_srv_an = HashMap::new();
+        for (service, factors) in &f_us_cr_by_srv_t {
+            let values: Vec<_> = prod
+                .iter()
+                .zip(factors.iter())
+                .map(|(val, f)| f * val)
+                .collect();
+            let values_an: f32 = values.iter().sum();
+            source_prod_by_srv_t.insert(*service, values);
+            source_prod_by_srv_an.insert(*service, values_an);
+        }
+        E_pr_cr_j_used_EPus_by_srv_by_src_t.insert(*source, source_prod_by_srv_t);
+        E_pr_cr_j_used_EPus_by_srv_by_src_an.insert(*source, source_prod_by_srv_an);
+    }
+
     (
         UsedEnergy {
             epus_t: E_EPus_cr_t,
@@ -305,6 +330,8 @@ fn compute_used_produced(
             epus_an: E_pr_cr_used_EPus_an,
             epus_by_src_t: E_pr_cr_j_used_EPus_t,
             epus_by_src_an: E_pr_cr_j_used_EPus_an,
+            epus_by_srv_by_src_t: E_pr_cr_j_used_EPus_by_srv_by_src_t,
+            epus_by_srv_by_src_an: E_pr_cr_j_used_EPus_by_srv_by_src_an,
         },
         f_match_t,
     )
@@ -496,7 +523,7 @@ fn compute_weighted_energy(
     // Compute fraction of used energy for each EPB service:
     // f_us_cr = (used energy for service_i) / (used energy for all services)
     // This uses the reverse calculation method (E.3.6)
-    let f_us_cr = compute_factors_by_use_cr_an(used);
+    let f_us_cr = compute_f_us_cr_an(used);
     let mut E_we_cr_an_A_by_srv: HashMap<Service, RenNrenCo2> = HashMap::new();
     let mut E_we_cr_an_by_srv: HashMap<Service, RenNrenCo2> = HashMap::new();
     for (service, f_us_k_cr) in f_us_cr {
@@ -530,7 +557,7 @@ fn compute_weighted_energy(
 /// It uses the reverse calculation method (E.3.6)
 /// * `cr_list` - components list for the selected carrier i
 ///
-fn compute_factors_by_use_cr_an(used: &UsedEnergy) -> HashMap<Service, f32> {
+fn compute_f_us_cr_an(used: &UsedEnergy) -> HashMap<Service, f32> {
     let mut factors_us_k: HashMap<Service, f32> = HashMap::new();
 
     for (service, used_srv) in &used.epus_by_srv_an {
@@ -539,6 +566,37 @@ fn compute_factors_by_use_cr_an(used: &UsedEnergy) -> HashMap<Service, f32> {
         } else {
             0.0
         };
+        factors_us_k.insert(*service, f);
+    }
+    factors_us_k
+}
+
+/// Calcula fracción de cada uso EPB para un vector energético i para cada paso de cálculo
+///
+/// Compute share of each EPB use for a given carrier i
+/// f_us_cr = (used energy for service_i) / (used energy for all services)
+///
+/// It uses the reverse calculation method (E.3.6)
+/// * `cr_list` - components list for the selected carrier i
+///
+fn compute_f_us_cr_by_srv_t(
+    epus_t: &[f32],
+    epus_by_srv_t: &HashMap<Service, Vec<f32>>,
+) -> HashMap<Service, Vec<f32>> {
+    let mut factors_us_k: HashMap<Service, Vec<f32>> = HashMap::new();
+
+    for (service, used_srv) in epus_by_srv_t {
+        let f = used_srv
+            .iter()
+            .zip(epus_t.iter())
+            .map(|(used_srv_t, used_t)| {
+                if *used_t > 0.0 {
+                    used_srv_t / used_t
+                } else {
+                    0.0
+                }
+            })
+            .collect();
         factors_us_k.insert(*service, f);
     }
     factors_us_k

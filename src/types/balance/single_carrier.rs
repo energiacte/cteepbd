@@ -84,18 +84,22 @@ pub struct ProducedEnergy {
     pub t: Vec<f32>,
     /// Produced energy (from all sources)
     pub an: f32,
+    /// Produced energy at each timestep by source
+    pub by_src_t: HashMap<ProdSource, Vec<f32>>,
+    /// Produced energy by source
+    pub by_src_an: HashMap<ProdSource, f32>,
     /// Produced energy from all sources and used for EPB services at each timestep
     pub epus_t: Vec<f32>,
     /// Produced energy from all sources and used for EPB services
     pub epus_an: f32,
-    /// Produced energy used for EPB services at each timestep by source (COGEN / INSITU)
+    /// Produced energy used for EPB services at each timestep by source
     pub epus_by_src_t: HashMap<ProdSource, Vec<f32>>,
-    /// Produced energy used for EPB services by source (COGEN / INSITU)
+    /// Produced energy used for EPB services by source
     pub epus_by_src_an: HashMap<ProdSource, f32>,
-    /// Produced energy at each timestep by source (COGEN / INSITU)
-    pub by_src_t: HashMap<ProdSource, Vec<f32>>,
-    /// Produced energy by source (COGEN / INSITU)
-    pub by_src_an: HashMap<ProdSource, f32>,
+    /// Produced energy used for EPB services at each timestep by service, by source
+    pub epus_by_srv_by_src_t: HashMap<ProdSource, HashMap<Service, Vec<f32>>>,
+    /// Produced energy used for EPB services by service, by source
+    pub epus_by_srv_by_src_an: HashMap<ProdSource, HashMap<Service, f32>>,
 }
 
 /// Exported Energy Data and Results

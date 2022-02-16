@@ -72,6 +72,11 @@ impl Balance {
         let mut prod_epus_by_src = self.prod.epus_by_src.clone();
         prod_epus_by_src.values_mut().for_each(|v| *v *= k_area);
 
+        let mut prod_epus_by_srv_by_src = self.prod.epus_by_srv_by_src.clone();
+        prod_epus_by_srv_by_src
+            .values_mut()
+            .for_each(|v| v.values_mut().for_each(|v| *v *= k_area));
+
         let mut prod_by_cr = self.prod.by_cr.clone();
         prod_by_cr.values_mut().for_each(|v| *v *= k_area);
 
@@ -94,6 +99,7 @@ impl Balance {
             prod: BalProd {
                 an: k_area * self.prod.an,
                 epus_by_src: prod_epus_by_src,
+                epus_by_srv_by_src: prod_epus_by_srv_by_src,
                 by_src: prod_by_src,
                 by_cr: prod_by_cr,
             },
@@ -170,6 +176,13 @@ impl std::ops::AddAssign<&BalanceCarrier> for Balance {
             *self.prod.epus_by_src.entry(*source).or_default() += produced;
         }
 
+        for (source, epus_by_srv_for_src) in &rhs.prod.epus_by_srv_by_src_an {
+            let hash_srv = self.prod.epus_by_srv_by_src.entry(*source).or_default();
+            for (service, epus_for_srv_for_src) in epus_by_srv_for_src {
+                *hash_srv.entry(*service).or_default() += epus_for_srv_for_src;
+            }
+        }
+
         // Aggregation by carrier
         if rhs.prod.an != 0.0 {
             *self.prod.by_cr.entry(rhs.carrier).or_default() += &rhs.prod.an;
@@ -203,10 +216,12 @@ pub struct BalUsed {
 pub struct BalProd {
     /// Produced energy from all sources
     pub an: f32,
-    /// Produced energy by source (COGEN / INSITU)
+    /// Produced energy by source
     pub by_src: HashMap<ProdSource, f32>,
-    /// Produced energy delivered to EPB services, by production source (EL_INSITU, EL_COGEN, EAMBIENTE, TERMOSOLAR)
+    /// Produced energy delivered to EPB services, by source
     pub epus_by_src: HashMap<ProdSource, f32>,
+    /// Produced energy delivered for each EPB service, by source
+    pub epus_by_srv_by_src: HashMap<ProdSource, HashMap<Service, f32>>,
     /// Produced energy by carrier
     pub by_cr: HashMap<Carrier, f32>,
 }
