@@ -74,6 +74,7 @@ impl AsCtePlain for EnergyPerformance {
         let del_an = bal.del.an;
         let del_grid = bal.del.grid;
         let del_onsite = bal.del.onst;
+        // let del_cgn = bal.del.cgn;
         // Exportada
         let exp_an = bal.exp.an;
         let exp_grid = bal.exp.grid;

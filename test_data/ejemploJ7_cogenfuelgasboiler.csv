@@ -1,6 +1,16 @@
-#META Ejemplo: J7
-#META Descripcion: Equipo de cogeneración de gas y caldera de gas
-CONSUMO,CAL,GASNATURAL,100
-CONSUMO,CAL,GASNATURAL,158
-CONSUMO,ILU,ELECTRICIDAD,20
-PRODUCCION,EL_COGEN,47.4
+#META Ejemplo 4: Table J.7
+#META Descripcion: Cogeneración con fuel y caldera de gas (alimentación de cogen con 158kWh de fuel)
+# Fuel empleado para la cogeneración 158kWh
+# Electricidad cogenerada 48 kWh
+# Eficiencia de generación eléctrica = eff_el = 0.30
+# Eficiencia eléctrica de referencia = Eficiencia de red eléctrica = eff_el_ref = 0.44 = (1 kWh_el / 2.25 kWh_ep_tot)
+# Factor de asignación de electricidad (método residual): a_W = W / (E_in * eff_el_ref) =
+# = E_in * eff_el / (E_in * eff_el_ref) = eff_el / eff_el_ref = 0.30 / 0.44 = 0.68
+# Factor de asignación a calor (método residual) a_Q = 1 - a_W = 1 - 0.68 = 0.32
+# Consumo de gas imputable a electricidad = E_in * a_W = 158 * 0.68 = 107.44 
+# Consumo de gas imputable a uso térmico = E_in * a_Q = 158 * 0.32 = 50.56 
+CONSUMO,ILU,ELECTRICIDAD,20.0
+CONSUMO,COGEN,GASNATURAL,108.0 # Consumo gas para ELEC 158 * 0.68 = 107.44
+PRODUCCION,EL_COGEN,48.0 # Producción electr. cogen (rend. elec = 0.30) -> 158 * 0.30 = 47.4
+CONSUMO,CAL,GASNATURAL,50.0 # Gas para calor cogen 158 * 0.32 = 50.56
+CONSUMO,CAL,GASNATURAL,100.0 # Caldera

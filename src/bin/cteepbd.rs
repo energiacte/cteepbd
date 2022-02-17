@@ -409,8 +409,6 @@ fn main() {
     let user_wf = UserWF {
         red1: get_factor(&matches, &mut components, "CTE_RED1"),
         red2: get_factor(&matches, &mut components, "CTE_RED2"),
-        cogen_to_grid: get_factor(&matches, &mut components, "CTE_COGEN"),
-        cogen_to_nepb: get_factor(&matches, &mut components, "CTE_COGENNEPB"),
     };
 
     if verbosity > 2 {

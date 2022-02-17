@@ -66,7 +66,9 @@ impl Factors {
     pub fn find(&self, cr: Carrier, source: Source, dest: Dest, step: Step) -> Result<RenNrenCo2> {
         self.wdata
             .iter()
-            .find(|fp| fp.carrier == cr && fp.source == source && fp.dest == dest && fp.step == step)
+            .find(|fp| {
+                fp.carrier == cr && fp.source == source && fp.dest == dest && fp.step == step
+            })
             .map(|fp| fp.factors())
             .ok_or_else(|| {
                 EpbdError::MissingFactor(format!("'{}, {}, {}, {}'", cr, source, dest, step))
@@ -115,28 +117,12 @@ impl Factors {
 
     /// Actualiza los factores definibles por el usuario (cogen_to_grid, cogen_to_nepb, red1 y red2)
     pub fn set_user_wfactors(mut self, user: UserWF<Option<RenNrenCo2>>) -> Self {
-        use Carrier::{ELECTRICIDAD, RED1, RED2};
-        use Dest::{A_NEPB, A_RED, SUMINISTRO};
-        use Source::{COGEN, RED};
+        use Carrier::{RED1, RED2};
+        use Dest::SUMINISTRO;
+        use Source::RED;
         use Step::A;
 
         [
-            (
-                ELECTRICIDAD,
-                COGEN,
-                A_RED,
-                A,
-                user.cogen_to_grid,
-                "Factor de usuario",
-            ),
-            (
-                ELECTRICIDAD,
-                COGEN,
-                A_NEPB,
-                A,
-                user.cogen_to_nepb,
-                "Factor de usuario",
-            ),
             (RED1, RED, SUMINISTRO, A, user.red1, "Factor de usuario"),
             (RED2, RED, SUMINISTRO, A, user.red2, "Factor de usuario"),
         ]
@@ -236,78 +222,54 @@ impl Factors {
             ));
         }
 
-        // En paso A, el factor SUMINISTRO de cogeneración es 0.0, 0.0 ya que el impacto se tiene en cuenta en el suministro del vector de generación
-        self.update_wfactor(
-            ELECTRICIDAD,
-            COGEN,
-            SUMINISTRO,
-            A,
-            RenNrenCo2::new(0.0, 0.0, 0.0),
-            "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)",
-        );
+        // // En paso A, el factor SUMINISTRO de cogeneración es 0.0, 0.0 ya que el impacto se tiene en cuenta en el suministro del vector de generación
+        // self.update_wfactor(
+        //     ELECTRICIDAD,
+        //     COGEN,
+        //     SUMINISTRO,
+        //     A,
+        //     RenNrenCo2::new(0.0, 0.0, 0.0),
+        //     "Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)",
+        // );
 
         // Asegura que todos los vectores con exportación tienen factores de paso a la red y a usos no EPB
         let exp_carriers = [
             (Carrier::ELECTRICIDAD, Source::INSITU),
-            (Carrier::ELECTRICIDAD, Source::COGEN),
+            // (Carrier::ELECTRICIDAD, Source::COGEN),
             (Carrier::EAMBIENTE, Source::INSITU),
             (Carrier::TERMOSOLAR, Source::INSITU),
         ];
         for (c, s) in &exp_carriers {
-            if *s != Source::COGEN {
-                // Asegura que existe VECTOR, SRC, A_RED | A_NEPB, A, ren, nren
-                let fp_a_input = self
-                    .wdata
-                    .iter()
-                    .find(|f| {
-                        f.carrier == *c
-                            && f.source == *s
-                            && f.step == Step::A
-                            && f.dest == Dest::SUMINISTRO
-                    })
-                    .map(|f| f.factors());
+            // Asegura que existe VECTOR, SRC, A_RED | A_NEPB, A, ren, nren
+            let fp_a_input = self
+                .wdata
+                .iter()
+                .find(|f| {
+                    f.carrier == *c
+                        && f.source == *s
+                        && f.step == Step::A
+                        && f.dest == Dest::SUMINISTRO
+                })
+                .map(|f| f.factors());
 
-                if let Some(factors) = fp_a_input {
-                    // VECTOR, SRC, A_RED, A, ren, nren === VECTOR, SRC, SUMINISTRO, A, ren, nren
-                    self.ensure_wfactor(
-                        *c,
-                        *s,
-                        A_RED,
-                        A,
-                        factors,
-                        "Recursos usados para producir la energía exportada a la red",
-                    );
-                    // VECTOR, SRC, A_NEPB, A, ren, nren == VECTOR, SRC, SUMINISTRO, A, ren, nren
-                    self.ensure_wfactor(
-                        *c,
-                        *s,
-                        A_NEPB,
-                        A,
-                        factors,
-                        "Recursos usados para producir la energía exportada a usos no EPB",
-                    );
-                }
-            } else {
+            if let Some(factors) = fp_a_input {
                 // VECTOR, SRC, A_RED, A, ren, nren === VECTOR, SRC, SUMINISTRO, A, ren, nren
                 self.ensure_wfactor(
-                    ELECTRICIDAD,
-                    COGEN,
+                    *c,
+                    *s,
                     A_RED,
                     A,
-                    defaults.cogen_to_grid,
-                    "Recursos usados para producir la energía exportada a la red. Valor predefinido",
+                    factors,
+                    "Recursos usados para producir la energía exportada a la red",
                 );
-                // TODO: Igual aquí hay que indicar que se deben definir factores de usuario en un bail y no hacer nada
-                // TODO: Si está definido para A_RED (no por defecto) y no para A_NEPB, qué hacemos? usamos por defecto? usamos igual a A_RED?
-                // Asegura que existe ELECTRICIDAD, COGEN, A_NEPB, A, ren, nren - ver 9.6.6.2.3
-                // VECTOR, SRC, A_RED, B, ren, nren == VECTOR, RED, SUMINISTRO, A, ren, nren
+                // VECTOR, SRC, A_NEPB, A, ren, nren == VECTOR, SRC, SUMINISTRO, A, ren, nren
                 self.ensure_wfactor(
-                    ELECTRICIDAD,
-                    COGEN,
+                    *c,
+                    *s,
                     A_NEPB,
                     A,
-                    defaults.cogen_to_nepb,
-                    "Recursos usados para producir la energía exportada a usos no EPB. Valor predefinido",
+                    factors,
+                    "Recursos usados para producir la energía exportada a usos no EPB",
                 );
             }
 
@@ -429,6 +391,111 @@ impl Factors {
         factors.set_meta("CTE_PERIMETRO", "NEARBY");
         factors
     }
+
+    /// Incorpora factores de exportación de la electricidad cogenerada
+    ///
+    /// Devuelve a definición de los factores de exportación a NEPB y RED (paso A y paso B),
+    /// para la electricidad cogenerada, que pueden ser agregados directamente a Factors.wdata
+    /// 
+    /// También devuelve las estructuras de datos de los factores de exportación paso A
+    /// para el perímetro distante y próximo, para facilitar el cálculo de RER_nrb
+    #[allow(non_snake_case)]
+    pub(crate) fn compute_cgn_factors(
+        &self,
+        components: &Components,
+    ) -> Result<Vec<Factor>> {
+        // Si hay producción eléctrica
+        // Calcula f_exp_pr_el_A_chp_t = suma (E_in_t * f_in_t) / pr_el_chp_t
+        use crate::types::Energy;
+        use crate::vecops::vecvecsum;
+        use std::collections::HashMap;
+
+        let mut factors = Vec::new();
+
+        let mut prod = Vec::<f32>::new();
+        let mut used = HashMap::<Carrier, Vec<f32>>::new();
+        for c in &components.cdata {
+            match c {
+                Energy::Used(e) if c.is_cogen_use() => {
+                    used.entry(e.carrier)
+                        .and_modify(|item| *item = vecvecsum(item, &e.values))
+                        .or_insert_with(|| e.values.clone());
+                }
+                Energy::Prod(e) if c.is_cogen_pr() => {
+                    prod = if prod.is_empty() {
+                        e.values.clone()
+                    } else {
+                        vecvecsum(&prod, &e.values)
+                    }
+                }
+                _ => continue,
+            }
+        }
+
+        let mut fP_exp_el_cgn_A = RenNrenCo2::default();
+        if !prod.is_empty() {
+            if used.is_empty() {
+                return Err(EpbdError::WrongInput(
+                    "No se han definido los consumos para la cogeneración".into(),
+                ));
+            };
+            for (carrier, used_t) in used {
+                let fP_A_cr = self.find(carrier, Source::RED, Dest::SUMINISTRO, Step::A)?;
+                let used_prod_ratio_sum = used_t
+                    .iter()
+                    .zip(prod.iter())
+                    .map(|(us, pr)| if *pr > 0.0 { us / pr } else { 0.0 })
+                    .sum::<f32>();
+                fP_exp_el_cgn_A += fP_A_cr * used_prod_ratio_sum;
+            }
+
+            let fP_el_grid_A = self.find(
+                Carrier::ELECTRICIDAD,
+                Source::RED,
+                Dest::SUMINISTRO,
+                Step::A,
+            )?;
+            let factor_to_nepb_A = Factor::new(
+                Carrier::ELECTRICIDAD,
+                Source::COGEN,
+                Dest::A_NEPB,
+                Step::A,
+                fP_exp_el_cgn_A,
+                "Recursos usados para la exportación a usos no EPB (calculado)",
+            );
+            let factor_to_grid_A = Factor::new(
+                Carrier::ELECTRICIDAD,
+                Source::COGEN,
+                Dest::A_RED,
+                Step::A,
+                fP_exp_el_cgn_A,
+                "Recursos usados para la exportación a la red (calculado)",
+            );
+            let factor_to_nepb_B = Factor::new(
+                Carrier::ELECTRICIDAD,
+                Source::COGEN,
+                Dest::A_NEPB,
+                Step::B,
+                fP_el_grid_A,
+                "Recursos ahorrados a la red por la exportación a usos no EPB (calculado)",
+            );
+            let factor_to_grid_B = Factor::new(
+                Carrier::ELECTRICIDAD,
+                Source::COGEN,
+                Dest::A_RED,
+                Step::B,
+                fP_el_grid_A,
+                "Recursos ahorrados a la red por la exportación a la red (calculado)",
+            );
+
+            factors.push(factor_to_nepb_A);
+            factors.push(factor_to_grid_A);
+            factors.push(factor_to_nepb_B);
+            factors.push(factor_to_grid_B);
+        };
+
+        Ok(factors)
+    }
 }
 
 impl MetaVec for Factors {
@@ -488,12 +555,6 @@ pub struct UserWF<T = RenNrenCo2> {
     /// Factores de paso de redes de distrito 2.
     /// RED2, RED, SUMINISTRO, A, ren, nren
     pub red2: T,
-    /// Factores de paso para exportación a la red (paso A) de electricidad cogenerada.
-    /// ELECTRICIDAD, COGEN, A_RED, A, ren, nren
-    pub cogen_to_grid: T,
-    /// Factores de paso para exportación a usos no EPB (paso A) de electricidad cogenerada.
-    /// ELECTRICIDAD, COGEN, A_NEPB, A, ren, nren
-    pub cogen_to_nepb: T,
 }
 
 #[cfg(test)]
@@ -523,8 +584,6 @@ ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para 
 #META CTE_FUENTE_COMENTARIO: Factores de paso del documento reconocido del IDAE de 20/07/2014
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para suministrar electricidad (peninsular) desde la red
 ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para producir electricidad in situ
-ELECTRICIDAD, COGEN, A_RED, A, 0.125, 0.500, 1.000 # Factor de usuario
-ELECTRICIDAD, COGEN, A_NEPB, A, 0.500, 0.125, 2.000 # Factor de usuario
 RED1, RED, SUMINISTRO, A, 0.100, 0.125, 0.500 # Factor de usuario
 RED2, RED, SUMINISTRO, A, 0.125, 0.100, 0.500 # Factor de usuario";
         assert_eq!(
@@ -532,8 +591,6 @@ RED2, RED, SUMINISTRO, A, 0.125, 0.100, 0.500 # Factor de usuario";
                 .set_user_wfactors(UserWF {
                     red1: Some(RenNrenCo2::new(0.1, 0.125, 0.5)),
                     red2: Some(RenNrenCo2::new(0.125, 0.1, 0.5)),
-                    cogen_to_grid: Some(RenNrenCo2::new(0.125, 0.5, 1.0)),
-                    cogen_to_nepb: Some(RenNrenCo2::new(0.5, 0.125, 2.0)),
                 })
                 .to_string(),
             tfactorsres
@@ -555,14 +612,10 @@ EAMBIENTE, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obt
 EAMBIENTE, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía ambiente (red ficticia)
 TERMOSOLAR, INSITU, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica
 TERMOSOLAR, RED, SUMINISTRO, A, 1.000, 0.000, 0.000 # Recursos usados para obtener energía solar térmica (red ficticia)
-ELECTRICIDAD, COGEN, SUMINISTRO, A, 0.000, 0.000, 0.000 # Factor de paso generado (el impacto de la cogeneración se tiene en cuenta en el vector de suministro)
-ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red\nELECTRICIDAD, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
+ELECTRICIDAD, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
+ELECTRICIDAD, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
 ELECTRICIDAD, INSITU, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
 ELECTRICIDAD, INSITU, A_NEPB, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
-ELECTRICIDAD, COGEN, A_RED, A, 0.000, 2.500, 0.300 # Recursos usados para producir la energía exportada a la red. Valor predefinido
-ELECTRICIDAD, COGEN, A_NEPB, A, 0.000, 2.500, 0.300 # Recursos usados para producir la energía exportada a usos no EPB. Valor predefinido
-ELECTRICIDAD, COGEN, A_RED, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
-ELECTRICIDAD, COGEN, A_NEPB, B, 0.414, 1.954, 0.331 # Recursos ahorrados a la red por la energía producida in situ y exportada a usos no EPB
 EAMBIENTE, INSITU, A_RED, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a la red
 EAMBIENTE, INSITU, A_NEPB, A, 1.000, 0.000, 0.000 # Recursos usados para producir la energía exportada a usos no EPB
 EAMBIENTE, INSITU, A_RED, B, 1.000, 0.000, 0.000 # Recursos ahorrados a la red por la energía producida in situ y exportada a la red
@@ -590,16 +643,6 @@ ELECTRICIDAD, RED, SUMINISTRO, A, 0.414, 1.954, 0.331 # Recursos usados para sum
                 red2: RenNrenCo2 {
                     ren: 0.0,
                     nren: 1.3,
-                    co2: 0.3,
-                },
-                cogen_to_grid: RenNrenCo2 {
-                    ren: 0.0,
-                    nren: 2.5,
-                    co2: 0.3,
-                },
-                cogen_to_nepb: RenNrenCo2 {
-                    ren: 0.0,
-                    nren: 2.5,
                     co2: 0.3,
                 },
             })

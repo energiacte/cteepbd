@@ -87,8 +87,6 @@ let components = read_to_string("test_data/cte_test_carriers.csv")
 let user_wf = UserWF {
     red1: Some((1.0, 0.0, 0.0).into()),
     red2: None,
-    cogen_to_grid: None,
-    cogen_to_nepb: None,
 }; // Factores definidos por el usuario
 let default_user_wf = cte::CTE_USERWF; // Valores por defecto de factores de paso del usuario
 

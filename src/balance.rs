@@ -73,13 +73,19 @@ pub fn energy_performance(
         )));
     };
     let components = components.clone();
+    let mut wfactors = wfactors.clone();
+
+    let mut cgn_factors = wfactors.compute_cgn_factors(&components)?;
+    if !cgn_factors.is_empty() {
+        wfactors.wdata.append(&mut cgn_factors);
+    };
 
     // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance = Balance::default();
     let mut balance_cr: HashMap<Carrier, BalanceCarrier> = HashMap::new();
     for cr in &components.available_carriers() {
         // Compute balance for this carrier ---
-        let bal_cr = balance_for_carrier(*cr, &components, wfactors, k_exp, load_matching)?;
+        let bal_cr = balance_for_carrier(*cr, &components, &wfactors, k_exp, load_matching)?;
         // Add up to the global balance
         balance += &bal_cr;
         // Append to the map of balances by carrier
@@ -93,7 +99,7 @@ pub fn energy_performance(
     let rer = balance.we.b.rer();
 
     // Nearby RER
-    // 1. Renewable energy from all nearby carriers (excluding ELECTRICIDAD)
+    // 1. Renewable energy from all nearby carriers (excluding electricity)
     let ren_nrb_cr = balance_cr
         .iter()
         .map(|(carrier, bal)| {
@@ -104,14 +110,23 @@ pub fn energy_performance(
             }
         })
         .sum::<f32>();
-    // 2. Renewable energy from onsite produced ELECTRICIDAD
-    // This is equivalent to the ren contribution that doesn't come from grid delivered ELECTRICIDAD
+    // 2. Renewable energy from onsite produced electricity
+    // This is equivalent to the ren contribution that doesn't come from grid delivered electicity
     let ren_nrb_el_nrb = balance_cr
         .get(&Carrier::ELECTRICIDAD)
         .map(|cr| cr.we.b.ren - cr.we.del_grid.ren)
         .unwrap_or(0.0);
-    // 3. Add both contributions
-    let ren_nrb = ren_nrb_cr + ren_nrb_el_nrb;
+    // 3. Add the ren part of resources avoided to the grid generation, as that's distant
+    // AB = kexp * exp * (f_B - f_A)
+    let ren_add_back_avoided_to_grid = balance_cr
+        .get(&Carrier::ELECTRICIDAD)
+        .map(|cr| k_exp * (
+            cr.we.exp_ab.ren 
+            + cr.we.exp_nepus_a.ren + cr.we.exp_grid_a.ren
+        ))
+        .unwrap_or(0.0);
+    // 4. Add all contributions
+    let ren_nrb = ren_nrb_cr + ren_nrb_el_nrb + ren_add_back_avoided_to_grid;
 
     let tot = balance.we.b.tot();
     let rer_nrb = if tot > 0.0 { ren_nrb / tot } else { 0.0 };
@@ -119,7 +134,7 @@ pub fn energy_performance(
     // Energy performance data and results
     Ok(EnergyPerformance {
         components,
-        wfactors: wfactors.clone(),
+        wfactors,
         k_exp,
         arearef,
         balance_cr,
@@ -201,27 +216,34 @@ fn compute_used_produced(
     let mut E_EPus_cr_t = vec![0.0; num_steps];
     let mut E_EPus_cr_t_by_srv: HashMap<Service, Vec<f32>> = HashMap::new();
     let mut E_nEPus_cr_t = vec![0.0; num_steps];
+    let mut E_cgn_in_cr_t = vec![0.0; num_steps];
     let mut E_pr_cr_j_t = HashMap::<ProdSource, Vec<f32>>::new();
     for c in &cr_list {
         let vals = c.values();
         if c.is_generated() {
+            // Onsite production + electr. cogeneration
             E_pr_cr_j_t
                 .entry(c.prod_source())
                 .and_modify(|e| *e = vecvecsum(e, vals))
                 .or_insert_with(|| vals.to_owned());
         } else if c.is_epb_use() {
+            // EPB services
             E_EPus_cr_t_by_srv
                 .entry(c.service())
                 .and_modify(|e| *e = vecvecsum(e, vals))
                 .or_insert_with(|| vals.to_owned());
             E_EPus_cr_t = vecvecsum(&E_EPus_cr_t, vals)
+        } else if c.is_cogen_use() {
+            // Cogeneration input
+            E_cgn_in_cr_t = vecvecsum(&E_cgn_in_cr_t, vals)
         } else {
-            // Non EPB use
+            // Non EPB services
             E_nEPus_cr_t = vecvecsum(&E_nEPus_cr_t, vals)
         }
     }
     let E_EPus_cr_an = vecsum(&E_EPus_cr_t);
     let E_nEPus_cr_an = vecsum(&E_nEPus_cr_t);
+    let E_cgn_in_cr_an = vecsum(&E_cgn_in_cr_t);
 
     // Used energy for this carrier for each service for all timesteps
     let mut E_EPus_cr_an_by_srv = HashMap::<Service, f32>::new();
@@ -242,13 +264,12 @@ fn compute_used_produced(
     // Load matching factor (32) (11.6.2.4)
     let f_match_t = compute_f_match(&E_pr_cr_t, &E_EPus_cr_t, load_matching);
 
-    let mut E_pr_cr_used_EPus_t = vec![0.0; num_steps];
-
     // Generated energy from source j used in EP
     // If there is more than one source... it could have priorities
     // Compute using priorities priorities (9.6.62.4). EL_INSITU > EL_COGEN
     let (has_priorities, priorities) = ProdSource::get_priorities(carrier);
 
+    let mut E_pr_cr_used_EPus_t = vec![0.0; num_steps];
     let mut E_pr_cr_j_used_EPus_t = HashMap::<ProdSource, Vec<f32>>::new();
     if has_priorities && priorities.iter().all(|s| E_pr_cr_j_an.contains_key(s)) {
         // Energy used for that carrier (9)
@@ -320,6 +341,8 @@ fn compute_used_produced(
             epus_by_srv_an: E_EPus_cr_an_by_srv,
             nepus_t: E_nEPus_cr_t,
             nepus_an: E_nEPus_cr_an,
+            cgn_in_t: E_cgn_in_cr_t,
+            cgn_in_an: E_cgn_in_cr_an,
         },
         ProducedEnergy {
             t: E_pr_cr_t,
@@ -385,10 +408,12 @@ fn compute_exported_delivered(
     // All energy produced onsite is delivered energy, though part of it can be later exported
     let mut E_del_cr_onsite_t = vec![0.0_f32; E_del_cr_t.len()];
     for (prod_src, prod_values_t) in &prod.by_src_t {
-        if Source::INSITU != (*prod_src).into() {
-            continue;
+        match (*prod_src).into() {
+            Source::INSITU => {
+                E_del_cr_onsite_t = vecvecsum(&E_del_cr_onsite_t, prod_values_t);
+            }
+            _ => continue,
         }
-        E_del_cr_onsite_t = vecvecsum(&E_del_cr_onsite_t, prod_values_t);
     }
     let E_del_cr_onsite_an = vecsum(&E_del_cr_onsite_t);
 
@@ -414,11 +439,13 @@ fn compute_exported_delivered(
             nepus_an: E_exp_cr_used_nEPus_an,
         },
         DeliveredEnergy {
-            an: E_del_cr_an + E_del_cr_onsite_an,
+            an: E_del_cr_an + E_del_cr_onsite_an + used.cgn_in_an,
             grid_t: E_del_cr_t,
             grid_an: E_del_cr_an,
             onst_t: E_del_cr_onsite_t,
             onst_an: E_del_cr_onsite_an,
+            cgn_t: used.cgn_in_t.clone(),
+            cgn_an: used.cgn_in_an,
         },
     )
 }
@@ -433,19 +460,32 @@ fn compute_weighted_energy(
     exp: &ExportedEnergy,
     del: &DeliveredEnergy,
 ) -> Result<WeightedEnergy> {
-    let E_we_del_cr_grid_an =
-        del.grid_an * wfactors.find(carrier, Source::RED, Dest::SUMINISTRO, Step::A)?;
-    // Weighted energy for onsite produced energy
+    let fP_grid_A = wfactors.find(carrier, Source::RED, Dest::SUMINISTRO, Step::A)?;
+
+    // Weighted energy due to delivered energy from the grid
+    let E_we_del_cr_grid_an = del.grid_an * fP_grid_A;
+
+    // Weighted energy due to delivered energy to produce cogenerated electricity
+    let E_we_del_cr_cgn_an = if del.cgn_an == 0.0 {
+        RenNrenCo2::default()
+    } else {
+        del.cgn_an * fP_grid_A
+    };
+
+    // Weighted energy due to delivered energy from onsite sources
     let E_we_del_cr_onsite_an = if del.onst_an == 0.0 {
         RenNrenCo2::default()
     } else {
         del.onst_an * wfactors.find(carrier, Source::INSITU, Dest::SUMINISTRO, Step::A)?
     };
-    let E_we_del_cr_an = E_we_del_cr_grid_an + E_we_del_cr_onsite_an;
 
-    let mut E_we_exp_cr_an_A = RenNrenCo2::default();
-    let mut E_we_exp_cr_an_AB = RenNrenCo2::default();
+    let E_we_del_cr_an = E_we_del_cr_grid_an + E_we_del_cr_onsite_an + E_we_del_cr_cgn_an;
+
     let mut E_we_exp_cr_an = RenNrenCo2::default();
+    let mut E_we_exp_cr_an_A = RenNrenCo2::default();
+    let mut E_we_exp_cr_nEPus_an_A = RenNrenCo2::default();
+    let mut E_we_exp_cr_grid_an_A = RenNrenCo2::default();
+    let mut E_we_exp_cr_an_AB = RenNrenCo2::default();
     let mut E_we_exp_cr_used_nEPus_an_AB = RenNrenCo2::default();
     let mut E_we_exp_cr_grid_an_AB = RenNrenCo2::default();
     if exp.an != 0.0 {
@@ -483,12 +523,14 @@ fn compute_weighted_energy(
         };
 
         // Weighted exported energy according to resources used to generate that energy (formula 23)
-        E_we_exp_cr_an_A = (exp.nepus_an * f_we_exp_cr_stepA_nEPus) // formula 24
-            + (exp.grid_an * f_we_exp_cr_stepA_grid); // formula 25
+        E_we_exp_cr_nEPus_an_A = exp.nepus_an * f_we_exp_cr_stepA_nEPus; // formula 24
+        E_we_exp_cr_grid_an_A = exp.grid_an * f_we_exp_cr_stepA_grid; // formula 25
+        E_we_exp_cr_an_A = E_we_exp_cr_nEPus_an_A + E_we_exp_cr_grid_an_A;
 
         // * Step B: weighting depends on exported energy generation and avoided resources on the grid
 
         // Factors of contribution for energy exported to nEP uses (step B)
+        // (resources avoided to the grid gen)
         let f_we_exp_cr_used_nEPus = if exp.nepus_an == 0.0 {
             // No energy exported to nEP uses
             RenNrenCo2::default() // ren: 0.0, nren: 0.0, co2: 0.0
@@ -497,6 +539,7 @@ fn compute_weighted_energy(
         };
 
         // Weighting factors for energy exported to the grid (step B)
+        // (resources avoided to the grid gen)
         let f_we_exp_cr_grid = if exp.grid_an == 0.0 {
             // No energy exported to grid
             RenNrenCo2::default() // ren: 0.0, nren: 0.0, co2: 0.0
@@ -507,11 +550,11 @@ fn compute_weighted_energy(
         // Effect of exported energy on weighted energy performance (step B) (formula 26)
 
         E_we_exp_cr_used_nEPus_an_AB =
-            exp.nepus_an * (f_we_exp_cr_used_nEPus - f_we_exp_cr_stepA_nEPus);
+            exp.nepus_an * (f_we_exp_cr_used_nEPus - f_we_exp_cr_stepA_nEPus); // formula 27
 
-        E_we_exp_cr_grid_an_AB = exp.grid_an * (f_we_exp_cr_grid - f_we_exp_cr_stepA_grid);
+        E_we_exp_cr_grid_an_AB = exp.grid_an * (f_we_exp_cr_grid - f_we_exp_cr_stepA_grid); // formula 28
 
-        E_we_exp_cr_an_AB = E_we_exp_cr_used_nEPus_an_AB + E_we_exp_cr_grid_an_AB;
+        E_we_exp_cr_an_AB = E_we_exp_cr_used_nEPus_an_AB + E_we_exp_cr_grid_an_AB; // formula 26
 
         // Contribution of exported energy to the annual weighted energy performance
         // 11.6.2.1, 11.6.2.2, 11.6.2.3
@@ -540,9 +583,12 @@ fn compute_weighted_energy(
         del: E_we_del_cr_an,
         del_grid: E_we_del_cr_grid_an,
         del_onst: E_we_del_cr_onsite_an,
+        del_cgn: E_we_del_cr_cgn_an,
 
         exp: E_we_exp_cr_an,
         exp_a: E_we_exp_cr_an_A,
+        exp_nepus_a: E_we_exp_cr_nEPus_an_A,
+        exp_grid_a: E_we_exp_cr_grid_an_A,
         exp_ab: E_we_exp_cr_an_AB,
         exp_nepus_ab: E_we_exp_cr_used_nEPus_an_AB,
         exp_grid_ab: E_we_exp_cr_grid_an_AB,

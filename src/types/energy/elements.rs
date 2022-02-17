@@ -195,7 +195,7 @@ impl Energy {
     /// Is this energy of the onsite produced kind?
     pub fn is_onsite_pr(&self) -> bool {
         match self {
-            // TODO: Revisar esto...
+            // TODO: COGEN Revisar esto...
             Energy::Prod(e) => e.source != ProdSource::EL_COGEN,
             Energy::Used(_) => false,
             Energy::Aux(_) => false,

@@ -63,8 +63,6 @@ pub const CTE_LOCS: [&str; 4] = ["PENINSULA", "BALEARES", "CANARIAS", "CEUTAMELI
 pub const CTE_USERWF: UserWF<RenNrenCo2> = UserWF {
     red1: RenNrenCo2::new(0.0, 1.3, 0.3),
     red2: RenNrenCo2::new(0.0, 1.3, 0.3),
-    cogen_to_grid: RenNrenCo2::new(0.0, 2.5, 0.3),
-    cogen_to_nepb: RenNrenCo2::new(0.0, 2.5, 0.3),
 };
 
 /// Factores de paso reglamentarios según el documento reconocido del RITE (20/07/2014)
@@ -96,8 +94,6 @@ pub static CTE_LOCWF_RITE2014: Lazy<HashMap<&'static str, Factors>> = Lazy::new(
             Factor::new(GASOLEO, RED, SUMINISTRO, A, (0.003, 1.179, 0.311).into(), "Recursos usados para suministrar el vector desde la red"),
             Factor::new(GLP, RED, SUMINISTRO, A, (0.003, 1.201, 0.254).into(), "Recursos usados para suministrar el vector desde la red"),
             Factor::new(ELECTRICIDAD, INSITU, SUMINISTRO, A, (1.000, 0.000, 0.000).into(), "Recursos usados para producir electricidad in situ"),
-            Factor::new(ELECTRICIDAD, COGEN, SUMINISTRO, A, (0.000, 0.000, 0.000).into(), "Recursos usados para suministrar la energía (0 porque se contabiliza el vector que alimenta el cogenerador)"),
-            // Factor::new(ELECTRICIDAD, RED, SUMINISTRO, A, (ren, nren, co2), "Recursos usados para el suministro desde la red")
         ]};
     let mut wfpen = wf.clone();
     wfpen.set_meta("CTE_LOCALIZACION", "PENINSULA");

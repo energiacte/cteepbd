@@ -17,7 +17,7 @@ ELECTRICIDAD, INSITU, A_RED, B, 0.5, 2.0, 0.42
 ELECTRICIDAD, INSITU, A_NEPB, A, 1.0, 0.0, 0.0
 ELECTRICIDAD, INSITU, A_NEPB, B, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
+BIOMASA, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
 EAMBIENTE, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
 EAMBIENTE, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 TERMOSOLAR, INSITU, SUMINISTRO,  A, 1.0, 0.0, 0.0
@@ -27,18 +27,12 @@ TERMOSOLAR, RED, SUMINISTRO,  A, 1.0, 0.0, 0.0
 const TESTFPJ7: &str = "vector, fuente, uso, step, ren, nren, co2
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
-ELECTRICIDAD, COGEN, SUMINISTRO, A, 0.0, 0.0, 0.0
-ELECTRICIDAD, COGEN, A_RED, A, 0.0, 2.5, 0.82
-ELECTRICIDAD, COGEN, A_RED, B, 0.5, 2.0, 0.42
 ";
 
 const TESTFPJ8: &str = "vector, fuente, uso, step, ren, nren, co2
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
-BIOCARBURANTE, RED, SUMINISTRO, A, 1.0, 0.1, 0.07
-ELECTRICIDAD, COGEN, SUMINISTRO, A, 0.0, 0.0, 0.0
-ELECTRICIDAD, COGEN, A_RED, A, 2.27, 0.23, 0.07
-ELECTRICIDAD, COGEN, A_RED, B, 0.5, 2.0, 0.42
+BIOMASA, RED, SUMINISTRO, A, 1.0, 0.1, 0.07
 ";
 
 const TESTFP: &str = "vector, fuente, uso, step, ren, nren
@@ -46,7 +40,8 @@ const TESTFP: &str = "vector, fuente, uso, step, ren, nren
 GASNATURAL, RED, SUMINISTRO,A, 0.0, 1.1, 0.22
 
 BIOCARBURANTE, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
-BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018
+BIOMASA, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
+BIOMASADENSIFICADA, RED, SUMINISTRO, A, 1.1, 0.1, 0.07
 
 # Vectores con exportación
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
@@ -69,12 +64,6 @@ TERMOSOLAR, INSITU, A_RED,  A, 1.0, 0.0, 0.0
 TERMOSOLAR, INSITU, A_NEPB,  A, 1.0, 0.0, 0.0
 TERMOSOLAR, INSITU, A_RED,  B, 1.0, 0.0, 0.0
 TERMOSOLAR, INSITU, A_NEPB,  B, 1.0, 0.0, 0.0
-
-ELECTRICIDAD, COGEN, SUMINISTRO,   A, 0.0, 0.0, 0.0
-ELECTRICIDAD, COGEN, A_RED, A, 0.0, 2.5, 0.82
-ELECTRICIDAD, COGEN, A_NEPB, A, 1.0, 0.0, 0.0
-ELECTRICIDAD, COGEN, A_RED, B, 0.5, 2.0, 0.42
-ELECTRICIDAD, COGEN, A_NEPB, B, 0.5, 2.0, 0.42
 ";
 
 const TESTKEXP: f32 = 1.0;
@@ -83,8 +72,6 @@ fn get_ctefp_peninsula() -> Factors {
     let user_wf = UserWF {
         red1: None,
         red2: None,
-        cogen_to_grid: None,
-        cogen_to_nepb: None,
     };
     wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, user_wf, CTE_USERWF).unwrap()
 }
@@ -151,8 +138,6 @@ fn wfactors_from_file(path: &str) -> Factors {
     let user_wf = UserWF {
         red1: None,
         red2: None,
-        cogen_to_grid: None,
-        cogen_to_nepb: None,
     };
     wfactors_from_str(&wfactors_string, user_wf, CTE_USERWF).unwrap()
 }
@@ -421,8 +406,8 @@ fn cte_5_cgn_biogas_normativo() {
     let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
-            ren: 151.3,
-            nren: 77.8,
+            ren: 147.4,
+            nren: 69.7,
             co2: 18.8,
         },
         bal.balance_m2.we.b
@@ -539,32 +524,6 @@ fn cte_J3_Base_PV_excess_kexp_1() {
 }
 
 #[test]
-#[ignore]
-fn cte_J4_cogen_fuel_boiler_kexp_1() {
-    let comps = components_from_file("test_data/ejemploJ4_cogen_fuel_boiler.csv");
-    let FP: Factors = TESTFPJ.parse().unwrap();
-    let bal = energy_performance(&comps, &FP, 1.0, 1.0, false).unwrap();
-    // EPnren 229, EPtot 215
-    assert!(approx_equal(
-        RenNrenCo2 {
-            ren: 100.0,
-            nren: 0.0,
-            co2: 0.0
-        },
-        bal.balance_m2.we.b
-    ));
-    // EPnren 215, EPtot 215
-    assert!(approx_equal(
-        RenNrenCo2 {
-            ren: 100.0,
-            nren: 0.0,
-            co2: 0.0,
-        },
-        bal.balance_m2.we.a
-    ));
-}
-
-#[test]
 fn cte_J3b_Base_PV_excess_kexp_0() {
     let comps = components_from_file("test_data/ejemploJ3_basePVexcess.csv");
     let FP: Factors = TESTFPJ.parse().unwrap();
@@ -640,17 +599,17 @@ fn cte_J7_Co_generator_gas_plus_gas_boiler_kexp_1() {
     let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
-            ren: -13.7,
-            nren: 229.0,
-            co2: 45.3,
+            ren: -14.0,
+            nren: 227.8,
+            co2: 45.0,
         },
         bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
             ren: 0.0,
-            nren: 215.3,
-            co2: 34.3,
+            nren: 214.5,
+            co2: 42.9,
         },
         bal.balance_m2.we.a
     ));
@@ -663,17 +622,17 @@ fn cte_J8_Co_generator_biogas_plus_gas_boiler_kexp_1() {
     let bal = energy_performance(&comps, &FP, TESTKEXP, 1.0, false).unwrap();
     assert!(approx_equal(
         RenNrenCo2 {
-            ren: 144.3,
-            nren: 71.0,
-            co2: 21.6,
+            ren: 144.0,
+            nren: 69.8,
+            co2: 21.3,
         },
         bal.balance_m2.we.b
     ));
     assert!(approx_equal(
         RenNrenCo2 {
-            ren: 95.8,
+            ren: 95.0,
             nren: 119.5,
-            co2: 31.1,
+            co2: 28.65,
         },
         bal.balance_m2.we.a
     ));
@@ -723,8 +682,6 @@ fn cte_EPBD() {
     let user_wf = UserWF {
         red1: Some(CTE_USERWF.red1),
         red2: Some(CTE_USERWF.red2),
-        cogen_to_grid: None,
-        cogen_to_nepb: None,
     };
     let FP = wfactors_from_loc("PENINSULA", &CTE_LOCWF_RITE2014, user_wf, CTE_USERWF).unwrap();
     let bal = energy_performance(&comps, &FP, 0.0, 217.4, false).unwrap();
@@ -825,7 +782,7 @@ CONSUMO,ACS,TERMOSOLAR,10"
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
-    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.972");
+    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.928");
 }
 
 /// Biomasa rend 75% (75kWh demanda ACS)
@@ -834,7 +791,7 @@ fn cte_ACS_demanda_ren_biomasa_100() {
     let comps = "CONSUMO,ACS,BIOMASA,100".parse::<Components>().unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
-    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.967");
+    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
 }
 
 /// Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS)
@@ -846,15 +803,9 @@ fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
     CONSUMO,ACS,BIOMASADENSIFICADA,50"
         .parse::<Components>()
         .unwrap();
-    let TESTFPEXT = format!(
-        "{}\n{}\n{}",
-        TESTFP,
-        "BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018",
-        "BIOMASADENSIFICADA,RED,SUMINISTRO, A, 1.028, 0.085, 0.018" // Red de distrito 50% renovable
-    );
-    let FP: Factors = TESTFPEXT.parse().unwrap();
+    let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
-    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.945");
+    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
 }
 
 /// Gas rend 90% (40% demanda -> 50kWh) + Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS las dos)
@@ -867,16 +818,10 @@ fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
     CONSUMO,ACS,BIOMASADENSIFICADA,50"
         .parse::<Components>()
         .unwrap();
-    let TESTFPEXT = format!(
-        "{}\n{}\n{}",
-        TESTFP,
-        "BIOMASA, RED, SUMINISTRO, A, 1.003, 0.034, 0.018",
-        "BIOMASADENSIFICADA,RED,SUMINISTRO, A, 1.028, 0.085, 0.018" // Red de distrito 50% renovable
-    );
-    let FP: Factors = TESTFPEXT.parse().unwrap();
+    let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 125.0).unwrap();
-    // Las dos biomasas producen lo mismo que antes de renovable = 0.945 * 75 = 70.875 , con el nuevo total de demanda (125kWh) -> 70.875 / 125.0 = 0.567
-    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.567");
+    // Las dos biomasas producen lo mismo que antes de renovable = 1.1_ren/1.2_tot * 0.60% = 0.55
+    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.550");
 }
 
 /// Red de distrito, red1 50% renovable y red2 10% renovable (100kWh demanda ACS)
@@ -1000,7 +945,7 @@ fn cte_ACS_demanda_ren_excluye_aux() {
     let comps = components_from_file("test_data/acs_demanda_ren_con_exclusion_auxiliares.csv");
     let FP = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 4549.0).unwrap();
-    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.967");
+    assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
 }
 
 /// Componentes con id de sistema explicitados, usos no EPB y exportación a usos nEPB y a la red
@@ -1099,18 +1044,18 @@ fn global_test_1() {
 }
 
 /// Cogeneración (rend_tot = 0.91, rend_el = 0.30) + PV
-/// Consumo de gas para cogen electr = 80 / 0.91 = 
+/// Consumo de gas para cogen electr = 80 / 0.91 =
 /// Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
-/// 
+///
 /// Sin prioridades la producción se reparte en proporción a la parte de generación que supone
 /// cada fuente y se distribuye a cada servicio en función de su peso en los servicios EPB.
-/// 
+///
 /// Con prioridades se consume primero la energía EL_INSITU disponible y luego EL_COGEN
 #[test]
 fn cte_prioridades_prod_epus_pv_cogen() {
     let comps = "CONSUMO,ILU,ELECTRICIDAD,100.0
     PRODUCCION,EL_INSITU,80
-    #CONSUMO,GEN,GASNATURAL,88 # Consumo gas para cogen_el = 80 / 0.909
+    CONSUMO,COGEN,GASNATURAL,200 # Consumo gas para cogen_el = 80 / 0.4 (0.4 = rend_el_ref = 1 / 2.5)
     PRODUCCION,EL_COGEN,80"
         .parse::<Components>()
         .unwrap();
@@ -1125,5 +1070,3 @@ fn cte_prioridades_prod_epus_pv_cogen() {
         format!("{:.3}", ep.balance.prod.epus_by_src[&ProdSource::EL_COGEN])
     );
 }
-
-

@@ -75,6 +75,10 @@ pub struct UsedEnergy {
     pub nepus_t: Vec<f32>,
     /// Energy used for non EPB services
     pub nepus_an: f32,
+    /// Energy input allocated to electricity cogeneration at each timestep
+    pub cgn_in_t: Vec<f32>,
+    /// Energy input allocated to electricity cogeneration
+    pub cgn_in_an: f32,
 }
 
 /// Produced Energy Data and Results
@@ -136,6 +140,10 @@ pub struct DeliveredEnergy {
     pub onst_t: Vec<f32>,
     /// Delivered energy from onsite sources
     pub onst_an: f32,
+    /// Delivered energy allocated to electricity cogeneration at each timestep
+    pub cgn_t: Vec<f32>,
+    /// Delivered energy allocated to electricity cogeneration
+    pub cgn_an: f32,
 }
 
 /// Weighted Energy Data and Results
@@ -155,10 +163,16 @@ pub struct WeightedEnergy {
     pub del_grid: RenNrenCo2,
     /// Weighted delivered energy by any onsite energy production source (EL_INSITU, TERMOSOLAR, EAMBIENTE)
     pub del_onst: RenNrenCo2,
+    /// Weighted delivered energy by cogenerated electricity (EL_COGEN)
+    pub del_cgn: RenNrenCo2,
     /// Weighted exported energy for calculation step A+B
     pub exp: RenNrenCo2,
-    /// Weighted exported energy for calculation step A
+    /// Weighted exported energy for calculation step A (resources used)
     pub exp_a: RenNrenCo2,
+    /// Weighted exported energy for non EPB services for calculation step A (resources used)
+    pub exp_nepus_a: RenNrenCo2,
+    /// Weighted exported energy to the grid and calculation step A (resources used)
+    pub exp_grid_a: RenNrenCo2,
     /// Weighted exported energy for non EPB services and calculation step AB
     pub exp_nepus_ab: RenNrenCo2,
     /// Weighted exported energy to the grid and calculation step AB

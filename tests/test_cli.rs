@@ -91,6 +91,7 @@ fn ejemplo_j6() {
 
 #[test]
 fn ejemplo_j7() {
+    // Step A
     assert_cli::Assert::main_binary()
         .with_args(&[
             "-c",
@@ -99,14 +100,32 @@ fn ejemplo_j7() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = -27.4, nren = 283.8, tot = 256.4")
+        .contains("C_ep [kWh/m2.an]: ren = 0.0, nren = 214.5, tot = 214.5")
         .stdout()
-        .contains("RER = -0.11")
+        .contains("RER = 0.0")
+        .unwrap();
+    // Step B, kexp=1
+    assert_cli::Assert::main_binary()
+        .with_args(&[
+            "-c",
+            "test_data/ejemploJ7_cogenfuelgasboiler.csv",
+            "-f",
+            "test_data/factores_paso_test.csv",
+            "--kexp",
+            "1.0",
+        ])
+        .stdout()
+        .contains("C_ep [kWh/m2.an]: ren = -14.0, nren = 227.8, tot = 213.8")
+        .stdout()
+        .contains("RER = -0.07")
+        .stdout()
+        .contains("RER_nrb = 0.00")
         .unwrap();
 }
 
 #[test]
 fn ejemplo_j8() {
+    // Step A
     assert_cli::Assert::main_binary()
         .with_args(&[
             "-c",
@@ -115,9 +134,28 @@ fn ejemplo_j8() {
             "test_data/factores_paso_test.csv",
         ])
         .stdout()
-        .contains("C_ep [kWh/m2.an]: ren = 146.4, nren = 125.8, tot = 272.2")
+        .contains("C_ep [kWh/m2.an]: ren = 95.0, nren = 119.5, tot = 214.5")
         .stdout()
-        .contains("RER = 0.54")
+        .contains("RER = 0.44")
+        .stdout()
+        .contains("RER_nrb = 0.44")
+        .unwrap();
+    // Step B
+    assert_cli::Assert::main_binary()
+        .with_args(&[
+            "-c",
+            "test_data/ejemploJ8_cogenbiogasboiler.csv",
+            "-f",
+            "test_data/factores_paso_test.csv",
+            "--kexp",
+            "1.0",
+        ])
+        .stdout()
+        .contains("C_ep [kWh/m2.an]: ren = 144.0, nren = 69.8, tot = 213.8")
+        .stdout()
+        .contains("RER = 0.67")
+        .stdout()
+        .contains("RER_nrb = 0.74")
         .unwrap();
 }
 
@@ -181,7 +219,7 @@ fn ejemplo_acs_demanda_ren_con_nepb() {
         .contains("* generada y usada en servicios EPB, por origen:\n- EAMBIENTE: 26.00\n- EL_INSITU: 4.45")
         .unwrap();
 
-        assert_cli::Assert::main_binary()
+    assert_cli::Assert::main_binary()
         .with_args(&[
             "-c",
             "test_data/acs_demanda_ren_con_nepb.csv",
