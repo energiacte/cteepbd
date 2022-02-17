@@ -117,9 +117,9 @@ pub struct ExportedEnergy {
     pub nepus_t: Vec<f32>,
     /// Exported energy to non EPB services
     pub nepus_an: f32,
-    /// Exported energy to the grid and non EPB services at each timestep, by source (INSITU, COGEN)
+    /// Exported energy to the grid and non EPB services at each timestep, by source
     pub by_src_t: HashMap<ProdSource, Vec<f32>>,
-    /// Exported energy to the grid and non EPB services, by source (INSITU, COGEN)
+    /// Exported energy to the grid and non EPB services, by source
     pub by_src_an: HashMap<ProdSource, f32>,
 }
 
@@ -153,7 +153,7 @@ pub struct WeightedEnergy {
     pub del: RenNrenCo2,
     /// Weighted delivered energy by the grid
     pub del_grid: RenNrenCo2,
-    /// Weighted delivered energy by any energy production sources
+    /// Weighted delivered energy by any onsite energy production source (EL_INSITU, TERMOSOLAR, EAMBIENTE)
     pub del_onst: RenNrenCo2,
     /// Weighted exported energy for calculation step A+B
     pub exp: RenNrenCo2,

@@ -45,7 +45,7 @@ pub struct EProd {
     /// A value greater than 0 identies a specific energy generation system
     pub id: i32,
     /// Energy source
-    /// - `ELINSITU | EL_COGEN | TERMOSOLAR | EAMBIENTE` for generated energy component types
+    /// - `EL_INSITU | EL_COGEN | TERMOSOLAR | EAMBIENTE` for generated energy component types
     pub source: ProdSource,
     /// List of produced energy values, one value for each time step. kWh
     pub values: Vec<f32>,
