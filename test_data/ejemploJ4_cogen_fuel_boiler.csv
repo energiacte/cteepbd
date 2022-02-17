@@ -1,7 +1,0 @@
-#META Ejemplo: J4, table J.7
-#META Descripcion: Cogeneración con fuel y caldera (alimentación de cogen con 158kWh de fuel)
-CONSUMO,ILU,ELECTRICIDAD,20.0
-CONSUMO,COGEN,GASNATURAL,52.66 # Consumo gas para ELEC rend. total cogen = 0.9. 158 * 0.30 / 0.90 = 52.66
-PRODUCCION,EL_COGEN,48.0 # Producción electr. cogen (rend. elec = 0.30) -> 158 * 0.30 = 48
-CONSUMO,CAL,GASNATURAL,105.33 # Gas para calor cogen (cogen thermal ef = 0.60) 158 * 0.60 / 0.90 = 105.33
-CONSUMO,CAL,GASNATURAL,100.0 # Caldera
