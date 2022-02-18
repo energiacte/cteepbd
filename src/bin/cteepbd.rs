@@ -33,13 +33,10 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
   Energy performance of buildings - Overarching EPB assessment - General framework and procedures
   This implementation has used the following assumptions:
   - weighting factors are constant for all timesteps
-  - no priority is set for energy production (average step A weighting factor f_we_el_stepA)
-  - all on-site produced energy from non cogeneration sources is considered as delivered
-  - on-site produced energy is not compensated on a service by service basis, but on a by carrier basis
-  - the load matching factor is constant and equal to 1.0
-  TODO:
-  - allow other values of the load matching factor (or usign functions) f_match_t (formula 32, B.32)
-
+  - energy production prioritizes onsite electricity production over cogeneration
+  - all on-site produced energy is considered as delivered
+  - on-site produced energy is compensated on a system by system basis
+  - the load matching factor is constant and equal to 1.0, unless --load-matching is used
 */
 
 use std::fs::{read_to_string, File};
@@ -263,7 +260,7 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .long("archivo_factores")
             .value_name("ARCHIVO_FACTORES")
             .required_unless_one(&["fps_loc", "archivo_componentes"])
-            .conflicts_with_all(&["fps_loc", "cogen", "red1", "red2"])
+            .conflicts_with_all(&["fps_loc", "red1", "red2"])
             .help("Archivo de definición de los componentes energéticos")
             .takes_value(true)
             //.validator(clap_validators::fs::is_file))
@@ -313,18 +310,6 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .long("red2")
             .value_names(&["RED2_ren", "RED2_nren", "RED2_co2"])
             .help("Factores de paso (ren, nren, co2) de la producción del vector RED2.\nP.e.: --red2 0 1.3 0.3")
-            .takes_value(true)
-            .number_of_values(3))
-        .arg(Arg::with_name("CTE_COGEN")
-            .long("cogen")
-            .value_names(&["COGEN_ren", "COGEN_nren", "COGEN_co2"])
-            .help("Factores de exportación a red (ren, nren, co2) de electricidad cogenerada.\nP.e.: --cogen 0 2.5 0.3")
-            .takes_value(true)
-            .number_of_values(3))
-        .arg(Arg::with_name("CTE_COGENNEPB")
-            .long("cogennepb")
-            .value_names(&["COGENNEPB_ren", "COGENNEPB_nren", "COGENNEBP_co2"])
-            .help("Factores de exportación a usos no EPB (ren, nren, co2) de electricidad cogenerada.\nP.e.: --cogennepb 0 2.5 0.3")
             .takes_value(true)
             .number_of_values(3))
         // Cálculo para servicio de ACS y factores en perímetro nearby
