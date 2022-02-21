@@ -194,20 +194,14 @@ impl std::convert::From<ProdSource> for Source {
 pub enum Service {
     /// DHW
     ACS,
-    /// Heating
+    /// Heating (including humidification)
     CAL,
-    /// Cooling
+    /// Cooling (including dehumidification)
     REF,
     /// Ventilation, including heat recovery
     VEN,
     /// Lighting (only when considered as EPB use)
     ILU,
-    /// Humidification, when not included in Heating
-    HU,
-    /// Dehumidification, when not included in Cooling
-    DHU,
-    /// Building automation and control
-    BAC,
     /// Generic non EPB use
     NEPB,
     /// Energy feeding an electricity cogeneration system
@@ -217,29 +211,23 @@ pub enum Service {
 
 impl Service {
     /// List of all available services
-    pub const SERVICES_ALL: [Service; 10] = [
+    pub const SERVICES_ALL: [Service; 7] = [
         Service::ACS,
         Service::CAL,
         Service::REF,
         Service::VEN,
         Service::ILU,
-        Service::HU,
-        Service::DHU,
-        Service::BAC,
         Service::NEPB,
         Service::COGEN,
     ];
 
     /// List EPB services
-    pub const SERVICES_EPB: [Service; 8] = [
+    pub const SERVICES_EPB: [Service; 5] = [
         Service::ACS,
         Service::CAL,
         Service::REF,
         Service::VEN,
         Service::ILU,
-        Service::HU,
-        Service::DHU,
-        Service::BAC,
     ];
 
     /// Check if service is an EPB service
@@ -269,11 +257,7 @@ impl str::FromStr for Service {
             "CAL" => Ok(Service::CAL),
             "REF" => Ok(Service::REF),
             "VEN" => Ok(Service::VEN),
-            "FANS" => Ok(Service::VEN),
             "ILU" => Ok(Service::ILU),
-            "HU" => Ok(Service::HU),
-            "DHU" => Ok(Service::DHU),
-            "BAC" => Ok(Service::BAC),
             "NEPB" => Ok(Service::NEPB),
             "COGEN" => Ok(Service::COGEN),
             _ => Err(EpbdError::ParseError(s.into())),

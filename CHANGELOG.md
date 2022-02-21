@@ -18,7 +18,9 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 ### Novedades
 
 - Implementación del factor de coincidencia de cargas con criterio estadístico (se mantiene el factor constante salvo activación con opción --load-matching)
-- Implementación de prioridades en el reparto de la energía producida a consumos EPB, con EL_INSITU > EL_COGEN
+- Implementación de prioridades en el reparto de la energía producida a consumos EPB, con EL_INSITU >
+- Se eliminan las categorías de servicio HU (humidificación) y DHU (deshumidificación), debiendo integrarse sus consumos en los de calefacción y/o refrigeración.
+- Se elimina la categoría de servicio BAC (automatización y control), debiendo integrarse en los consumos auxiliares o corrientes de los servicios afectados.
 - Cambios en el componente energético para energía usada (CONSUMO)
   - Añadido un identificador (un número entero) del sistema asociado al componente (id)
   - Eliminación de los subtipos EPB, NEPB
