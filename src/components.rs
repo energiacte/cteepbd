@@ -160,6 +160,11 @@ impl str::FromStr for Components {
         }
 
         // Check that all used or produced energy components have an equal number of steps (data lengths)
+        // TODO: Additional 
+        // - Move to check_components
+        // - There are, at most, 3 building needs definitions (CAL, REF, ACS)
+        // - Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
+        // - AUX components for systems with more than 1 service output need Q_out (SALIDA) components
         {
             let cdata_lengths: Vec<_> = cdata.iter().map(|e| e.num_steps()).collect();
             let start_num_steps = *cdata_lengths.get(0).unwrap_or(&12);
@@ -169,10 +174,6 @@ impl str::FromStr for Components {
                 ));
             }
         }
-        // TODO: Additional checks
-        // - There are, at most, 3 building needs definitions (CAL, REF, ACS)
-        // - Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
-        // - AUX components for systems with more than 1 service output need Q_out (SALIDA) components
 
         Components {
             cmeta,
