@@ -150,6 +150,7 @@ impl AsCteXml for Components {
         let Components {
             cmeta,
             cdata,
+            building,
             zones,
         } = self;
         let cmetastring = cmeta
@@ -158,6 +159,11 @@ impl AsCteXml for Components {
             .collect::<Vec<String>>()
             .join("\n");
         let cdatastring = cdata
+            .iter()
+            .map(AsCteXml::to_xml)
+            .collect::<Vec<String>>()
+            .join("\n");
+        let buildingdatastring = building
             .iter()
             .map(AsCteXml::to_xml)
             .collect::<Vec<String>>()
@@ -172,8 +178,9 @@ impl AsCteXml for Components {
         {}
         {}
         {}
+        {}
     </Componentes>",
-            cmetastring, cdatastring, zonesdatastring
+            cmetastring, cdatastring, buildingdatastring, zonesdatastring
         )
     }
 }
@@ -267,8 +274,25 @@ impl AsCteXml for EOut {
     }
 }
 
+impl AsCteXml for BuildingNeeds {
+    /// Convierte elementos de demanda del edificio a XML
+    fn to_xml(&self) -> String {
+        let Self {
+            service,
+            values,
+            comment,
+        } = self;
+        format!(
+            "<DemandaEdificio><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></DemandaEdificio>",
+            service,
+            <Self as AsCteXml>::format_values_2f(values),
+            <Self as AsCteXml>::escape_xml(comment)
+        )
+    }
+}
+
 impl AsCteXml for ZoneNeeds {
-    /// Convierte elementos de demanda a XML
+    /// Convierte elementos de demanda de zona a XML
     fn to_xml(&self) -> String {
         let Self {
             id,

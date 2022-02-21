@@ -4,14 +4,14 @@
   - Detailed report of ren contribution by perimeter (onsite, nearby, distant) + rer_dst + rer_nrb
   - Take ACS use from ZONAS data and remove --demanda_anual_acs, deduce SPF for BIOMASS using SALIDA / CONSUMO
   - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
-  - Datos de ZONA completar con EN 52000-1, 12.1 informe
   - Datos de SISTEMA
     - Eficiencias de sistemas (no las calculamos sino que son datos)
     - Ver para qué sistemas (cal, ref, acs, ven?, ??)
     - Indicar qué tipo de sistema es
     - id, SISTEMA, GEN, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - id, SISTEMA, NGEN (DIS + EM), ???
-  - checks: Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
+  - extra checks: see components.rs TODO
+  - use f_match in filter_by_epb_service
 
 - tests:
 
@@ -43,3 +43,4 @@
 
 - use templates for output (plain, detailed, ...) depending on cli parameter
 - implement battery support (in compute_used_produced)
+- zone data following EN 52000-1, 12.1 report (see ZoneNeeds)

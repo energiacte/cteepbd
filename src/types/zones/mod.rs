@@ -33,7 +33,7 @@ use crate::error::EpbdError;
 
 // -------------------- Zone Energy Needs Component
 // Define basic Zone Energy Needs Component type
-// This component is used to express energy needs of this zone to provide service X (for zone i with i=0 for the whole building) (Q_X_nd_i)
+// This component is used to express energy needs of this zone to provide service X (for zone i) (Q_X_nd_i)
 
 /// Componente de zona.
 ///
@@ -41,7 +41,7 @@ use crate::error::EpbdError;
 ///
 /// Se serializa como: `id, ZONA, DEMANDA, servicio, vals... # comentario`
 ///
-/// - ZONA, DEMANDA, CAL / REF, meses
+/// - ZONA, DEMANDA, CAL / REF / ACS, meses
 /// TODO: otros datos de ZONA (Ver EN 52000-1, 12.1 informe)
 ///
 /// - ZONA, TEMPERATURA, EXT / INT, meses
@@ -56,12 +56,11 @@ use crate::error::EpbdError;
 pub struct ZoneNeeds {
     /// Zone id
     /// This identifies the part of the building linked to this component.
-    /// By default, id=0 means the whole building (all zones)
     /// Negative numbers should represent ficticious elements (ficticious zones, such as reference ones)
     pub id: i32,
     /// End use
     pub service: Service,
-    /// List of timestep energy needs for zone i (i=0 for the whole building) to provide service X, Q_X_nd_i_t. kWh
+    /// List of timestep energy needs for zone i to provide service X, Q_X_nd_i_t. kWh
     /// Negative values means needs heating and positive values, needs cooling. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string

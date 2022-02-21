@@ -28,41 +28,40 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
+use super::{HasValues, Service};
 use crate::error::EpbdError;
-use crate::types::{HasValues, Service};
 
-// -------------------- System Energy Output Component
-// Define basic System Energy Needs Component type
-// This component is used to express energy output of this system to provide service X (for system i) (E_X_gen_i_out_t)
+// -------------------- Building Energy Needs Component
+// Define basic Building Energy Needs Component type
+// This component is used to express energy needs of the whole building provide service X (X=CAL/REF/ACS) (Q_X_nd)
 
-/// Componente de generación.
+/// Componente de demanda de edificio.
 ///
-/// Energía entregada o absorbida por los sistemas pertenecientes al subsistema de generación del edificio, E_X_gen_i_out
+/// Se serializa como: `EDIFICIO, DEMANDA, servicio, vals... # comentario`
 ///
-/// Se serializa como: `id, SALIDA, servicio, vals... # comentario`
+/// - servicio == CAL / REF / ACS
+///
+/// Otros datos que podrían asignarse al edificio:
+///
+/// - Horas fuera de consigna (CAL, REF, CAL+REF)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EOut {
-    /// System id
-    ///
-    /// This identifies the system linked to this component.
-    /// Negative numbers should represent ficticious elements (ficticious systems, such as the reference ones)
-    pub id: i32,
-    /// End use
+pub struct BuildingNeeds {
+    /// End use (CAL, REF, ACS)
     pub service: Service,
-    /// Timestep energy output or absorbed energy values by system i to provide service X, E_X_gen_i_out_t. kWh
-    /// Negative values means absorbed energy (e.g. by a chiller) and positive values means delivered energy (e.g. heat from a boiler) by the system. kWh
+    /// List of timestep energy needs for zone i to provide service X, Q_X_nd_i_t. kWh
+    /// Negative values means needs heating and positive values, needs cooling. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
     pub comment: String,
 }
 
-impl HasValues for EOut {
+impl HasValues for BuildingNeeds {
     fn values(&self) -> &[f32] {
         &self.values
     }
 }
 
-impl fmt::Display for EOut {
+impl fmt::Display for BuildingNeeds {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let valuelist = self
             .values
@@ -77,53 +76,40 @@ impl fmt::Display for EOut {
         };
         write!(
             f,
-            "{}, SALIDA, {}, {}{}",
-            self.id, self.service, valuelist, comment
+            "EDIFICIO, DEMANDA, {}, {}{}",
+            self.service, valuelist, comment
         )
     }
 }
 
-impl str::FromStr for EOut {
+impl str::FromStr for BuildingNeeds {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<EOut, Self::Err> {
+    fn from_str(s: &str) -> Result<BuildingNeeds, Self::Err> {
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (id + SALIDA + servicio + 1 value)
-        if items.len() < 4 {
+        // Minimal possible length (EDIFICIO + DEMANDA + 1 value)
+        if items.len() < 3 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        // Check SALIDA marker field;
-        if items[1] != "SALIDA" {
+        // Check EDIFICIO and DEMANDA marker fields;
+        if items[0] != "EDIFICIO" && items[1] != "DEMANDA" {
             return Err(EpbdError::ParseError(format!(
-                "No se reconoce el formato como elemento de Salida del sistema: {}",
+                "No se reconoce el formato como elemento de Demanda: {}",
                 s
             )));
         }
 
-        // Zone Id
-        let id = match items[0].parse() {
-            Ok(id) => id,
-            Err(_) => {
-                return Err(EpbdError::ParseError(format!(
-                    "Id erróneo en elemento de Salida del sistema: {}",
-                    s
-                )))
-            }
-        };
-
         // Check service field
-        let service: Service = items[2].parse()?;
-
-        // Check that service is an EPB service
-        if !service.is_epb() {
+        let service = items[2].parse()?;
+        if ![Service::CAL, Service::REF, Service::ACS].contains(&service) {
             return Err(EpbdError::ParseError(format!(
-                "energía entregada o absorbida definida para un uso no EPB `{}`",
-                s
+                "Servicio de edificio no soportado: {}",
+                service
             )));
         }
 
@@ -131,13 +117,9 @@ impl str::FromStr for EOut {
         let values = items[3..]
             .iter()
             .map(|v| v.parse::<f32>())
-            .collect::<Result<Vec<f32>, _>>()
-            .map_err(|_| {
-                EpbdError::ParseError(format!("se esperaban valores numéricos en línea `{}`", s))
-            })?;
+            .collect::<Result<Vec<f32>, _>>()?;
 
-        Ok(EOut {
-            id,
+        Ok(BuildingNeeds {
             service,
             values,
             comment,
@@ -153,22 +135,21 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn component_system_needs() {
+    fn component_building_needs() {
         // zone energy needs component
-        let component1 = EOut {
-            id: 0,
+        let component1 = BuildingNeeds {
             service: "REF".parse().unwrap(),
             values: vec![
-                -1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0,
+                1.0, 2.0, 3.0, 4.0, 5.0, -6.0, -7.0, -8.0, -9.0, 10.0, 11.0, 12.0,
             ],
-            comment: "Comentario carga sobre sistema 0".into(),
+            comment: "Demanda de refrigeración del edificio".into(),
         };
-        let component1str = "0, SALIDA, REF, -1.00, -2.00, -3.00, -4.00, -5.00, -6.00, -7.00, -8.00, -9.00, -10.00, -11.00, -12.00 # Comentario carga sobre sistema 0";
+        let component1str = "EDIFICIO, DEMANDA, REF, 1.00, 2.00, 3.00, 4.00, 5.00, -6.00, -7.00, -8.00, -9.00, 10.00, 11.00, 12.00 # Demanda de refrigeración del edificio";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string
         assert_eq!(
-            component1str.parse::<EOut>().unwrap().to_string(),
+            component1str.parse::<BuildingNeeds>().unwrap().to_string(),
             component1str
         );
     }

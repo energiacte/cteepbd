@@ -46,7 +46,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
-    types::{Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service, ZoneNeeds},
+    types::{
+        BuildingNeeds, Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service,
+        ZoneNeeds,
+    },
     vecops::{veclistsum, vecvecdif, vecvecmin, vecvecmul, vecvecsum},
 };
 
@@ -63,7 +66,9 @@ pub struct Components {
     pub cmeta: Vec<Meta>,
     /// EUsed or produced energy data
     pub cdata: Vec<Energy>,
-    /// Building data
+    /// Building data (energy needs, ...)
+    pub building: Vec<BuildingNeeds>,
+    /// Zone data (energy needs, ...)
     pub zones: Vec<ZoneNeeds>,
     // System data
     // pub systems: Vec<SystemData>,
@@ -113,11 +118,20 @@ impl str::FromStr for Components {
             .collect::<Result<Vec<Meta>, _>>()?;
 
         let mut cdata = Vec::new();
+        let mut zones = Vec::new();
         let mut building = Vec::new();
         // let mut systems = None;
 
         // Tipos disponibles
-        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "SALIDA", "ZONA", "SISTEMA"];
+        let ctypes_tag_list = [
+            "CONSUMO",
+            "PRODUCCION",
+            "AUX",
+            "SALIDA",
+            "EDIFICIO",
+            "ZONA",
+            "SISTEMA",
+        ];
 
         for line in datalines {
             let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
@@ -133,7 +147,8 @@ impl str::FromStr for Components {
                 "PRODUCCION" => cdata.push(Energy::Prod(line.parse()?)),
                 "AUX" => cdata.push(Energy::Aux(line.parse()?)),
                 "SALIDA" => cdata.push(Energy::Out(line.parse()?)),
-                "ZONA" => building.push(line.parse()?),
+                "EDIFICIO" => building.push(line.parse()?),
+                "ZONA" => zones.push(line.parse()?),
                 "SISTEMA" => unimplemented!(),
                 _ => {
                     return Err(EpbdError::ParseError(format!(
@@ -154,10 +169,16 @@ impl str::FromStr for Components {
                 ));
             }
         }
+        // TODO: Additional checks
+        // - There are, at most, 3 building needs definitions (CAL, REF, ACS)
+        // - Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
+        // - AUX components for systems with more than 1 service output need Q_out (SALIDA) components
+
         Components {
             cmeta,
             cdata,
-            zones: building,
+            building,
+            zones,
         }
         .normalize()
     }
@@ -296,6 +317,7 @@ impl Components {
         let mut newcomponents = Self {
             cmeta,
             cdata: cdata_srv,
+            building: self.building.clone(),
             zones: self.zones.clone(),
         };
         newcomponents.set_meta("CTE_SERVICIO", &service.to_string());
