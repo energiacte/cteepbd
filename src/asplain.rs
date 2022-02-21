@@ -62,7 +62,9 @@ impl AsCtePlain for EnergyPerformance {
         // Consumos
         let epus = bal.used.epus;
         let nepus = bal.used.nepus;
-        let used = epus + nepus;
+        let cgnus = bal.used.cgnus;
+        let used = epus + nepus + cgnus;
+
         let used_by_srv = list_entries_f32(&bal.used.epus_by_srv);
         let used_epus_by_cr = list_entries_f32(&bal.used.epus_by_cr);
         // Generada
@@ -115,7 +117,7 @@ RER_nrb = {rer_nrb:.2}
 
 Energía consumida: {used:.2}
 
-Consumida en usos EPB: {epus:.2}
++ Consumida en usos EPB: {epus:.2}
 
 * por servicio:
 {used_by_srv}
@@ -123,7 +125,9 @@ Consumida en usos EPB: {epus:.2}
 * por vector:
 {used_epus_by_cr}
 
-Consumida en usos no EPB: {nepus:.2}
++ Consumida en usos no EPB: {nepus:.2}
+
++ Consumida en cogeneración: {cgnus:.2}
 
 Generada: {prod_an:.2}
 

@@ -93,6 +93,7 @@ impl Balance {
             used: BalUsed {
                 epus: k_area * self.used.epus,
                 nepus: k_area * self.used.nepus,
+                cgnus: k_area * self.used.cgnus,
                 epus_by_srv: used_epus_by_srv,
                 epus_by_cr: used_epus_by_cr,
             },
@@ -132,6 +133,7 @@ impl std::ops::AddAssign<&BalanceCarrier> for Balance {
         // Used energy
         self.used.epus += rhs.used.epus_an;
         self.used.nepus += rhs.used.nepus_an;
+        self.used.cgnus += rhs.used.cgnus_an;
         // Produced energy
         self.prod.an += rhs.prod.an;
         // Delivered energy
@@ -204,6 +206,8 @@ pub struct BalUsed {
     pub nepus: f32,
     /// Energy use for EPB services
     pub epus: f32,
+    /// Energy use for Cogen
+    pub cgnus: f32,
     /// Energy use for EPB services, by service
     pub epus_by_srv: HashMap<Service, f32>,
     /// Energy use for EPB uses, by carrier
