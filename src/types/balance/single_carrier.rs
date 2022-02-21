@@ -76,9 +76,9 @@ pub struct UsedEnergy {
     /// Energy used for non EPB services
     pub nepus_an: f32,
     /// Energy input allocated to electricity cogeneration at each timestep
-    pub cgn_in_t: Vec<f32>,
+    pub cgnus_t: Vec<f32>,
     /// Energy input allocated to electricity cogeneration
-    pub cgn_in_an: f32,
+    pub cgnus_an: f32,
 }
 
 /// Produced Energy Data and Results

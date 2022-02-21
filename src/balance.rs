@@ -341,8 +341,8 @@ fn compute_used_produced(
             epus_by_srv_an: E_EPus_cr_an_by_srv,
             nepus_t: E_nEPus_cr_t,
             nepus_an: E_nEPus_cr_an,
-            cgn_in_t: E_cgn_in_cr_t,
-            cgn_in_an: E_cgn_in_cr_an,
+            cgnus_t: E_cgn_in_cr_t,
+            cgnus_an: E_cgn_in_cr_an,
         },
         ProducedEnergy {
             t: E_pr_cr_t,
@@ -439,13 +439,13 @@ fn compute_exported_delivered(
             nepus_an: E_exp_cr_used_nEPus_an,
         },
         DeliveredEnergy {
-            an: E_del_cr_an + E_del_cr_onsite_an + used.cgn_in_an,
+            an: E_del_cr_an + E_del_cr_onsite_an + used.cgnus_an,
             grid_t: E_del_cr_t,
             grid_an: E_del_cr_an,
             onst_t: E_del_cr_onsite_t,
             onst_an: E_del_cr_onsite_an,
-            cgn_t: used.cgn_in_t.clone(),
-            cgn_an: used.cgn_in_an,
+            cgn_t: used.cgnus_t.clone(),
+            cgn_an: used.cgnus_an,
         },
     )
 }
