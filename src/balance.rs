@@ -52,6 +52,7 @@ use crate::{
 /// * `wfactors` - weighting factors
 /// * `k_exp` - exported energy factor [0, 1]
 /// * `arearef` - reference area used for computing energy performance ratios
+/// * `load_matching` - whether statistical load matching is used or not
 ///
 /// # Errors
 ///

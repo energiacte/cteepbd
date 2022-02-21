@@ -1,6 +1,7 @@
 # TODO
 
 - epbd:
+  - Detailed report of ren contribution by perimeter (onsite, nearby, distant) + rer_dst + rer_nrb
   - Take ACS use from ZONAS data and remove --demanda_anual_acs, deduce SPF for BIOMASS using SALIDA / CONSUMO
   - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
   - Datos de ZONA completar con EN 52000-1, 12.1 informe
