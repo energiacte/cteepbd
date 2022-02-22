@@ -753,7 +753,8 @@ fn cte_balance_by_srv() {
 /// Efecto Joule con 60% PV (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_joule_60pv() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,100
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,100
 PRODUCCION,EL_INSITU,60"
         .parse::<Components>()
         .unwrap();
@@ -765,7 +766,8 @@ PRODUCCION,EL_INSITU,60"
 /// Gas natural (fp_nren = 1.1, con rend=0.9) y 60% de cobertura solar (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_gn_60pst() {
-    let comps = "CONSUMO,ACS,GASNATURAL,44.44
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,GASNATURAL,44.44
 CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
         .unwrap();
@@ -777,7 +779,8 @@ CONSUMO,ACS,TERMOSOLAR,60"
 /// Biomasa rend 75% y PST (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_10PST_100() {
-    let comps = "CONSUMO,ACS,BIOMASA,100
+    let comps = "EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
+CONSUMO,ACS,BIOMASA,100
 CONSUMO,ACS,TERMOSOLAR,10"
         .parse::<Components>()
         .unwrap();
@@ -789,7 +792,10 @@ CONSUMO,ACS,TERMOSOLAR,10"
 /// Biomasa rend 75% (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_100() {
-    let comps = "CONSUMO,ACS,BIOMASA,100".parse::<Components>().unwrap();
+    let comps = "EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
+CONSUMO,ACS,BIOMASA,100"
+        .parse::<Components>()
+        .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
@@ -800,6 +806,7 @@ fn cte_ACS_demanda_ren_biomasa_100() {
 fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
     let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 50
     #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 50
+    EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
     CONSUMO,ACS,BIOMASA,50
     CONSUMO,ACS,BIOMASADENSIFICADA,50"
         .parse::<Components>()
@@ -814,6 +821,7 @@ fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
 fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
     let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 30
     #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 30
+    EDIFICIO,DEMANDA,ACS,125 # Demanda anual ACS (kWh)
     CONSUMO,ACS,GASNATURAL,55.556
     CONSUMO,ACS,BIOMASA,50
     CONSUMO,ACS,BIOMASADENSIFICADA,50"
@@ -828,7 +836,8 @@ fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
 /// Red de distrito, red1 50% renovable y red2 10% renovable (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_red1_red2() {
-    let comps = "CONSUMO,ACS,RED1,50
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,RED1,50
 CONSUMO,ACS,RED2,50"
         .parse::<Components>()
         .unwrap();
@@ -846,7 +855,8 @@ CONSUMO,ACS,RED2,50"
 /// Bomba de calor (SCOP=2.5) (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
         .unwrap();
@@ -858,7 +868,8 @@ CONSUMO,ACS,TERMOSOLAR,60"
 /// Bomba de calor (SCOP=2.5) + 10kWh PV (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10"
         .parse::<Components>()
@@ -872,7 +883,8 @@ PRODUCCION,EL_INSITU,10"
 /// Debería dar igual el tipo de uso definido para NEPB
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_nEPB() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10
 CONSUMO,NEPB,ELECTRICIDAD,40.0"
@@ -888,7 +900,8 @@ CONSUMO,NEPB,ELECTRICIDAD,40.0"
 /// Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,40.0
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_COGEN,10"
         .parse::<Components>()
@@ -901,7 +914,8 @@ PRODUCCION,EL_COGEN,10"
 /// Bomba de calor (SCOP=2.5) y 25% caldera de GN (rend. 0.9) (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_45ma_25gn() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,30.0
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,30.0
 CONSUMO,ACS,EAMBIENTE,45
 CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
@@ -915,7 +929,8 @@ CONSUMO,ACS,GASNATURAL,27.88"
 /// En este caso se excluye la producción de medioambiente puesto que no es renovable
 #[test]
 fn cte_ACS_demanda_ren_bdc_38ma__25gn_excluye_medioambiente() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,37.5
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,37.5
 CONSUMO,ACS,EAMBIENTE,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
 CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
@@ -929,7 +944,8 @@ CONSUMO,ACS,GASNATURAL,27.88"
 /// Falla al haber BIOMASA y otro suministro de red que no es insitu
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn_y_biomasa() {
-    let comps = "CONSUMO,ACS,ELECTRICIDAD,30.0
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,30.0
 CONSUMO,ACS,EAMBIENTE,45
 CONSUMO,ACS,BIOMASA,13.94
 CONSUMO,ACS,GASNATURAL,13.94"
@@ -945,7 +961,7 @@ fn cte_ACS_demanda_ren_excluye_aux() {
     // Caso de GT con exclusión de líneas de consumo eléctrico auxiliar
     let comps = components_from_file("test_data/acs_demanda_ren_con_exclusion_auxiliares.csv");
     let FP = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 4549.0).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 4549.4).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
 }
 

@@ -243,7 +243,7 @@ fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux() {
             "-l",
             "PENINSULA",
             "--demanda_anual_acs",
-            "4549.0",
+            "4549.4",
         ])
         .stdout()
         .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 96.7 [%]")
