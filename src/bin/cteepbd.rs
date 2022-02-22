@@ -312,11 +312,6 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .help("Factores de paso (ren, nren, co2) de la producción del vector RED2.\nP.e.: --red2 0 1.3 0.3")
             .takes_value(true)
             .number_of_values(3))
-        // Cálculo para servicio de ACS y factores en perímetro nearby
-        .arg(Arg::with_name("demanda_anual_acs")
-            .long("demanda_anual_acs")
-            .value_name("DEM_ACS")
-            .help("Demanda anual de ACS [kWh]"))
         // Simplificación de factores
         .arg(Arg::with_name("nosimplificafps")
             .short("F")
@@ -521,22 +516,10 @@ fn main() {
         }
     }
 
-    // Demanda anual de ACS: CLI > Meta > None ----------------------------------------------------
-    let maybe_demanda_anual_acs = matches
-        .value_of("demanda_anual_acs")
-        .and_then(|v| {
-            v.parse::<f32>().ok().or_else(|| {
-                eprintln!("ERROR: demanda anual de ACS con formato incorrecto");
-                exit(exitcode::DATAERR);
-            })
-        })
-        .or_else(|| components.get_meta_f32("CTE_ACS_DEMANDA_ANUAL"))
-        .or(None);
-
     // Cálculo de la eficiencia energética ------------------------------------------------------------------------
     let ep: Option<EnergyPerformance> = if !components.cdata.is_empty() {
         let ep = energy_performance(&components, &fpdata, kexp, arearef, load_matching)
-            .map(|b| cte::incorpora_demanda_renovable_acs_nrb(b, maybe_demanda_anual_acs))
+            .map(cte::incorpora_demanda_renovable_acs_nrb)
             .unwrap_or_else(|e| {
                 eprintln!(
                     "ERROR: no se ha podido calcular la eficiencia energética: {}",

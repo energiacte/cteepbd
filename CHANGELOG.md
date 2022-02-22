@@ -38,10 +38,14 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - El reparto de este consumo entre servicios se realiza de forma automática y proporcionalmente a la energía entregada o absorbida por cada servicio EPB
   - Nota: este componente sustituye la anotación de consumos en el comentario con CTEEPBD_EXCLUYE_AUX_ACS, que deja de estar soportada
   - Cuando se definan consumos auxiliares el sistema debe, bien atender un solo servicio, o bien definir la energía saliente para cada uno de ellos.
-- Nuevo elemento de datos de demanda de zona (ZONA, DEMANDA)
-  - Permite introducir datos de demanda asociados a una zona z (id=z)
-  - La zona con id=0 remite al conjunto del edificio (p.e. demandas de edificio)
-  - Incluye el identificador de zona, el tipo (DEMANDA), el servicio, los datos de demanda para cada paso de cálculo y un comentario
+- Nuevo elemento de datos de zona (ZONA)
+  - Permite introducir datos de zona, según tipos
+  - El tipo DEMANDA permite introducir datos de demanda asociados a una zona z (id=z)
+    - Incluye: identificador de zona, ZONA, el tipo (DEMANDA), el servicio, los datos de demanda para cada paso de cálculo (kWh) y un comentario
+- Nuevo elemento de datos de edificio (EDIFICIO)
+  - Permite introducir datos globales del edificio, según tipos
+  - El tipo DEMANDA permite definir la demanda del edificio para CAL, REF, ACS
+    - Incluye: EDIFICIO, tipo (DEMANDA), servicio, datos de demanda para cada paso de cálculo (kWh) y un comentario
 - Nuevo elemento de descripción de sistemas / equipos (SISTEMA)
   - Permite indicar el subsistema al que pertenecen, así como sus rendimientos para los distintos servicios (SPF, COP/EER, SCOP/SEER, EFF)
   - Incluye un identificador (id) de equipo que permite vincularlos a los componentes energéticos
@@ -78,8 +82,9 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
     - exp_nEPB: energía final exportada a usos no EPB
   - Cambio de nombre de sufijos "\_bygen" a "\_by_src" y "\_byuse" a "\_by_srv" en la salida JSON
 - Ejecutable cteepbd:
-  - Eliminada la opción --acsnrb para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
-  - Añadida la opción --load_matching para realizar el cálculo de coincidencia de cargas (en lugar de usar f_match = 1)
+  - Eliminada la opción `--acsnrb` para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
+  - Eliminada la opción `--demanda_anual_acs`, debiendo introducirse los datos mediante un componente `EDIFICIO,DEMANDA,ACS,...`
+  - Añadida la opción `--load_matching` para realizar el cálculo de coincidencia de cargas (en lugar de usar f_match = 1)
 
 ### Incompatibilidades
 

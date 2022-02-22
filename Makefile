@@ -20,7 +20,6 @@ mintest:
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --red1 0 1.3 0.252 --red2 0 1.3 0.252
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --demanda_anual_acs 2800.0
 
 run:
 	$(info [INFO]: Ejecutando versión de depuración)
@@ -82,7 +81,6 @@ docexamples: linux
 	target/release/cteepbd -c $(TESTCARRIERS) -f $(FPTEST) > $(TESTDIR)/output/cte_test_carriers.out
 	target/release/cteepbd -N -c $(TESTCARRIERS) -l PENINSULA > $(TESTDIR)/output/cte_test_carriers_ACS.out
 	target/release/cteepbd -c $(TESTCARRIERS) -l PENINSULA --json "$(TESTDIR)/output/balance.json" --xml "$(TESTDIR)/output/balance.xml" > "$(TESTDIR)/output/balance.plain"
-	target/release/cteepbd -c ${TESTCARRIERS} -l PENINSULA --demanda_anual_acs 2800.0 --json "$(TESTDIR)/output/balance_dem_acs.json" > "$(TESTDIR)/output/cte_test_carriers_dem_ACS.out"
 
 docs: docexamples docs/Manual_cteepbd.tex
 	$(info [INFO]: Generando manual)

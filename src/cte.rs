@@ -434,46 +434,51 @@ pub fn fraccion_renovable_acs_nrb(
 }
 
 /// Devuelve eficiencia energética con datos de demanda renovable de ACS en perímetro próximo incorporados
-pub fn incorpora_demanda_renovable_acs_nrb(
-    mut ep: EnergyPerformance,
-    demanda_anual_acs: Option<f32>,
-) -> EnergyPerformance {
+pub fn incorpora_demanda_renovable_acs_nrb(mut ep: EnergyPerformance) -> EnergyPerformance {
+    // Demanda anual de ACS
+    let dhw_elements: Vec<_> = ep
+        .components
+        .building
+        .iter()
+        .filter(|c| c.service == Service::ACS)
+        .map(HasValues::values_sum)
+        .collect();
+
     // Añadir a EnergyPerformance.misc un diccionario, si no existe, con datos:
     let mut map = ep.misc.unwrap_or_default();
-    match demanda_anual_acs {
-        Some(demanda_anual_acs) => {
-            map.insert(
-                "demanda_anual_acs".to_string(),
-                format!("{:.1}", demanda_anual_acs),
-            );
 
-            match fraccion_renovable_acs_nrb(&ep.components, &ep.wfactors, demanda_anual_acs) {
-                Ok(fraccion_renovable_acs_nrb) => {
-                    map.insert(
-                        "fraccion_renovable_demanda_acs_nrb".to_string(),
-                        format!("{:.3}", fraccion_renovable_acs_nrb),
-                    );
-                    map.remove("error_acs");
-                }
-                Err(e) => {
-                    map.insert(
-                        "error_acs".to_string(),
-                        format!(
-                            "ERROR: no se puede calcular la demanda renovable de ACS \"{}\"",
-                            e
-                        ),
-                    );
-                    map.remove("fraccion_renovable_demanda_acs_nrb");
-                }
+    if !dhw_elements.is_empty() {
+        let demanda_anual_acs: f32 = dhw_elements.iter().sum();
+        map.insert(
+            "demanda_anual_acs".to_string(),
+            format!("{:.1}", demanda_anual_acs),
+        );
+
+        match fraccion_renovable_acs_nrb(&ep.components, &ep.wfactors, demanda_anual_acs) {
+            Ok(fraccion_renovable_acs_nrb) => {
+                map.insert(
+                    "fraccion_renovable_demanda_acs_nrb".to_string(),
+                    format!("{:.3}", fraccion_renovable_acs_nrb),
+                );
+                map.remove("error_acs");
+            }
+            Err(e) => {
+                map.insert(
+                    "error_acs".to_string(),
+                    format!(
+                        "ERROR: no se puede calcular la demanda renovable de ACS \"{}\"",
+                        e
+                    ),
+                );
+                map.remove("fraccion_renovable_demanda_acs_nrb");
             }
         }
-        _ => {
-            map.insert(
-                "error_acs".to_string(),
-                "ERROR: demanda anual de ACS no definida".to_string(),
-            );
-        }
-    }
+    } else {
+        map.insert(
+            "error_acs".to_string(),
+            "ERROR: demanda anual de ACS no definida".to_string(),
+        );
+    };
     ep.misc = Some(map);
     ep
 }

@@ -210,8 +210,6 @@ fn ejemplo_acs_demanda_ren_con_nepb() {
             "test_data/acs_demanda_ren_con_nepb.csv",
             "-l",
             "PENINSULA",
-            "--demanda_anual_acs",
-            "1823.8",
         ])
         .stdout()
         .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 77.3 [%]")
@@ -225,8 +223,6 @@ fn ejemplo_acs_demanda_ren_con_nepb() {
             "test_data/acs_demanda_ren_con_nepb.csv",
             "-l",
             "PENINSULA",
-            "--demanda_anual_acs",
-            "1823.8",
             "--load_matching"
         ])
         .stdout()
@@ -241,23 +237,7 @@ fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux() {
             "-c",
             "test_data/acs_demanda_ren_con_exclusion_auxiliares.csv",
             "-l",
-            "PENINSULA",
-            "--demanda_anual_acs",
-            "4549.4",
-        ])
-        .stdout()
-        .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 96.7 [%]")
-        .unwrap();
-}
-
-#[test]
-fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux_meta() {
-    assert_cli::Assert::main_binary()
-        .with_args(&[
-            "-c",
-            "test_data/acs_demanda_ren_con_exclusion_auxiliares.csv",
-            "-l",
-            "PENINSULA",
+            "PENINSULA"
         ])
         .stdout()
         .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 96.7 [%]")
