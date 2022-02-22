@@ -160,7 +160,7 @@ impl str::FromStr for Components {
         }
 
         // Check that all used or produced energy components have an equal number of steps (data lengths)
-        // TODO: Additional 
+        // TODO: Additional checks
         // - Move to check_components
         // - There are, at most, 3 building needs definitions (CAL, REF, ACS)
         // - Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
@@ -280,7 +280,8 @@ impl Components {
             // Repartimos la producción eléctrica
 
             // Energía eléctrica producida y consumida en usos EPB, corregida por f_match_t
-            let f_match_t = vec![1.0; num_steps]; // TODO: implementar f_match_t
+            // TODO: implementar f_match_t
+            let f_match_t = vec![1.0; num_steps];
             let E_pr_el_t_tot = E_pr_el_t
                 .clone()
                 .fold(vec![0.0; num_steps], |acc, e| vecvecsum(&acc, e.values()));

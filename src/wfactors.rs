@@ -145,7 +145,7 @@ impl Factors {
     /// - asegura definición de factores a la red para vectores con exportación
     /// - asegura que existe RED1 | RED2 en suministro
     ///
-    /// TODO: se deberían separar algunos de estos pasos como métodos de CteFactorsExt
+    /// TODO: refactorizar moviendo algunos métodos a trait CteFactorsExt
     pub fn normalize(mut self, defaults: &UserWF<RenNrenCo2>) -> Result<Self> {
         use Carrier::*;
         use Dest::*;

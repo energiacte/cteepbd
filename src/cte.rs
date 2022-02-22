@@ -323,7 +323,8 @@ pub fn fraccion_renovable_acs_nrb(
     // Si tenemos electricidad cogenerada no sabemos con qué se ha cogenerado ni si se ha imputado todo el combustible correspondiente
     // ya que este podría ir a otros usos y no a ACS (y no tenemos los factores de paso de electricidad cogenerada)
     //
-    // TODO: Para poder tenerlo en cuenta tendríamos dos opciones:
+    // TODO: Soporte de cálculo de fracción renovable de ACS con cogeneración
+    // Para poder tenerlo en cuenta tendríamos dos opciones:
     // - Imputar correctamente los factores de paso de electricidad cogenerada, en lugar de 0.0 (y ver cómo se imputa el combustible en la parte térmica)
     // - Imputar el consumo de combustible en función del servicio de destino de la electricidad y de la parte térmica. Esto se podría hacer a la
     //   hora del reparto de electricidad, si se ha marcado el consumo de combustible como destinado a cogeneración eléctrica CTEEPBD_DESTINO_COGEN.

@@ -203,8 +203,7 @@ fn balance_for_carrier(
 
 /// Compute used and produced energy data from energy components
 ///
-/// TODO:
-/// - Implementar uso de baterías (almacenamiento, sto)
+/// TODO: Battery storage support (sto)
 #[allow(non_snake_case)]
 fn compute_used_produced(
     cr_list: Vec<Energy>,

@@ -263,8 +263,6 @@ impl<'a> Mul<f32> for &'a RenNrenCo2 {
     }
 }
 
-// TODO: &rennren * &f32 -> impl<'a, 'b> Mul<&'b f32> for &'a RenNRenPair
-
 // f32 * rennren
 impl Mul<RenNrenCo2> for f32 {
     type Output = RenNrenCo2;
@@ -303,8 +301,6 @@ impl<'a> Mul<&'a RenNrenCo2> for f32 {
         }
     }
 }
-
-// TODO: &f32 * &rennren -> impl<'a, 'b> Mul<&'b RenNRenPair> for &'a f32
 
 // Implement RenNren *= f32
 impl MulAssign<f32> for RenNrenCo2 {
