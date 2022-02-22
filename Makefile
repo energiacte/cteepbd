@@ -18,9 +18,8 @@ mintest:
 	$(info [INFO]: Ejemplos de prueba mínimos)
 	${BUILDDIR}/${SCRIPT} --help
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -f ${TESTFP} -a 200 --json balance.json --xml balance.xml > balance.txt
-	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --cogen 0 2.5 0.331 --red1 0 1.3 0.252 --red2 0 1.3 0.252
+	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --red1 0 1.3 0.252 --red2 0 1.3 0.252
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA
-	${BUILDDIR}/${SCRIPT} -c ${TESTCARRIERS} -l PENINSULA --acs_nearby
 	${BUILDDIR}/${SCRIPT} -vv -c ${TESTCARRIERS} -l PENINSULA --demanda_anual_acs 2800.0
 
 run:
