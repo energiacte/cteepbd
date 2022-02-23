@@ -220,14 +220,14 @@ pub struct BalUsed {
 pub struct BalProd {
     /// Produced energy from all sources
     pub an: f32,
+    /// Produced energy by carrier
+    pub by_cr: HashMap<Carrier, f32>,
     /// Produced energy by source
     pub by_src: HashMap<ProdSource, f32>,
     /// Produced energy delivered to EPB services, by source
     pub epus_by_src: HashMap<ProdSource, f32>,
     /// Produced energy delivered for each EPB service, by source
     pub epus_by_srv_by_src: HashMap<ProdSource, HashMap<Service, f32>>,
-    /// Produced energy by carrier
-    pub by_cr: HashMap<Carrier, f32>,
 }
 
 /// Datos de energía suministrada por la red o producción insitu para el balance global
