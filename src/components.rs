@@ -274,7 +274,7 @@ impl Components {
             let f_srv_t = E_srv_el_t_tot
                 .iter()
                 .zip(&E_EPus_el_t_tot)
-                .map(|(v, t)| if v.abs() < f32::EPSILON { 0.0 } else { v / t })
+                .map(|(v, t)| if t.abs() < f32::EPSILON { 0.0 } else { v / t })
                 .collect::<Vec<_>>();
 
             // Repartimos la producción eléctrica
@@ -290,7 +290,7 @@ impl Components {
 
             // Para cada producción de electricidad i
             // Repartimos la electricidad generada en la parte que corresponde al servicio
-            // ya que la habíamos excluido en el filtrado incial
+            // ya que la habíamos excluido en el filtrado inicial
             for mut E_pr_el_i in E_pr_el_t.cloned() {
                 let pr_component = match E_pr_el_i {
                     Energy::Prod(ref mut c) => c,
@@ -298,13 +298,14 @@ impl Components {
                 };
 
                 // Fracción de la producción total que corresponde al generador i
-                let f_pr_el_i: f32 = pr_component.values_sum() / E_pr_el_an;
+                let f_pr_el_i_t = pr_component.values().iter().zip(E_pr_el_t_tot.iter()).map(|(pr_t, pr_t_tot)| if pr_t_tot.abs() > f32::EPSILON {pr_t / pr_t_tot} else {0.0});
 
                 // Reparto proporcional a la producción del generador i y al consumo del servicio srv
                 pr_component.values = E_pr_el_used_EPus_t
                     .iter()
                     .zip(&f_srv_t)
-                    .map(|(v, f_srv)| v * f_pr_el_i * f_srv)
+                    .zip(f_pr_el_i_t)
+                    .map(|((v, f_srv), f_pr_el_i)| v * f_pr_el_i * f_srv)
                     .collect();
                 pr_component.comment = format!(
                     "{} Producción eléctrica reasignada al servicio",
