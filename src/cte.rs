@@ -42,7 +42,7 @@ use crate::{
     error::EpbdError,
     types::*,
     vecops::{vecvecmin, vecvecsum},
-    Components, Factors, UserWF,
+    Factors, UserWF,
 };
 
 /**
@@ -297,6 +297,31 @@ pub fn fraccion_renovable_acs_nrb(
     // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
     let components = &ep.components.filter_by_epb_service(Service::ACS);
 
+    // TODO: intenta calcular fraccion_renovable_acs_nrb con ep
+    // println!("========= ACS ===========");
+    // println!("{:#?}", components);
+    // let bal = &ep.balance;
+    // println!(
+    //     "used.epus_by_srv_by_cr:\n{:#?}",
+    //     &bal.used.epus_by_srv_by_cr
+    // );
+    // println!(
+    //     "prod.epus_by_srv_by_src:\n{:#?}",
+    //     &bal.prod.epus_by_srv_by_src
+    // );
+    // println!(
+    //     "prod.epus_by_srv_by_src_t:\n{:#?}",
+    //     &ep.balance_cr.get(&Carrier::ELECTRICIDAD).and_then(|b| b.prod
+    //         .epus_by_srv_by_src_t
+    //         .get(&ProdSource::EL_INSITU))
+    //         .cloned()
+    //         .unwrap_or_default()
+    // );
+    // println!(
+    //     "prod.epus_by_src:\n{:#?}",
+    //     &bal.prod.epus_by_src
+    // );
+
     let cr_list_dhw: &Vec<&Energy> = &components
         .cdata
         .iter()
@@ -426,6 +451,19 @@ pub fn fraccion_renovable_acs_nrb(
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, c.values()));
     // c. Consumo efectivo de electricidad renovable en ACS (Mínimo entre el consumo y la producción in situ) (consumo == demanda)
     let Q_el_an_ren: f32 = vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();
+
+    // TODO: intenta calcular fraccion_renovable_acs_nrb con ep
+    // let alt_Q_el_an_ren = bal
+    //     .prod
+    //     .epus_by_srv_by_src
+    //     .get(&ProdSource::EL_INSITU)
+    //     .and_then(|by_src| by_src.get(&Service::ACS))
+    //     .copied()
+    //     .unwrap_or_default();
+
+    // println!("E_EPus_el_t: {:?}", E_EPus_el_t);
+    // println!("E_pr_el_onsite_t: {:?}", E_pr_el_onsite_t);
+    // assert_eq!(Q_el_an_ren, alt_Q_el_an_ren);
 
     // === Total de demanda renovable ==
     let Q_an_ren = Q_nrb_non_biomass_an_ren + Q_biomass_an_ren + Q_el_an_ren;
