@@ -759,7 +759,8 @@ PRODUCCION,EL_INSITU,60"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
 }
 
@@ -772,7 +773,8 @@ CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
 }
 
@@ -785,7 +787,8 @@ CONSUMO,ACS,TERMOSOLAR,10"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 75.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.928");
 }
 
@@ -797,7 +800,8 @@ CONSUMO,ACS,BIOMASA,100"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 75.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
 }
 
@@ -812,7 +816,8 @@ fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 75.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 75.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
 }
 
@@ -828,7 +833,8 @@ fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 125.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 125.0).unwrap();
     // Las dos biomasas producen lo mismo que antes de renovable = 1.1_ren/1.2_tot * 0.60% = 0.55
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.550");
 }
@@ -848,7 +854,8 @@ CONSUMO,ACS,RED2,50"
         "RED2,RED,SUMINISTRO,A,0.1,0.9,0.0"  // Red de distrito 10% renovable
     );
     let FP: Factors = TESTFPEXT.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.30");
 }
 
@@ -861,7 +868,8 @@ CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
 }
 
@@ -875,7 +883,8 @@ PRODUCCION,EL_INSITU,10"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
 }
 
@@ -891,7 +900,8 @@ CONSUMO,NEPB,ELECTRICIDAD,40.0"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
 }
 
@@ -903,11 +913,13 @@ fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
     let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
-PRODUCCION,EL_COGEN,10"
+PRODUCCION,EL_COGEN,10
+CONSUMO,COGEN,GASNATURAL,25# Consumos para cogeneración. Eficiencia de red 40% -> 10 / 0.40 = 25"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0);
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0);
     assert!(fraccion_ren_acs.is_err());
 }
 
@@ -921,7 +933,8 @@ CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.45");
 }
 
@@ -936,7 +949,8 @@ CONSUMO,ACS,GASNATURAL,27.88"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0).unwrap();
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.00");
 }
 
@@ -952,7 +966,8 @@ CONSUMO,ACS,GASNATURAL,13.94"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 100.0);
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 100.0);
     assert!(fraccion_ren_acs.is_err());
 }
 
@@ -961,7 +976,8 @@ fn cte_ACS_demanda_ren_excluye_aux() {
     // Caso de GT con exclusión de líneas de consumo eléctrico auxiliar
     let comps = components_from_file("test_data/acs_demanda_ren_con_exclusion_auxiliares.csv");
     let FP = TESTFP.parse().unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 4549.4).unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep, 4549.4).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.917");
 }
 

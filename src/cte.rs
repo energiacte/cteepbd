@@ -289,14 +289,14 @@ fn get_used_carriers(cr_list: &[&Energy]) -> Vec<Carrier> {
 ///       que supone sobre la demanda global del edificio (id=0, DEMANDA).
 ///
 pub fn fraccion_renovable_acs_nrb(
-    components: &Components,
-    wfactors: &Factors,
+    ep: &EnergyPerformance,
     demanda_anual_acs: f32,
 ) -> Result<f32, EpbdError> {
     use Carrier::{BIOMASA, BIOMASADENSIFICADA, EAMBIENTE};
 
     // Lista de componentes para ACS y filtrados excluidos de participar en el cálculo de la demanda renovable
-    let components = &components.filter_by_epb_service(Service::ACS);
+    let components = &ep.components.filter_by_epb_service(Service::ACS);
+
     let cr_list_dhw: &Vec<&Energy> = &components
         .cdata
         .iter()
@@ -349,7 +349,7 @@ pub fn fraccion_renovable_acs_nrb(
     // 1. == Energía ambiente y distrito ==
     // Demanda total y renovable de los consumos de ACS de RED1, RED2 o EAMBIENTE (demanda == consumo)
     let (Q_nrb_non_biomass_an_tot, Q_nrb_non_biomass_an_ren) =
-        Q_nrb_non_biomass_an(cr_list_dhw, wfactors)?;
+        Q_nrb_non_biomass_an(cr_list_dhw, &ep.wfactors)?;
 
     // 2. == Biomasa ==
     // Vectores energéticos consumidos
@@ -368,15 +368,15 @@ pub fn fraccion_renovable_acs_nrb(
         let Q_any_biomass_acs_an = demanda_anual_acs - Q_nrb_non_biomass_an_tot;
         // Parte renovable: Q_any_biomass_acs_an_ren
         if has_biomass {
-            Q_any_biomass_acs_an * get_fpA_del_ren_fraction(BIOMASA, wfactors)?
+            Q_any_biomass_acs_an * get_fpA_del_ren_fraction(BIOMASA, &ep.wfactors)?
         } else {
-            Q_any_biomass_acs_an * get_fpA_del_ren_fraction(BIOMASADENSIFICADA, wfactors)?
+            Q_any_biomass_acs_an * get_fpA_del_ren_fraction(BIOMASADENSIFICADA, &ep.wfactors)?
         }
     } else if has_any_biomass {
         // Cuando además de biomasa hay otros vectores que no son de distrito o insitu
         // necesitamos saber qué cantidad de ACS produce la biomasa para poder calcular
         let Q_biomass_an_ren = if has_biomass {
-            let fp_ren_fraction_biomass = get_fpA_del_ren_fraction(BIOMASA, wfactors)?;
+            let fp_ren_fraction_biomass = get_fpA_del_ren_fraction(BIOMASA, &ep.wfactors)?;
             let Q_biomass_an_pct = components
                 .get_meta_f32("CTE_DEMANDA_ACS_PCT_BIOMASA")
                 .ok_or_else(|| {
@@ -391,7 +391,7 @@ pub fn fraccion_renovable_acs_nrb(
         };
         let Q_dens_biomass_an_ren = if has_dens_biomass {
             let fp_ren_fraction_dens_biomass =
-                get_fpA_del_ren_fraction(BIOMASADENSIFICADA, wfactors)?;
+                get_fpA_del_ren_fraction(BIOMASADENSIFICADA, &ep.wfactors)?;
             let Q_dens_biomass_an_pct = components
                 .get_meta_f32("CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA")
                 .ok_or_else(|| {
@@ -445,7 +445,7 @@ pub fn incorpora_demanda_renovable_acs_nrb(mut ep: EnergyPerformance) -> EnergyP
         .collect();
 
     // Añadir a EnergyPerformance.misc un diccionario, si no existe, con datos:
-    let mut map = ep.misc.unwrap_or_default();
+    let mut map = ep.misc.take().unwrap_or_default();
 
     if !dhw_elements.is_empty() {
         let demanda_anual_acs: f32 = dhw_elements.iter().sum();
@@ -454,7 +454,7 @@ pub fn incorpora_demanda_renovable_acs_nrb(mut ep: EnergyPerformance) -> EnergyP
             format!("{:.1}", demanda_anual_acs),
         );
 
-        match fraccion_renovable_acs_nrb(&ep.components, &ep.wfactors, demanda_anual_acs) {
+        match fraccion_renovable_acs_nrb(&ep, demanda_anual_acs) {
             Ok(fraccion_renovable_acs_nrb) => {
                 map.insert(
                     "fraccion_renovable_demanda_acs_nrb".to_string(),
