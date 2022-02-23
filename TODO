@@ -1,6 +1,7 @@
 # TODO
 
 - epbd:
+  - Reference area as EDIFICIO,AREAREF,...
   - Detailed report of ren contribution by perimeter (onsite, nearby, distant) + rer_dst + rer_nrb
   - Deduce SPF for BIOMASS using SALIDA / CONSUMO when computing DHW ren needs covered by nearby sources
   - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
