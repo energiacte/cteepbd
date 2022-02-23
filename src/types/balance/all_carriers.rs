@@ -66,6 +66,11 @@ impl Balance {
         let mut used_epus_by_cr = self.used.epus_by_cr.clone();
         used_epus_by_cr.values_mut().for_each(|v| *v *= k_area);
 
+        let mut used_epus_by_srv_by_cr = self.used.epus_by_srv_by_cr.clone();
+        used_epus_by_srv_by_cr
+            .values_mut()
+            .for_each(|v| v.values_mut().for_each(|v| *v *= k_area));
+
         let mut prod_by_src = self.prod.by_src.clone();
         prod_by_src.values_mut().for_each(|v| *v *= k_area);
 
@@ -96,6 +101,7 @@ impl Balance {
                 cgnus: k_area * self.used.cgnus,
                 epus_by_srv: used_epus_by_srv,
                 epus_by_cr: used_epus_by_cr,
+                epus_by_srv_by_cr: used_epus_by_srv_by_cr,
             },
             prod: BalProd {
                 an: k_area * self.prod.an,
@@ -168,6 +174,14 @@ impl std::ops::AddAssign<&BalanceCarrier> for Balance {
             if let Some(&value) = rhs.we.b_by_srv.get(&service) {
                 *self.we.b_by_srv.entry(service).or_default() += value;
             }
+            // By carrier detail
+            *self
+                .used
+                .epus_by_srv_by_cr
+                .entry(service)
+                .or_default()
+                .entry(rhs.carrier)
+                .or_default() += used_epb_for_service;
         }
 
         // Aggregation by energy source
@@ -212,6 +226,8 @@ pub struct BalUsed {
     pub epus_by_srv: HashMap<Service, f32>,
     /// Energy use for EPB uses, by carrier
     pub epus_by_cr: HashMap<Carrier, f32>,
+    /// Energy use for EPB services, by service, by carrier
+    pub epus_by_srv_by_cr: HashMap<Service, HashMap<Carrier, f32>>,
 }
 
 /// Datos de energía producida in situ o cogenerada para el balance global
