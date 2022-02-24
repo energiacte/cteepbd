@@ -3,10 +3,10 @@
 - epbd:
 
   - Reference area as EDIFICIO,AREAREF,...
+  - Nearby electricity support
   - Detailed report of ren contribution by perimeter (onsite, nearby, distant) + rer_dst + rer_nrb
   - DHW ren needs covered by nearby sources:
     - Deduce SPF for BIOMASS using SALIDA / CONSUMO
-    - Take DHW needs from EDIFICIO,DEMANDA,ACS
   - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
   - Datos de SISTEMA
     - Eficiencias de sistemas (no las calculamos sino que son datos)
