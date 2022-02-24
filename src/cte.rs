@@ -36,7 +36,7 @@ Utilidades para el manejo de balances energéticos para el CTE:
 */
 
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::{error::EpbdError, types::*, Factors, UserWF};
 
@@ -249,8 +249,10 @@ pub fn incorpora_demanda_renovable_acs_nrb(mut ep: EnergyPerformance) -> EnergyP
 pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdError> {
     use Carrier::{BIOMASA, BIOMASADENSIFICADA, EAMBIENTE, ELECTRICIDAD};
 
+    let bal = &ep.balance;
+
     // Demanda anual de ACS
-    let demanda_anual_acs = match ep.balance.needs.get(&Service::ACS).cloned() {
+    let demanda_anual_acs = match bal.needs.get(&Service::ACS).cloned() {
         // Sin demanda anual de ACS definida
         None => {
             return Err(EpbdError::WrongInput(
@@ -260,10 +262,8 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
         Some(demanda) => demanda,
     };
 
-    let bal = &ep.balance;
-    // Consumode de ACS por vectores
-    let dhw_used_by_cr = ep
-        .balance
+    // Consumo de de ACS por vectores
+    let dhw_used_by_cr = bal
         .used
         .epus_by_cr_by_srv
         .get(&Service::ACS)
@@ -386,30 +386,84 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
         // necesitamos saber qué cantidad de ACS produce la biomasa para poder calcular
         let Q_biomass_an_ren = if has_biomass {
             let fp_ren_fraction_biomass = get_fpA_del_ren_fraction(BIOMASA, &ep.wfactors)?;
-            let Q_biomass_an_pct = ep.components
-                .get_meta_f32("CTE_DEMANDA_ACS_PCT_BIOMASA")
-                .ok_or_else(|| {
-                    EpbdError::WrongInput(
-                        "No se ha especificado el porcentaje de la demanda de ACS abastecida por BIOMASA en el metadato 'CTE_DEMANDA_ACS_PCT_BIOMASA'"
-                            .to_string(),
-                    )
-                })?;
-            demanda_anual_acs * Q_biomass_an_pct / 100.0 * fp_ren_fraction_biomass
+            // Id de sistemas con uso de BIOMASA para ACS
+            let idx_with_acs_use = Vec::from_iter(
+                ep.components
+                    .cdata
+                    .iter()
+                    .filter(|c| {
+                        c.is_used() && c.has_service(Service::ACS) && c.has_carrier(BIOMASA)
+                    })
+                    .map(|c| c.id())
+                    .collect::<HashSet<i32>>(),
+            );
+            // Comprobar que se ha definido la salida de ACS para equipos de BIOMASA
+            for idx in &idx_with_acs_use {
+                if !ep
+                    .components
+                    .cdata
+                    .iter()
+                    .any(|c| c.has_id(*idx) && c.is_out() && c.has_service(Service::ACS))
+                {
+                    return Err(EpbdError::WrongInput(
+                        format!("Uso de biomasa en el sistema con id:{} sin definición de la energía entregada para el servicio de ACS.", idx),
+                    ));
+                }
+            }
+            // Suma de demandas de ACS salientes de equipos con consumo de BIOMASA
+            let alt_tot_dhw_use: f32 = ep
+                .components
+                .cdata
+                .iter()
+                .filter(|c| {
+                    idx_with_acs_use.contains(&c.id()) && c.is_out() && c.has_service(Service::ACS)
+                })
+                .map(HasValues::values_sum)
+                .sum();
+            alt_tot_dhw_use * fp_ren_fraction_biomass
         } else {
             0.0
         };
         let Q_dens_biomass_an_ren = if has_dens_biomass {
             let fp_ren_fraction_dens_biomass =
                 get_fpA_del_ren_fraction(BIOMASADENSIFICADA, &ep.wfactors)?;
-            let Q_dens_biomass_an_pct = ep.components
-                .get_meta_f32("CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA")
-                .ok_or_else(|| {
-                    EpbdError::WrongInput(
-                        "No se ha especificado el porcentaje de la demanda de ACS abastecida por BIOMASADENSIFICADA en el metadato 'CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA'"
-                            .to_string(),
-                    )
-                })?;
-            demanda_anual_acs * Q_dens_biomass_an_pct / 100.0 * fp_ren_fraction_dens_biomass
+            // Id de sistemas con uso de BIOMASADENSIFICADA para ACS
+            let idx_with_acs_use = Vec::from_iter(
+                ep.components
+                    .cdata
+                    .iter()
+                    .filter(|c| {
+                        c.is_used()
+                            && c.has_service(Service::ACS)
+                            && c.has_carrier(BIOMASADENSIFICADA)
+                    })
+                    .map(|c| c.id())
+                    .collect::<HashSet<i32>>(),
+            );
+            // Comprobar que se ha definido la salida de ACS para equipos de BIOMASADENSIFICADA
+            for idx in &idx_with_acs_use {
+                if !ep
+                    .components
+                    .cdata
+                    .iter()
+                    .any(|c| c.has_id(*idx) && c.is_out() && c.has_service(Service::ACS))
+                {
+                    return Err(EpbdError::WrongInput(
+                        format!("Uso de biomasa en el sistema con id:{} sin definición de la energía entregada para el servicio de ACS.", idx),
+                    ));
+                }
+            }
+            // Suma de demandas de ACS salientes de equipos con consumo de BIOMASADENSIFICADA
+            let alt_tot_dhw_use: f32 = ep
+                .components
+                .cdata
+                .iter()
+                .filter(|c| {
+                    idx_with_acs_use.contains(&c.id()) && c.is_out() && c.has_service(Service::ACS)
+                })
+                .map(HasValues::values_sum)
+                .sum();
+            alt_tot_dhw_use * fp_ren_fraction_dens_biomass
         } else {
             0.0
         };

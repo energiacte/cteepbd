@@ -32,6 +32,8 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 - Nuevo componente energético para energía saliente (SALIDA)
   - Indica la energía absorbida (p.e. refrigeración) o entregada (p.e. calor) en cada paso de cálculo), para cada servicio y para cada sistema (id=i)
   - Incluye un identificador de sistema asociado (id), servicio, valores para los pasos de cálculo y un comentario.
+  - Se utiliza para determinar la demanda generada de ACS generada en equipos de BIOMASA y BIOMASADENSIFICADA, eliminándose los metadatos
+    `CTE_DEMANDA_ACS_PCT_BIOMASA` y `CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA`.
 - Nuevo componente energético para consumo auxiliar (AUX)
   - Indica la energía eléctrica consumida para usos auxiliares de los servicios EPB en cada paso de cálculo, para cada sistema (id=i)
   - Incluye un identificador de sistema asociado (id), valores para los pasos de cálculo y un comentario.

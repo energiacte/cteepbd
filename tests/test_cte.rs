@@ -791,11 +791,11 @@ CONSUMO,ACS,BIOMASA,100"
 /// Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
-    let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 50
-    #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 50
-    EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
-    CONSUMO,ACS,BIOMASA,50
-    CONSUMO,ACS,BIOMASADENSIFICADA,50"
+    let comps = "EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
+    1,CONSUMO,ACS,BIOMASA,50
+    1,SALIDA,ACS,37.5 # Energía entregada ACS = 50*0.75 = 37.5kWh
+    2,CONSUMO,ACS,BIOMASADENSIFICADA,50
+    2,SALIDA,ACS,37.5 # Energía entregada ACS = 50*0.75 = 37.5kWh"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
@@ -807,12 +807,12 @@ fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
 /// Gas rend 90% (40% demanda -> 50kWh) + Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS las dos)
 #[test]
 fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
-    let comps = "#META CTE_DEMANDA_ACS_PCT_BIOMASA: 30
-    #META CTE_DEMANDA_ACS_PCT_BIOMASADENSIFICADA: 30
-    EDIFICIO,DEMANDA,ACS,125 # Demanda anual ACS (kWh)
-    CONSUMO,ACS,GASNATURAL,55.556
-    CONSUMO,ACS,BIOMASA,50
-    CONSUMO,ACS,BIOMASADENSIFICADA,50"
+    let comps = "EDIFICIO,DEMANDA,ACS,125 # Demanda anual ACS (kWh)
+    1,CONSUMO,ACS,GASNATURAL,55.556
+    2,CONSUMO,ACS,BIOMASA,50
+    2,SALIDA,ACS,37.5 # Energía entregada ACS = 50*0.75 = 37.5kWh
+    3,CONSUMO,ACS,BIOMASADENSIFICADA,50
+    3,SALIDA,ACS,37.5 # Energía entregada ACS = 50*0.75 = 37.5kWh"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
@@ -942,10 +942,10 @@ CONSUMO,ACS,GASNATURAL,27.88"
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn_y_biomasa() {
     let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
-CONSUMO,ACS,ELECTRICIDAD,30.0
-CONSUMO,ACS,EAMBIENTE,45
-CONSUMO,ACS,BIOMASA,13.94
-CONSUMO,ACS,GASNATURAL,13.94"
+1,CONSUMO,ACS,ELECTRICIDAD,30.0
+1,CONSUMO,ACS,EAMBIENTE,45
+2,CONSUMO,ACS,BIOMASA,13.94
+3,CONSUMO,ACS,GASNATURAL,13.94"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();

@@ -164,6 +164,7 @@ impl str::FromStr for Components {
         // - Move to check_components
         // - There are, at most, 3 building needs definitions (CAL, REF, ACS)
         // - Q_out (SALIDA) services include, at least, those included in E_in (CONSUMO). Think about interactive building of components and transient states
+        // - Q_out (SALIDA) for ACS service with BIOMASA & BIOMASADENSIFICADA
         // - AUX components for systems with more than 1 service output need Q_out (SALIDA) components
         {
             let cdata_lengths: Vec<_> = cdata.iter().map(|e| e.num_steps()).collect();
