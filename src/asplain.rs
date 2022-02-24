@@ -94,11 +94,8 @@ impl AsCtePlain for EnergyPerformance {
         let b_by_srv = list_entries_rennrenco2(&bal.we.b_by_srv);
         // Parámetros de demanda HE4
         let misc_out = if let Some(map) = &self.misc {
-            let demanda = map.get_str_1d("demanda_anual_acs");
             let pct_ren = map.get_str_pct1d("fraccion_renovable_demanda_acs_nrb");
-            format!("\n\n** Indicadores adicionales\n
-Demanda total de ACS: {demanda} [kWh]\nPorcentaje renovable de la demanda de ACS (perímetro próximo): {pct_ren} [%]
-"            )
+            format!("\n\n** Indicadores adicionales\nPorcentaje renovable de la demanda de ACS (perímetro próximo): {pct_ren} [%]")
         } else {
             String::new()
         };

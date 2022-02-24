@@ -185,51 +185,32 @@ Porcentaje renovable de la demanda de ACS en el perímetro próximo
 -----------------------------------------------------------------
 */
 
-// Funciones auxiliares ----------
+/// Devuelve eficiencia energética con datos de demanda renovable de ACS en perímetro próximo incorporados
+pub fn incorpora_demanda_renovable_acs_nrb(mut ep: EnergyPerformance) -> EnergyPerformance {
+    // Añadir a EnergyPerformance.misc un diccionario, si no existe, con datos:
+    let mut map = ep.misc.take().unwrap_or_default();
 
-/// Cálculo de la fracción que supone el factor de paso a energía primaria renovable respecto a la energía primaria total
-#[allow(non_snake_case)]
-fn get_fpA_del_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError> {
-    // El origen es la red, salvo para la electricidad producida in situ
-    let src = match c {
-        Carrier::ELECTRICIDAD => Source::INSITU,
-        _ => Source::RED,
-    };
-    wfactors
-        .wdata
-        .iter()
-        .find(|f| {
-            f.carrier == c && f.source == src && f.dest == Dest::SUMINISTRO && f.step == Step::A
-        })
-        .ok_or_else(|| {
-            EpbdError::WrongInput(format!("No se encuentra el factor de paso para \"{}\"", c))
-        })
-        .map(|f| f.ren / (f.ren + f.nren))
-}
-
-#[allow(non_snake_case)]
-/// Demanda total y renovable de los consumos de ACS cubierto por vectores nearby que no sean biomasa
-/// (EAMBIENTE, RED1, RED2 o TERMOSOLAR)
-///
-fn Q_nrb_non_biomass_an(
-    dhw_used_by_cr_no_aux_or_low_scop: &HashMap<Carrier, f32>,
-    ep: &EnergyPerformance,
-) -> Result<(f32, f32), EpbdError> {
-    use Carrier::{BIOMASA, BIOMASADENSIFICADA};
-
-    let (mut tot, mut ren) = (0.0, 0.0);
-
-    if !dhw_used_by_cr_no_aux_or_low_scop.is_empty() {
-        // Energía usada en vectores nearby que no son biomasa
-        for (carrier, us) in dhw_used_by_cr_no_aux_or_low_scop {
-            if carrier.is_nearby() && *carrier != BIOMASA && *carrier != BIOMASADENSIFICADA {
-                tot += us;
-                ren += us * get_fpA_del_ren_fraction(*carrier, &ep.wfactors)?;
-            }
+    match fraccion_renovable_acs_nrb(&ep) {
+        Ok(fraccion_renovable_acs_nrb) => {
+            map.insert(
+                "fraccion_renovable_demanda_acs_nrb".to_string(),
+                format!("{:.3}", fraccion_renovable_acs_nrb),
+            );
+            map.remove("error_acs");
+        }
+        Err(e) => {
+            map.insert(
+                "error_acs".to_string(),
+                format!(
+                    "ERROR: no se puede calcular la demanda renovable de ACS \"{}\"",
+                    e
+                ),
+            );
+            map.remove("fraccion_renovable_demanda_acs_nrb");
         }
     }
-
-    Ok((tot, ren))
+    ep.misc = Some(map);
+    ep
 }
 
 #[allow(non_snake_case)]
@@ -265,11 +246,19 @@ fn Q_nrb_non_biomass_an(
 ///       Podemos resolver esto también si se incluye la energía entregada o absorbida por los equipos (id, Q_OUT) y viendo la proporción
 ///       que supone sobre la demanda global del edificio (id=0, DEMANDA).
 ///
-pub fn fraccion_renovable_acs_nrb(
-    ep: &EnergyPerformance,
-    demanda_anual_acs: f32,
-) -> Result<f32, EpbdError> {
+pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdError> {
     use Carrier::{BIOMASA, BIOMASADENSIFICADA, EAMBIENTE, ELECTRICIDAD};
+
+    // Demanda anual de ACS
+    let demanda_anual_acs = match ep.balance.needs.get(&Service::ACS).cloned() {
+        // Sin demanda anual de ACS definida
+        None => {
+            return Err(EpbdError::WrongInput(
+                "Demanda anual de ACS desconocida".to_string(),
+            ));
+        }
+        Some(demanda) => demanda,
+    };
 
     let bal = &ep.balance;
     // Consumode de ACS por vectores
@@ -343,9 +332,6 @@ pub fn fraccion_renovable_acs_nrb(
     // TODO: Soporte de cálculo de fracción renovable de ACS con cogeneración
     // Para poder tenerlo en cuenta tendríamos dos opciones:
     // - Imputar correctamente los factores de paso de electricidad cogenerada, en lugar de 0.0 (y ver cómo se imputa el combustible en la parte térmica)
-    // - Imputar el consumo de combustible en función del servicio de destino de la electricidad y de la parte térmica. Esto se podría hacer a la
-    //   hora del reparto de electricidad, si se ha marcado el consumo de combustible como destinado a cogeneración eléctrica CTEEPBD_DESTINO_COGEN.
-    //   Habría que pensar qué ocurre si una parte no se consume y se exporta.
     // - Habría que ver cómo se imputa (prioridad) el consumo de electricidad in situ y cogenerada.
     let has_el_cgn = dhw_used_by_cr_no_aux_or_low_scop.contains_key(&ELECTRICIDAD)
         && ep.components.cdata.iter().any(Energy::is_cogen_pr);
@@ -463,52 +449,49 @@ pub fn fraccion_renovable_acs_nrb(
     Ok(Q_an_ren / demanda_anual_acs)
 }
 
-/// Devuelve eficiencia energética con datos de demanda renovable de ACS en perímetro próximo incorporados
-pub fn incorpora_demanda_renovable_acs_nrb(mut ep: EnergyPerformance) -> EnergyPerformance {
-    // Demanda anual de ACS
-    let dhw_elements: Vec<_> = ep
-        .components
-        .building
+// Funciones auxiliares ----------
+
+/// Cálculo de la fracción que supone el factor de paso a energía primaria renovable respecto a la energía primaria total
+#[allow(non_snake_case)]
+fn get_fpA_del_ren_fraction(c: Carrier, wfactors: &Factors) -> Result<f32, EpbdError> {
+    // El origen es la red, salvo para la electricidad producida in situ
+    let src = match c {
+        Carrier::ELECTRICIDAD => Source::INSITU,
+        _ => Source::RED,
+    };
+    wfactors
+        .wdata
         .iter()
-        .filter(|c| c.service == Service::ACS)
-        .map(HasValues::values_sum)
-        .collect();
+        .find(|f| {
+            f.carrier == c && f.source == src && f.dest == Dest::SUMINISTRO && f.step == Step::A
+        })
+        .ok_or_else(|| {
+            EpbdError::WrongInput(format!("No se encuentra el factor de paso para \"{}\"", c))
+        })
+        .map(|f| f.ren / (f.ren + f.nren))
+}
 
-    // Añadir a EnergyPerformance.misc un diccionario, si no existe, con datos:
-    let mut map = ep.misc.take().unwrap_or_default();
+#[allow(non_snake_case)]
+/// Demanda total y renovable de los consumos de ACS cubierto por vectores nearby que no sean biomasa
+/// (EAMBIENTE, RED1, RED2 o TERMOSOLAR)
+///
+fn Q_nrb_non_biomass_an(
+    dhw_used_by_cr_no_aux_or_low_scop: &HashMap<Carrier, f32>,
+    ep: &EnergyPerformance,
+) -> Result<(f32, f32), EpbdError> {
+    use Carrier::{BIOMASA, BIOMASADENSIFICADA};
 
-    if !dhw_elements.is_empty() {
-        let demanda_anual_acs: f32 = dhw_elements.iter().sum();
-        map.insert(
-            "demanda_anual_acs".to_string(),
-            format!("{:.1}", demanda_anual_acs),
-        );
+    let (mut tot, mut ren) = (0.0, 0.0);
 
-        match fraccion_renovable_acs_nrb(&ep, demanda_anual_acs) {
-            Ok(fraccion_renovable_acs_nrb) => {
-                map.insert(
-                    "fraccion_renovable_demanda_acs_nrb".to_string(),
-                    format!("{:.3}", fraccion_renovable_acs_nrb),
-                );
-                map.remove("error_acs");
-            }
-            Err(e) => {
-                map.insert(
-                    "error_acs".to_string(),
-                    format!(
-                        "ERROR: no se puede calcular la demanda renovable de ACS \"{}\"",
-                        e
-                    ),
-                );
-                map.remove("fraccion_renovable_demanda_acs_nrb");
+    if !dhw_used_by_cr_no_aux_or_low_scop.is_empty() {
+        // Energía usada en vectores nearby que no son biomasa
+        for (carrier, us) in dhw_used_by_cr_no_aux_or_low_scop {
+            if carrier.is_nearby() && *carrier != BIOMASA && *carrier != BIOMASADENSIFICADA {
+                tot += us;
+                ren += us * get_fpA_del_ren_fraction(*carrier, &ep.wfactors)?;
             }
         }
-    } else {
-        map.insert(
-            "error_acs".to_string(),
-            "ERROR: demanda anual de ACS no definida".to_string(),
-        );
-    };
-    ep.misc = Some(map);
-    ep
+    }
+
+    Ok((tot, ren))
 }
