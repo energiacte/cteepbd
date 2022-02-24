@@ -162,7 +162,7 @@ impl Energy {
         }
     }
 
-    /// Is this of kind UsedEnergy and destination is an EPB service?
+    /// Is this of kind UsedEnergy and destination is an EPB service (includes aux and used)?
     pub fn is_epb_use(&self) -> bool {
         match self {
             Energy::Prod(_) => false,

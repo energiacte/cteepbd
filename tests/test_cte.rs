@@ -713,23 +713,6 @@ fn cte_new_services_format() {
 }
 
 #[test]
-fn cte_new_services_format_ACS() {
-    // Igual que N_R09, y usamos valores por defecto en función de normalize
-    let comps =
-        components_from_file("test_data/newServicesFormat.csv").filter_by_epb_service(Service::ACS);
-    let FP = get_ctefp_peninsula();
-    let bal = energy_performance(&comps, &FP, 0.0, 217.4, false).unwrap();
-    assert!(approx_equal(
-        RenNrenCo2 {
-            ren: 0.0,
-            nren: 12.4,
-            co2: 2.9,
-        },
-        bal.balance_m2.we.b
-    ));
-}
-
-#[test]
 fn cte_balance_by_srv() {
     let ENERGYDATALIST = get_energydatalist();
     let FP = get_ctefp_peninsula();

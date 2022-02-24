@@ -1,9 +1,12 @@
 # TODO
 
 - epbd:
+
   - Reference area as EDIFICIO,AREAREF,...
   - Detailed report of ren contribution by perimeter (onsite, nearby, distant) + rer_dst + rer_nrb
-  - Deduce SPF for BIOMASS using SALIDA / CONSUMO when computing DHW ren needs covered by nearby sources
+  - DHW ren needs covered by nearby sources:
+    - Deduce SPF for BIOMASS using SALIDA / CONSUMO
+    - Take DHW needs from EDIFICIO,DEMANDA,ACS
   - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
   - Datos de SISTEMA
     - Eficiencias de sistemas (no las calculamos sino que son datos)
@@ -12,7 +15,6 @@
     - id, SISTEMA, GEN, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - id, SISTEMA, NGEN (DIS + EM), ???
   - extra checks: see components.rs TODO. Add Vecs: warnings & errors to EnergyPerformance used as collectors.
-  - use f_match in filter_by_epb_service
 
 - tests:
 
