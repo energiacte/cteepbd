@@ -71,6 +71,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 - Salida JSON:
   - Nuevos resultados disponibles
   - Nuevos resultados en balance y balance_m2:
+    - needs: demanda energética, por servicio
     - used_EPB: energía final consumida en servicios EPB
     - used_nEPB: energía final consumida en servicios no EPB
     - prod: energía final producida

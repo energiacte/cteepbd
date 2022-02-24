@@ -77,8 +77,17 @@ pub fn energy_performance(
     let mut wfactors = wfactors.clone();
     wfactors.add_cgn_factors(&components)?;
 
-    // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance = Balance::default();
+    
+    // Add energy needs to balance
+    for srv in [Service::CAL, Service::REF, Service::ACS] {
+        let nd = components.building.iter().find(|c| c.service == srv).map(HasValues::values_sum);
+        if let Some(srv_nd) = nd {
+            balance.needs.insert(srv, srv_nd);
+        }
+    }
+    
+    // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance_cr: HashMap<Carrier, BalanceCarrier> = HashMap::new();
     for cr in &components.available_carriers() {
         // Compute balance for this carrier ---

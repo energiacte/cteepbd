@@ -42,6 +42,8 @@ use super::BalanceCarrier;
 #[allow(non_snake_case)]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Balance {
+    /// Energy needs (CAL, REF, ACS)
+    pub needs: HashMap<Service, f32>,
     /// Energy use
     pub used: BalUsed,
     /// Produced energy
@@ -59,6 +61,9 @@ impl Balance {
     #[allow(non_snake_case)]
     pub fn normalize_by_area(&self, area: f32) -> Balance {
         let k_area = if area == 0.0 { 0.0 } else { 1.0 / area };
+
+        let mut needs = self.needs.clone();
+        needs.values_mut().for_each(|v| *v *= k_area);
 
         let mut used_epus_by_srv = self.used.epus_by_srv.clone();
         used_epus_by_srv.values_mut().for_each(|v| *v *= k_area);
@@ -95,6 +100,7 @@ impl Balance {
         B_by_srv.values_mut().for_each(|v| *v *= k_area);
 
         Balance {
+            needs,
             used: BalUsed {
                 epus: k_area * self.used.epus,
                 nepus: k_area * self.used.nepus,
