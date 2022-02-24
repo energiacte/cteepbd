@@ -400,10 +400,10 @@ impl Factors {
     /// También devuelve las estructuras de datos de los factores de exportación paso A
     /// para el perímetro distante y próximo, para facilitar el cálculo de RER_nrb
     #[allow(non_snake_case)]
-    pub(crate) fn compute_cgn_factors(
-        &self,
+    pub(crate) fn add_cgn_factors(
+        &mut self,
         components: &Components,
-    ) -> Result<Vec<Factor>> {
+    ) -> Result<()> {
         // Si hay producción eléctrica
         // Calcula f_exp_pr_el_A_chp_t = suma (E_in_t * f_in_t) / pr_el_chp_t
         use crate::types::Energy;
@@ -494,7 +494,11 @@ impl Factors {
             factors.push(factor_to_grid_B);
         };
 
-        Ok(factors)
+        if !factors.is_empty() {
+            self.wdata.append(&mut factors);
+        }
+
+        Ok(())
     }
 }
 

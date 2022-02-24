@@ -75,11 +75,7 @@ pub fn energy_performance(
     };
     let components = components.clone();
     let mut wfactors = wfactors.clone();
-
-    let mut cgn_factors = wfactors.compute_cgn_factors(&components)?;
-    if !cgn_factors.is_empty() {
-        wfactors.wdata.append(&mut cgn_factors);
-    };
+    wfactors.add_cgn_factors(&components)?;
 
     // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance = Balance::default();
@@ -121,10 +117,7 @@ pub fn energy_performance(
     // AB = kexp * exp * (f_B - f_A)
     let ren_add_back_avoided_to_grid = balance_cr
         .get(&Carrier::ELECTRICIDAD)
-        .map(|cr| k_exp * (
-            cr.we.exp_ab.ren 
-            + cr.we.exp_nepus_a.ren + cr.we.exp_grid_a.ren
-        ))
+        .map(|cr| k_exp * (cr.we.exp_ab.ren + cr.we.exp_nepus_a.ren + cr.we.exp_grid_a.ren))
         .unwrap_or(0.0);
     // 4. Add all contributions
     let ren_nrb = ren_nrb_cr + ren_nrb_el_nrb + ren_add_back_avoided_to_grid;
