@@ -130,15 +130,15 @@ pub struct ExportedEnergy {
 /// Delivered Energy Data and Results
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeliveredEnergy {
-    /// Delivered energy from the grid or onsite sources
+    /// Delivered energy from the grid or onsite sources (incl. cogen)
     pub an: f32,
     /// Delivered energy by the grid at each timestep
     pub grid_t: Vec<f32>,
     /// Delivered energy by the grid
     pub grid_an: f32,
-    /// Delivered energy from onsite sources at each timestep
+    /// Delivered energy from onsite sources (excl. cogen) at each timestep
     pub onst_t: Vec<f32>,
-    /// Delivered energy from onsite sources
+    /// Delivered energy from onsite sources (excl. cogen)
     pub onst_an: f32,
     /// Delivered energy allocated to electricity cogeneration at each timestep
     pub cgn_t: Vec<f32>,

@@ -75,9 +75,17 @@ impl Carrier {
         Carrier::TERMOSOLAR,
     ]; // Ver B.23. Solo biomasa sólida
 
-    /// Is this a carrier from the nearby perimeter?
+    /// Vectores considerados dentro del perímetro ONSITE (a excepción de la ELECTRICIDAD in situ).
+    pub const ONST: [Carrier; 2] = [Carrier::EAMBIENTE, Carrier::TERMOSOLAR];
+
+    /// Is this a carrier from the onsite or nearby perimeter?
     pub fn is_nearby(&self) -> bool {
         Carrier::NRBY.contains(self)
+    }
+
+    /// Is this a carrier from the onsite perimeter?
+    pub fn is_onsite(&self) -> bool {
+        Carrier::ONST.contains(self)
     }
 }
 

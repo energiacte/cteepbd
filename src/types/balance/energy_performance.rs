@@ -67,6 +67,9 @@ pub struct EnergyPerformance {
     /// Renewable Energy Ratio considering onsite and nearby perimeter
     /// RER_nrb = we_ren_nrb+onst / we_tot
     pub rer_nrb: f32,
+    /// Renewable Energy Ratio considering onsite perimeter
+    /// RER_onst = we_ren_onst / we_tot
+    pub rer_onst: f32,
     /// Generic miscelaneous user provided data
     pub misc: Option<MiscMap>,
 }

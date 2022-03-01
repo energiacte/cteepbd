@@ -78,15 +78,19 @@ pub fn energy_performance(
     wfactors.add_cgn_factors(&components)?;
 
     let mut balance = Balance::default();
-    
+
     // Add energy needs to balance
     for srv in [Service::CAL, Service::REF, Service::ACS] {
-        let nd = components.building.iter().find(|c| c.service == srv).map(HasValues::values_sum);
+        let nd = components
+            .building
+            .iter()
+            .find(|c| c.service == srv)
+            .map(HasValues::values_sum);
         if let Some(srv_nd) = nd {
             balance.needs.insert(srv, srv_nd);
         }
     }
-    
+
     // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance_cr: HashMap<Carrier, BalanceCarrier> = HashMap::new();
     for cr in &components.available_carriers() {
@@ -104,35 +108,16 @@ pub fn energy_performance(
     // Distant RER
     let rer = balance.we.b.rer();
 
-    // Nearby RER
-    // 1. Renewable energy from all nearby carriers (excluding electricity)
-    let ren_nrb_cr = balance_cr
-        .iter()
-        .map(|(carrier, bal)| {
-            if carrier.is_nearby() {
-                bal.we.b.ren
-            } else {
-                0.0
-            }
-        })
-        .sum::<f32>();
-    // 2. Renewable energy from onsite produced electricity
-    // This is equivalent to the ren contribution that doesn't come from grid delivered electicity
-    let ren_nrb_el_nrb = balance_cr
-        .get(&Carrier::ELECTRICIDAD)
-        .map(|cr| cr.we.b.ren - cr.we.del_grid.ren)
-        .unwrap_or(0.0);
-    // 3. Add the ren part of resources avoided to the grid generation, as that's distant
-    // AB = kexp * exp * (f_B - f_A)
-    let ren_add_back_avoided_to_grid = balance_cr
-        .get(&Carrier::ELECTRICIDAD)
-        .map(|cr| k_exp * (cr.we.exp_ab.ren + cr.we.exp_nepus_a.ren + cr.we.exp_grid_a.ren))
-        .unwrap_or(0.0);
-    // 4. Add all contributions
-    let ren_nrb = ren_nrb_cr + ren_nrb_el_nrb + ren_add_back_avoided_to_grid;
-
-    let tot = balance.we.b.tot();
-    let rer_nrb = if tot > 0.0 { ren_nrb / tot } else { 0.0 };
+    // Onsite and nearby RER
+    let (rer_onst, rer_nrb) = {
+        let tot = balance.we.b.tot();
+        if tot > 0.0 {
+            let (onst, nrb) = ren_onst_nrb(&balance_cr, k_exp);
+            (onst / tot, nrb / tot)
+        } else {
+            (0.0, 0.0)
+        }
+    };
 
     // Energy performance data and results
     Ok(EnergyPerformance {
@@ -145,8 +130,59 @@ pub fn energy_performance(
         balance_m2,
         rer,
         rer_nrb,
+        rer_onst,
         misc: None,
     })
+}
+
+/// Renewable energy used (EPB services) from onsite and nearby sources
+/// This excludes the impact on the grid of the exported energy
+/// Cogen generation is considered onsite (and its renewable contribution depends on the step A factor)
+fn ren_onst_nrb(balance_cr: &HashMap<Carrier, BalanceCarrier>, k_exp: f32) -> (f32, f32) {
+    // 1. Renewable energy from all nearby carriers (excluding electricity)
+    let ren_nrb_cr = balance_cr
+        .iter()
+        .map(|(carrier, bal)| {
+            if carrier.is_nearby() {
+                bal.we.b.ren
+            } else {
+                0.0
+            }
+        })
+        .sum::<f32>();
+    let ren_onst_cr = balance_cr
+        .iter()
+        .map(|(carrier, bal)| {
+            if carrier.is_onsite() {
+                bal.we.b.ren
+            } else {
+                0.0
+            }
+        })
+        .sum::<f32>();
+    // 2. Renewable energy from onsite produced electricity (excl. cogen)
+    let ren_el_onst = balance_cr
+        .get(&Carrier::ELECTRICIDAD)
+        .map(|cr| cr.we.del_onst.ren)
+        .unwrap_or(0.0);
+    // 3. Renewable energy from cogeneration
+    let ren_el_cgn = balance_cr
+        .get(&Carrier::ELECTRICIDAD)
+        .map(|cr| cr.we.del_cgn.ren)
+        .unwrap_or(0.0);
+    // 3. Renewable resources used for exported electricity
+    // These have to be substracted depending on k_exp value
+    let ren_el_exp_a = balance_cr
+        .get(&Carrier::ELECTRICIDAD)
+        .map(|cr| cr.we.exp_a.ren)
+        .unwrap_or(0.0);
+    // 4. Add all contributions
+    (
+        // Onsite
+        ren_onst_cr + ren_el_onst,
+        // Nearby
+        ren_nrb_cr + ren_el_onst + ren_el_cgn - (1.0 - k_exp) * ren_el_exp_a,
+    )
 }
 
 // --------------------------------------------------------------------
