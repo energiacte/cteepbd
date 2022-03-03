@@ -5,14 +5,17 @@
   - Reference area as EDIFICIO,AREAREF,...
   - Nearby electricity support
   - Support cogen generation when computing DHW ren needs covered by nearby sources
-  - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
-  - Datos de SISTEMA
+  - Datos de SISTEMA:
     - Eficiencias de sistemas (no las calculamos sino que son datos)
     - Ver para qué sistemas (cal, ref, acs, ven?, ilu?)
     - Indicar qué tipo de sistema es
     - id, SISTEMA, GEN, COP, 2.95, EER, 3.2, COP_dhw, 3.1, SCOP, 3.2, SEER, 3.4, SCOP_dhw, 3.5, SPF_h, 2.95, SPF_c, 3.0, SPF_dhw, 3.4 # Nombre
     - id, SISTEMA, NGEN (DIS + EM), ???
-  - extra checks: see components.rs TODO. Add Vecs: warnings & errors to EnergyPerformance used as collectors.
+  - extra checks - see components.rs TODO. Add Vecs: warnings & errors to EnergyPerformance used as collectors.
+
+- docs:
+
+  - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
 
 - tests:
 
@@ -20,24 +23,24 @@
 
 - input / output:
   - JSON input
-  - JSON output
-    - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data
+  - JSON output:
+    - Additional JSON output generated from the zone (ZONA) and system (SISTEMA) data:
       - Energy needs (with annual totals)
-      - System efficiencies / indicators
+      - System efficiencies / indicators:
         - See UNE_EN 15316-1 formula (35). Varies by subsystem type
         - ¿Whole building efficiencies by service (non renewable primary energy)?
-      - Fraction of energy use covered by renewable sources, by service and by system (id)
+      - Fraction of energy use covered by renewable sources, by service and by system (id):
         - Calcular % de cobertura renovable (consumo EF) para los distintos servicios
       - Consumos de sistemas ficticios (id<=0?) y reales (id>0)
       - Calcular ReduccionEPNR y ReduccionEmisiones por uso de renovables
       - Demanda por servicios y total (¿y demanda de referencia si la hay?)
       - Valores totales de los distintos indicadores (Ver BalanceEPB nuevo y ver 52000-1 Tabla 5 para datos por servicio)
       - Cambiar RenNrenCo2 para tener algún factor más (tot y ren_nrb) -> (ren, nren, tot, co2)
-      - Emisiones: desglose eléctrico y no eléctrico
+      - Emisiones - desglose eléctrico y no eléctrico
   - XML output:
     - Test XML output
     - Fix XML indentation
-    - Ratio of prod_onst / used for nearby sources
+    - Ratio of prod_onst / used for nearby sources:
       - Balance: prod.epus_ratio_by_srv_by_src[src] = prod.epus_by_srv_by_src[src] / used.epus_by_srv[src]
 
 ## Wishlist
