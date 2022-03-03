@@ -761,6 +761,25 @@ CONSUMO,ACS,TERMOSOLAR,60"
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
 }
 
+/// Gas natural (fp_nren = 1.1, con rend=0.9) y 60% de cobertura solar (100kWh demanda ACS)
+/// Con cogeneración para otro servicio, sin afectar al ACS
+#[test]
+fn cte_ACS_demanda_ren_gn_60pst_noACS_con_cogen() {
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,GASNATURAL,44.44
+CONSUMO,ACS,TERMOSOLAR,60
+CONSUMO,COGEN,BIOMASA,25 # Rendimiento de red 0.40 -> consumo para 10kWh -> 10 / .4 = 25kWh
+PRODUCCION,EL_COGEN,10
+CONSUMO,REF,ELECTRICIDAD,20
+"
+        .parse::<Components>()
+        .unwrap();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.60");
+}
+
 /// Biomasa rend 75% y PST (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_10PST_100() {

@@ -324,18 +324,21 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
         ));
     };
 
-    // Existe cogeneración eléctrica -> caso no soportado -> ERROR
-    //
-    // Si tenemos electricidad cogenerada no sabemos con qué se ha cogenerado ni si se ha imputado todo el combustible correspondiente
-    // ya que este podría ir a otros usos y no a ACS (y no tenemos los factores de paso de electricidad cogenerada)
-    //
-    // TODO: Soporte de cálculo de fracción renovable de ACS con cogeneración
-    // Para poder tenerlo en cuenta tendríamos dos opciones:
-    // - Imputar correctamente los factores de paso de electricidad cogenerada, en lugar de 0.0 (y ver cómo se imputa el combustible en la parte térmica)
-    // - Habría que ver cómo se imputa (prioridad) el consumo de electricidad in situ y cogenerada.
-    let has_el_cgn = dhw_used_by_cr_no_aux_or_low_scop.contains_key(&ELECTRICIDAD)
-        && ep.components.cdata.iter().any(Energy::is_cogen_pr);
-    if has_el_cgn {
+    // Existe cogeneración eléctrica para ACS (sin ser para auxiliares)
+    // 1. Hay producción de electricidad cogenerada que se usa en ACS
+    let dhw_cogen_use = ep.balance.prod.epus_by_srv_by_src.get(&ProdSource::EL_COGEN).and_then(|s| s.get(&Service::ACS)).cloned().unwrap_or_default();
+    // 2. La electricidad destinada a usos EPB va más allá de los auxiliares
+    let dhw_el_use_no_aux_or_low_scop = dhw_used_by_cr_no_aux_or_low_scop.contains_key(&ELECTRICIDAD);
+    if dhw_el_use_no_aux_or_low_scop && dhw_cogen_use > 0.0 {
+        // TODO: Soporte de cálculo de fracción renovable de ACS con cogeneración
+        // Para poder tenerlo en cuenta tenemos que:
+        // - Ver la contribución renovable nearby de todos los sistemas de cogeneración:
+        //      - Ver la energía primaria total usada en la producción de electricidad cogenerada (ya lo calculamos)
+        //      - Ver la energía primaria renovable nearby usada en la producción de electricidad cogenerada (lo tenemos que calcular) (CONSUMO, COGEN, vector es nearby)
+        //      - Obtener el % renovable de la electricidad cogenerada f_ren_cgn_nrb = f_ren_nrb / f_tot
+        //      - Calcular la cantidad de electricidad cogenerada usada para producir ACS (no auxiliar) y la fracción que supone respecto al consumo eléctrico
+        //      - Imputar esa fracción de Q_out a la electricidad cogenerada -> Q_out_cgn
+        //      - Q_out_cgn * f_ren_cgn_nrb    
         return Err(EpbdError::WrongInput(
             "Uso de electricidad cogenerada".to_string(),
         ));
