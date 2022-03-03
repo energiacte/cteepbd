@@ -907,16 +907,34 @@ CONSUMO,NEPB,ELECTRICIDAD,40.0"
     assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
 }
 
-/// Bomba de calor (SCOP=2.5) con electricidad cogenerada (100kWh demanda ACS)
-/// Caso no cubierto, al definirse cogeneración (solo permitimos la parte térmica)
-/// Si hay más de un suministro que no sea insitu no podemos hacer el cálculo
+/// Bomba de calor (SCOP=2.5) + 10kWh PV + 10kWh cogen con vector distante (100kWh demanda ACS)
+/// La cogeneración no contribuye a la fracción renovable nearby
 #[test]
-fn cte_ACS_demanda_ren_fail_bdc_60ma_10cgn() {
+fn cte_ACS_demanda_ren_bdc_60ma_10pv_10cgn_gas() {
     let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
+PRODUCCION,EL_INSITU,10
 PRODUCCION,EL_COGEN,10
 CONSUMO,COGEN,GASNATURAL,25# Consumos para cogeneración. Eficiencia de red 40% -> 10 / 0.40 = 25"
+        .parse::<Components>()
+        .unwrap();
+    let FP: Factors = TESTFP.parse().unwrap();
+    let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.70");
+}
+
+/// Bomba de calor (SCOP=2.5) + 10kWh PV + 10kWh cogen con vector nearby (100kWh demanda ACS)
+/// Caso no cubierto todavía
+#[test]
+fn cte_ACS_demanda_ren_bdc_60ma_10pv_10cgn_biomasa() {
+    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+CONSUMO,ACS,ELECTRICIDAD,40.0
+CONSUMO,ACS,EAMBIENTE,60
+PRODUCCION,EL_INSITU,10
+PRODUCCION,EL_COGEN,10
+CONSUMO,COGEN,BIOMASA,25# Consumos para cogeneración. Eficiencia de red 40% -> 10 / 0.40 = 25"
         .parse::<Components>()
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();

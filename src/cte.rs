@@ -325,11 +325,15 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
     };
 
     // Existe cogeneración eléctrica para ACS (sin ser para auxiliares)
+    // XXX: Duda: ¿es la cogeneración una fuente nearby solo cuando el vector que lo alimenta es nearby o siempre?
     // 1. Hay producción de electricidad cogenerada que se usa en ACS
     let dhw_cogen_use = ep.balance.prod.epus_by_srv_by_src.get(&ProdSource::EL_COGEN).and_then(|s| s.get(&Service::ACS)).cloned().unwrap_or_default();
     // 2. La electricidad destinada a usos EPB va más allá de los auxiliares
     let dhw_el_use_no_aux_or_low_scop = dhw_used_by_cr_no_aux_or_low_scop.contains_key(&ELECTRICIDAD);
-    if dhw_el_use_no_aux_or_low_scop && dhw_cogen_use > 0.0 {
+    // 3. La cogeneración se produce con algún vector del perímetro próximo
+    let cogen_sources: Vec<_> = ep.components.cdata.iter().filter(|c| c.is_cogen_use()).collect();
+    let cogen_sources_has_nearby = cogen_sources.iter().any(|c| c.carrier().is_nearby());
+    if dhw_el_use_no_aux_or_low_scop && dhw_cogen_use > 0.0 && cogen_sources_has_nearby {
         // TODO: Soporte de cálculo de fracción renovable de ACS con cogeneración
         // Para poder tenerlo en cuenta tenemos que:
         // - Ver la contribución renovable nearby de todos los sistemas de cogeneración:
