@@ -324,30 +324,6 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
         ));
     };
 
-    // Existe cogeneración eléctrica para ACS (sin ser para auxiliares)
-    // XXX: Duda: ¿es la cogeneración una fuente nearby solo cuando el vector que lo alimenta es nearby o siempre?
-    // 1. Hay producción de electricidad cogenerada que se usa en ACS
-    let dhw_cogen_use = ep.balance.prod.epus_by_srv_by_src.get(&ProdSource::EL_COGEN).and_then(|s| s.get(&Service::ACS)).cloned().unwrap_or_default();
-    // 2. La electricidad destinada a usos EPB va más allá de los auxiliares
-    let dhw_el_use_no_aux_or_low_scop = dhw_used_by_cr_no_aux_or_low_scop.contains_key(&ELECTRICIDAD);
-    // 3. La cogeneración se produce con algún vector del perímetro próximo
-    let cogen_sources: Vec<_> = ep.components.cdata.iter().filter(|c| c.is_cogen_use()).collect();
-    let cogen_sources_has_nearby = cogen_sources.iter().any(|c| c.carrier().is_nearby());
-    if dhw_el_use_no_aux_or_low_scop && dhw_cogen_use > 0.0 && cogen_sources_has_nearby {
-        // TODO: Soporte de cálculo de fracción renovable de ACS con cogeneración
-        // Para poder tenerlo en cuenta tenemos que:
-        // - Ver la contribución renovable nearby de todos los sistemas de cogeneración:
-        //      - Ver la energía primaria total usada en la producción de electricidad cogenerada (ya lo calculamos)
-        //      - Ver la energía primaria renovable nearby usada en la producción de electricidad cogenerada (lo tenemos que calcular) (CONSUMO, COGEN, vector es nearby)
-        //      - Obtener el % renovable de la electricidad cogenerada f_ren_cgn_nrb = f_ren_nrb / f_tot
-        //      - Calcular la cantidad de electricidad cogenerada usada para producir ACS (no auxiliar) y la fracción que supone respecto al consumo eléctrico
-        //      - Imputar esa fracción de Q_out a la electricidad cogenerada -> Q_out_cgn
-        //      - Q_out_cgn * f_ren_cgn_nrb    
-        return Err(EpbdError::WrongInput(
-            "Uso de electricidad cogenerada".to_string(),
-        ));
-    };
-
     // Comprobaremos las condiciones para poder calcular las aportaciones renovables a la demanda
     //
     // 1. Las aportaciones de redes de distrito RED1, RED2,TERMOSOLAR y EAMBIENTE son aportaciones renovables según sus factores de paso (fp_ren / fp_tot)
@@ -356,6 +332,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
     //  - si tenemos el porcentaje de demanda cubierto por la biomasa o biomasa in situ, podemos calcular la demanda renovable.
     //  - en ambos casos se usa también la proporción de los factores de paso
     // 3. La ELECTRICIDAD consumida en ACS y producida in situ se toma como renovable en un 100% (rendimiento térmico == 1 y demanda == consumo).
+    // 4. ELECTRICIDAD cogenerada, se toma como renovable en la fracción que lo es su vector nearby
 
     // 1. == Energía ambiente y distrito ==
     // Demanda total y renovable de los consumos de ACS de RED1, RED2, TERMOSOLAR o EAMBIENTE (demanda == consumo)
@@ -485,12 +462,12 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
     // sin considerar consumos auxiliares de ACS, que no se convierten en demanda
 
     // a) Fracción del consumo eléctrico para ACS que suponen los auxiliares
-    let frac_aux_use_dhw = {
-        let dhw_used_an = dhw_used_by_cr.get(&ELECTRICIDAD).unwrap_or(&0.0);
-        if dhw_used_an.abs() > f32::EPSILON {
-            dhw_aux_use_an / dhw_used_an
+    let frac_non_aux_el_use_dhw = {
+        let dhw_el_used_an = dhw_used_by_cr.get(&ELECTRICIDAD).unwrap_or(&0.0);
+        if dhw_el_used_an.abs() > f32::EPSILON {
+            1.0 - (dhw_aux_use_an / dhw_el_used_an)
         } else {
-            0.0
+            1.0
         }
     };
     // b) Producción in situ destinada a ACS, incluidos auxiliares de ACS
@@ -502,10 +479,74 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
         .copied()
         .unwrap_or_default();
     // c) Producción insitu EL_INSITU destinada a ACS, excluidos auxiliares
-    let Q_el_an_ren = prod_el_onst_dhw * (1.0 - frac_aux_use_dhw);
+    let Q_onst_el_an_ren = prod_el_onst_dhw * frac_non_aux_el_use_dhw;
 
-    // 4. === Total de demanda renovable ==
-    let Q_an_ren = Q_nrb_non_biomass_an_ren + Q_biomass_an_ren + Q_el_an_ren;
+    // 4. === Cogeneración ==
+    // Consideramos la electricidad cogenerada con vectores nearby no usada para consumos auxiliares
+    // XXX: Duda: ¿es la cogeneración una fuente nearby solo cuando el vector que lo alimenta es nearby o siempre?
+
+    // 1. Hay producción de electricidad cogenerada que se usa en ACS
+    let dhw_cogen_use = ep
+        .balance
+        .prod
+        .epus_by_srv_by_src
+        .get(&ProdSource::EL_COGEN)
+        .and_then(|s| s.get(&Service::ACS))
+        .cloned()
+        .unwrap_or_default();
+    // 2. La electricidad destinada a usos EPB va más allá de los auxiliares
+    let dhw_el_use_no_aux_or_low_scop = dhw_used_by_cr_no_aux_or_low_scop
+        .get(&ELECTRICIDAD)
+        .cloned()
+        .unwrap_or_default();
+    // 3. La cogeneración se produce con algún vector del perímetro próximo
+    let cogen_sources: Vec<_> = ep
+        .components
+        .cdata
+        .iter()
+        .filter(|c| c.is_cogen_use())
+        .collect();
+    let cogen_sources_has_nearby = cogen_sources.iter().any(|c| c.carrier().is_nearby());
+    let Q_nrb_cogen_el_an_ren =
+        if dhw_el_use_no_aux_or_low_scop > 0.0 && dhw_cogen_use > 0.0 && cogen_sources_has_nearby {
+            // A diferencia de la generación in situ, la electricidad cogenerada se convierte en demanda
+            // con un factor que depende del vector usado para generarla.
+            // Tenemos que calcular el factor de paso para obtener
+            //  f_ren_cgn_nrb = f_ren_nrb / f_tot
+            // f_ren_nrb = suma (f_pA_cr_i.ren * consumo_cogen_cr_i) cuando cr_i es nrb
+            // f_tot = suma(f_pA_cr_i.tot * consumo_cogen_cr_i)
+            let f_ren_cgn_nrb = {
+                let f_cgn_A = ep.wfactors.find(
+                    Carrier::ELECTRICIDAD,
+                    Source::COGEN,
+                    Dest::SUMINISTRO,
+                    Step::A,
+                )?;
+                let f_tot = f_cgn_A.ren + f_cgn_A.nren;
+                if f_tot > 0.0 {
+                    let f_cgn_ren_A = ep
+                        .wfactors
+                        .compute_cgn_exp_fP_A(&ep.components, true)?
+                        .unwrap_or_default()
+                        .ren;
+                    println!("f_cgn_ren_A: {f_cgn_ren_A:.3}, f_tot: {f_tot:.3}");
+                    f_cgn_ren_A / f_tot
+                } else {
+                    0.0
+                }
+            };
+            // Fracción de la electricidad cogenerada que no va a auxiliares
+            let dhw_non_aux_cogen_use = dhw_cogen_use * frac_non_aux_el_use_dhw;
+
+            // fracción renovable de cada unidad cogenerada
+            dhw_non_aux_cogen_use * f_ren_cgn_nrb
+        } else {
+            0.0
+        };
+
+    // 5. === Total de demanda renovable ==
+    let Q_an_ren =
+        Q_nrb_non_biomass_an_ren + Q_biomass_an_ren + Q_onst_el_an_ren + Q_nrb_cogen_el_an_ren;
 
     Ok(Q_an_ren / demanda_anual_acs)
 }

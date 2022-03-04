@@ -4,7 +4,6 @@
 
   - Reference area as EDIFICIO,AREAREF,...
   - Nearby electricity support
-  - Support cogen generation when computing DHW ren needs covered by nearby sources
   - Datos de SISTEMA:
     - Eficiencias de sistemas (no las calculamos sino que son datos)
     - Ver para qué sistemas (cal, ref, acs, ven?, ilu?)

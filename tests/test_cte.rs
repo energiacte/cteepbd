@@ -772,8 +772,8 @@ CONSUMO,COGEN,BIOMASA,25 # Rendimiento de red 0.40 -> consumo para 10kWh -> 10 /
 PRODUCCION,EL_COGEN,10
 CONSUMO,REF,ELECTRICIDAD,20
 "
-        .parse::<Components>()
-        .unwrap();
+    .parse::<Components>()
+    .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep).unwrap();
@@ -926,7 +926,6 @@ CONSUMO,COGEN,GASNATURAL,25# Consumos para cogeneración. Eficiencia de red 40% 
 }
 
 /// Bomba de calor (SCOP=2.5) + 10kWh PV + 10kWh cogen con vector nearby (100kWh demanda ACS)
-/// Caso no cubierto todavía
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_10cgn_biomasa() {
     let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
@@ -939,8 +938,8 @@ CONSUMO,COGEN,BIOMASA,25# Consumos para cogeneración. Eficiencia de red 40% -> 
         .unwrap();
     let FP: Factors = TESTFP.parse().unwrap();
     let ep = energy_performance(&comps, &FP, TESTKEXP, 100.0, false).unwrap();
-    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep);
-    assert!(fraccion_ren_acs.is_err());
+    let fraccion_ren_acs = fraccion_renovable_acs_nrb(&ep).unwrap();
+    assert_eq!(format!("{:.2}", fraccion_ren_acs), "0.79");
 }
 
 /// Bomba de calor (SCOP=2.5) y 25% caldera de GN (rend. 0.9) (100kWh demanda ACS)

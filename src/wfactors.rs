@@ -396,22 +396,89 @@ impl Factors {
     ///
     /// Devuelve a definición de los factores de exportación a NEPB y RED (paso A y paso B),
     /// para la electricidad cogenerada, que pueden ser agregados directamente a Factors.wdata
-    /// 
+    ///
     /// También devuelve las estructuras de datos de los factores de exportación paso A
     /// para el perímetro distante y próximo, para facilitar el cálculo de RER_nrb
     #[allow(non_snake_case)]
-    pub(crate) fn add_cgn_factors(
-        &mut self,
+    pub(crate) fn add_cgn_factors(&mut self, components: &Components) -> Result<()> {
+        let fP_exp_el_cgn_A = match self.compute_cgn_exp_fP_A(components, false)? {
+            Some(fP) => fP,
+            _ => return Ok(()),
+        };
+
+        // Factores derivados para el paso A (recursos usados)
+        let factor_input_A = Factor::new(
+            Carrier::ELECTRICIDAD,
+            Source::COGEN,
+            Dest::SUMINISTRO,
+            Step::A,
+            fP_exp_el_cgn_A,
+            "Recursos usados para el suministrar electricidad cogenerada (calculado)",
+        );
+
+        // Factores derivados para el paso A (recursos usados)
+        let factor_to_nepb_A = Factor::new(
+            Carrier::ELECTRICIDAD,
+            Source::COGEN,
+            Dest::A_NEPB,
+            Step::A,
+            fP_exp_el_cgn_A,
+            "Recursos usados para la exportación a usos no EPB (calculado)",
+        );
+        let factor_to_grid_A = Factor::new(
+            Carrier::ELECTRICIDAD,
+            Source::COGEN,
+            Dest::A_RED,
+            Step::A,
+            fP_exp_el_cgn_A,
+            "Recursos usados para la exportación a la red (calculado)",
+        );
+
+        // Factores derivados para el paso B (recursos ahorrados a la red, iguales al paso A de red)
+        let fP_el_grid_A = self.find(
+            Carrier::ELECTRICIDAD,
+            Source::RED,
+            Dest::SUMINISTRO,
+            Step::A,
+        )?;
+        let factor_to_nepb_B = Factor::new(
+            Carrier::ELECTRICIDAD,
+            Source::COGEN,
+            Dest::A_NEPB,
+            Step::B,
+            fP_el_grid_A,
+            "Recursos ahorrados a la red por la exportación a usos no EPB (calculado)",
+        );
+        let factor_to_grid_B = Factor::new(
+            Carrier::ELECTRICIDAD,
+            Source::COGEN,
+            Dest::A_RED,
+            Step::B,
+            fP_el_grid_A,
+            "Recursos ahorrados a la red por la exportación a la red (calculado)",
+        );
+
+        // Incorporamos los factores a wfactors
+        self.wdata.push(factor_input_A);
+        self.wdata.push(factor_to_nepb_A);
+        self.wdata.push(factor_to_grid_A);
+        self.wdata.push(factor_to_nepb_B);
+        self.wdata.push(factor_to_grid_B);
+
+        Ok(())
+    }
+
+    #[allow(non_snake_case)]
+    pub(crate) fn compute_cgn_exp_fP_A(
+        &self,
         components: &Components,
-    ) -> Result<()> {
+        only_nearby: bool,
+    ) -> Result<Option<RenNrenCo2>> {
         // Si hay producción eléctrica
         // Calcula f_exp_pr_el_A_chp_t = suma (E_in_t * f_in_t) / pr_el_chp_t
         use crate::types::Energy;
         use crate::vecops::vecvecsum;
         use std::collections::HashMap;
-
-        let mut factors = Vec::new();
-
         let mut prod = Vec::<f32>::new();
         let mut used = HashMap::<Carrier, Vec<f32>>::new();
         for c in &components.cdata {
@@ -431,74 +498,28 @@ impl Factors {
                 _ => continue,
             }
         }
-
-        let mut fP_exp_el_cgn_A = RenNrenCo2::default();
-        if !prod.is_empty() {
-            if used.is_empty() {
-                return Err(EpbdError::WrongInput(
-                    "No se han definido los consumos para la cogeneración".into(),
-                ));
-            };
-            for (carrier, used_t) in used {
-                let fP_A_cr = self.find(carrier, Source::RED, Dest::SUMINISTRO, Step::A)?;
-                let used_prod_ratio_sum = used_t
-                    .iter()
-                    .zip(prod.iter())
-                    .map(|(us, pr)| if *pr > 0.0 { us / pr } else { 0.0 })
-                    .sum::<f32>();
-                fP_exp_el_cgn_A += fP_A_cr * used_prod_ratio_sum;
-            }
-
-            let fP_el_grid_A = self.find(
-                Carrier::ELECTRICIDAD,
-                Source::RED,
-                Dest::SUMINISTRO,
-                Step::A,
-            )?;
-            let factor_to_nepb_A = Factor::new(
-                Carrier::ELECTRICIDAD,
-                Source::COGEN,
-                Dest::A_NEPB,
-                Step::A,
-                fP_exp_el_cgn_A,
-                "Recursos usados para la exportación a usos no EPB (calculado)",
-            );
-            let factor_to_grid_A = Factor::new(
-                Carrier::ELECTRICIDAD,
-                Source::COGEN,
-                Dest::A_RED,
-                Step::A,
-                fP_exp_el_cgn_A,
-                "Recursos usados para la exportación a la red (calculado)",
-            );
-            let factor_to_nepb_B = Factor::new(
-                Carrier::ELECTRICIDAD,
-                Source::COGEN,
-                Dest::A_NEPB,
-                Step::B,
-                fP_el_grid_A,
-                "Recursos ahorrados a la red por la exportación a usos no EPB (calculado)",
-            );
-            let factor_to_grid_B = Factor::new(
-                Carrier::ELECTRICIDAD,
-                Source::COGEN,
-                Dest::A_RED,
-                Step::B,
-                fP_el_grid_A,
-                "Recursos ahorrados a la red por la exportación a la red (calculado)",
-            );
-
-            factors.push(factor_to_nepb_A);
-            factors.push(factor_to_grid_A);
-            factors.push(factor_to_nepb_B);
-            factors.push(factor_to_grid_B);
-        };
-
-        if !factors.is_empty() {
-            self.wdata.append(&mut factors);
+        if prod.is_empty() {
+            return Ok(None);
         }
-
-        Ok(())
+        if used.is_empty() {
+            return Err(EpbdError::WrongInput(
+                "No se han definido los consumos para la cogeneración".into(),
+            ));
+        };
+        let mut fP_exp_el_cgn_A = RenNrenCo2::default();
+        for (carrier, used_t) in used {
+            if only_nearby && !carrier.is_nearby() {
+                continue;
+            }
+            let fP_A_cr = self.find(carrier, Source::RED, Dest::SUMINISTRO, Step::A)?;
+            let used_prod_ratio_sum = used_t
+                .iter()
+                .zip(prod.iter())
+                .map(|(us, pr)| if *pr > 0.0 { us / pr } else { 0.0 })
+                .sum::<f32>();
+            fP_exp_el_cgn_A += fP_A_cr * used_prod_ratio_sum;
+        }
+        Ok(Some(fP_exp_el_cgn_A))
     }
 }
 
