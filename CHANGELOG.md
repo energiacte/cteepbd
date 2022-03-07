@@ -48,6 +48,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Permite introducir datos globales del edificio, según tipos
   - El tipo DEMANDA permite definir la demanda del edificio para CAL, REF, ACS
     - Incluye: EDIFICIO, tipo (DEMANDA), servicio, datos de demanda para cada paso de cálculo (kWh) y un comentario
+    - Se elimina la introducción de la demanda anual de ACS con el metadato `CTE_ACS_DEMANDA_ANUAL`
 - Nuevo elemento de descripción de sistemas / equipos (SISTEMA)
   - Permite indicar el subsistema al que pertenecen, así como sus rendimientos para los distintos servicios (SPF, COP/EER, SCOP/SEER, EFF)
   - Incluye un identificador (id) de equipo que permite vincularlos a los componentes energéticos
