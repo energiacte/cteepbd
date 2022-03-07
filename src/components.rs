@@ -46,10 +46,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::EpbdError,
-    types::{
-        BuildingNeeds, Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service,
-        ZoneNeeds,
-    },
+    types::{BuildingNeeds, Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service},
     vecops::{veclistsum, vecvecdif, vecvecsum},
 };
 
@@ -68,10 +65,6 @@ pub struct Components {
     pub cdata: Vec<Energy>,
     /// Building data (energy needs, ...)
     pub building: Vec<BuildingNeeds>,
-    /// Zone data (energy needs, ...)
-    pub zones: Vec<ZoneNeeds>,
-    // System data
-    // pub systems: Vec<SystemData>,
 }
 
 impl MetaVec for Components {
@@ -118,20 +111,11 @@ impl str::FromStr for Components {
             .collect::<Result<Vec<Meta>, _>>()?;
 
         let mut cdata = Vec::new();
-        let mut zones = Vec::new();
         let mut building = Vec::new();
         // let mut systems = None;
 
         // Tipos disponibles
-        let ctypes_tag_list = [
-            "CONSUMO",
-            "PRODUCCION",
-            "AUX",
-            "SALIDA",
-            "EDIFICIO",
-            "ZONA",
-            "SISTEMA",
-        ];
+        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "SALIDA", "EDIFICIO"];
 
         for line in datalines {
             let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
@@ -148,8 +132,6 @@ impl str::FromStr for Components {
                 "AUX" => cdata.push(Energy::Aux(line.parse()?)),
                 "SALIDA" => cdata.push(Energy::Out(line.parse()?)),
                 "EDIFICIO" => building.push(line.parse()?),
-                "ZONA" => zones.push(line.parse()?),
-                "SISTEMA" => unimplemented!(),
                 _ => {
                     return Err(EpbdError::ParseError(format!(
                         "ERROR: No se reconoce el componente de la línea: {} {}",
@@ -180,7 +162,6 @@ impl str::FromStr for Components {
             cmeta,
             cdata,
             building,
-            zones,
         }
         .normalize()
     }
@@ -498,8 +479,8 @@ mod tests {
     #[test]
     fn tcomponents_extended_parse() {
         "#META CTE_AREAREF: 1.0
-            0, ZONA, DEMANDA, REF, -3.0 # Demanda ref. edificio
-            0, ZONA, DEMANDA, CAL, 3.0 # Demanda cal. edificio
+            EDIFICIO, DEMANDA, REF, 3.0 # Demanda ref. edificio
+            EDIFICIO, DEMANDA, CAL, 3.0 # Demanda cal. edificio
             1, PRODUCCION, EL_INSITU, 2.00 # Producción PV
             2, CONSUMO, CAL, ELECTRICIDAD, 1.00 # BdC modo calefacción
             2, CONSUMO, CAL, EAMBIENTE, 2.00 # BdC modo calefacción

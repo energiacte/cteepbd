@@ -38,7 +38,6 @@ mod energy;
 mod factor;
 mod rennrenco2;
 mod tmeta;
-mod zones;
 
 pub use balance::*;
 pub use building::*;
@@ -47,4 +46,3 @@ pub use energy::*;
 pub use factor::*;
 pub use rennrenco2::*;
 pub use tmeta::*;
-pub use zones::*;
