@@ -82,7 +82,7 @@ pub fn energy_performance(
     // Add energy needs to balance
     for srv in [Service::CAL, Service::REF, Service::ACS] {
         let nd = components
-            .building
+            .needs
             .iter()
             .find(|c| c.service == srv)
             .map(HasValues::values_sum);

@@ -150,7 +150,7 @@ impl AsCteXml for Components {
         let Components {
             cmeta,
             cdata,
-            building,
+            needs: building,
         } = self;
         let cmetastring = cmeta
             .iter()

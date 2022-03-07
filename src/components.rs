@@ -64,7 +64,8 @@ pub struct Components {
     /// EUsed or produced energy data
     pub cdata: Vec<Energy>,
     /// Building data (energy needs, ...)
-    pub building: Vec<BuildingNeeds>,
+    /// TODO: convertir a HashMap<Service, Vec<f32>> o struct { CAL, REF, ACS }
+    pub needs: Vec<BuildingNeeds>,
 }
 
 impl MetaVec for Components {
@@ -161,7 +162,7 @@ impl str::FromStr for Components {
         Components {
             cmeta,
             cdata,
-            building,
+            needs: building,
         }
         .normalize()
     }
