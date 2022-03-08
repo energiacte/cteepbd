@@ -16,7 +16,6 @@
 - input / output:
   - JSON input
   - JSON output:
-    - Energy needs (with annual totals)
     - Fraction of energy use covered by renewable sources, by service and by system (id):
       - Calcular % de cobertura renovable (consumo EF) para los distintos servicios
     - Consumos de sistemas ficticios (id<=0?) y reales (id>0)
