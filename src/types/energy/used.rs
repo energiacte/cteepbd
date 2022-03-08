@@ -55,6 +55,8 @@ pub struct EUsed {
     /// Descriptive comment string
     /// This can also be used to label a component as auxiliary energy use
     /// by including in this field the "CTEEPBD_AUX" tag
+    #[serde(default)]
+    #[serde(skip_serializing_if="String::is_empty")]
     pub comment: String,
 }
 

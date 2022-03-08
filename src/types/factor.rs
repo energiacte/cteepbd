@@ -56,6 +56,8 @@ pub struct Factor {
     /// CO2 emissions for each end use unit of this carrier
     pub co2: f32,
     /// Descriptive comment string for the weighting factor
+    #[serde(default)]
+    #[serde(skip_serializing_if="String::is_empty")]
     pub comment: String,
 }
 

@@ -52,6 +52,8 @@ pub struct EAux {
     /// List of timestep energy use for the current carrier and service. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
+    #[serde(default)]
+    #[serde(skip_serializing_if="String::is_empty")]
     pub comment: String,
 }
 

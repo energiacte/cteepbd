@@ -50,6 +50,8 @@ pub struct EProd {
     /// List of produced energy values, one value for each time step. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
+    #[serde(default)]
+    #[serde(skip_serializing_if="String::is_empty")]
     pub comment: String,
 }
 

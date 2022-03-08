@@ -53,6 +53,8 @@ pub struct EOut {
     /// Negative values means absorbed energy (e.g. by a chiller) and positive values means delivered energy (e.g. heat from a boiler) by the system. kWh
     pub values: Vec<f32>,
     /// Descriptive comment string
+    #[serde(default)]
+    #[serde(skip_serializing_if="String::is_empty")]
     pub comment: String,
 }
 

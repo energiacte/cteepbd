@@ -114,10 +114,13 @@ impl AsCteXml for Factor {
             co2,
             comment,
         } = self;
+        let comentario = if comment.is_empty() {String::new()} else {
+            format!("<Comentario>{}</Comentario>", <Self as AsCteXml>::escape_xml(comment))
+        };
         format!(
-            "<Factor><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2><Comentario>{}</Comentario></Factor>",
-            carrier, source, dest, step, ren, nren, co2, 
-            <Self as AsCteXml>::escape_xml(comment)
+            "<Factor><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2>{}</Factor>",
+            carrier, source, dest, step, ren, nren, co2, comentario
+            
         )
     }
 }
@@ -206,12 +209,15 @@ impl AsCteXml for EProd {
             values,
             comment,
         } = self;
+        let comentario = if comment.is_empty() {String::new()} else {
+            format!("<Comentario>{}</Comentario>", <Self as AsCteXml>::escape_xml(comment))
+        };
         format!(
-            "<Produccion><Id>{}</Id><Origen>{}</Origen><Valores>{}</Valores><Comentario>{}</Comentario></Produccion>",
+            "<Produccion><Id>{}</Id><Origen>{}</Origen><Valores>{}</Valores>{}</Produccion>",
             id,
             source,
             <Self as AsCteXml>::format_values_2f(values),
-            <Self as AsCteXml>::escape_xml(comment)
+            comentario
         )
     }
 }
@@ -226,13 +232,16 @@ impl AsCteXml for EUsed {
             values,
             comment,
         } = self;
+        let comentario = if comment.is_empty() {String::new()} else {
+            format!("<Comentario>{}</Comentario>", <Self as AsCteXml>::escape_xml(comment))
+        };
         format!(
-        "<Consumo><Id>{}</Id><Vector>{}</Vector><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></Consumo>",
+        "<Consumo><Id>{}</Id><Vector>{}</Vector><Servicio>{}</Servicio><Valores>{}</Valores>{}</Consumo>",
         id,
         carrier,
         service,
         <Self as AsCteXml>::format_values_2f(values),
-        <Self as AsCteXml>::escape_xml(comment)
+        comentario
     )
     }
 }
@@ -246,12 +255,15 @@ impl AsCteXml for EAux {
             values,
             comment,
         } = self;
+        let comentario = if comment.is_empty() {String::new()} else {
+            format!("<Comentario>{}</Comentario>", <Self as AsCteXml>::escape_xml(comment))
+        };
         format!(
-        "<EAux><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></EAux>",
+        "<EAux><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores>{}</EAux>",
         id,
         service,
         <Self as AsCteXml>::format_values_2f(values),
-        <Self as AsCteXml>::escape_xml(comment)
+        comentario
     )
     }
 }
@@ -265,12 +277,15 @@ impl AsCteXml for EOut {
             values,
             comment,
         } = self;
+        let comentario = if comment.is_empty() {String::new()} else {
+            format!("<Comentario>{}</Comentario>", <Self as AsCteXml>::escape_xml(comment))
+        };
         format!(
-        "<Salida><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores><Comentario>{}</Comentario></Salida>",
+        "<Salida><Id>{}</Id><Servicio>{}</Servicio><Valores>{}</Valores>{}</Salida>",
         id,
         service,
         <Self as AsCteXml>::format_values_2f(values),
-        <Self as AsCteXml>::escape_xml(comment)
+        comentario
     )
     }
 }
