@@ -40,10 +40,9 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - El reparto de este consumo entre servicios se realiza de forma automática y proporcionalmente a la energía entregada o absorbida por cada servicio EPB
   - Nota: este componente sustituye la anotación de consumos en el comentario con CTEEPBD_EXCLUYE_AUX_ACS, que deja de estar soportada
   - Cuando se definan consumos auxiliares el sistema debe, bien atender un solo servicio, o bien definir la energía saliente para cada uno de ellos.
-- Nuevo elemento de datos de edificio (EDIFICIO)
-  - Permite introducir datos globales del edificio, según tipos
-  - El tipo DEMANDA permite definir la demanda del edificio para CAL, REF, ACS
-    - Incluye: EDIFICIO, tipo (DEMANDA), servicio, datos de demanda para cada paso de cálculo (kWh) y un comentario
+- Nuevo elemento de datos de demanda del edificio (DEMANDA)
+  - Permite definir la demanda del edificio para CAL, REF, ACS
+    - Incluye: DEMANDA, servicio, datos de demanda para cada paso de cálculo (kWh)
     - Se elimina la introducción de la demanda anual de ACS con el metadato `CTE_ACS_DEMANDA_ANUAL`
 - Nuevo vector energético TERMOSOLAR
   - Identifica la energía solar térmica procedente de captadores
@@ -78,7 +77,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Cambio de nombre de sufijos "\_bygen" a "\_by_src" y "\_byuse" a "\_by_srv" en la salida JSON
 - Ejecutable cteepbd:
   - Eliminada la opción `--acsnrb` para el cálculo exclusivo de ACS en perímetro nearby (ya se calcula incondicionalmente)
-  - Eliminada la opción `--demanda_anual_acs`, debiendo introducirse los datos mediante un componente `EDIFICIO,DEMANDA,ACS,...`
+  - Eliminada la opción `--demanda_anual_acs`, debiendo introducirse los datos mediante un componente `DEMANDA,ACS,...`
   - Añadida la opción `--load_matching` para realizar el cálculo de coincidencia de cargas (en lugar de usar f_match = 1)
 
 ### Incompatibilidades

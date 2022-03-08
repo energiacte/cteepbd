@@ -37,7 +37,7 @@ use crate::error::EpbdError;
 
 /// Componente de demanda de edificio.
 ///
-/// Se serializa como: `EDIFICIO, DEMANDA, servicio, vals... # comentario`
+/// Se serializa como: `DEMANDA, servicio, vals... # comentario`
 ///
 /// - servicio == CAL / REF / ACS
 ///
@@ -51,8 +51,6 @@ pub struct BuildingNeeds {
     /// List of timestep energy needs for zone i to provide service X, Q_X_nd_i_t. kWh
     /// Negative values means needs heating and positive values, needs cooling. kWh
     pub values: Vec<f32>,
-    /// Descriptive comment string
-    pub comment: String,
 }
 
 impl HasValues for BuildingNeeds {
@@ -69,16 +67,7 @@ impl fmt::Display for BuildingNeeds {
             .map(|v| format!("{:.2}", v))
             .collect::<Vec<_>>()
             .join(", ");
-        let comment = if !self.comment.is_empty() {
-            format!(" # {}", self.comment)
-        } else {
-            "".to_owned()
-        };
-        write!(
-            f,
-            "EDIFICIO, DEMANDA, {}, {}{}",
-            self.service, valuelist, comment
-        )
+        write!(f, "DEMANDA, {}, {}", self.service, valuelist)
     }
 }
 
@@ -88,42 +77,37 @@ impl str::FromStr for BuildingNeeds {
     fn from_str(s: &str) -> Result<BuildingNeeds, Self::Err> {
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
-        let comment = items.get(1).unwrap_or(&"").to_string();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
 
-        // Minimal possible length (EDIFICIO + DEMANDA + 1 value)
+        // Minimal possible length (DEMANDA + Service + 1 value)
         if items.len() < 3 {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        // Check EDIFICIO and DEMANDA marker fields;
-        if items[0] != "EDIFICIO" && items[1] != "DEMANDA" {
+        // Check DEMANDA marker fields;
+        if items[0] != "DEMANDA" {
             return Err(EpbdError::ParseError(format!(
                 "No se reconoce el formato como elemento de Demanda: {}",
                 s
             )));
         }
 
-        // Check service field
-        let service = items[2].parse()?;
+        // Check valid service field CAL, REF, ACS
+        let service = items[1].parse()?;
         if ![Service::CAL, Service::REF, Service::ACS].contains(&service) {
             return Err(EpbdError::ParseError(format!(
-                "Servicio de edificio no soportado: {}",
+                "Servicio no soportado en componente de DEMANDA del edificio: {}",
                 service
             )));
         }
 
         // Collect energy values from the service field on
-        let values = items[3..]
+        let values = items[2..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
 
-        Ok(BuildingNeeds {
-            service,
-            values,
-            comment,
-        })
+        Ok(BuildingNeeds { service, values })
     }
 }
 
@@ -141,10 +125,9 @@ mod tests {
             service: "REF".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, -6.0, -7.0, -8.0, -9.0, 10.0, 11.0, 12.0,
-            ],
-            comment: "Demanda de refrigeración del edificio".into(),
+            ]
         };
-        let component1str = "EDIFICIO, DEMANDA, REF, 1.00, 2.00, 3.00, 4.00, 5.00, -6.00, -7.00, -8.00, -9.00, 10.00, 11.00, 12.00 # Demanda de refrigeración del edificio";
+        let component1str = "DEMANDA, REF, 1.00, 2.00, 3.00, 4.00, 5.00, -6.00, -7.00, -8.00, -9.00, 10.00, 11.00, 12.00";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string

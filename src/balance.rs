@@ -214,7 +214,7 @@ fn balance_for_carrier(
     load_matching: bool,
 ) -> Result<BalanceCarrier> {
     let cr_list: Vec<Energy> = components
-        .cdata
+        .data
         .iter()
         .filter(|e| e.has_carrier(carrier))
         .cloned()

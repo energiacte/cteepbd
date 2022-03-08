@@ -359,9 +359,9 @@ fn main() {
     // Componentes energéticos ---------------------------------------------------------------------
     let mut components = get_components(matches.value_of("archivo_componentes"));
 
-    if verbosity > 1 && !components.cmeta.is_empty() {
+    if verbosity > 1 && !components.meta.is_empty() {
         println!("Metadatos de componentes:");
-        for meta in &components.cmeta {
+        for meta in &components.meta {
             println!("  {}: {}", meta.key, meta.value);
         }
     }
@@ -432,7 +432,7 @@ fn main() {
     println!("Factores de paso ({}): {}", orig_fp, param_fp);
 
     // Simplificación de los factores de paso -----------------------------------------------------
-    if !matches.is_present("nosimplificafps") && !components.cdata.is_empty() {
+    if !matches.is_present("nosimplificafps") && !components.data.is_empty() {
         let oldfplen = fpdata.wdata.len();
         fpdata = fpdata.strip(&components);
         if verbosity > 1 {
@@ -517,7 +517,7 @@ fn main() {
     }
 
     // Cálculo de la eficiencia energética ------------------------------------------------------------------------
-    let ep: Option<EnergyPerformance> = if !components.cdata.is_empty() {
+    let ep: Option<EnergyPerformance> = if !components.data.is_empty() {
         let ep = energy_performance(&components, &fpdata, kexp, arearef, load_matching)
             .map(cte::incorpora_demanda_renovable_acs_nrb)
             .unwrap_or_else(|e| {

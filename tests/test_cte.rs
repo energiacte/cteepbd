@@ -81,8 +81,8 @@ fn get_energydatalist() -> Components {
 
     //3 PV BdC_normativo
     Components {
-        cmeta: vec![],
-        cdata: vec![
+        meta: vec![],
+        data: vec![
             Energy::Prod(EProd {
                 id: 0,
                 values: vec![
@@ -735,7 +735,7 @@ fn cte_balance_by_srv() {
 /// Efecto Joule con 60% PV (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_joule_60pv() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,100
 PRODUCCION,EL_INSITU,60"
         .parse::<Components>()
@@ -749,7 +749,7 @@ PRODUCCION,EL_INSITU,60"
 /// Gas natural (fp_nren = 1.1, con rend=0.9) y 60% de cobertura solar (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_gn_60pst() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,GASNATURAL,44.44
 CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
@@ -764,7 +764,7 @@ CONSUMO,ACS,TERMOSOLAR,60"
 /// Con cogeneración para otro servicio, sin afectar al ACS
 #[test]
 fn cte_ACS_demanda_ren_gn_60pst_noACS_con_cogen() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,GASNATURAL,44.44
 CONSUMO,ACS,TERMOSOLAR,60
 CONSUMO,COGEN,BIOMASA,25 # Rendimiento de red 0.40 -> consumo para 10kWh -> 10 / .4 = 25kWh
@@ -782,7 +782,7 @@ CONSUMO,REF,ELECTRICIDAD,20
 /// Biomasa rend 75% y PST (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_10PST_100() {
-    let comps = "EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,75 # Demanda anual ACS (kWh)
 CONSUMO,ACS,BIOMASA,100
 CONSUMO,ACS,TERMOSOLAR,10"
         .parse::<Components>()
@@ -796,7 +796,7 @@ CONSUMO,ACS,TERMOSOLAR,10"
 /// Biomasa rend 75% (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_100() {
-    let comps = "EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,75 # Demanda anual ACS (kWh)
 CONSUMO,ACS,BIOMASA,100"
         .parse::<Components>()
         .unwrap();
@@ -809,7 +809,7 @@ CONSUMO,ACS,BIOMASA,100"
 /// Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
-    let comps = "EDIFICIO,DEMANDA,ACS,75 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,75 # Demanda anual ACS (kWh)
     1,CONSUMO,ACS,BIOMASA,50
     1,SALIDA,ACS,37.5 # Energía entregada ACS = 50*0.75 = 37.5kWh
     2,CONSUMO,ACS,BIOMASADENSIFICADA,50
@@ -825,7 +825,7 @@ fn cte_ACS_demanda_ren_biomasa_y_biomasa_densificada_100() {
 /// Gas rend 90% (40% demanda -> 50kWh) + Biomasa rend 75% + Biomasa densificada rend 75% cada una participando al 50% (75kWh demanda ACS las dos)
 #[test]
 fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
-    let comps = "EDIFICIO,DEMANDA,ACS,125 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,125 # Demanda anual ACS (kWh)
     1,CONSUMO,ACS,GASNATURAL,55.556
     2,CONSUMO,ACS,BIOMASA,50
     2,SALIDA,ACS,37.5 # Energía entregada ACS = 50*0.75 = 37.5kWh
@@ -843,7 +843,7 @@ fn cte_ACS_demanda_ren_gas_biomasa_y_biomasa_densificada_125() {
 /// Red de distrito, red1 50% renovable y red2 10% renovable (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_red1_red2() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,RED1,50
 CONSUMO,ACS,RED2,50"
         .parse::<Components>()
@@ -863,7 +863,7 @@ CONSUMO,ACS,RED2,50"
 /// Bomba de calor (SCOP=2.5) (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,TERMOSOLAR,60"
         .parse::<Components>()
@@ -877,7 +877,7 @@ CONSUMO,ACS,TERMOSOLAR,60"
 /// Bomba de calor (SCOP=2.5) + 10kWh PV (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10"
@@ -893,7 +893,7 @@ PRODUCCION,EL_INSITU,10"
 /// Debería dar igual el tipo de uso definido para NEPB
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_nEPB() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10
@@ -910,7 +910,7 @@ CONSUMO,NEPB,ELECTRICIDAD,40.0"
 /// La cogeneración no contribuye a la fracción renovable nearby
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_10cgn_gas() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10
@@ -927,7 +927,7 @@ CONSUMO,COGEN,GASNATURAL,25# Consumos para cogeneración. Eficiencia de red 40% 
 /// Bomba de calor (SCOP=2.5) + 10kWh PV + 10kWh cogen con vector nearby (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_60ma_10pv_10cgn_biomasa() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,40.0
 CONSUMO,ACS,EAMBIENTE,60
 PRODUCCION,EL_INSITU,10
@@ -944,7 +944,7 @@ CONSUMO,COGEN,BIOMASA,25# Consumos para cogeneración. Eficiencia de red 40% -> 
 /// Bomba de calor (SCOP=2.5) y 25% caldera de GN (rend. 0.9) (100kWh demanda ACS)
 #[test]
 fn cte_ACS_demanda_ren_bdc_45ma_25gn() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,30.0
 CONSUMO,ACS,EAMBIENTE,45
 CONSUMO,ACS,GASNATURAL,27.88"
@@ -960,7 +960,7 @@ CONSUMO,ACS,GASNATURAL,27.88"
 /// En este caso se excluye la producción de medioambiente puesto que no es renovable
 #[test]
 fn cte_ACS_demanda_ren_bdc_38ma__25gn_excluye_medioambiente() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 CONSUMO,ACS,ELECTRICIDAD,37.5
 CONSUMO,ACS,EAMBIENTE,37.5# CTEEPBD_EXCLUYE_SCOP_ACS
 CONSUMO,ACS,GASNATURAL,27.88"
@@ -976,7 +976,7 @@ CONSUMO,ACS,GASNATURAL,27.88"
 /// Falla al haber BIOMASA y otro suministro de red que no es insitu
 #[test]
 fn cte_ACS_demanda_ren_fail_bdc_45ma_25gn_y_biomasa() {
-    let comps = "EDIFICIO,DEMANDA,ACS,100 # Demanda anual ACS (kWh)
+    let comps = "DEMANDA,ACS,100 # Demanda anual ACS (kWh)
 1,CONSUMO,ACS,ELECTRICIDAD,30.0
 1,CONSUMO,ACS,EAMBIENTE,45
 2,CONSUMO,ACS,BIOMASA,13.94

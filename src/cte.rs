@@ -275,7 +275,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
     let mut dhw_used_by_cr_no_aux_or_low_scop = dhw_used_by_cr.clone();
     let dhw_aux_use_an = ep
         .components
-        .cdata
+        .data
         .iter()
         .filter(|c| c.is_aux() && c.has_service(Service::ACS))
         .map(HasValues::values_sum)
@@ -292,7 +292,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
     };
     let dhw_used_low_scop_an: f32 = ep
         .components
-        .cdata
+        .data
         .iter()
         .filter(|c| {
             c.is_used()
@@ -373,7 +373,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
             // Id de sistemas con uso de BIOMASA para ACS
             let idx_with_acs_use = Vec::from_iter(
                 ep.components
-                    .cdata
+                    .data
                     .iter()
                     .filter(|c| {
                         c.is_used() && c.has_service(Service::ACS) && c.has_carrier(BIOMASA)
@@ -385,7 +385,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
             for idx in &idx_with_acs_use {
                 if !ep
                     .components
-                    .cdata
+                    .data
                     .iter()
                     .any(|c| c.has_id(*idx) && c.is_out() && c.has_service(Service::ACS))
                 {
@@ -397,7 +397,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
             // Suma de demandas de ACS salientes de equipos con consumo de BIOMASA
             let alt_tot_dhw_use: f32 = ep
                 .components
-                .cdata
+                .data
                 .iter()
                 .filter(|c| {
                     idx_with_acs_use.contains(&c.id()) && c.is_out() && c.has_service(Service::ACS)
@@ -414,7 +414,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
             // Id de sistemas con uso de BIOMASADENSIFICADA para ACS
             let idx_with_acs_use = Vec::from_iter(
                 ep.components
-                    .cdata
+                    .data
                     .iter()
                     .filter(|c| {
                         c.is_used()
@@ -428,7 +428,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
             for idx in &idx_with_acs_use {
                 if !ep
                     .components
-                    .cdata
+                    .data
                     .iter()
                     .any(|c| c.has_id(*idx) && c.is_out() && c.has_service(Service::ACS))
                 {
@@ -440,7 +440,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
             // Suma de demandas de ACS salientes de equipos con consumo de BIOMASADENSIFICADA
             let alt_tot_dhw_use: f32 = ep
                 .components
-                .cdata
+                .data
                 .iter()
                 .filter(|c| {
                     idx_with_acs_use.contains(&c.id()) && c.is_out() && c.has_service(Service::ACS)
@@ -502,7 +502,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
     // 3. La cogeneración se produce con algún vector del perímetro próximo
     let cogen_sources: Vec<_> = ep
         .components
-        .cdata
+        .data
         .iter()
         .filter(|c| c.is_cogen_use())
         .collect();

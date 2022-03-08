@@ -60,9 +60,9 @@ use crate::{
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Components {
     /// Metadata
-    pub cmeta: Vec<Meta>,
+    pub meta: Vec<Meta>,
     /// EUsed or produced energy data
-    pub cdata: Vec<Energy>,
+    pub data: Vec<Energy>,
     /// Building data (energy needs, ...)
     /// TODO: convertir a HashMap<Service, Vec<f32>> o struct { CAL, REF, ACS }
     pub needs: Vec<BuildingNeeds>,
@@ -70,23 +70,23 @@ pub struct Components {
 
 impl MetaVec for Components {
     fn get_metavec(&self) -> &Vec<Meta> {
-        &self.cmeta
+        &self.meta
     }
     fn get_mut_metavec(&mut self) -> &mut Vec<Meta> {
-        &mut self.cmeta
+        &mut self.meta
     }
 }
 
 impl fmt::Display for Components {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let metalines = self
-            .cmeta
+            .meta
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()
             .join("\n");
         let datalines = self
-            .cdata
+            .data
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()
@@ -112,11 +112,11 @@ impl str::FromStr for Components {
             .collect::<Result<Vec<Meta>, _>>()?;
 
         let mut cdata = Vec::new();
-        let mut building = Vec::new();
+        let mut needs = Vec::new();
         // let mut systems = None;
 
         // Tipos disponibles
-        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "SALIDA", "EDIFICIO"];
+        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "SALIDA", "DEMANDA"];
 
         for line in datalines {
             let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
@@ -132,7 +132,7 @@ impl str::FromStr for Components {
                 "PRODUCCION" => cdata.push(Energy::Prod(line.parse()?)),
                 "AUX" => cdata.push(Energy::Aux(line.parse()?)),
                 "SALIDA" => cdata.push(Energy::Out(line.parse()?)),
-                "EDIFICIO" => building.push(line.parse()?),
+                "DEMANDA" => needs.push(line.parse()?),
                 _ => {
                     return Err(EpbdError::ParseError(format!(
                         "ERROR: No se reconoce el componente de la línea: {} {}",
@@ -160,9 +160,9 @@ impl str::FromStr for Components {
         }
 
         Components {
-            cmeta,
-            cdata,
-            needs: building,
+            meta: cmeta,
+            data: cdata,
+            needs,
         }
         .normalize()
     }
@@ -171,12 +171,12 @@ impl str::FromStr for Components {
 impl Components {
     /// Number of steps of the first component
     pub fn num_steps(&self) -> usize {
-        self.cdata.get(0).map(|v| v.num_steps()).unwrap_or(0)
+        self.data.get(0).map(|v| v.num_steps()).unwrap_or(0)
     }
 
     /// Conjunto de vectores energéticos disponibles en componentes de energía consumida o producida
     pub fn available_carriers(&self) -> HashSet<Carrier> {
-        self.cdata
+        self.data
             .iter()
             .filter(|c| c.is_used() || c.is_generated())
             .map(|e| e.carrier())
@@ -225,7 +225,7 @@ impl Components {
 
         // Localiza componentes pertenecientes al vector
         let envcomps: Vec<_> = self
-            .cdata
+            .data
             .iter()
             .cloned()
             .filter(|c| c.has_carrier(carrier))
@@ -270,7 +270,7 @@ impl Components {
             };
 
             // Si hay desequilibrio agregamos un componente de producción
-            self.cdata.push(Energy::Prod(EProd {
+            self.data.push(Energy::Prod(EProd {
                 id,
                 source,
                 values: unbalanced_use,
@@ -293,14 +293,14 @@ impl Components {
     fn assign_aux_nepb_to_epb_services(&mut self) -> Result<(), EpbdError> {
         // ids with aux energy use
         let ids: HashSet<_> = self
-            .cdata
+            .data
             .iter()
             .filter(|c| c.is_aux())
             .map(Energy::id)
             .collect();
         for id in ids {
             let services_for_uses_with_id = self
-                .cdata
+                .data
                 .iter()
                 .filter_map(|c| match c {
                     Energy::Used(e) if e.id == id => Some(e.service),
@@ -312,7 +312,7 @@ impl Components {
             // sin necesidad de consultar la energía entregada o absorbida
             if services_for_uses_with_id.len() == 1 {
                 let service = *services_for_uses_with_id.iter().next().unwrap();
-                for c in &mut self.cdata {
+                for c in &mut self.data {
                     if let Energy::Aux(e) = c {
                         if e.id == id {
                             e.service = service
@@ -326,7 +326,7 @@ impl Components {
             // a la energía saliente de cada servicio en relación al total de servicios EPB
             let aux_tot = veclistsum(
                 &self
-                    .cdata
+                    .data
                     .iter()
                     .filter_map(|c| match c {
                         Energy::Aux(e) if e.id == id => Some(e.values()),
@@ -336,7 +336,7 @@ impl Components {
             );
 
             let mut q_out_by_srv: HashMap<Service, Vec<f32>> = HashMap::new();
-            for component in &self.cdata {
+            for component in &self.data {
                 if let Energy::Out(e) = component {
                     if e.id == id {
                         q_out_by_srv
@@ -370,7 +370,7 @@ impl Components {
             }
 
             // Elimina componentes de auxiliares existentes
-            self.cdata.retain(|c| !c.is_aux());
+            self.data.retain(|c| !c.is_aux());
 
             // Incorpora nuevos auxiliares con reparto calculado por servicios
             for service in &out_services {
@@ -379,7 +379,7 @@ impl Components {
                     .zip(aux_tot.iter())
                     .map(|(q_out_frac, aux_tot_i)| q_out_frac * aux_tot_i)
                     .collect();
-                self.cdata.push(Energy::Aux(crate::types::EAux {
+                self.data.push(Energy::Aux(crate::types::EAux {
                     id,
                     service: *service,
                     values,
@@ -392,7 +392,7 @@ impl Components {
 
     /// Ordena componentes según el id del sistema
     fn sort_by_id(&mut self) {
-        self.cdata.sort_by_key(|e| e.id());
+        self.data.sort_by_key(|e| e.id());
     }
 }
 
@@ -450,7 +450,7 @@ mod tests {
             .parse::<Components>()
             .unwrap();
         let ma_prod = comps
-            .cdata
+            .data
             .iter()
             .filter(|c| c.is_generated() && c.has_carrier(Carrier::EAMBIENTE));
 
@@ -480,8 +480,8 @@ mod tests {
     #[test]
     fn tcomponents_extended_parse() {
         "#META CTE_AREAREF: 1.0
-            EDIFICIO, DEMANDA, REF, 3.0 # Demanda ref. edificio
-            EDIFICIO, DEMANDA, CAL, 3.0 # Demanda cal. edificio
+            DEMANDA, REF, 3.0 # Demanda ref. edificio
+            DEMANDA, CAL, 3.0 # Demanda cal. edificio
             1, PRODUCCION, EL_INSITU, 2.00 # Producción PV
             2, CONSUMO, CAL, ELECTRICIDAD, 1.00 # BdC modo calefacción
             2, CONSUMO, CAL, EAMBIENTE, 2.00 # BdC modo calefacción
