@@ -45,8 +45,8 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::EpbdError,
-    types::{BuildingNeeds, Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service},
+    error::{EpbdError, Result},
+    types::{Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service, BuildingNeeds},
     vecops::{veclistsum, vecvecdif, vecvecsum},
 };
 
@@ -63,9 +63,8 @@ pub struct Components {
     pub meta: Vec<Meta>,
     /// EUsed or produced energy data
     pub data: Vec<Energy>,
-    /// Building data (energy needs, ...)
-    /// TODO: convertir a HashMap<Service, Vec<f32>> o struct { CAL, REF, ACS }
-    pub needs: Vec<BuildingNeeds>,
+    /// Building energy needs
+    pub needs: BuildingNeeds,
 }
 
 impl MetaVec for Components {
@@ -98,7 +97,7 @@ impl fmt::Display for Components {
 impl str::FromStr for Components {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<Components, Self::Err> {
+    fn from_str(s: &str) -> std::result::Result<Components, Self::Err> {
         let s_nobom = s.strip_prefix('\u{feff}').or(Some(s)).unwrap();
         let lines: Vec<&str> = s_nobom.lines().map(str::trim).collect();
         let metalines = lines
@@ -109,10 +108,10 @@ impl str::FromStr for Components {
             .filter(|l| !(l.starts_with('#') || l.starts_with("vector,") || l.is_empty()));
         let cmeta = metalines
             .map(|e| e.parse())
-            .collect::<Result<Vec<Meta>, _>>()?;
+            .collect::<Result<Vec<Meta>>>()?;
 
         let mut cdata = Vec::new();
-        let mut needs = Vec::new();
+        let mut needs = BuildingNeeds::default();
         // let mut systems = None;
 
         // Tipos disponibles
@@ -132,7 +131,7 @@ impl str::FromStr for Components {
                 "PRODUCCION" => cdata.push(Energy::Prod(line.parse()?)),
                 "AUX" => cdata.push(Energy::Aux(line.parse()?)),
                 "SALIDA" => cdata.push(Energy::Out(line.parse()?)),
-                "DEMANDA" => needs.push(line.parse()?),
+                "DEMANDA" => needs.add(line.parse()?)?,
                 _ => {
                     return Err(EpbdError::ParseError(format!(
                         "ERROR: No se reconoce el componente de la línea: {} {}",
@@ -190,7 +189,7 @@ impl Components {
     /// - Reparte los consumos auxliares proporcionalmente a los servicios
     ///
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
-    pub fn normalize(mut self) -> Result<Self, EpbdError> {
+    pub fn normalize(mut self) -> Result<Self> {
         // Compensa consumos no respaldados por producción
         self.complete_produced_for_onsite_generated_use(Carrier::EAMBIENTE);
         self.complete_produced_for_onsite_generated_use(Carrier::TERMOSOLAR);
@@ -290,7 +289,7 @@ impl Components {
     ///    disponible y se asigna a cada servicio un consumo proporcional
     ///    a la energía saliente de cada servicio en relación a la total saliente
     ///    para todos los servicios EPB.
-    fn assign_aux_nepb_to_epb_services(&mut self) -> Result<(), EpbdError> {
+    fn assign_aux_nepb_to_epb_services(&mut self) -> Result<()> {
         // ids with aux energy use
         let ids: HashSet<_> = self
             .data

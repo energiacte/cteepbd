@@ -79,17 +79,10 @@ pub fn energy_performance(
 
     let mut balance = Balance::default();
 
-    // Add energy needs to balance
-    for srv in [Service::CAL, Service::REF, Service::ACS] {
-        let nd = components
-            .needs
-            .iter()
-            .find(|c| c.service == srv)
-            .map(HasValues::values_sum);
-        if let Some(srv_nd) = nd {
-            balance.needs.insert(srv, srv_nd);
-        }
-    }
+    // Add energy needs to
+    balance.needs.ACS = components.needs.ACS.as_ref().map(|nd| nd.iter().sum());
+    balance.needs.CAL = components.needs.CAL.as_ref().map(|nd| nd.iter().sum());
+    balance.needs.REF = components.needs.REF.as_ref().map(|nd| nd.iter().sum());
 
     // Compute balance for each carrier and accumulate partial balance values for total balance
     let mut balance_cr: HashMap<Carrier, BalanceCarrier> = HashMap::new();

@@ -152,28 +152,36 @@ impl AsCteXml for Components {
             data,
             needs,
         } = self;
-        let cmetastring = meta
+        let metastring = meta
             .iter()
             .map(AsCteXml::to_xml)
             .collect::<Vec<String>>()
             .join("\n");
-        let cdatastring = data
+        let datastring = data
             .iter()
             .map(AsCteXml::to_xml)
             .collect::<Vec<String>>()
             .join("\n");
-        let buildingdatastring = needs
-            .iter()
-            .map(AsCteXml::to_xml)
-            .collect::<Vec<String>>()
-            .join("\n");
+        let needsdatastring = {
+            let mut res = vec![];
+            if let Some(nd) = &needs.ACS {
+                res.push(format!("<Demanda><Servicio>ACS</Servicio><Valores>{}</Valores>", <Self as AsCteXml>::format_values_2f(nd)))
+            };
+            if let Some(nd) = &needs.CAL {
+                res.push(format!("<Demanda><Servicio>CAL</Servicio><Valores>{}</Valores>", <Self as AsCteXml>::format_values_2f(nd)))
+            };
+            if let Some(nd) = &needs.REF {
+                res.push(format!("<Demanda><Servicio>REF</Servicio><Valores>{}</Valores>", <Self as AsCteXml>::format_values_2f(nd)))
+            };
+            res.join("\n")
+        };
         format!(
             "<Componentes>
         {}
         {}
         {}
     </Componentes>",
-            cmetastring, cdatastring, buildingdatastring
+            metastring, datastring, needsdatastring
         )
     }
 }
@@ -267,7 +275,7 @@ impl AsCteXml for EOut {
     }
 }
 
-impl AsCteXml for BuildingNeeds {
+impl AsCteXml for Needs {
     /// Convierte elementos de demanda del edificio a XML
     fn to_xml(&self) -> String {
         let Self { service, values        } = self;

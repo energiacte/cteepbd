@@ -30,36 +30,78 @@ use serde::{Deserialize, Serialize};
 
 use super::{HasValues, Service};
 use crate::error::EpbdError;
+use crate::vecops::vecvecsum;
 
 // -------------------- Building Energy Needs Component
-// Define basic Building Energy Needs Component type
-// This component is used to express energy needs of the whole building provide service X (X=CAL/REF/ACS) (Q_X_nd)
+// Define basic Building Energy Needs Component type and a container of all Building needs
+// The component is used to express energy needs of the whole building provide service X (X=CAL/REF/ACS) (Q_X_nd_t)
+// The component stores building needs for heating (CAL), cooling (REF) and domestic heat water (ACS)
+
+
+/// Demandas del edificio
+#[allow(non_snake_case)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct BuildingNeeds {
+    /// Timestep building energy needs to provide the domestic heat water service, Q_DHW_nd_t. kWh
+    #[serde(default)]
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub ACS: Option<Vec<f32>>,
+    /// Timestep building energy needs to provide the heating service, Q_H_nd_t. kWh
+    #[serde(default)]
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub CAL: Option<Vec<f32>>,
+    /// Timestep building energy needs to provide the cooling service, Q_C_nd_t. kWh
+    #[serde(default)]
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub REF: Option<Vec<f32>>,
+}
+
+impl BuildingNeeds {
+    /// Añade elemento de demanda del edificio, sumando los valores si ya se han definido para ese servicio
+    pub fn add(&mut self, need: Needs) -> Result<(), EpbdError> {
+        let update = |cur_values: &Option<Vec<f32>>, new_values| {
+            if let Some(nd) = cur_values {
+                Some(vecvecsum(nd, new_values))
+            } else {
+                Some(new_values.to_owned())
+            }
+        };
+        match need.service {
+            Service::ACS => self.ACS = update(&self.ACS, &need.values),
+            Service::CAL => self.CAL = update(&self.CAL, &need.values),
+            Service::REF => self.REF = update(&self.REF, &need.values),
+            _ => {
+                return Err(EpbdError::WrongInput(format!(
+                    "Demanda de edificio con servicio no contemplado por el programa: {}",
+                    need.service
+                )))
+            }
+        };
+        Ok(())
+    }
+}
+
 
 /// Componente de demanda de edificio.
 ///
 /// Se serializa como: `DEMANDA, servicio, vals... # comentario`
 ///
 /// - servicio == CAL / REF / ACS
-///
-/// Otros datos que podrían asignarse al edificio:
-///
-/// - Horas fuera de consigna (CAL, REF, CAL+REF)
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BuildingNeeds {
+pub struct Needs {
     /// End use (CAL, REF, ACS)
     pub service: Service,
-    /// List of timestep energy needs for zone i to provide service X, Q_X_nd_i_t. kWh
-    /// Negative values means needs heating and positive values, needs cooling. kWh
+    /// List of timestep energy needs for the building to provide service X, Q_X_nd_t. kWh
     pub values: Vec<f32>,
 }
 
-impl HasValues for BuildingNeeds {
+impl HasValues for Needs {
     fn values(&self) -> &[f32] {
         &self.values
     }
 }
 
-impl fmt::Display for BuildingNeeds {
+impl fmt::Display for Needs {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let valuelist = self
             .values
@@ -71,10 +113,10 @@ impl fmt::Display for BuildingNeeds {
     }
 }
 
-impl str::FromStr for BuildingNeeds {
+impl str::FromStr for Needs {
     type Err = EpbdError;
 
-    fn from_str(s: &str) -> Result<BuildingNeeds, Self::Err> {
+    fn from_str(s: &str) -> Result<Needs, Self::Err> {
         // Split comment from the rest of fields
         let items: Vec<&str> = s.trim().splitn(2, '#').map(str::trim).collect();
         let items: Vec<&str> = items[0].split(',').map(str::trim).collect();
@@ -107,9 +149,11 @@ impl str::FromStr for BuildingNeeds {
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()?;
 
-        Ok(BuildingNeeds { service, values })
+        Ok(Needs { service, values })
     }
 }
+
+
 
 // ========================== Tests
 
@@ -121,7 +165,7 @@ mod tests {
     #[test]
     fn component_building_needs() {
         // zone energy needs component
-        let component1 = BuildingNeeds {
+        let component1 = Needs {
             service: "REF".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, -6.0, -7.0, -8.0, -9.0, 10.0, 11.0, 12.0,
@@ -132,7 +176,7 @@ mod tests {
 
         // roundtrip building from/to string
         assert_eq!(
-            component1str.parse::<BuildingNeeds>().unwrap().to_string(),
+            component1str.parse::<Needs>().unwrap().to_string(),
             component1str
         );
     }

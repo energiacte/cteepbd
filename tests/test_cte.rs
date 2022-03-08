@@ -118,7 +118,7 @@ fn get_energydatalist() -> Components {
                 comment: "".into(),
             }),
         ],
-        needs: vec![],
+        needs: Default::default(),
     }
 }
 

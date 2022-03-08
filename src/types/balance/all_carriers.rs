@@ -43,7 +43,7 @@ use super::BalanceCarrier;
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Balance {
     /// Energy needs (CAL, REF, ACS)
-    pub needs: HashMap<Service, f32>,
+    pub needs: BalNeeds,
     /// Energy use
     pub used: BalUsed,
     /// Produced energy
@@ -61,9 +61,6 @@ impl Balance {
     #[allow(non_snake_case)]
     pub fn normalize_by_area(&self, area: f32) -> Balance {
         let k_area = if area == 0.0 { 0.0 } else { 1.0 / area };
-
-        let mut needs = self.needs.clone();
-        needs.values_mut().for_each(|v| *v *= k_area);
 
         let mut used_epus_by_srv = self.used.epus_by_srv.clone();
         used_epus_by_srv.values_mut().for_each(|v| *v *= k_area);
@@ -100,7 +97,11 @@ impl Balance {
         B_by_srv.values_mut().for_each(|v| *v *= k_area);
 
         Balance {
-            needs,
+            needs: BalNeeds {
+                ACS: self.needs.ACS.map(|v| v * k_area),
+                CAL: self.needs.CAL.map(|v| v * k_area),
+                REF: self.needs.REF.map(|v| v * k_area),
+            },
             used: BalUsed {
                 epus: k_area * self.used.epus,
                 nepus: k_area * self.used.nepus,
@@ -216,6 +217,24 @@ impl std::ops::AddAssign<&BalanceCarrier> for Balance {
             *self.used.epus_by_cr.entry(rhs.carrier).or_default() += &rhs.used.epus_an;
         }
     }
+}
+
+/// Demandas del edificio
+#[allow(non_snake_case)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct BalNeeds {
+    /// Building energy needs to provide the domestic heat water service, Q_DHW_nd. kWh
+    #[serde(default)]
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub ACS: Option<f32>,
+    /// Building energy needs to provide the heating service, Q_H_nd. kWh
+    #[serde(default)]
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub CAL: Option<f32>,
+    /// Building energy needs to provide the cooling service, Q_C_nd. kWh
+    #[serde(default)]
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub REF: Option<f32>,
 }
 
 /// Datos de energía consumida para el balance global

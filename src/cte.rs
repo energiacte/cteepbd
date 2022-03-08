@@ -252,7 +252,7 @@ pub fn fraccion_renovable_acs_nrb(ep: &EnergyPerformance) -> Result<f32, EpbdErr
     let bal = &ep.balance;
 
     // Demanda anual de ACS
-    let demanda_anual_acs = match bal.needs.get(&Service::ACS).cloned() {
+    let demanda_anual_acs = match bal.needs.ACS {
         // Sin demanda anual de ACS definida
         None => {
             return Err(EpbdError::WrongInput(
