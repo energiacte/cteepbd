@@ -7,6 +7,7 @@
 
 - docs:
 
+  - update docs
   - Describe default method to find used energy from electrical efficiency of cogeneration and reference electrical efficiency.
 
 - tests:
