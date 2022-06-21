@@ -579,3 +579,8 @@ fn main() {
         }
     };
 }
+
+/// Función ficticia para arreglar linkado en win32
+/// Nunca se llama porque tenemos configurado panic=abort
+#[no_mangle]
+pub extern "C" fn _Unwind_Resume() {}
