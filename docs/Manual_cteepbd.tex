@@ -387,6 +387,7 @@ Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los a
 El programa admite distintos componentes energéticos:
 
 \begin{itemize}
+    \item Demanda (\texttt{DEMANDA}): define una cantidad de energía útil demandada para el conjunto del edificio y para sus servicios básicos;
     \item Producción (\texttt{PRODUCCION}): define una cantidad de energía final generada de un vector energético concreto, en función de su origen (in situ o de cogeneración);
     \item Consumo (\texttt{CONSUMO}): define la energía usada por los sistemas del edificio para abastecer diversos servicios (EPB y no EPB) o la cogeneración de energía eléctrica empleando un vector energético concreto;
     \item Consumo auxiliar (\texttt{AUX}): define un consumo eléctrico para usos auxiliares y ligado a un servicio del edificio;
@@ -394,6 +395,12 @@ El programa admite distintos componentes energéticos:
 \end{itemize}
 
 Cada uno de estos componentes energéticos se lee a partir de una estructura de columnas (valores separados por comas):
+
+\textit{Componente de demanda:}
+
+\begin{lstlisting}
+DEMANDA, servicio_basico, valor...
+\end{lstlisting}
 
 \textit{Componente de producción:}
 
@@ -450,8 +457,20 @@ Los distintos campos tienen el siguiente significado:
           \end{itemize}
           \begin{myquote}\small
               \textbf{Nota:} Para el caso de la producción del vector energético \texttt{ELECTRICIDAD}, esta se distribuye entre los distintos servicios de forma proporcional al porcentaje que representa cada uno respecto al consumo total de \texttt{ELECTRICIDAD}.
-              
+
               \textbf{Nota:} El consumo de los usos de iluminación, cuando no se compute el servicio como EPB debe asignarse al servicio NEPB.
+          \end{myquote}
+
+    \item [\texttt{servicio\_basico}] \hfill \\
+          Servicio para el que se evalúa la demanda.\\
+          Puede tomar los siguientes valores:
+          \begin{itemize}
+              \item \texttt{ACS} - Agua caliente sanitaria
+              \item \texttt{CAL} - Calefacción
+              \item \texttt{REF} - Refrigeración
+          \end{itemize}
+          \begin{myquote}\small
+              \textbf{Nota:} Únicamente se permite un componente de demanda para cada servicio, correspondiente a la demanda global del edificio para dicho servicio.
           \end{myquote}
 
     \item [\texttt{vector}] \hfill \\
@@ -492,10 +511,12 @@ Los distintos campos tienen el siguiente significado:
 Las siguientes líneas muestran ejemplos de los distintos componentes energéticos:
 
 \begin{lstlisting}
-1, PRODUCCION, EL_INSITU, 34.21, 41.94, 64.94, 73.88, 88.44, 88.64, 91.04, 76.15, 52.84, 39.26, 27.43, 26.26 # PV 5m2 (5kWp)
-2, CONSUMO, CAL, ELECTRICIDAD, 98.74, 89.18, 98.74, 95.55, 98.74, 95.55, 98.74, 98.74, 95.55, 98.74, 95.55, 98.74 # Caldera eléctrica 2
-2, AUX, CAL, 9.74, 8.18, 9.74, 9.55, 9.74, 9.55, 9.74, 9.74, 9.55, 9.74, 9.55, 9.74 # Consumos auxiliares calefacción
-2, SALIDA, CAL, 98.74, 89.18, 98.74, 95.55, 98.74, 95.55, 98.74, 98.74, 95.55, 98.74, 95.55, 98.74 # Energía entregada por la caldera
+DEMANDA, ACS, 237.8, 214.8, 237.8, 230.1, 237.8, 230.1, 237.8, 237.8, 230.1, 237.8, 230.1, 237.8 # Demanda mensual de ACS (Anual 2799.8 kWh)
+1, PRODUCCION, TERMOSOLAR, 41.05, 50.33, 77.92, 88.66, 106.13, 106.36, 109.25, 91.38, 63.40, 47.11, 32.92, 31.51 # Paneles solares térmicos 2m2, n=0.30
+2, PRODUCCION, EL_INSITU, 34.21, 41.94, 64.94, 73.88, 88.44, 88.64, 91.04, 76.15, 52.84, 39.26, 27.43, 26.26 # Fotovoltaica 5m2 (5kWp)
+3, CONSUMO, CAL, ELECTRICIDAD, 98.74, 89.18, 98.74, 95.55, 98.74, 95.55, 98.74, 98.74, 95.55, 98.74, 95.55, 98.74 # Caldera eléctrica 2
+3, AUX, CAL, 9.74, 8.18, 9.74, 9.55, 9.74, 9.55, 9.74, 9.74, 9.55, 9.74, 9.55, 9.74 # Consumos auxiliares calefacción
+3, SALIDA, CAL, 98.74, 89.18, 98.74, 95.55, 98.74, 95.55, 98.74, 98.74, 95.55, 98.74, 95.55, 98.74 # Energía entregada por la caldera
 \end{lstlisting}
 
 \begin{myquote}\small
