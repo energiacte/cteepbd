@@ -58,7 +58,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
   - Para consumos destinados a la producción eléctrica por cogeneración
   - Estos consumos no pertenece ni a usos EPB ni a usos no EPB
   - Permite el cálculo de los factores de paso de la electricidad cogenerada
-  - Se eliminan los factores de paso de usuario para la cogeneración
+  - Se eliminan los factores de paso de usuario para la cogeneración (`CTE_COGEN`)
   - Es necesario indicar el consumo de vectores para la cogeneración eléctrica con componentes CONSUMO,COGEN,valores...
 - Nueva salida XML
 - Salida JSON:
