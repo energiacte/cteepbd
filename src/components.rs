@@ -186,7 +186,7 @@ impl Components {
     ///
     /// - Asegura que la energía EAMBIENTE consumida tiene su producción correspondiente
     /// - Asegura que la energía TERMOSOLAR consumida tiene su producción correspondiente
-    /// - Reparte los consumos auxliares proporcionalmente a los servicios
+    /// - Reparte los consumos auxiliares proporcionalmente a los servicios
     ///
     /// Los metadatos, servicios y coherencia de los vectores se aseguran ya en el parsing
     pub fn normalize(mut self) -> Result<Self> {
@@ -208,7 +208,7 @@ impl Components {
     ///
     /// Esto significa que, para cada sistema (j=id):
     /// 1) se calcula el consumo del vector en todos los servicios
-    /// 2) se calculan las cantidades produccidas del vector
+    /// 2) se calculan las cantidades producidas del vector
     /// 2) se reparte la producción existente para ese sistema
     /// 3) se genera una producción que completa las cantidades no cubiertas por la producción definida
     ///
@@ -280,7 +280,7 @@ impl Components {
 
     /// Asigna servicios EPB a los componentes de energía auxiliar
     ///
-    /// Los componentes de consumos auxiliares se cargan incialmente con el servicio NEPB
+    /// Los componentes de consumos auxiliares se cargan inicialmente con el servicio NEPB
     /// pero representan solo servicios EPB y debemos asignarlos.
     ///
     /// Para hacer esta asignación se actúa sistema a sistema:
