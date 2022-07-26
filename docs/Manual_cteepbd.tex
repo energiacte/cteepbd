@@ -387,13 +387,19 @@ Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los a
 El programa admite distintos componentes energéticos:
 
 \begin{itemize}
-    \item Consumo: define la energía usada por los sistemas del edificio para abastecer diversos servicios (EPB y no EPB) o la cogeneración de energía eléctrica;
-    \item Consumo auxiliar: define un consumo eléctrico para usos auxiliares y ligado a un servicio del edificio;
-    \item Producción: define una cantidad de energía final generada en función de su origen (in situ o de cogeneración);
-    \item Energía saliente: define la energía térmica entregada o absorbida por los sistemas o subsistemas del edificio (demandas sobre los sistemas).
+    \item Producción (\texttt{PRODUCCION}): define una cantidad de energía final generada de un vector energético concreto, en función de su origen (in situ o de cogeneración);
+    \item Consumo (\texttt{CONSUMO}): define la energía usada por los sistemas del edificio para abastecer diversos servicios (EPB y no EPB) o la cogeneración de energía eléctrica empleando un vector energético concreto;
+    \item Consumo auxiliar (\texttt{AUX}): define un consumo eléctrico para usos auxiliares y ligado a un servicio del edificio;
+    \item Energía saliente (\texttt{SALIDA}): define la energía térmica entregada o absorbida (en el caso de refrigeración) por los sistemas o subsistemas del edificio (demandas sobre los sistemas).
 \end{itemize}
 
 Cada uno de estos componentes energéticos se lee a partir de una estructura de columnas (valores separados por comas):
+
+\textit{Componente de producción:}
+
+\begin{lstlisting}
+id, PRODUCCION, origen, vector, valor... # comentario
+\end{lstlisting}
 
 \textit{Componente de consumo:}
 
@@ -404,33 +410,27 @@ id, CONSUMO, servicio, vector, valores... # comentario
 \textit{Componente de consumo auxiliar:}
 
 \begin{lstlisting}
-id, AUX, servicio, vector, valores... # comentario
-\end{lstlisting}
-
-\textit{Componente de producción:}
-
-\begin{lstlisting}
-id, PRODUCCION, origen, vector, valores... # comentario
+id, AUX, servicio, valor... # comentario
 \end{lstlisting}
 
 \textit{Componente de energía saliente:}
 
 \begin{lstlisting}
-id, SALIDA, servicio, valores... # comentario
+id, SALIDA, servicio, valor... # comentario
 \end{lstlisting}
 
 Los distintos campos tienen el siguiente significado:
 
 \begin{itemize}
-\item campo \texttt{id}, que identificación el sistema, zona o parte asociada al componente. Si este campo no aparece se supone igual al valor `0` y normalmente se asocia al conjunto del edificio.
-\item campo \texttt{vector}, que identifica el vector energético;
-\item campo \texttt{origen}, que identifica el origen de la energía producida;
+\item campo \texttt{id}, que identificación el sistema, zona o parte asociada al componente. Si este campo no aparece se supone igual al valor `0` que, normalmente, se asocia al conjunto del edificio.
 \item campo \texttt{servicio}, que identifica el servicio atendido;
-\item campos \texttt{valor}, conjunto de valores numéricos (con un punto como separador decimal) separados por comas, para definir la energia imputada a cada paso de tiempo;
-\item un campo opcional \texttt{comentario}, que puede contener cualquier texto y no está precedido de una coma, sino de una almohadilla \texttt{\#}.
+\item campo \texttt{origen}, que identifica el origen de la energía producida;
+\item campo \texttt{vector}, que identifica el vector energético;
+\item campos \texttt{valor}, lista de valores numéricos (usando el punto como separador decimal) separados por comas, que define la energia imputada a cada paso de tiempo (normalmente, en evaluación reglamentaria, 12 valores mensuales);
+\item un campo opcional \texttt{comentario}, separado de los campos anteriores por una almohadilla \texttt{\#}, y que puede contener cualquier texto.
 \end{itemize}
 
-Las siguientes líneas definen ejemplos de los distintos componentes energéticos:
+Las siguientes líneas muestran ejemplos de los distintos componentes energéticos:
 
 \begin{lstlisting}
 1, PRODUCCION, EL_INSITU, 34.21, 41.94, 64.94, 73.88, 88.44, 88.64, 91.04, 76.15, 52.84, 39.26, 27.43, 26.26 # PV 5m2 (5kWp)
