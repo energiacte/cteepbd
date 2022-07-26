@@ -371,15 +371,12 @@ En el ejemplo, la siguiente línea define un metadato con clave \texttt{CTE\_ARE
 Para el archivo de definición de los componentes energéticos se establecen las siguientes claves conocidas de metadatos y los valores que pueden adoptar (todos los valores numéricos usan de separador decimal el punto):
 
 \begin{itemize}
-\item \texttt{CTE\_ACS\_DEMANDA\_ANUAL}: valor numérico que indica la demanda anual de ACS (kWh/a) para el cálculo del porcentaje de la demanda de fuentes renovables;
 \item \texttt{CTE\_AREAREF}: valor numérico que indica el área de referencia (superficie útil);
 \item \texttt{CTE\_KEXP}; valor numérico que indica el factor de exportación;
 \item \texttt{CTE\_LOCALIZACION}: cadena de texto que indica la localización que define los factores de paso reglamentarios y puede adoptar los valores: \texttt{CANARIAS}, \texttt{CEUTAMELILLA}, \texttt{BALEARES} o \texttt{PENINSULA};
 \item \texttt{CTE\_COGEN}: tres valores numéricos separados por una coma, que indican los factores de paso (energía primaria renovable, no renovable y emisiones) para exportación a la red de electricidad cogenerada;
 \item \texttt{CTE\_RED1}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 1 (vector energético \texttt{RED1});
 \item \texttt{CTE\_RED2}: tres valores numéricos separados por una coma, que definen los factores de paso (energía primaria renovable, no renovable y emisiones) de la red de distrito 2 (vector energético \texttt{RED2});
-\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{EAMBIENTE}, \texttt{RED1}, \texttt{RED2} o \texttt{TERMOSOLAR};
-\item \texttt{CTE\_DEMANDA\_ACS\_PCT\_BIOMASADENSIFICADA}: porcentaje de la demanda de ACS que se cubre con el consumo del vector \texttt{BIOMASADENSIFICADA}. Puede ser necesario para el cálculo de la fracción renovable de la demanda de ACS cuando se genere ACS empleando sistemas que consumen biomasa de distinto tipo y/o vectores que no son \texttt{EAMBIENTE}, \texttt{RED1}, \texttt{RED2} o \texttt{TERMOSOLAR};
 \end{itemize}
 
 Al hacer una llamada al programa \texttt{cteepbd} los valores definidos en los anteriores metadatos del archivo de componentes tienen preferencia sobre los valores por defecto, pero tienen menor precedencia que los definidos a través de las opciones del programa. Es decir, para el área de referencia se prefiere, en primer lugar, el valor dado a través de la opción \texttt{-a}, en segundo lugar, al valor definido para el metadato de clave \texttt{CTE\_AREAREF} y, en tercer lugar, al valor por defecto de 1,0.
