@@ -422,10 +422,10 @@ id, SALIDA, servicio, valor... # comentario
 Los distintos campos tienen el siguiente significado:
 
 \begin{itemize}
-\item campo \texttt{id}, que identificación el sistema, zona o parte asociada al componente. Si este campo no aparece se supone igual al valor `0` que, normalmente, se asocia al conjunto del edificio.
+\item campo \texttt{id}, de identificación del sistema, zona o parte asociada al componente. Si este campo no aparece se supone igual al valor `0` que, normalmente, se asocia al conjunto del edificio.
 \item campo \texttt{origen}, que identifica el origen de la energía producida;
-\item campo \texttt{servicio}, que identifica el servicio atendido;
-\item campo \texttt{vector}, que identifica el vector energético;
+\item campo \texttt{servicio}, que identifica el servicio al que se destina el consumo o la energía saliente o absorbida;
+\item campo \texttt{vector}, que identifica el vector energético generado o consumido;
 \item campos \texttt{valor}, lista de valores numéricos (usando el punto como separador decimal) separados por comas, que define la energia imputada a cada paso de tiempo (normalmente, en evaluación reglamentaria, 12 valores mensuales);
 \item un campo opcional \texttt{comentario}, separado de los campos anteriores por una almohadilla \texttt{\#}, y que puede contener cualquier texto.
 \end{itemize}
