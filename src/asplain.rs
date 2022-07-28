@@ -51,6 +51,14 @@ fn rennren2string(v: &RenNrenCo2) -> String {
     )
 }
 
+/// Muestra un valor opcional con la precisión deseada o como un guion si no está presente
+fn value_or_dash(v: Option<f32>, precision: usize) -> String {
+    match v {
+        Some(v) => format!("{:.*}", precision, v),
+        None => "-".to_string(),
+    }
+}
+
 impl AsCtePlain for EnergyPerformance {
     /// Está mostrando únicamente los resultados
     fn to_plain(&self) -> String {
@@ -58,6 +66,11 @@ impl AsCtePlain for EnergyPerformance {
         let bal = &self.balance_m2;
         let k_exp = self.k_exp;
         let arearef = self.arearef;
+
+        // Demanda
+        let dhw_needs = value_or_dash(bal.needs.ACS, 1);
+        let heating_needs = value_or_dash(bal.needs.CAL, 1);
+        let cooling_needs = value_or_dash(bal.needs.REF, 1);
 
         // Consumos
         let epus = bal.used.epus;
@@ -109,6 +122,12 @@ C_ep [kWh/m2.an]: ren = {ren:.1}, nren = {nren:.1}, tot = {tot:.1}
 E_CO2 [kg_CO2e/m2.an]: {co2:.2}
 RER = {rer:.2}
 RER_nrb = {rer_nrb:.2}
+
+** Demanda [kWh/m2.an]:
+
+- ACS: {dhw_needs}
+- CAL: {heating_needs}
+- REF: {cooling_needs}
 
 ** Energía final (todos los vectores) [kWh/m2.an]:
 
