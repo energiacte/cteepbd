@@ -30,6 +30,8 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
+use super::ProdSource;
+
 use crate::error::EpbdError;
 
 /// Vector energético (energy carrier).
@@ -112,5 +114,16 @@ impl str::FromStr for Carrier {
 impl std::fmt::Display for Carrier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:?}", self)
+    }
+}
+
+impl std::convert::From<ProdSource> for Carrier {
+    fn from(value: ProdSource) -> Self {
+        match value {
+            ProdSource::EL_INSITU => Carrier::ELECTRICIDAD,
+            ProdSource::EL_COGEN => Carrier::ELECTRICIDAD,
+            ProdSource::TERMOSOLAR => Carrier::TERMOSOLAR,
+            ProdSource::EAMBIENTE => Carrier::EAMBIENTE,
+        }
     }
 }
