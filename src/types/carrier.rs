@@ -64,6 +64,8 @@ pub enum Carrier {
     TERMOSOLAR,
 }
 
+/// TODO: La clasificación de los vectores en función del perímetro debería hacerse
+/// TODO: en la propia definición de esos vectores
 impl Carrier {
     /// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
     pub const NRBY: [Carrier; 6] = [
