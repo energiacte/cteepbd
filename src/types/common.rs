@@ -28,94 +28,11 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
+use super::Carrier;
+
 use crate::error::EpbdError;
 
 // ==================== Common types (components + weighting factors)
-
-// -------------------- Carrier
-
-/// Vector energético (energy carrier).
-#[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub enum Carrier {
-    /// Environment thermal energy (from heat pumps and other)
-    EAMBIENTE,
-    /// Biofuel
-    BIOCARBURANTE,
-    /// Biomass
-    BIOMASA,
-    /// Densified biomass (pellets)
-    BIOMASADENSIFICADA,
-    /// Coal
-    CARBON,
-    /// Electricity
-    ELECTRICIDAD,
-    /// Natural gas
-    GASNATURAL,
-    /// Diesel oil
-    GASOLEO,
-    /// LPG - Liquefied petroleum gas
-    GLP,
-    /// Generic energy carrier 1
-    RED1,
-    /// Generic energy carrier 2
-    RED2,
-    /// Thermal energy from solar collectors
-    TERMOSOLAR,
-}
-
-impl Carrier {
-    /// Vectores considerados dentro del perímetro NEARBY (a excepción de la ELECTRICIDAD in situ).
-    pub const NRBY: [Carrier; 6] = [
-        Carrier::BIOMASA,
-        Carrier::BIOMASADENSIFICADA,
-        Carrier::RED1,
-        Carrier::RED2,
-        Carrier::EAMBIENTE,
-        Carrier::TERMOSOLAR,
-    ]; // Ver B.23. Solo biomasa sólida
-
-    /// Vectores considerados dentro del perímetro ONSITE (a excepción de la ELECTRICIDAD in situ).
-    pub const ONST: [Carrier; 2] = [Carrier::EAMBIENTE, Carrier::TERMOSOLAR];
-
-    /// Is this a carrier from the onsite or nearby perimeter?
-    pub fn is_nearby(&self) -> bool {
-        Carrier::NRBY.contains(self)
-    }
-
-    /// Is this a carrier from the onsite perimeter?
-    pub fn is_onsite(&self) -> bool {
-        Carrier::ONST.contains(self)
-    }
-}
-
-impl str::FromStr for Carrier {
-    type Err = EpbdError;
-
-    fn from_str(s: &str) -> Result<Carrier, Self::Err> {
-        match s {
-            "EAMBIENTE" => Ok(Carrier::EAMBIENTE),
-            "BIOCARBURANTE" => Ok(Carrier::BIOCARBURANTE),
-            "BIOMASA" => Ok(Carrier::BIOMASA),
-            "BIOMASADENSIFICADA" => Ok(Carrier::BIOMASADENSIFICADA),
-            "CARBON" => Ok(Carrier::CARBON),
-            "ELECTRICIDAD" => Ok(Carrier::ELECTRICIDAD),
-            "GASNATURAL" => Ok(Carrier::GASNATURAL),
-            "GASOLEO" => Ok(Carrier::GASOLEO),
-            "GLP" => Ok(Carrier::GLP),
-            "RED1" => Ok(Carrier::RED1),
-            "RED2" => Ok(Carrier::RED2),
-            "TERMOSOLAR" => Ok(Carrier::TERMOSOLAR),
-            _ => Err(EpbdError::ParseError(s.into())),
-        }
-    }
-}
-
-impl std::fmt::Display for Carrier {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
 
 // ==================== Energy Components
 
