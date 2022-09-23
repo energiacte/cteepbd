@@ -33,9 +33,9 @@ Definición de tipos básicos para el cálculo de la eficiencia energética.
 
 mod balance;
 mod carrier;
-mod common;
 mod energy;
 mod factor;
+mod hasvalues;
 mod needs;
 mod prodsource;
 mod rennrenco2;
@@ -44,9 +44,9 @@ mod tmeta;
 
 pub use balance::*;
 pub use carrier::*;
-pub use common::*;
 pub use energy::*;
 pub use factor::*;
+pub use hasvalues::*;
 pub use needs::*;
 pub use prodsource::*;
 pub use rennrenco2::*;
