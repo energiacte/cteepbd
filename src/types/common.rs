@@ -318,7 +318,7 @@ impl std::fmt::Display for Source {
 
 /// Destino de la energía
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Dest {
     /// Building delivery destination
     SUMINISTRO,
@@ -351,7 +351,7 @@ impl std::fmt::Display for Dest {
 
 /// Paso de cálculo para el que se define el factor de paso
 #[allow(non_camel_case_types)]
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Step {
     /// Calculation step A
     A,

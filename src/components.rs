@@ -98,7 +98,7 @@ impl str::FromStr for Components {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> std::result::Result<Components, Self::Err> {
-        let s_nobom = s.strip_prefix('\u{feff}').or(Some(s)).unwrap();
+        let s_nobom = s.strip_prefix('\u{feff}').unwrap_or(s);
         let lines: Vec<&str> = s_nobom.lines().map(str::trim).collect();
         let metalines = lines
             .iter()
@@ -119,7 +119,7 @@ impl str::FromStr for Components {
 
         for line in datalines {
             let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
-            let tag1 = tags.get(0).unwrap_or(&"");
+            let tag1 = tags.first().unwrap_or(&"");
             let tag2 = tags.get(1).unwrap_or(&"");
             let tag = if ctypes_tag_list.contains(tag1) {
                 tag1
@@ -150,7 +150,7 @@ impl str::FromStr for Components {
         // - AUX components for systems with more than 1 service output need Q_out (SALIDA) components
         {
             let cdata_lengths: Vec<_> = cdata.iter().map(|e| e.num_steps()).collect();
-            let start_num_steps = *cdata_lengths.get(0).unwrap_or(&12);
+            let start_num_steps = *cdata_lengths.first().unwrap_or(&12);
             if cdata_lengths.iter().any(|&clen| clen != start_num_steps) {
                 return Err(EpbdError::ParseError(
                     "Componentes con distinto número de pasos de cálculo".into(),
