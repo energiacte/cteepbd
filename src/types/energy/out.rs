@@ -45,7 +45,7 @@ pub struct EOut {
     /// System id
     ///
     /// This identifies the system linked to this component.
-    /// Negative numbers should represent ficticious elements (ficticious systems, such as the reference ones)
+    /// Negative numbers should represent fictitious elements (fictitious systems, such as the reference ones)
     pub id: i32,
     /// End use
     pub service: Service,
@@ -66,7 +66,7 @@ impl HasValues for EOut {
 
 impl fmt::Display for EOut {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let valuelist = self
+        let value_list = self
             .values
             .iter()
             .map(|v| format!("{:.2}", v))
@@ -80,7 +80,7 @@ impl fmt::Display for EOut {
         write!(
             f,
             "{}, SALIDA, {}, {}{}",
-            self.id, self.service, valuelist, comment
+            self.id, self.service, value_list, comment
         )
     }
 }

@@ -38,13 +38,13 @@ use crate::types::{HasValues, Service};
 ///
 /// Representa el consumo de energía (eléctrica) para usos auxiliares
 /// del servicio X en el subsistema Y, para los distintos pasos de cálculo,
-/// Subsistema: generacion + almacenamiento
+/// Subsistema: generación + almacenamiento
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EAux {
     /// System or part id (generator i)
     /// This can identify the system linked to this energy use.
     /// By default, id=0 means whole building systems.
-    /// Negative numbers should represent ficticious systems (such as the reference ones)
+    /// Negative numbers should represent fictitious systems (such as the reference ones)
     /// A value greater than 0 identifies a specific system that is using some energy
     pub id: i32,
     /// End use
@@ -65,7 +65,7 @@ impl HasValues for EAux {
 
 impl fmt::Display for EAux {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let valuelist = self
+        let value_list = self
             .values
             .iter()
             .map(|v| format!("{:.2}", v))
@@ -80,7 +80,7 @@ impl fmt::Display for EAux {
         write!(
             f,
             "{}, AUX, {}{}",
-            self.id, valuelist, comment
+            self.id, value_list, comment
         )
     }
 }
@@ -99,13 +99,13 @@ impl str::FromStr for EAux {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        let (baseidx, id) = match items[0].parse() {
+        let (base_idx, id) = match items[0].parse() {
             Ok(id) => (1, id),
             Err(_) => (0, 0_i32),
         };
 
         // Check type
-        let ctype = items[baseidx];
+        let ctype = items[base_idx];
         if ctype != "AUX" {
             return Err(EpbdError::ParseError(format!(
                 "Componente de energía auxiliar con formato incorrecto: {}",
@@ -117,7 +117,7 @@ impl str::FromStr for EAux {
         let service = Service::NEPB;
 
         // Collect energy values from the service field on
-        let values = items[baseidx + 1..]
+        let values = items[base_idx + 1..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()

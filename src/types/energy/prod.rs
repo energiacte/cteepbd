@@ -35,14 +35,14 @@ use crate::types::{HasValues, ProdSource};
 ///
 /// Representa la producción de energía con el vector energético j del sistema i
 /// para cada paso de cálculo t, a lo largo del periodo de cálculo.
-/// Subsistema: generacion + almacenamiento
+/// Subsistema: generación + almacenamiento
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EProd {
     /// System or part id
     /// This can identify the system linked to this component.
     /// By default, id=0 means a system attending the whole building
-    /// Negative numbers should represent ficticious elements (such as reference systems)
-    /// A value greater than 0 identies a specific energy generation system
+    /// Negative numbers should represent fictitious elements (such as reference systems)
+    /// A value greater than 0 identifies a specific energy generation system
     pub id: i32,
     /// Energy source
     /// - `EL_INSITU | EL_COGEN | TERMOSOLAR | EAMBIENTE` for generated energy component types
@@ -63,7 +63,7 @@ impl HasValues for EProd {
 
 impl std::fmt::Display for EProd {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let valuelist = self
+        let value_list = self
             .values
             .iter()
             .map(|v| format!("{:.2}", v))
@@ -77,7 +77,7 @@ impl std::fmt::Display for EProd {
         write!(
             f,
             "{}, PRODUCCION, {}, {}{}",
-            self.id, self.source, valuelist, comment
+            self.id, self.source, value_list, comment
         )
     }
 }
@@ -96,12 +96,12 @@ impl std::str::FromStr for EProd {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        let (baseidx, id) = match items[0].parse() {
+        let (base_idx, id) = match items[0].parse() {
             Ok(id) => (1, id),
             Err(_) => (0, 0_i32),
         };
 
-        let ctype = items[baseidx];
+        let ctype = items[base_idx];
         if ctype != "PRODUCCION" {
             return Err(EpbdError::ParseError(format!(
                 "Componente de energía generada con formato incorrecto: {}",
@@ -109,10 +109,10 @@ impl std::str::FromStr for EProd {
             )));
         }
 
-        let source = items[baseidx + 1].parse()?;
+        let source = items[base_idx + 1].parse()?;
 
         // Collect energy values from the service field on
-        let values = items[baseidx + 2..]
+        let values = items[base_idx + 2..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<Vec<f32>, _>>()
@@ -148,7 +148,7 @@ mod tests {
             comment: "Comentario prod 1".into(),
         };
         let component2str = "0, PRODUCCION, EL_INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
-        let component2strlegacy = "PRODUCCION, EL_INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
+        let component2str_legacy = "PRODUCCION, EL_INSITU, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario prod 1";
         assert_eq!(component2.to_string(), component2str);
 
         // roundtrip building from/to string
@@ -158,7 +158,7 @@ mod tests {
         );
         // roundtrip building from/to string for legacy format
         assert_eq!(
-            component2strlegacy.parse::<EProd>().unwrap().to_string(),
+            component2str_legacy.parse::<EProd>().unwrap().to_string(),
             component2str
         );
     }

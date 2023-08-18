@@ -103,13 +103,13 @@ impl HasValues for Needs {
 
 impl fmt::Display for Needs {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let valuelist = self
+        let value_list = self
             .values
             .iter()
             .map(|v| format!("{:.2}", v))
             .collect::<Vec<_>>()
             .join(", ");
-        write!(f, "DEMANDA, {}, {}", self.service, valuelist)
+        write!(f, "DEMANDA, {}, {}", self.service, value_list)
     }
 }
 

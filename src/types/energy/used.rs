@@ -37,13 +37,13 @@ use crate::types::{Carrier, HasValues, Service};
 /// para el servicio X en el generador i, para los distintos pasos de cálculo t,
 ///
 /// Las cantidades de energía de combustibles son en relación al poder calorífico superior.
-/// Subsistema: generacion + almacenamiento
+/// Subsistema: generación + almacenamiento
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EUsed {
     /// System or part id (generator i)
     /// This can identify the system linked to this energy use.
     /// By default, id=0 means the whole building systems.
-    /// Negative numbers should represent ficticious systems (such as the reference ones)
+    /// Negative numbers should represent fictitious systems (such as the reference ones)
     /// A value greater than 0 identifies a specific system that is using some energy
     pub id: i32,
     /// Carrier name
@@ -68,7 +68,7 @@ impl HasValues for EUsed {
 
 impl std::fmt::Display for EUsed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let valuelist = self
+        let value_list = self
             .values
             .iter()
             .map(|v| format!("{:.2}", v))
@@ -83,7 +83,7 @@ impl std::fmt::Display for EUsed {
         write!(
             f,
             "{}, CONSUMO, {}, {}, {}{}",
-            self.id, self.service, self.carrier, valuelist, comment
+            self.id, self.service, self.carrier, value_list, comment
         )
     }
 }
@@ -102,13 +102,13 @@ impl std::str::FromStr for EUsed {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        let (baseidx, id) = match items[0].parse() {
+        let (base_idx, id) = match items[0].parse() {
             Ok(id) => (1, id),
             Err(_) => (0, 0_i32),
         };
 
         // Check type
-        let ctype = items[baseidx];
+        let ctype = items[base_idx];
         if ctype != "CONSUMO" {
             return Err(EpbdError::ParseError(format!(
                 "Componente de energía consumida con formato incorrecto: {}",
@@ -117,12 +117,12 @@ impl std::str::FromStr for EUsed {
         }
 
         // Check service field. May be missing in legacy versions
-        let service = items[baseidx + 1].parse()?;
+        let service = items[base_idx + 1].parse()?;
 
-        let carrier: Carrier = items[baseidx + 2].parse()?;
+        let carrier: Carrier = items[base_idx + 2].parse()?;
 
         // Collect energy values from the service field on
-        let values: Vec<_> = items[baseidx + 3..]
+        let values: Vec<_> = items[base_idx + 3..]
             .iter()
             .map(|v| v.parse::<f32>())
             .collect::<Result<_, _>>()
@@ -160,7 +160,7 @@ mod tests {
             comment: "Comentario cons 1".into(),
         };
         let component1str = "0, CONSUMO, ILU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
-        let component1strlegacy = "CONSUMO, ILU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
+        let component1str_legacy = "CONSUMO, ILU, ELECTRICIDAD, 1.00, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00, 9.00, 10.00, 11.00, 12.00 # Comentario cons 1";
         assert_eq!(component1.to_string(), component1str);
 
         // roundtrip building from/to string
@@ -171,7 +171,7 @@ mod tests {
 
         // roundtrip building from/to legacy string
         assert_eq!(
-            component1strlegacy.parse::<EUsed>().unwrap().to_string(),
+            component1str_legacy.parse::<EUsed>().unwrap().to_string(),
             component1str
         );
     }
