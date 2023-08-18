@@ -53,7 +53,7 @@ use cteepbd::{
 
 const APP_TITLE: &str = r#"CteEPBD"#;
 const APP_DESCRIPTION: &str = r#"
-Copyright (c) 2018-2022 Ministerio de Fomento,
+Copyright (c) 2018-2023 Ministerio de Fomento,
               Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
@@ -65,7 +65,7 @@ Licencia: Publicado bajo licencia MIT.
 "#;
 const APP_ABOUT: &str = r#"CteEpbd - Eficiencia energética de los edificios (CTE DB-HE)."#;
 const APP_LICENSE: &str = r#"
-Copyright (c) 2018-2022 Ministerio de Fomento
+Copyright (c) 2018-2023 Ministerio de Fomento
               Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
