@@ -78,13 +78,13 @@ impl AsCtePlain for EnergyPerformance {
         let cgnus = bal.used.cgnus;
         let used = epus + nepus + cgnus;
 
-        let used_by_srv = list_entries_f32(&bal.used.epus_by_srv);
-        let used_epus_by_cr = list_entries_f32(&bal.used.epus_by_cr);
+        let used_by_srv = to_key_value_list(&bal.used.epus_by_srv);
+        let used_epus_by_cr = to_key_value_list(&bal.used.epus_by_cr);
         // Generada
         let prod_an = bal.prod.an;
-        let prod_by_src = list_entries_f32(&bal.prod.by_src);
-        let prod_by_cr = list_entries_f32(&bal.prod.by_cr);
-        let prod_epus_by_src = list_entries_f32(&bal.prod.epus_by_src);
+        let prod_by_src = to_key_value_list(&bal.prod.by_src);
+        let prod_by_cr = to_key_value_list(&bal.prod.by_cr);
+        let prod_epus_by_src = to_key_value_list(&bal.prod.epus_by_src);
         // Suministrada
         let del_an = bal.del.an;
         let del_grid = bal.del.grid;
@@ -102,9 +102,9 @@ impl AsCtePlain for EnergyPerformance {
         let rer = self.rer;
         let rer_nrb = self.rer_nrb;
         let balance_m2_a = rennren2string(&we_a);
-        let a_by_srv = list_entries_rennrenco2(&bal.we.a_by_srv);
+        let a_by_srv = to_key_rennrenco2_value_list(&bal.we.a_by_srv);
         let balance_m2_b = rennren2string(&we_b);
-        let b_by_srv = list_entries_rennrenco2(&bal.we.b_by_srv);
+        let b_by_srv = to_key_rennrenco2_value_list(&bal.we.b_by_srv);
         // Parámetros de demanda HE4
         let misc_out = if let Some(map) = &self.misc {
             let pct_ren = map.get_str_pct1d("fraccion_renovable_demanda_acs_nrb");
@@ -182,7 +182,7 @@ Incluyendo el efecto de la energía exportada (paso B): {balance_m2_b}
     }
 }
 
-fn list_entries_f32<T: std::fmt::Display>(map: &std::collections::HashMap<T, f32>) -> String {
+fn to_key_value_list<T: std::fmt::Display>(map: &std::collections::HashMap<T, f32>) -> String {
     let mut entries = map
         .iter()
         .map(|(k, v)| format!("- {}: {:.2}", k, v))
@@ -191,7 +191,7 @@ fn list_entries_f32<T: std::fmt::Display>(map: &std::collections::HashMap<T, f32
     entries.join("\n")
 }
 
-fn list_entries_rennrenco2<T: std::fmt::Display>(
+fn to_key_rennrenco2_value_list<T: std::fmt::Display>(
     map: &std::collections::HashMap<T, RenNrenCo2>,
 ) -> String {
     let mut entries = map
