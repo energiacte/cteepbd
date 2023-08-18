@@ -28,7 +28,7 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 
-use super::{HasValues, Service};
+use super::{CType, HasValues, Service};
 use crate::error::EpbdError;
 use crate::vecops::vecvecsum;
 
@@ -37,22 +37,21 @@ use crate::vecops::vecvecsum;
 // The component is used to express energy needs of the whole building provide service X (X=CAL/REF/ACS) (Q_X_nd_t)
 // The component stores building needs for heating (CAL), cooling (REF) and domestic heat water (ACS)
 
-
 /// Demandas del edificio
 #[allow(non_snake_case)]
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct BuildingNeeds {
     /// Timestep building energy needs to provide the domestic heat water service, Q_DHW_nd_t. kWh
     #[serde(default)]
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ACS: Option<Vec<f32>>,
     /// Timestep building energy needs to provide the heating service, Q_H_nd_t. kWh
     #[serde(default)]
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub CAL: Option<Vec<f32>>,
     /// Timestep building energy needs to provide the cooling service, Q_C_nd_t. kWh
     #[serde(default)]
-    #[serde(skip_serializing_if="Option::is_none")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub REF: Option<Vec<f32>>,
 }
 
@@ -80,7 +79,6 @@ impl BuildingNeeds {
         Ok(())
     }
 }
-
 
 /// Componente de demanda de edificio.
 ///
@@ -126,13 +124,16 @@ impl str::FromStr for Needs {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        // Check DEMANDA marker fields;
-        if items[0] != "DEMANDA" {
-            return Err(EpbdError::ParseError(format!(
-                "No se reconoce el formato como elemento de Demanda: {}",
-                s
-            )));
-        }
+        // Check type
+        match items[0].parse() {
+            Ok(CType::DEMANDA) => {}
+            _ => {
+                return Err(EpbdError::ParseError(format!(
+                    "No se reconoce el formato como elemento de Demanda: {}",
+                    s
+                )))
+            }
+        };
 
         // Check valid service field CAL, REF, ACS
         let service = items[1].parse()?;
@@ -153,8 +154,6 @@ impl str::FromStr for Needs {
     }
 }
 
-
-
 // ========================== Tests
 
 #[cfg(test)]
@@ -169,7 +168,7 @@ mod tests {
             service: "REF".parse().unwrap(),
             values: vec![
                 1.0, 2.0, 3.0, 4.0, 5.0, -6.0, -7.0, -8.0, -9.0, 10.0, 11.0, 12.0,
-            ]
+            ],
         };
         let component1str = "DEMANDA, REF, 1.00, 2.00, 3.00, 4.00, 5.00, -6.00, -7.00, -8.00, -9.00, 10.00, 11.00, 12.00";
         assert_eq!(component1.to_string(), component1str);

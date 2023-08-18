@@ -29,7 +29,7 @@ use std::str;
 use serde::{Deserialize, Serialize};
 
 use crate::error::EpbdError;
-use crate::types::{HasValues, Service};
+use crate::types::{HasValues, Service, CType};
 
 // -------------------- Auxiliary Energy Component
 // Define basic Auxiliary Energy Component type
@@ -105,14 +105,16 @@ impl str::FromStr for EAux {
         };
 
         // Check type
-        let ctype = items[base_idx];
-        if ctype != "AUX" {
-            return Err(EpbdError::ParseError(format!(
-                "Componente de energía auxiliar con formato incorrecto: {}",
-                s
-            )));
-        }
-
+        match items[base_idx].parse() {
+            Ok(CType::AUX) => {},
+            _ => {
+                return Err(EpbdError::ParseError(format!(
+                    "Componente de energía auxiliar con formato incorrecto: {}",
+                    s
+                )))
+            }
+        };
+        
         // Initial service is NEPB. This is changed when normalizing data
         let service = Service::NEPB;
 

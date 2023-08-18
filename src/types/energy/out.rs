@@ -29,10 +29,10 @@ use std::str;
 use serde::{Deserialize, Serialize};
 
 use crate::error::EpbdError;
-use crate::types::{HasValues, Service};
+use crate::types::{CType, HasValues, Service};
 
 // -------------------- System Energy Output Component
-// Define basic System Energy Needs Component type
+// Define basic System Energy Output Component type
 // This component is used to express energy output of this system to provide service X (for system i) (E_X_gen_i_out_t)
 
 /// Componente de generación.
@@ -54,7 +54,7 @@ pub struct EOut {
     pub values: Vec<f32>,
     /// Descriptive comment string
     #[serde(default)]
-    #[serde(skip_serializing_if="String::is_empty")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub comment: String,
 }
 
@@ -99,13 +99,16 @@ impl str::FromStr for EOut {
             return Err(EpbdError::ParseError(s.into()));
         };
 
-        // Check SALIDA marker field;
-        if items[1] != "SALIDA" {
-            return Err(EpbdError::ParseError(format!(
-                "No se reconoce el formato como elemento de Salida del sistema: {}",
-                s
-            )));
-        }
+        // Check type
+        match items[1].parse() {
+            Ok(CType::SALIDA) => {}
+            _ => {
+                return Err(EpbdError::ParseError(format!(
+                    "No se reconoce el formato como elemento de Salida del sistema: {}",
+                    s
+                )))
+            }
+        };
 
         // Zone Id
         let id = match items[0].parse() {

@@ -1,5 +1,6 @@
 # TODO
 
+- CType: usar la conversión a cadena de los tipos en la salida de los componentes (en lugar de tener p.e. CONSUMO en la línea escrita)
 - epbd:
   - extra checks - see components.rs TODO. Add Vecs: warnings & errors to EnergyPerformance used as collectors.
   - cte:

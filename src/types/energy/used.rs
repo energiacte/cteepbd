@@ -26,7 +26,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::EpbdError;
-use crate::types::{Carrier, HasValues, Service};
+use crate::types::{CType, Carrier, HasValues, Service};
 
 // -------------------- EUsed Energy Component
 // Define basic EUsed Energy Component type
@@ -56,7 +56,7 @@ pub struct EUsed {
     /// This can also be used to label a component as auxiliary energy use
     /// by including in this field the "CTEEPBD_AUX" tag
     #[serde(default)]
-    #[serde(skip_serializing_if="String::is_empty")]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub comment: String,
 }
 
@@ -108,13 +108,15 @@ impl std::str::FromStr for EUsed {
         };
 
         // Check type
-        let ctype = items[base_idx];
-        if ctype != "CONSUMO" {
-            return Err(EpbdError::ParseError(format!(
-                "Componente de energía consumida con formato incorrecto: {}",
-                s
-            )));
-        }
+        match items[base_idx].parse() {
+            Ok(CType::CONSUMO) => {}
+            _ => {
+                return Err(EpbdError::ParseError(format!(
+                    "Componente de energía consumida con formato incorrecto: {}",
+                    s
+                )))
+            }
+        };
 
         // Check service field. May be missing in legacy versions
         let service = items[base_idx + 1].parse()?;

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022  Ministerio de Fomento
+// Copyright (c) 2018-2023  Ministerio de Fomento
 //                          Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,34 +23,46 @@
 //            Daniel Jiménez González <dani@ietcc.csic.es>,
 //            Marta Sorribes Gil <msorribes@ietcc.csic.es>
 
-/*!
-Tipos de datos (types)
-======================
+use std::fmt;
+use std::str;
 
-Definición de tipos básicos para el cálculo de la eficiencia energética.
+use serde::{Deserialize, Serialize};
 
-*/
+use crate::error::EpbdError;
 
-mod balance;
-mod carrier;
-mod ctypes;
-mod energy;
-mod factor;
-mod hasvalues;
-mod needs;
-mod prodsource;
-mod rennrenco2;
-mod service;
-mod tmeta;
+/// Tipos de componentes (energía final y demanda)
+#[allow(non_camel_case_types)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum CType {
+    /// Consumo de energía final
+    CONSUMO,
+    /// Producción de energía final
+    PRODUCCION,
+    /// Consumo auxiliar de energía final
+    AUX,
+    /// Energía entregada
+    SALIDA,
+    /// Demanda energética
+    DEMANDA,
+}
 
-pub use balance::*;
-pub use carrier::*;
-pub use ctypes::CType;
-pub use energy::*;
-pub use factor::*;
-pub use hasvalues::*;
-pub use needs::*;
-pub use prodsource::*;
-pub use rennrenco2::*;
-pub use service::*;
-pub use tmeta::*;
+impl str::FromStr for CType {
+    type Err = EpbdError;
+
+    fn from_str(s: &str) -> std::result::Result<CType, Self::Err> {
+        match s {
+            "CONSUMO" => Ok(CType::CONSUMO),
+            "PRODUCCION" => Ok(CType::PRODUCCION),
+            "AUX" => Ok(CType::AUX),
+            "SALIDA" => Ok(CType::SALIDA),
+            "DEMANDA" => Ok(CType::DEMANDA),
+            _ => Err(EpbdError::ParseError(s.into())),
+        }
+    }
+}
+
+impl std::fmt::Display for CType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}

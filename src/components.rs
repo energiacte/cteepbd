@@ -46,7 +46,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::{EpbdError, Result},
-    types::{Carrier, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service, BuildingNeeds},
+    types::{BuildingNeeds, Carrier, CType, EProd, Energy, HasValues, Meta, MetaVec, ProdSource, Service},
     vecops::{veclistsum, vecvecdif, vecvecsum},
 };
 
@@ -114,30 +114,27 @@ impl str::FromStr for Components {
         let mut needs = BuildingNeeds::default();
         // let mut systems = None;
 
-        // Tipos disponibles
-        let ctypes_tag_list = ["CONSUMO", "PRODUCCION", "AUX", "SALIDA", "DEMANDA"];
-
         for line in datalines {
-            let tags: Vec<_> = line.splitn(3, ',').map(str::trim).take(2).collect();
-            let tag1 = tags.first().unwrap_or(&"");
-            let tag2 = tags.get(1).unwrap_or(&"");
-            let tag = if ctypes_tag_list.contains(tag1) {
-                tag1
-            } else {
-                tag2
-            };
-            match *tag {
-                "CONSUMO" => cdata.push(Energy::Used(line.parse()?)),
-                "PRODUCCION" => cdata.push(Energy::Prod(line.parse()?)),
-                "AUX" => cdata.push(Energy::Aux(line.parse()?)),
-                "SALIDA" => cdata.push(Energy::Out(line.parse()?)),
-                "DEMANDA" => needs.add(line.parse()?)?,
-                _ => {
-                    return Err(EpbdError::ParseError(format!(
-                        "ERROR: No se reconoce el componente de la línea: {} {}",
-                        line, tag
-                    )))
-                }
+            let [tag1, tag2]: [&str; 2] = line
+                .splitn(3, ',')
+                .map(str::trim)
+                .take(2)
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap_or(["", ""]);
+            let ctype: CType = tag1.parse().or_else(|_| tag2.parse()).map_err(|e| {
+                EpbdError::ParseError(format!(
+                    "ERROR: No se reconoce el tipo de componente de la línea {}: {}",
+                    line, e
+                ))
+            })?;
+
+            match ctype {
+                CType::CONSUMO => cdata.push(Energy::Used(line.parse()?)),
+                CType::PRODUCCION => cdata.push(Energy::Prod(line.parse()?)),
+                CType::AUX => cdata.push(Energy::Aux(line.parse()?)),
+                CType::SALIDA => cdata.push(Energy::Out(line.parse()?)),
+                CType::DEMANDA => needs.add(line.parse()?)?,
             }
         }
 

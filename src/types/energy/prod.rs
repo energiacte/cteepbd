@@ -26,7 +26,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::error::EpbdError;
-use crate::types::{HasValues, ProdSource};
+use crate::types::{CType, HasValues, ProdSource};
 
 // -------------------- Produced Energy Component
 // Define basic Produced Energy Component type
@@ -101,13 +101,16 @@ impl std::str::FromStr for EProd {
             Err(_) => (0, 0_i32),
         };
 
-        let ctype = items[base_idx];
-        if ctype != "PRODUCCION" {
-            return Err(EpbdError::ParseError(format!(
-                "Componente de energía generada con formato incorrecto: {}",
-                s
-            )));
-        }
+        // Check type
+        match items[base_idx].parse() {
+            Ok(CType::PRODUCCION) => {},
+            _ => {
+                return Err(EpbdError::ParseError(format!(
+                    "Componente de energía generada con formato incorrecto: {}",
+                    s
+                )))
+            }
+        };
 
         let source = items[base_idx + 1].parse()?;
 
