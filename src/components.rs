@@ -78,19 +78,19 @@ impl MetaVec for Components {
 
 impl fmt::Display for Components {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let metalines = self
+        let meta_lines = self
             .meta
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()
             .join("\n");
-        let datalines = self
+        let data_lines = self
             .data
             .iter()
             .map(|v| format!("{}", v))
             .collect::<Vec<_>>()
             .join("\n");
-        write!(f, "{}\n{}", metalines, datalines)
+        write!(f, "{}\n{}", meta_lines, data_lines)
     }
 }
 
@@ -98,15 +98,15 @@ impl str::FromStr for Components {
     type Err = EpbdError;
 
     fn from_str(s: &str) -> std::result::Result<Components, Self::Err> {
-        let s_nobom = s.strip_prefix('\u{feff}').unwrap_or(s);
-        let lines: Vec<&str> = s_nobom.lines().map(str::trim).collect();
-        let metalines = lines
+        let s_no_bom = s.strip_prefix('\u{feff}').unwrap_or(s);
+        let lines: Vec<&str> = s_no_bom.lines().map(str::trim).collect();
+        let meta_lines = lines
             .iter()
             .filter(|l| l.starts_with("#META") || l.starts_with("#CTE_"));
-        let datalines = lines
+        let data_lines = lines
             .iter()
             .filter(|l| !(l.starts_with('#') || l.starts_with("vector,") || l.is_empty()));
-        let cmeta = metalines
+        let cmeta = meta_lines
             .map(|e| e.parse())
             .collect::<Result<Vec<Meta>>>()?;
 
@@ -114,7 +114,7 @@ impl str::FromStr for Components {
         let mut needs = BuildingNeeds::default();
         // let mut systems = None;
 
-        for line in datalines {
+        for line in data_lines {
             let [tag1, tag2]: [&str; 2] = line
                 .splitn(3, ',')
                 .map(str::trim)
@@ -148,7 +148,7 @@ impl str::FromStr for Components {
         {
             let cdata_lengths: Vec<_> = cdata.iter().map(|e| e.num_steps()).collect();
             let start_num_steps = *cdata_lengths.first().unwrap_or(&12);
-            if cdata_lengths.iter().any(|&clen| clen != start_num_steps) {
+            if cdata_lengths.iter().any(|&len| len != start_num_steps) {
                 return Err(EpbdError::ParseError(
                     "Componentes con distinto número de pasos de cálculo".into(),
                 ));
@@ -220,20 +220,20 @@ impl Components {
         };
 
         // Localiza componentes pertenecientes al vector
-        let envcomps: Vec<_> = self
+        let env_comps: Vec<_> = self
             .data
             .iter()
             .cloned()
             .filter(|c| c.has_carrier(carrier))
             .collect();
-        if envcomps.is_empty() {
+        if env_comps.is_empty() {
             return;
         };
 
-        let ids: HashSet<_> = envcomps.iter().map(|c| c.id()).collect();
+        let ids: HashSet<_> = env_comps.iter().map(|c| c.id()).collect();
         for id in ids {
             // Componentes para el sistema dado
-            let components_for_id = envcomps.iter().filter(|c| c.has_id(id));
+            let components_for_id = env_comps.iter().filter(|c| c.has_id(id));
             // Componentes de producción del servicio
             let prod: Vec<_> = components_for_id
                 .clone()
@@ -421,8 +421,8 @@ mod tests {
 
     #[test]
     fn tcomponents_normalize() {
-        let tcompsnorm = TCOMPS1.parse::<Components>().unwrap();
-        assert_eq!(tcompsnorm.to_string(), TCOMPSRES1);
+        let tcomps_norm = TCOMPS1.parse::<Components>().unwrap();
+        assert_eq!(tcomps_norm.to_string(), TCOMPSRES1);
     }
 
     /// Componentes con id de sistema diferenciados
