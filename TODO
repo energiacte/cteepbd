@@ -28,7 +28,12 @@
     - Emisiones - desglose eléctrico y no eléctrico
   - XML output:
     - Test XML output
-    - Fix XML indentation
+      - Interpolation with https://docs.rs/format_xml/latest/format_xml/
+      - Generation with https://crates.io/crates/xml-builder
+    - Fix XML indentation:
+      - Check using:
+        - xml-rs https://users.rust-lang.org/t/pretty-printing-xml/76372/11
+        - quick-xml https://gist.github.com/lwilli/14fb3178bd9adac3a64edfbc11f42e0d
     - Ratio of prod_onst / used for nearby sources:
       - Balance: prod.epus_ratio_by_srv_by_src[src] = prod.epus_by_srv_by_src[src] / used.epus_by_srv[src]
 
