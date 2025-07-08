@@ -559,7 +559,7 @@ fn main() {
         if verbosity > 2 {
             println!("Componentes energéticos:\n{}", components);
         }
-        writefile(&path, components.to_string().as_bytes());
+        writefile(path, components.to_string().as_bytes());
         if verbosity > 0 {
             println!("Guardado archivo de componentes energéticos: {:?}", path);
         }
@@ -571,7 +571,7 @@ fn main() {
         if verbosity > 2 {
             println!("Factores de paso:\n{}", fpdata);
         }
-        writefile(&path, fpdata.to_string().as_bytes());
+        writefile(path, fpdata.to_string().as_bytes());
         if verbosity > 0 {
             println!("Guardado archivo de factores de paso: {:?}", path);
         }
@@ -627,7 +627,7 @@ fn main() {
                 );
                 exit(exitcode::DATAERR);
             });
-            writefile(&path, json.as_bytes());
+            writefile(path, json.as_bytes());
         }
         // Guardar balance en formato XML
         if matches.is_present("archivo_salida_xml") {
@@ -636,7 +636,7 @@ fn main() {
                 println!("Resultados en formato XML: {:?}", path);
             }
             let xml = cte::balance_to_xml(&balance);
-            writefile(&path, xml.as_bytes());
+            writefile(path, xml.as_bytes());
         }
         // Mostrar siempre en formato de texto plano
         if matches.is_present("acsnrb") {
@@ -653,7 +653,7 @@ fn main() {
             if verbosity > 0 {
                 println!("Resultados en formato XML: {:?}", path);
             }
-            writefile(&path, plain.as_bytes());
+            writefile(path, plain.as_bytes());
         }
     };
 }
