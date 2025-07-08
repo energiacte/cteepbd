@@ -156,14 +156,6 @@ fn validate_kexp(kexpstr: &str, orig: &str) -> Option<f32> {
         );
         exit(exitcode::DATAERR);
     };
-    if kexp != cte::KEXP_DEFAULT {
-        println!(
-            "AVISO: factor de exportación k_exp distinto al reglamentario ({:.2}): {:.2} ({})",
-            cte::KEXP_DEFAULT,
-            kexp,
-            orig
-        );
-    };
     Some(kexp)
 }
 
@@ -221,22 +213,17 @@ fn get_factor(
 }
 
 /// Carga componentes desde archivo o devuelve componentes por defecto
-fn get_components(archivo: Option<&str>) -> Components {
-    if let Some(archivo_componentes) = archivo {
-        println!("Componentes energéticos: \"{}\"", archivo_componentes);
-        readfile(archivo_componentes)
-            .parse::<Components>()
-            .unwrap_or_else(|e| {
-                eprintln!(
-                    "ERROR: formato incorrecto del archivo de componentes \"{}\": {}",
-                    archivo_componentes, e
-                );
-                exit(exitcode::DATAERR);
-            })
-            .normalize()
-    } else {
-        Components::default()
-    }
+fn get_components(path: &str) -> Components {
+    readfile(path)
+        .parse::<Components>()
+        .unwrap_or_else(|e| {
+            eprintln!(
+                "ERROR: formato incorrecto del archivo de componentes \"{}\": {}",
+                path, e
+            );
+            exit(exitcode::DATAERR);
+        })
+        .normalize()
 }
 
 /// Crea aplicación y detecta opciones seleccionadas
@@ -390,7 +377,13 @@ fn main() {
     println!("** Datos de entrada");
 
     // Componentes energéticos ---------------------------------------------------------------------
-    let mut components = get_components(matches.value_of("archivo_componentes"));
+    let maybe_archivo = matches.value_of("archivo_componentes");
+    let mut components = if let Some(archivo_componentes) = maybe_archivo {
+        println!("Componentes energéticos: \"{}\"", archivo_componentes);
+        get_components(archivo_componentes)
+    } else {
+        Components::default()
+    };
 
     // Cálculo para servicio de ACS en nearby
     if matches.is_present("acsnrb") {
@@ -408,6 +401,17 @@ fn main() {
     let kexp_cli = matches
         .value_of("kexp")
         .and_then(|kexpstr| validate_kexp(kexpstr, "usuario"));
+
+    // Aviso de valor no reglamentario
+    if let Some(k) = kexp_cli {
+        if k != cte::KEXP_DEFAULT {
+            println!(
+                "AVISO: factor de exportación k_exp distinto al reglamentario ({:.2}): {:.2} (usuario)",
+                cte::KEXP_DEFAULT,
+                k
+            );
+        };
+    };
 
     // Comprobación del parámetro de área de referencia -------------------------------------------
     let arearef_cli = matches
@@ -516,6 +520,17 @@ fn main() {
     let kexp_meta = components
         .get_meta("CTE_KEXP")
         .and_then(|ref kexpstr| validate_kexp(kexpstr, "metadatos"));
+    
+    // Aviso de valor no reglamentario
+    if let Some(k) = kexp_meta {
+        if k != cte::KEXP_DEFAULT {
+            println!(
+                "AVISO: factor de exportación k_exp distinto al reglamentario ({:.2}): {:.2} (metadatos)",
+                cte::KEXP_DEFAULT,
+                k
+            );
+        };
+    };
 
     if let (Some(k_meta), Some(k_cli)) = (kexp_meta, kexp_cli) {
         if (k_meta - k_cli).abs() > 1e-3 {
