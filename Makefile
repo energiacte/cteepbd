@@ -27,6 +27,9 @@ test_stdin_input:
 	$(info Mostrando diferencia entre llamada desde stdin con '-c -' y archivo con '-c ${TESTCARRIERS}')
 	@bash -c 'diff <(cat ${TESTCARRIERS} | cargo run -- -c - -l PENINSULA --acs_nearby) <(cargo run -- -c ${TESTCARRIERS} -l PENINSULA --acs_nearby)'
 
+test_xml30:
+	cargo run -- -c ${TESTCARRIERS} -l PENINSULA --acs_nearby --xml balance.xml
+
 run:
 	$(info [INFO]: Ejecutando versión de depuración)
 	cargo run

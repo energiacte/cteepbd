@@ -603,7 +603,7 @@ Porcentaje renovable de la demanda de ACS (perímetro próximo): {} [%]
     }
 }
 
-/// Muestra el balance (paso B) en formato XML
+/// Muestra el balance (paso B) en formato XML v2.1
 ///
 /// Esta función usa un formato compatible con el formato XML del certificado de eficiencia
 /// energética del edificio definido en el documento de apoyo de la certificación energética
@@ -640,7 +640,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         .iter()
         .map(|m| {
             format!(
-                "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
+                "            <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
                 escape_xml(&m.key),
                 escape_xml(&m.value)
             )
@@ -658,9 +658,15 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 ren,
                 nren,
                 co2,
+                // perimeter,
                 comment,
             } = f;
-            format!("      <Dato><Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso><ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2><Comentario>{}</Comentario></Dato>",
+            // No escribimos todavía el perímetro ya que no se ha incluido todavía en las definiciones
+            format!("            <Dato>
+                <Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso>
+                <ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2>
+                <Comentario>{}</Comentario>
+            </Dato>",
             carrier, source, dest, step, ren, nren, co2, escape_xml(comment))
         })
         .collect::<Vec<String>>()
@@ -669,7 +675,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         .iter()
         .map(|m| {
             format!(
-                "      <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
+                "            <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
                 escape_xml(&m.key),
                 escape_xml(&m.value)
             )
@@ -680,6 +686,7 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         .iter()
         .map(|c| {
             let Component {
+                // id,
                 carrier,
                 ctype,
                 csubtype,
@@ -687,17 +694,19 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 values,
                 comment,
             } = c;
+            // En 3.0, a diferencia de 2.1 los valores se separan por esapcios y no comas
             let vals = values
                 .iter()
                 .map(|v| format!("{:.2}", v))
                 .collect::<Vec<String>>()
-                .join(",");
+                .join(" ");
+            // No añadimos todavía id porque no se ha definido en la estructura de datos
             format!(
-                "      <Dato>
-            <Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
-            <Valores>{}</Valores>
-            <Comentario>{}</Comentario>
-        </Dato>",
+                "            <Dato>
+                <Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
+                <Valores>{}</Valores>
+                <Comentario>{}</Comentario>
+            </Dato>",
                 carrier,
                 ctype,
                 csubtype,
@@ -711,36 +720,40 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
 
     // Final assembly
     format!(
-        "<BalanceEPB>
-    <FactoresDePaso>
-        <Metadatos>
-    {}
-        </Metadatos>
-        <Datos>
-    {}
-        </Datos>
-    </FactoresDePaso>
-    <Componentes>
-        <Metadatos>
-    {}
-        </Metadatos>
-        <Datos>
-    {}
-        </Datos>
-    </Componentes>
+        "<DatosBalance>    
     <kexp>{:.2}</kexp>
     <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
+    <FactoresPaso>
+        <Version>3.0</Version>
+        <Metadatos>
+{}
+        </Metadatos>
+        <Datos>
+{}
+        </Datos>
+    </FactoresPaso>
+    <Componentes>
+        <Version>3.0</Version>
+        <Metadatos>
+{}
+        </Metadatos>
+        <Datos>
+{}
+        </Datos>
+    </Componentes>
+</DatosBalance>
+<ResultadosBalance>
     <Epm2><!-- C_ep [kWh/m2.an] -->
         <tot>{:.1}</tot>
         <nren>{:.1}</nren>
     </Epm2>
-</BalanceEPB>",
+</ResultadosBalance>",
+        k_exp,
+        arearef,
         wmetastring,
         wdatastring,
         cmetastring,
         cdatastring,
-        k_exp,
-        arearef,
         ren + nren,
         nren
     )
