@@ -43,7 +43,7 @@ cteepbd - Implementation of the ISO EN 52000-1 standard
 */
 
 use std::fs::{read_to_string, File};
-use std::io::prelude::*;
+use std::io::{self, prelude::*};
 use std::path::Path;
 use std::process::exit;
 use std::str::FromStr;
@@ -56,7 +56,7 @@ use cteepbd::{
 
 const APP_TITLE: &str = r#"CteEPBD"#;
 const APP_DESCRIPTION: &str = r#"
-Copyright (c) 2018-2020 Ministerio de Fomento,
+Copyright (c) 2018-2025 Ministerio de Vivienda y Agenda Urbana,
               Instituto de CC. de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Autores: Rafael Villar Burke <pachi@ietcc.csic.es>,
@@ -68,7 +68,7 @@ Licencia: Publicado bajo licencia MIT.
 "#;
 const APP_ABOUT: &str = r#"CteEpbd - Eficiencia energética de los edificios (CTE DB-HE)."#;
 const APP_LICENSE: &str = r#"
-Copyright (c) 2018-2020 Ministerio de Fomento
+Copyright (c) 2018-2025 Ministerio de Vivienda y Agenda Urbana
               Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -95,17 +95,28 @@ Author(s): Rafael Villar Burke <pachi@ietcc.csic.es>
 
 // Funciones auxiliares -----------------------------------------------------------------------
 
+/// Lee archivo desde path o de la entrada estándar si el path es '-'
 fn readfile<P: AsRef<Path>>(path: P) -> String {
-    read_to_string(&path).unwrap_or_else(|e| {
-        eprintln!(
-            "ERROR: lectura incorrecta del archivo \"{}\": {}",
-            path.as_ref().display(),
-            e
-        );
-        exit(exitcode::IOERR);
-    })
+    let mut buffer = String::new();
+    if path.as_ref().as_os_str() == "-" {
+        io::stdin().read_to_string(&mut buffer).unwrap_or_else(|e| {
+            eprintln!("ERROR: lectura incorrecta de la entrada estándar: {}", e);
+            exit(exitcode::IOERR);
+        });
+        buffer
+    } else {
+        read_to_string(&path).unwrap_or_else(|e| {
+            eprintln!(
+                "ERROR: lectura incorrecta del archivo \"{}\": {}",
+                path.as_ref().display(),
+                e
+            );
+            exit(exitcode::IOERR);
+        })
+    }
 }
 
+/// Escribe contenidos a la ruta indicada en el path
 fn writefile<P: AsRef<Path>>(path: P, content: &[u8]) {
     let mut file = File::create(&path)
         .map_err(|e| {
