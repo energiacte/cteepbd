@@ -355,6 +355,9 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
 }
 
 // Función principal ------------------------------------------------------------------------------
+// TODO: Crear función cli_out que si --json-output es true no saca nada.
+// Si no se define entonces usa println!
+// TODO: auditar si hay más println! fuera de main
 
 fn main() {
     let matches = start_app_and_get_matches();
