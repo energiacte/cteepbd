@@ -13,6 +13,16 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - 2025-07-09
+
+### Novedades
+
+- Posibilidad de leer el archivo de componentes usando la entrada estándar con \texttt{-c '-'}.
+- Posibilidad de sacar resultados JSON por la salida estándar con opción \texttt{-J, -{}-json\_output}.
+- Adaptación de la salida del framento XML a la versión v3.0 del Certificado de Eficiencia Energética del Edificio en Formato XML.
+- Muestra en la versión, además del número, también el commit id y fecha con el que se ha compilado el programa.
+- Compilación para arquitectura x86_64 (64-bit).
+
 ## [0.23.0] - 2020-10-23
 
 ### Novedades
