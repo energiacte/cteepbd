@@ -123,7 +123,7 @@ impl std::str::FromStr for RenNrenCo2 {
                         ("ren", Ok(v)) => res.ren = v,
                         ("nren", Ok(v)) => res.nren = v,
                         ("co2", Ok(v)) => res.co2 = v,
-                        _ => println!("Algo malo pasa con {}", key),
+                        _ => eprintln!("Algo malo pasa con {}", key),
                     }
                 });
             Ok(res)
