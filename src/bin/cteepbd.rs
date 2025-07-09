@@ -344,6 +344,7 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .help("Evita la simplificación de los factores de paso según los vectores definidos"))
         // Salida json por stdout
         .arg(Arg::with_name("json_output")
+            .short("J")
             .long("json_output")
             .conflicts_with_all(&["showlicense", "v"])
             .help("Devuelve solamente resultado JSON en stdout"))
