@@ -108,6 +108,7 @@ bundle: release docs examples
 	cp LICENSE dist/LICENSE
 	cp README.md dist/README.md
 	cp CHANGELOG.md dist/CHANGELOG.md
+	@echo "cteepbd `git log -1 --format=\"(%h %cd)\" --date=short`" > dist/timestamp
 	-cd dist && [ -e $(OUTBUNDLE) ] && mv $(OUTBUNDLE) $(OUTBUNDLEBAK)
 	cd dist && zip -r $(OUTBUNDLE) ./*
 
