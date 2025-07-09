@@ -23,3 +23,112 @@
 ## Wishlist
 
 - use templates for output (plain, detailed, ...) depending on cli parameter
+
+## Clap derive
+
+```rust
+use clap::{Parser};
+
+
+#[derive(Parser, Debug)]
+#[clap(
+    name = "cteepbd",
+    version = env!("CARGO_PKG_VERSION"),
+    author = APP_DESCRIPTION,
+    about = APP_ABOUT,
+    next_line_help = true
+)]
+pub struct Cli {
+    /// Área de referencia
+    #[clap(short = 'a', long, value_name = "AREAREF")]
+    pub arearef: Option<String>,
+
+    /// Factor de exportación (k_exp)
+    #[clap(short = 'k', long, value_name = "KEXP")]
+    pub kexp: Option<String>,
+
+    /// Archivo de definición de los componentes energéticos
+    #[clap(short = 'c', long, value_name = "ARCHIVO_COMPONENTES")]
+    pub archivo_componentes: Option<String>,
+
+    /// Archivo de definición de los factores de paso
+    #[clap(
+        short = 'f',
+        long,
+        value_name = "ARCHIVO_FACTORES",
+        required_unless_present_any = &["fps_loc", "archivo_componentes"],
+        conflicts_with_all = &["fps_loc", "cogen", "red1", "red2"]
+    )]
+    pub archivo_factores: Option<String>,
+
+    /// Localización que define los factores de paso
+    #[clap(
+        short = 'l',
+        value_name = "LOCALIZACION",
+        required_unless_present_any = &["archivo_factores", "archivo_componentes"],
+        possible_values = &["PENINSULA", "CANARIAS", "BALEARES", "CEUTAMELILLA"]
+    )]
+    pub fps_loc: Option<String>,
+
+    /// Archivo de salida de los vectores energéticos corregidos
+    #[clap(long = "oc", value_name = "GEN_ARCHIVO_COMPONENTES")]
+    pub gen_archivo_componentes: Option<String>,
+
+    /// Archivo de salida de los factores de paso corregidos
+    #[clap(long = "of", value_name = "GEN_ARCHIVO_FACTORES")]
+    pub gen_archivo_factores: Option<String>,
+
+    /// Archivo de salida de resultados detallados en formato JSON
+    #[clap(long = "json", value_name = "ARCHIVO_SALIDA_JSON")]
+    pub archivo_salida_json: Option<String>,
+
+    /// Archivo de salida de resultados detallados en formato XML
+    #[clap(long = "xml", value_name = "ARCHIVO_SALIDA_XML")]
+    pub archivo_salida_xml: Option<String>,
+
+    /// Archivo de salida de resultados detallados en formato texto simple
+    #[clap(long = "txt", value_name = "ARCHIVO_SALIDA_TXT")]
+    pub archivo_salida_txt: Option<String>,
+
+    /// Factores de paso (ren, nren, co2) de la producción del vector RED1
+    #[clap(long = "red1", value_names = &["RED1_ren", "RED1_nren", "RED1_co2"], number_of_values = 3)]
+    pub red1: Option<Vec<String>>,
+
+    /// Factores de paso (ren, nren, co2) de la producción del vector RED2
+    #[clap(long = "red2", value_names = &["RED2_ren", "RED2_nren", "RED2_co2"], number_of_values = 3)]
+    pub red2: Option<Vec<String>>,
+
+    /// Factores de exportación a red (ren, nren, co2) de electricidad cogenerada
+    #[clap(long = "cogen", value_names = &["COGEN_ren", "COGEN_nren", "COGEN_co2"], number_of_values = 3)]
+    pub cogen: Option<Vec<String>>,
+
+    /// Factores de exportación a usos no EPB (ren, nren, co2) de electricidad cogenerada
+    #[clap(long = "cogennepb", value_names = &["COGENNEPB_ren", "COGENNEPB_nren", "COGENNEBP_co2"], number_of_values = 3)]
+    pub cogennepb: Option<Vec<String>>,
+
+    /// Demanda anual de ACS [kWh]
+    #[clap(long = "demanda_anual_acs", value_name = "DEM_ACS")]
+    pub demanda_anual_acs: Option<String>,
+
+    /// Realiza el balance considerando solo el servicio de ACS y el perímetro nearby
+    #[clap(short = 'N', long = "acs_nearby", requires = "archivo_componentes", hide = true)]
+    pub acsnrb: bool,
+
+    /// Evita la simplificación de los factores de paso según los vectores definidos
+    #[clap(short = 'F', long = "no_simplifica_fps")]
+    pub nosimplificafps: bool,
+
+    /// Muestra la licencia del programa (MIT)
+    #[clap(short = 'L', long = "licencia")]
+    pub showlicense: bool,
+
+    /// Nivel de verbosidad
+    #[clap(short = 'v', parse(from_occurrences))]
+    pub verbosity: u8,
+}
+
+// [dependencies]
+// clap = { version = "4.5", features = ["derive"] }
+
+let cli = Cli::parse();
+```
