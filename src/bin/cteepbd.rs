@@ -231,7 +231,7 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
     use clap::Arg;
     clap::App::new(APP_TITLE)
         .bin_name("cteepbd")
-        .version(env!("CARGO_PKG_VERSION"))
+        .version(concat!(env!("CARGO_PKG_VERSION"), " ", env!("GIT_COMMIT")))
         .author(APP_DESCRIPTION)
         .about(APP_ABOUT)
         .setting(clap::AppSettings::NextLineHelp)
