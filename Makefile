@@ -101,8 +101,9 @@ ifndef PDFLATEX
 	$(error "Es necesario tener instalado pdflatex para generar la documentación")
 endif
 	mkdir -p docs/build
+	mkdir -p dist
 	cd docs && pdflatex --output-directory=build Manual_cteepbd.tex && pdflatex --output-directory=build Manual_cteepbd.tex
-	cp docs/build/Manual_cteepbd.pdf ./dist
+	cp docs/build/Manual_cteepbd.pdf ./dist/
 
 examples:
 	$(info [INFO]: Copiando archivos de ejemplo)
@@ -120,3 +121,5 @@ bundle: release docs examples
 genjson:
 	cargo run -- -c $(TESTCARRIERS) -l PENINSULA --json "prueba.json"
 
+latex_install:
+	sudo apt install texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-lang-spanish texlive-pstricks texlive-science
