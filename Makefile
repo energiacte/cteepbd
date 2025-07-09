@@ -30,6 +30,9 @@ test_stdin_input:
 test_xml30:
 	cargo run -- -c ${TESTCARRIERS} -l PENINSULA --acs_nearby --xml balance.xml
 
+test_json_output:
+	cargo run -- -c ${TESTCARRIERS} -l PENINSULA --acs_nearby --json_output
+
 run:
 	$(info [INFO]: Ejecutando versión de depuración)
 	cargo run

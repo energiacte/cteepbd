@@ -342,6 +342,11 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .short("F")
             .long("no_simplifica_fps")
             .help("Evita la simplificación de los factores de paso según los vectores definidos"))
+        // Salida json por stdout
+        .arg(Arg::with_name("json_output")
+            .long("json_output")
+            .conflicts_with_all(&["showlicense", "v"])
+            .help("Devuelve solamente resultado JSON en stdout"))
         // Opciones estándar: licencia y nivel de detalle
         .arg(Arg::with_name("showlicense")
             .short("L")
@@ -352,6 +357,19 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .multiple(true)
             .help("Sets the level of verbosity"))
         .get_matches()
+}
+
+/// Genera función que muestra salida por stdout o nada en función del argumento
+fn build_info(disable_stdout: bool) -> Box<dyn Fn(&str)> {
+    if disable_stdout {
+        Box::new(|_msg: &str| {
+            // No hacer nada
+        })
+    } else {
+        Box::new(|msg: &str| {
+            println!("{}", msg);
+        })
+    }
 }
 
 // Función principal ------------------------------------------------------------------------------
@@ -367,6 +385,9 @@ fn main() {
         exit(exitcode::OK);
     }
 
+    let disable_normal_stdout = matches.is_present("json_output");
+    let info = build_info(disable_normal_stdout);
+
     // Prólogo ------------------------------------------------------------------------------------
 
     let verbosity = matches.occurrences_of("v");
@@ -377,12 +398,12 @@ fn main() {
         println!("------------------------------");
     }
 
-    println!("** Datos de entrada");
+    info("** Datos de entrada");
 
     // Componentes energéticos ---------------------------------------------------------------------
     let maybe_archivo = matches.value_of("archivo_componentes");
     let mut components = if let Some(archivo_componentes) = maybe_archivo {
-        println!("Componentes energéticos: \"{}\"", archivo_componentes);
+        info(&format!("Componentes energéticos: \"{}\"", archivo_componentes));
         get_components(archivo_componentes)
     } else {
         Components::default()
@@ -408,11 +429,11 @@ fn main() {
     // Aviso de valor no reglamentario
     if let Some(k) = kexp_cli {
         if k != cte::KEXP_DEFAULT {
-            println!(
+            info(&format!(
                 "AVISO: factor de exportación k_exp distinto al reglamentario ({:.2}): {:.2} (usuario)",
                 cte::KEXP_DEFAULT,
                 k
-            );
+            ));
         };
     };
 
@@ -473,7 +494,7 @@ fn main() {
         exit(exitcode::DATAERR);
     });
 
-    println!("Factores de paso ({}): {}", orig_fp, param_fp);
+    info(&format!("Factores de paso ({}): {}", orig_fp, param_fp));
 
     // Simplificación de los factores de paso -----------------------------------------------------
     if !matches.is_present("nosimplificafps") && !components.cdata.is_empty() {
@@ -502,7 +523,7 @@ fn main() {
 
     if let (Some(a_meta), Some(a_cli)) = (arearef_meta, arearef_cli) {
         if (a_meta - a_cli).abs() > 1e-3 {
-            println!("AVISO: área de referencia A_ref en componentes ({:.1}) y de usuario ({:.1}) distintos", a_meta, a_cli);
+            info(&format!("AVISO: área de referencia A_ref en componentes ({:.1}) y de usuario ({:.1}) distintos", a_meta, a_cli));
         };
     }
 
@@ -516,7 +537,7 @@ fn main() {
     // Actualiza metadato CTE_AREAREF al valor seleccionado
     components.set_meta("CTE_AREAREF", &format!("{:.2}", arearef));
 
-    println!("Área de referencia ({}) [m2]: {:.2}", orig_arearef, arearef);
+    info(&format!("Área de referencia ({}) [m2]: {:.2}", orig_arearef, arearef));
 
     // kexp ---------------------------------------------------------------------------------------
     // CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
@@ -527,17 +548,17 @@ fn main() {
     // Aviso de valor no reglamentario
     if let Some(k) = kexp_meta {
         if k != cte::KEXP_DEFAULT {
-            println!(
+            info(&format!(
                 "AVISO: factor de exportación k_exp distinto al reglamentario ({:.2}): {:.2} (metadatos)",
                 cte::KEXP_DEFAULT,
                 k
-            );
+            ));
         };
     };
 
     if let (Some(k_meta), Some(k_cli)) = (kexp_meta, kexp_cli) {
         if (k_meta - k_cli).abs() > 1e-3 {
-            println!("AVISO: factor de exportación k_exp en componentes ({:.1}) y de usuario ({:.1}) distintos", k_meta, k_cli);
+            info(&format!("AVISO: factor de exportación k_exp en componentes ({:.1}) y de usuario ({:.1}) distintos", k_meta, k_cli));
         };
     }
 
@@ -551,7 +572,7 @@ fn main() {
     // Actualiza metadato CTE_KEXP al valor seleccionado
     components.set_meta("CTE_KEXP", &format!("{:.1}", kexp));
 
-    println!("Factor de exportación ({}) [-]: {:.1}", orig_kexp, kexp);
+    info(&format!("Factor de exportación ({}) [-]: {:.1}", orig_kexp, kexp));
 
     // Guardado de componentes energéticos --------------------------------------------------------
     if matches.is_present("gen_archivo_componentes") {
@@ -602,24 +623,20 @@ fn main() {
             });
         Some(balance)
     } else if matches.is_present("gen_archivos_factores") {
-        println!(
+        info(&format!(
             "No se calcula el balance pero se ha generado el archivo de factores de paso {:?}",
             matches.value_of_os("gen_archivo_factores").unwrap()
-        );
+        ));
         None
     } else {
-        println!("No se han definido datos suficientes para calcular el balance energético. Necesita definir al menos los componentes energéticos y los factores de paso");
+        info("No se han definido datos suficientes para calcular el balance energético. Necesita definir al menos los componentes energéticos y los factores de paso");
         None
     };
 
     // Salida de resultados -----------------------------------------------------------------------
     if let Some(balance) = balance {
         // Guardar balance en formato json
-        if matches.is_present("archivo_salida_json") {
-            let path = matches.value_of_os("archivo_salida_json").unwrap();
-            if verbosity > 0 {
-                println!("Resultados en formato JSON: {:?}", path);
-            }
+        if matches.is_present("archivo_salida_json") || matches.is_present("json_output") {
             let json = serde_json::to_string_pretty(&balance).unwrap_or_else(|e| {
                 eprintln!(
                     "ERROR: conversión incorrecta del balance energético a JSON: {}",
@@ -627,7 +644,16 @@ fn main() {
                 );
                 exit(exitcode::DATAERR);
             });
-            writefile(path, json.as_bytes());
+            if matches.is_present("archivo_salida_json") {
+                let path = matches.value_of_os("archivo_salida_json").unwrap();
+                if verbosity > 0 {
+                    println!("Resultados en formato JSON: {:?}", path);
+                }
+                writefile(path, json.as_bytes());
+            }
+            if matches.is_present("json_output") {
+                println!("{}", json)
+            }
         }
         // Guardar balance en formato XML
         if matches.is_present("archivo_salida_xml") {
@@ -640,12 +666,12 @@ fn main() {
         }
         // Mostrar siempre en formato de texto plano
         if matches.is_present("acsnrb") {
-            println!("** Balance energético (servicio de ACS, perímetro próximo)");
+            info("** Balance energético (servicio de ACS, perímetro próximo)");
         } else {
-            println!("** Balance energético");
+            info("** Balance energético");
         }
         let plain = cte::balance_to_plain(&balance);
-        println!("{}", plain);
+        info(&plain);
 
         // Guardar balance en formato de texto plano
         if matches.is_present("archivo_salida_txt") {
