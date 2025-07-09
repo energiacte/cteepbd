@@ -178,10 +178,10 @@ para su aplicación al CTE DB-HE (procedimiento EN ISO 52000-1) y formatos de da
 \begin{center} \footnotesize
 
 \fbox{\parbox{.75\textwidth}{
-\textbf{\copyright ~ 2018-2022 Ministerio de Fomento}\\
-\textbf{\phantom{\copyright ~ 2018-2022 }Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)}\\[5pt]
+\textbf{\copyright ~ 2018-2025 Ministerio de Fomento}\\
+\textbf{\phantom{\copyright ~ 2018-2025 }Instituto de Ciencias de la Construcción Eduardo Torroja (IETcc-CSIC)}\\[5pt]
 \textbf{Autores}:\\[5pt]
-\-\qquad Grupo de Energética Edificatoria y Sostenibilidad de la Unidad de Calidad en la Construcción (IETcc-CSIC):\\
+\-\qquad Grupo de Energética Edificatoria de la Unidad de Calidad en la Construcción (IETcc-CSIC):\\
 \-\qquad Rafael Villar Burke \href{mailto:pachi@ietcc.csic.es}{<pachi@ietcc.csic.es>}\\
 \-\qquad Daniel Jiménez González \href{mailto:danielj@ietcc.csic.es}{<danielj@ietcc.csic.es>}\\
 \-\qquad Marta Sorribes Gil \href{mailto:msorribes@ietcc.csic.es}{<msorribes@ietcc.csic.es>}
@@ -271,19 +271,19 @@ Los resultados obtenidos solamente tienen sentido para la justificación de valo
 
 Algunos de los argumentos de la interfaz del programa \texttt{cteepbd} sirven para definir los datos de entrada para el cálculo del balance energético. Estos datos tienen preferencia sobre los parámetros definidos en los metadatos del archivo de definición de componentes energéticos.
 
-\textbf{\texttt{-a, --arearef <AREAREF>}}
+\textbf{\texttt{-a, -{}-arearef <AREAREF>}}
 
 Este argumento indica el área de referencia para el cálculo de ratios por superficie. Debe tenerse en cuenta que el balance energético no se calcula repercutido por superficie, sino en valor total, y solamente algunos tipos de salida utilizan este dato para algunos indicadores de eficiencia energética.
 
-\textbf{\texttt{-k, --kexp <KEXP>}}
+\textbf{\texttt{-k, -{}-kexp <KEXP>}}
 
 Este argumento indica el factor de exportación $k_{exp}$ usado para calcular la eficiencia energética. En condiciones \textit{CTE DB-HE} toma el valor $0.0$.
 
-\textbf{\texttt{-c, --archivo\_componentes <ARCHIVO\_COMPONENTES>}}
+\textbf{\texttt{-c, -{}-archivo\_componentes <ARCHIVO\_COMPONENTES>}}
 
-Este argumento indica la ruta del archivo que define los componentes energéticos sobre los que se realiza el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatocomponentes} e incluye metadatos que pueden definir también algunos parámetros de cálculo, aunque con menor prioridad que las opciones definidas explícitamente a través de la interfaz del programa.
+Este argumento indica la ruta del archivo que define los componentes energéticos sobre los que se realiza el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatocomponentes} e incluye metadatos que pueden definir también algunos parámetros de cálculo, aunque con menor prioridad que las opciones definidas explícitamente a través de la interfaz del programa. El valor '-' indica la lectura de los datos desde la entrada estándar.
 
-\textbf{\texttt{-f, --archivo\_factores <ARCHIVO\_FACTORES>}}
+\textbf{\texttt{-f, -{}-archivo\_factores <ARCHIVO\_FACTORES>}}
 
 Este argumento indica la ruta del archivo de definición de los factores de paso para el cálculo de la eficiencia energética. Tiene el formato definido en el apartado \nameref{sec:formatofactorespaso}.
 Alternativamente, estos factores de paso pueden definirse mediante una localización (ver argumento \texttt{-l}).
@@ -341,6 +341,10 @@ Este argumento indica la ruta de salida del archivo con los factores de paso gen
 \textbf{\texttt{-{}-json ARCHIVO\_SALIDA\_JSON}}
 
 Este argumento indica la ruta de salida de un archivo en formato JSON con la información detallada del cálculo de la eficiencia energética. Las propiedades definidas en el objeto se detallan en el apartado \nameref{sec:formatosalida}.
+
+\textbf{\texttt{-{}-json\_output}}
+
+Este argumento sustituye la salida de texto convencional a la salida estándar por el resultado de la evaluación en formato JSON. Esta opción es incompatible con las opciones \texttt{-v} y \texttt{-{}-licencia}.
 
 \textbf{\texttt{-{}-txt ARCHIVO\_SALIDA\_TXT}}
 
@@ -1007,5 +1011,28 @@ Para ello basta indicar la salida \texttt{XML}:
     $ cteepbd -c componentes.cteepbd -l PENINSULA --xml fragmentocert.xml
 \end{Verbatim}
 %$
+
+\clearpage
+\newpage
+\section{Historial de versiones}
+\label{sec:anexocambios}
+\setcounter{figure}{0} % resetear contador por sección
+\setcounter{table}{0} % resetear contador por sección
+
+Este apéndice detalla los cambios realizados entre versiones.
+
+\subsection{v.0.24.0 (julio 2025)}
+
+\begin{itemize}
+\item Posibilidad de leer el archivo de componentes usando la entrada estándar con \texttt{-c '-'}.
+\item Posibilidad de sacar resultados JSON por la salida estándar con opción \texttt{-J, -{}-json\_output}.
+\item Adaptación de la salida del framento XML a la versión v3.0 del Certificado de Eficiencia Energética del Edificio en Formato XML.
+\end{itemize}
+
+\subsection{v.0.23.0 (enero 2022)}
+
+\begin{itemize}
+\item Versión inicial.
+\end{itemize}
 
 \end{document}
