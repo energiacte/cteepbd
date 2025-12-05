@@ -1,8 +1,12 @@
 # TODO
 
+- cargo-dist
+
+  - creo que tenemos todo bien configurado pero está en la rama update_to_v0.24.0
+  - habría que llevarlo a main y permitir que se ejecute a voluntad (on: workflow_dispatch:)
+
 - check if the `#[non_exhaustive]` attribute can be useful in some enums
-- maybe bug: see why emissions for ACS for the example in the manual change
-  depending on whether nearby factors are used or not.
+- maybe bug: see why emissions for ACS for the example in the manual change depending on whether nearby factors are used or not.
 
 - cte
 
