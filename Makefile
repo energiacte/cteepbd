@@ -115,5 +115,8 @@ bundle: release docs examples
 genjson:
 	cargo run -- -c $(TESTCARRIERS) -l PENINSULA --json "prueba.json"
 
-latex_install:
+install_deps:
+	$(info [INFO]: Instalando dependencias en sistema Linux Debian/Ubuntu)
 	sudo apt install texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-lang-spanish texlive-pstricks texlive-science
+	$(info [INFO]: Instalando cargo-dist)
+	cargo install cargo-dist
