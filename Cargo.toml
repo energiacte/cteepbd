@@ -28,3 +28,8 @@ lto = true
 codegen-units = 1
 incremental = false
 opt-level = "z"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

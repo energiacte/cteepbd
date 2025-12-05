@@ -120,3 +120,10 @@ install_deps:
 	sudo apt install texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-lang-spanish texlive-pstricks texlive-science
 	$(info [INFO]: Instalando cargo-dist)
 	cargo install cargo-dist
+
+help_dist:
+	$(info [INFO]: Regenera distribución con `dist generate` si hay cambios)
+	$(info [INFO]: Revisa plan de distribución con `dist plan`)
+	$(info [INFO]: Haz distibución local con `dist build`)
+	$(info [INFO]: Sube distibución a github después de subir cambios, haciendo `git tag v0.25` y `git push origin v0.25`)
+	$(info [INFO]: Más información en https://axodotdev.github.io/cargo-dist/book/quickstart/rust.html#cut-a-release-trigger-github-ci)

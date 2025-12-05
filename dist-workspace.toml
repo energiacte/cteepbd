@@ -1,0 +1,50 @@
+[workspace]
+members = ["cargo:."]
+
+# Config for 'dist'
+[dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.30.2"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = []
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc"
+]
+
+# (Opcional) Activa subidas de artifacts en PRs (útil para probar el pipeline)
+pr-run-mode = "upload"
+
+# Formato de archivos por plataforma (auto-incluye README/LICENSE/CHANGELOG por defecto)
+# auto-includes=true ya es el valor por defecto.
+# unix-archive    = ".tar.gz"
+# windows-archive = ".zip"
+
+# === Paquetes del sistema que deben instalarse antes de compilar ===
+#   - zip (para empaquetar salidas de ejemplos)
+#   - TeX Live básico para pdflatex y manual: paquetes recomendados/extra/fonts
+#   - cargo-dist gestionará apt/choco/homebrew según el runner
+[dist.dependencies.apt]
+zip                         = "*"
+texlive-latex-recommended   = "*"
+texlive-latex-extra         = "*"
+texlive-fonts-recommended   = "*"
+
+# === Artifacts extra del Makefile ===
+# 1) Ejemplos en test_data
+[[dist.extra-artifacts]]
+build     = ["bash", "-c","make examples && cd dist && zip -r test_data.zip test_data"]
+artifacts = ["dist/test_data.zip"]
+
+# 2) Compilar el manual PDF
+[[dist.extra-artifacts]]
+build     = ["make","docs"]
+artifacts = ["dist/Manual_cteepbd.pdf"]
+
+# 3) Timestamp
+[[dist.extra-artifacts]]
+build     = ["bash", "-c","echo \"cteepbd $(git log -1 --format=\"(%h %cd)\" --date=short)\" > dist/timestamp"]
+artifacts = ["dist/timestamp"]
