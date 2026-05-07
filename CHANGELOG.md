@@ -13,6 +13,12 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.2] - 2026-05-07
+
+### Correcciones
+
+- Usa factores de paso explicitamente indicados en el caso de vectores insitu (ELECTRICIDAD, MEDIOAMBIENTE) y no siempre ren 1.0, nren 0.0, co2 0.0
+
 ## [0.24.0] - 2025-07-09
 
 ### Novedades

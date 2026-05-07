@@ -161,7 +161,7 @@ impl Factors {
         let wf_carriers: HashSet<_> = self.wdata.iter().map(|f| f.carrier).collect();
 
         // Asegura que existe MEDIOAMBIENTE, INSITU, SUMINISTRO, A, 1.0, 0.0
-        self.update_wfactor(
+        self.ensure_wfactor(
             MEDIOAMBIENTE,
             INSITU,
             SUMINISTRO,
@@ -171,7 +171,7 @@ impl Factors {
         );
 
         // Asegura que existe MEDIOAMBIENTE, RED, SUMINISTRO, A, 1.0, 0.0
-        self.update_wfactor(
+        self.ensure_wfactor(
             MEDIOAMBIENTE,
             RED,
             SUMINISTRO,
@@ -182,7 +182,7 @@ impl Factors {
 
         // Asegura que existe ELECTRICIDAD, INSITU, SUMINISTRO, A, 1.0, 0.0 si hay ELECTRICIDAD
         if wf_carriers.contains(&ELECTRICIDAD) {
-            self.update_wfactor(
+            self.ensure_wfactor(
                 ELECTRICIDAD,
                 INSITU,
                 SUMINISTRO,
