@@ -36,7 +36,7 @@ use std::fmt;
 pub type Result<T> = std::result::Result<T, EpbdError>;
 
 /// Errores definidos para la librería y aplicación cteepbd
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum EpbdError {
     /// Error al interpretar un valor
     ParseError(String),

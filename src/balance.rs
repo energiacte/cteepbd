@@ -445,27 +445,27 @@ fn balance_for_carrier(
     // * `source` - match this energy source (`RED`, `INSITU`, `COGENERACION`)
     // * `dest` - match this energy destination (use)
     // * `step` - match this calculation step
-    fn fp_find(fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor> {
+    fn fp_find(carrier: Carrier, fp_cr: &[Factor], source: Source, dest: Dest, step: Step) -> Result<&Factor> {
         fp_cr
             .iter()
             .find(|fp| fp.source == source && fp.dest == dest && fp.step == step)
             .ok_or_else(|| {
                 EpbdError::MissingFactor(format!(
                     "'{}, {}, {}, {}'",
-                    fp_cr[0].carrier, source, dest, step
+                    carrier, source, dest, step
                 ))
             })
     }
 
     // * Weighted energy for delivered energy: the cost of producing that energy
-    let fpA_grid = fp_find(fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
+    let fpA_grid = fp_find(carrier, fp_cr, Source::RED, Dest::SUMINISTRO, Step::A)?;
     let E_we_del_cr_grid_an = E_del_cr_an * fpA_grid.factors(); // formula 19, 39
 
     // 2) Delivered energy from non cogeneration on-site sources (origin i)
     let E_we_del_cr_onsite_an = E_pr_cr_i_an
         .get(&CSubtype::INSITU)
         .and_then(|E_pr_cr_i| {
-            fp_find(fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
+            fp_find(carrier, fp_cr, Source::INSITU, Dest::SUMINISTRO, Step::A)
                 .map(|fpA_pr_cr_i| E_pr_cr_i * fpA_pr_cr_i.factors())
                 .ok()
         })
@@ -511,7 +511,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?;
+                    let fp = fp_find(carrier, fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::A)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_nEPus_i[gen] * f_pr_cr_i[gen]
@@ -525,7 +525,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?;
+                    let fp = fp_find(carrier, fp_cr, (*gen).try_into()?, Dest::A_RED, Step::A)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpA_grid_i[gen] * f_pr_cr_i[gen];
@@ -545,7 +545,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?;
+                    let fp = fp_find(carrier, fp_cr, (*gen).try_into()?, Dest::A_NEPB, Step::B)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_nEPus_i[gen] * f_pr_cr_i[gen]
@@ -559,7 +559,7 @@ fn balance_for_carrier(
             exp_generators.iter().fold(
                 Ok(RenNrenCo2::default()),
                 |acc: Result<RenNrenCo2>, &gen| {
-                    let fp = fp_find(fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?;
+                    let fp = fp_find(carrier, fp_cr, (*gen).try_into()?, Dest::A_RED, Step::B)?;
                     Ok(acc? + (fp.factors() * f_pr_cr_i[gen]))
                 },
             )? // sum all i (non grid sources): fpB_grid_i[gen] * f_pr_cr_i[gen];

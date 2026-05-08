@@ -13,15 +13,27 @@ El formato se basa en el descrito en [Keep a Changelog](https://keepachangelog.c
 
 Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Correcciones
+
+- Genera error y no panic al no localizar algunos factores de paso
+
 ## [0.24.2] - 2026-05-07
 
 ### Correcciones
 
-- Usa factores de paso explicitamente indicados en el caso de vectores insitu (ELECTRICIDAD, MEDIOAMBIENTE) y no siempre ren 1.0, nren 0.0, co2 0.0
+- Usa factores de paso explícitamente indicados en el caso de vectores insitu (ELECTRICIDAD, MEDIOAMBIENTE) y no siempre ren 1.0, nren 0.0, co2 0.0
+
+## [0.24.1] - 2025-05-12
+
+### Novedades
+
+- Introduce dependencia de cargo-dist para mejorar distribución en el futuro
 
 ## [0.24.0] - 2025-07-09
 
-### Novedades
+### Novedades 3c37cb1acad49d2994a1ca84c8acaa6906672208
 
 - Posibilidad de leer el archivo de componentes usando la entrada estándar con \texttt{-c '-'}.
 - Posibilidad de sacar resultados JSON por la salida estándar con opción \texttt{-J, -{}-json\_output}.

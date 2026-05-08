@@ -7,7 +7,7 @@ use std::path::Path;
 
 use pretty_assertions::assert_eq;
 
-use cteepbd::{cte::*, types::*, *};
+use cteepbd::{cte::*, error::EpbdError, types::*, *};
 
 const TESTFPJ: &str = "vector, fuente, uso, step, ren, nren, co2
 ELECTRICIDAD, RED, SUMINISTRO, A, 0.5, 2.0, 0.42
@@ -996,4 +996,23 @@ fn cte_ACS_demanda_ren_excluye_aux() {
     let FP = TESTFP.parse().unwrap();
     let fraccion_ren_acs = fraccion_renovable_acs_nrb(&comps, &FP, 4549.0).unwrap();
     assert_eq!(format!("{:.3}", fraccion_ren_acs), "0.967");
+}
+
+/// Consumo de gas natural sin factor de paso da error de MissingFactor
+#[test]
+fn cte_ACS_gn_wf_undefined() {
+    let comps = "GASNATURAL,CONSUMO,EPB,ACS,44.44"
+        .parse::<Components>()
+        .unwrap()
+        .normalize();
+    let FP: Factors = TESTFP
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("GASNATURAL"))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .parse()
+        .unwrap();
+    let bal = energy_performance(&comps, &FP, 1.0, 1.0);
+
+    assert_eq!(bal.err(), Some(EpbdError::MissingFactor("'GASNATURAL, RED, SUMINISTRO, A'".into())));
 }
