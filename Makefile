@@ -105,6 +105,7 @@ examples:
 
 bundle: release docs examples
 	$(info [INFO]: Generando archivo .zip de distribución)
+	mkdir -p dist
 	cp LICENSE dist/LICENSE
 	cp README.md dist/README.md
 	cp CHANGELOG.md dist/CHANGELOG.md
