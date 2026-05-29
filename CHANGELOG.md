@@ -15,6 +15,8 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 ## Unreleased
 
+## [0.24.3] - 2026-05-29
+
 ### Correcciones
 
 - Genera error y no panic al no localizar algunos factores de paso
