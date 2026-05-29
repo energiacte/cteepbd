@@ -24,19 +24,17 @@ pr-run-mode = "upload"
 # windows-archive = ".zip"
 
 # === Paquetes del sistema que deben instalarse antes de compilar ===
-#   - zip (para empaquetar salidas de ejemplos)
-#   - TeX Live básico para pdflatex y manual: paquetes recomendados/extra/fonts
-#   - cargo-dist gestionará apt/choco/homebrew según el runner
-[dist.dependencies.apt]
-zip                         = "*"
-texlive-latex-base          = "*"
-texlive-latex-recommended   = "*"
-texlive-latex-extra         = "*"
-texlive-fonts-recommended   = "*"
-texlive-fonts-extra         = "*"
-texlive-lang-spanish        = "*"
-texlive-pstricks            = "*"
-texlive-science             = "*"
+# No se usan en la compilación sino en los extra-artifacts
+# [dist.dependencies.apt]
+# zip                         = "*"
+# texlive-latex-base          = "*"
+# texlive-latex-recommended   = "*"
+# texlive-latex-extra         = "*"
+# texlive-fonts-recommended   = "*"
+# texlive-fonts-extra         = "*"
+# texlive-lang-spanish        = "*"
+# texlive-pstricks            = "*"
+# texlive-science             = "*"
 
 # === Artifacts extra del Makefile ===
 # 1) Ejemplos en test_data
