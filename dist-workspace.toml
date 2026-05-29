@@ -46,5 +46,5 @@ artifacts = ["dist/Manual_cteepbd.pdf"]
 
 # 3) Timestamp
 [[dist.extra-artifacts]]
-build     = ["bash", "-c","echo \"cteepbd $(git log -1 --format=\"(%h %cd)\" --date=short)\" > dist/timestamp"]
+build     = ["bash", "-c","echo \"cteepbd $(git log -1 --format='(%h %cd)' --date=short)\" > dist/timestamp"]
 artifacts = ["dist/timestamp"]
