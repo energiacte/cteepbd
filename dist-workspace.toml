@@ -29,9 +29,14 @@ pr-run-mode = "upload"
 #   - cargo-dist gestionará apt/choco/homebrew según el runner
 [dist.dependencies.apt]
 zip                         = "*"
+texlive-latex-base          = "*"
 texlive-latex-recommended   = "*"
 texlive-latex-extra         = "*"
 texlive-fonts-recommended   = "*"
+texlive-fonts-extra         = "*"
+texlive-lang-spanish        = "*"
+texlive-pstricks            = "*"
+texlive-science             = "*"
 
 # === Artifacts extra del Makefile ===
 # 1) Ejemplos en test_data
