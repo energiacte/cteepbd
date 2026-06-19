@@ -459,7 +459,9 @@ pub fn fraccion_renovable_acs_nrb(
     // b. Total de producción de electricidad in situ asignada, en principio, a ACS
     let E_pr_el_onsite_t = cr_list
         .iter()
-        .filter(|c| c.carrier == ELECTRICIDAD && c.ctype == PRODUCCION && c.csubtype == CSubtype::INSITU)
+        .filter(|c| {
+            c.carrier == ELECTRICIDAD && c.ctype == PRODUCCION && c.csubtype == CSubtype::INSITU
+        })
         .fold(vec![0.0; num_steps], |acc, c| vecvecsum(&acc, &c.values));
     // c. Consumo efectivo de electricidad renovable en ACS (Mínimo entre el consumo y la producción in situ) (consumo == demanda)
     let Q_el_an_ren: f32 = vecvecmin(&E_EPus_el_t, &E_pr_el_onsite_t).iter().sum();
@@ -662,12 +664,21 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
                 comment,
             } = f;
             // No escribimos todavía el perímetro ya que no se ha incluido todavía en las definiciones
-            format!("            <Dato>
+            format!(
+                "            <Dato>
                 <Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso>
                 <ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2>
                 <Comentario>{}</Comentario>
             </Dato>",
-            carrier, source, dest, step, ren, nren, co2, escape_xml(comment))
+                carrier,
+                source,
+                dest,
+                step,
+                ren,
+                nren,
+                co2,
+                escape_xml(comment)
+            )
         })
         .collect::<Vec<String>>()
         .join("\n");
@@ -754,6 +765,166 @@ pub fn balance_to_xml(balanceobj: &Balance) -> String {
         wdatastring,
         cmetastring,
         cdatastring,
+        ren + nren,
+        nren
+    )
+}
+
+/// Muestra el balance (paso B) en formato XML v2.1
+///
+/// Esta función usa un formato compatible con el formato XML del certificado de eficiencia
+/// energética del edificio definido en el documento de apoyo de la certificación energética
+/// correspondiente.
+pub fn balance_to_xml21(balanceobj: &Balance) -> String {
+    let Balance {
+        components,
+        wfactors,
+        k_exp,
+        arearef,
+        balance_m2,
+        ..
+    } = balanceobj;
+
+    // Data
+    let RenNrenCo2 { ren, nren, .. } = balance_m2.B;
+    let cmeta = &components.cmeta;
+    let cdata = &components.cdata;
+    let wmeta = &wfactors.wmeta;
+    let wdata = &wfactors.wdata;
+
+    /// Helper function -> XML escape symbols
+    fn escape_xml(unescaped: &str) -> String {
+        unescaped
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('\\', "&apos;")
+            .replace('"', "&quot;")
+    }
+
+    // Formatting
+    let wmetastring = wmeta
+        .iter()
+        .map(|m| {
+            format!(
+                "            <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
+                escape_xml(&m.key),
+                escape_xml(&m.value)
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    let wdatastring = wdata
+        .iter()
+        .map(|f| {
+            let Factor {
+                carrier,
+                source,
+                dest,
+                step,
+                ren,
+                nren,
+                co2,
+                // perimeter,
+                comment,
+            } = f;
+            // No escribimos todavía el perímetro ya que no se ha incluido todavía en las definiciones
+            format!(
+                "            <Dato>
+                <Vector>{}</Vector><Origen>{}</Origen><Destino>{}</Destino><Paso>{}</Paso>
+                <ren>{:.3}</ren><nren>{:.3}</nren><co2>{:.3}</co2>
+                <Comentario>{}</Comentario>
+            </Dato>",
+                carrier,
+                source,
+                dest,
+                step,
+                ren,
+                nren,
+                co2,
+                escape_xml(comment)
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    let cmetastring = cmeta
+        .iter()
+        .map(|m| {
+            format!(
+                "            <Metadato><Clave>{}</Clave><Valor>{}</Valor></Metadato>",
+                escape_xml(&m.key),
+                escape_xml(&m.value)
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+    let cdatastring = cdata
+        .iter()
+        .map(|c| {
+            let Component {
+                // id,
+                carrier,
+                ctype,
+                csubtype,
+                service,
+                values,
+                comment,
+            } = c;
+            // 2.1 separa valores por comas
+            let vals = values
+                .iter()
+                .map(|v| format!("{:.2}", v))
+                .collect::<Vec<String>>()
+                .join(",");
+            format!(
+                "            <Dato>
+                <Vector>{}</Vector><Tipo>{}</Tipo><Subtipo>{}</Subtipo><Servicio>{}</Servicio>
+                <Valores>{}</Valores>
+                <Comentario>{}</Comentario>
+            </Dato>",
+                carrier,
+                ctype,
+                csubtype,
+                service,
+                vals,
+                escape_xml(comment)
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    // Final assembly
+    format!(
+        "<BalanceEPB>
+    <FactoresDePaso>
+        <Metadatos>
+{}
+        </Metadatos>
+        <Datos>
+{}
+        </Datos>
+    </FactoresDePaso>
+    <Componentes>
+        <Metadatos>
+{}
+        </Metadatos>
+        <Datos>
+{}
+        </Datos>
+    </Componentes>
+    <kexp>{:.2}</kexp>
+    <AreaRef>{:.2}</AreaRef><!-- área de referencia [m2] -->
+    <Epm2><!-- C_ep [kWh/m2.an] -->
+        <tot>{:.1}</tot>
+        <nren>{:.1}</nren>
+    </Epm2>
+</BalanceEPB>",
+        wmetastring,
+        wdatastring,
+        cmetastring,
+        cdatastring,
+        k_exp,
+        arearef,
         ren + nren,
         nren
     )

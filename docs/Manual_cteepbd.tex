@@ -356,6 +356,10 @@ Este argumento indica la ruta de salida de un archivo en formato XML, con inform
 
 \subsubsection{Otros argumentos}
 
+\textbf{\texttt{-{}-xml\_version}}
+
+Este argumento indica la versión del formato XML a utilizar para la salida de datos. Puede adoptar los valores \texttt{2.1} o \texttt{3.0}.
+
 \textbf{\texttt{-{}-no\_simplifica\_fps}}
 
 Este argumento evita la simplificación de los factores de paso que de forma predefinida se realiza y que elimina aquellos factores de paso que no son necesarios para evaluar los componentes energéticos de la entrada de datos.
@@ -1012,6 +1016,13 @@ Para ello basta indicar la salida \texttt{XML}:
 \end{Verbatim}
 %$
 
+En el caso de que se quiera obtener el fragmento XML de acuerdo a la versión 2.1 es necesario indicar la opción \texttt{-{}-xml\_version 2.1}:
+
+\begin{Verbatim}[fontsize=\small]
+    $ cteepbd -c componentes.cteepbd -l PENINSULA --xml fragmentocert21.xml --xml_version 2.1
+\end{Verbatim}
+%$
+
 \clearpage
 \newpage
 \section{Historial de versiones}
@@ -1021,12 +1032,30 @@ Para ello basta indicar la salida \texttt{XML}:
 
 Este apéndice detalla los cambios realizados entre versiones.
 
+\subsection{v.0.25.0 (junio 2026)}
+
+\begin{itemize}
+\item  Nueva opción \texttt{-{}-xml\_version} para indicar si se quiere que el XML generado en el archivo sea con el formato de la versión 2.1 o 3.0
+\end{itemize}
+
+\subsection{v.0.24.3 (mayo 2026)}
+
+\begin{itemize}
+\item  Corrección de panic para generar un error al no localizar algunos factores de paso
+\end{itemize}
+
+\subsection{v.0.24.2 (mayo 2026)}
+
+\begin{itemize}
+\item  Corrección de uso de factores de paso explícitamente indicados en el caso de vectores insitu (ELECTRICIDAD, MEDIOAMBIENTE) y no siempre ren 1.0, nren 0.0, co2 0.0
+\end{itemize}
+
 \subsection{v.0.24.0 (julio 2025)}
 
 \begin{itemize}
 \item Posibilidad de leer el archivo de componentes usando la entrada estándar con \texttt{-c '-'}.
 \item Posibilidad de sacar resultados JSON por la salida estándar con opción \texttt{-J, -{}-json\_output}.
-\item Adaptación de la salida del framento XML a la versión v3.0 del Certificado de Eficiencia Energética del Edificio en Formato XML.
+\item Adaptación de la salida del fragmento XML a la versión v3.0 del Certificado de Eficiencia Energética del Edificio en Formato XML.
 \item Muestra en la versión, además del número, también el commit id y fecha con el que se ha compilado el programa.
 \item Compilación para arquitectura x86\_64 (64-bit).
 \end{itemize}
@@ -1035,6 +1064,52 @@ Este apéndice detalla los cambios realizados entre versiones.
 
 \begin{itemize}
 \item Versión inicial.
+\end{itemize}
+
+\subsection{v.0.22.0 (septiembre 2020)}
+
+\begin{itemize}
+\item  Corrección del fragmento XML (\<CO2> -{}-> \<co2>)
+\end{itemize}
+
+\subsection{0.21.0 (junio 2020)}
+
+\begin{itemize}
+\item  El cálculo del porcentaje renovable de la demanda de ACS en el perímetro próximo ahora admite más casos, con las siguientes restricciones:
+  \begin{itemize}
+  \item  Si se produce ACS con biomasa, solo se puede combinar con otra producción in situ
+  \item  No admite producción de ACS con electricidad cogenerada
+  \end{itemize}
+\item  Se corrige el cálculo del porcentaje renovable de la demanda de ACS en el perímetro próximo, que en algunos casos se reportaba superior al 100%.
+\end{itemize}
+
+\subsection{0.20.0 (junio 2020)}
+
+\begin{itemize}
+\item  El cálculo de la parte renovable de la demanda de ACS en perímetro próximo es ahora una operación infalible (siempre devuelve un resultado). En el caso de que el indicador no se pueda calcular, se añade en `balance.misc` una clave \texttt{error\_acs} donde se dan los detalles, evitando la salida abrupta del programa.
+\end{itemize}
+
+\subsection{0.19.0 (junio 2020)}
+
+\begin{itemize}
+\item  Posibilidad de excluir en el cálculo de la demanda renovable de ACS de los componentes marcados con \texttt{CTEEPBD\_EXCLUYE\_AUX\_ACS} en el comentario. Esto permite excluir los consumos auxiliares eléctricos, que no contribuyen a la demanda.
+\item  Posiblidad de indicar la demanda anual de ACS en los metadatos con \texttt{CTE\_ACS\_DEMANDA\_ANUAL}
+\end{itemize}
+
+\subsection{0.18.0 (junio 2020)}
+
+\begin{itemize}
+\item  Documentación de los códigos de salida de la aplicación (OK y errores)
+\end{itemize}
+
+\begin{itemize}
+\item  Detalla error al recibir demanda anual de ACS nula para el cálculo de la parte renovable de la demanda (emite error)
+\end{itemize}
+
+\subsection{0.17.0 (mayo 2020)}
+
+\begin{itemize}
+\item  Corrección del reparto de la producción eléctrica por servicios en presencia de consumos No EPB
 \end{itemize}
 
 \end{document}

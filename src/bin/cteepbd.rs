@@ -296,11 +296,18 @@ fn start_app_and_get_matches() -> clap::ArgMatches<'static> {
             .value_name("ARCHIVO_SALIDA_XML")
             .help("Archivo de salida de resultados detallados en formato XML")
             .takes_value(true))
-        .arg(Arg::with_name("archivo_salida_txt")
+            .arg(Arg::with_name("archivo_salida_txt")
             .long("txt")
             .value_name("ARCHIVO_SALIDA_TXT")
             .help("Archivo de salida de resultados detallados en formato texto simple")
             .takes_value(true))
+        // Formato de salida del XML
+            .arg(Arg::with_name("xml_version")
+                .long("xml_version")
+                .value_names(&["XML_VERSION"])
+                .possible_values(&["2.1", "3.0"])
+                .help("Versión del formato XML generado")
+                .takes_value(true))
         // Factores definidos por el usuario
         .arg(Arg::with_name("CTE_RED1")
             .long("red1")
@@ -404,7 +411,10 @@ fn main() {
     // Componentes energéticos ---------------------------------------------------------------------
     let maybe_archivo = matches.value_of("archivo_componentes");
     let mut components = if let Some(archivo_componentes) = maybe_archivo {
-        info(&format!("Componentes energéticos: \"{}\"", archivo_componentes));
+        info(&format!(
+            "Componentes energéticos: \"{}\"",
+            archivo_componentes
+        ));
         get_components(archivo_componentes)
     } else {
         Components::default()
@@ -538,14 +548,17 @@ fn main() {
     // Actualiza metadato CTE_AREAREF al valor seleccionado
     components.set_meta("CTE_AREAREF", &format!("{:.2}", arearef));
 
-    info(&format!("Área de referencia ({}) [m2]: {:.2}", orig_arearef, arearef));
+    info(&format!(
+        "Área de referencia ({}) [m2]: {:.2}",
+        orig_arearef, arearef
+    ));
 
     // kexp ---------------------------------------------------------------------------------------
     // CLI > Metadatos de componentes > Valor por defecto (KEXP_REF = 0.0)
     let kexp_meta = components
         .get_meta("CTE_KEXP")
         .and_then(|ref kexpstr| validate_kexp(kexpstr, "metadatos"));
-    
+
     // Aviso de valor no reglamentario
     if let Some(k) = kexp_meta {
         if k != cte::KEXP_DEFAULT {
@@ -573,7 +586,10 @@ fn main() {
     // Actualiza metadato CTE_KEXP al valor seleccionado
     components.set_meta("CTE_KEXP", &format!("{:.1}", kexp));
 
-    info(&format!("Factor de exportación ({}) [-]: {:.1}", orig_kexp, kexp));
+    info(&format!(
+        "Factor de exportación ({}) [-]: {:.1}",
+        orig_kexp, kexp
+    ));
 
     // Guardado de componentes energéticos --------------------------------------------------------
     if matches.is_present("gen_archivo_componentes") {
@@ -658,11 +674,22 @@ fn main() {
         }
         // Guardar balance en formato XML
         if matches.is_present("archivo_salida_xml") {
+            // En función del formato elegido se genera la versión correspondiente del XML
+            let xml_ver_requested = matches.value_of("xml_version").unwrap_or("3.0");
+            let xml = match xml_ver_requested {
+                "2.1" => cte::balance_to_xml21(&balance),
+                _ => cte::balance_to_xml(&balance),
+            };
             let path = matches.value_of_os("archivo_salida_xml").unwrap();
             if verbosity > 0 {
                 println!("Resultados en formato XML: {:?}", path);
+            };
+            if verbosity > 2 {
+                println!(
+                    "---XML {}---\n{}\n---XML {}---",
+                    xml_ver_requested, xml, xml_ver_requested
+                );
             }
-            let xml = cte::balance_to_xml(&balance);
             writefile(path, xml.as_bytes());
         }
         // Mostrar siempre en formato de texto plano

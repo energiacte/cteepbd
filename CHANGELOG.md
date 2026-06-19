@@ -15,6 +15,12 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 ## Unreleased
 
+## [0.25.0] - 2026-06-19
+
+### Novedades
+
+- Nueva opción --xml_version para indicar si se quiere que el XML generado en el archivo sea con el formato de la versión 2.1 o 3.0
+
 ## [0.24.3] - 2026-05-29
 
 ### Correcciones
@@ -39,7 +45,7 @@ Este proyecto sigue, además, el [Versionado semántico](https://semver.org/spec
 
 - Posibilidad de leer el archivo de componentes usando la entrada estándar con \texttt{-c '-'}.
 - Posibilidad de sacar resultados JSON por la salida estándar con opción \texttt{-J, -{}-json\_output}.
-- Adaptación de la salida del framento XML a la versión v3.0 del Certificado de Eficiencia Energética del Edificio en Formato XML.
+- Adaptación de la salida del fragmento XML a la versión v3.0 del Certificado de Eficiencia Energética del Edificio en Formato XML.
 - Muestra en la versión, además del número, también el commit id y fecha con el que se ha compilado el programa.
 - Compilación para arquitectura x86_64 (64-bit).
 
