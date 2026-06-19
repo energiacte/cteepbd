@@ -201,34 +201,34 @@ fn ejemplo_acs_demanda_ren_con_nepb_con_exclusion_aux_meta() {
         .stdout()
         .contains("Porcentaje renovable de la demanda de ACS (perímetro próximo): 96.7 [%]")
         .unwrap();
-    }
+}
 
-    #[test]
-    fn ejemplo_pvbdc_fp_peninsula() {
-        assert_cli::Assert::main_binary()
+#[test]
+fn ejemplo_pvbdc_fp_peninsula() {
+    assert_cli::Assert::main_binary()
         .with_args(&[
             "-c",
             "test_data/extra/ejemplo3PVBdC.csv",
             "-f",
             "test_data/factores_paso_PENINSULA_20140203.csv",
             "-k",
-            "1.0"
+            "1.0",
         ])
         .stdout()
         .contains("C_ep [kWh/m2.an]: ren = 178.9, nren = 37.1, tot = 216.0, RER = 0.83")
         .unwrap();
-    }
+}
 
-    #[test]
-    fn ejemplo_pvbdc_fp_peninsula_pef0onsite() {
-        assert_cli::Assert::main_binary()
+#[test]
+fn ejemplo_pvbdc_fp_peninsula_pef0onsite() {
+    assert_cli::Assert::main_binary()
         .with_args(&[
             "-c",
             "test_data/extra/ejemplo3PVBdC.csv",
             "-f",
             "test_data/factores_paso_PENINSULA_20140203_pef0onsite.csv",
             "-k",
-            "1.0"
+            "1.0",
         ])
         .stdout()
         .contains("C_ep [kWh/m2.an]: ren = 7.9, nren = 37.1, tot = 45.0, RER = 0.17")
