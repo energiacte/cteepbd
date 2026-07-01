@@ -1,5 +1,13 @@
 # TODO
 
+- Metadatos
+  - claves parseado de metadatos en tmeta.rs (FromStr) y components.rs (FromStr) poara CTE_, ya que se elimina esa parte y las claves no siempre se reconocen. Ver cteepbd.rs (518 y ss.)
+    - Los metadatos siempre deben empezar por "#META " + metadato. El resto son comentarios
+    - Ver cómo escriben estos archivos los procedimientos reconocidos (usan #CTE_)
+    - ver cómo se reconocen en metadatos y en cli.
+    - caso de que CTE_ACS_DEMANDA_ANUAL se convierte a ACS_DEMANDA_ANUAL y no se almacena y escribe luego correctamente (sí funciona al pasar como parámetro)
+    - también revisar CTE_Area_Ref vs #META Area_Ref vs #META AREA_REF vs AREAREF vs CTE_AREAREF vs CTE_AREA_REF
+
 - cargo-dist
 
   - creo que tenemos todo bien configurado pero está en la rama update_to_v0.24.0
