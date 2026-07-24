@@ -1,5 +1,6 @@
 # TODO
 
+- Añade C_ep;tot;net (extender RenNrenCo2)
 - Metadatos
   - claves parseado de metadatos en tmeta.rs (FromStr) y components.rs (FromStr) poara CTE_, ya que se elimina esa parte y las claves no siempre se reconocen. Ver cteepbd.rs (518 y ss.)
     - Los metadatos siempre deben empezar por "#META " + metadato. El resto son comentarios
